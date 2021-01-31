@@ -34,9 +34,6 @@
 #include "binload.h"
 #include "cartridge.h"
 
-struct cart_t myCart = {"", CART_5200_32, CTRL_JOY, 0,0,0,0};
-
-
 int CART_Checksum(const UBYTE *image, int nbytes)
 {
     return 0;

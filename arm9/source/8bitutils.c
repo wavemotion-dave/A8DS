@@ -28,14 +28,18 @@ unsigned int counta5200=0, countfiles=0, ucFicAct=0;
 int gTotalAtariFrames = 0;
 int bg0, bg1, bg0b,bg1b;
 unsigned int etatEmu;
+gamecfg GameConf;                       // Game Config svg
 
-unsigned char bufVideo[512*512];        // Video buffer
-gamecfg GameConf;                        // Game Config svg
+int myGame_offset_x = 32;
+int myGame_offset_y = 20;
+int myGame_scale_x = 256;
+int myGame_scale_y = 256;
 
-#define  cxBG (myCart.offset_x<<8)
-#define  cyBG (myCart.offset_y<<8)
-#define  xdxBG (((320 / myCart.scale_x) << 8) | (320 % myCart.scale_x))
-#define  ydyBG (((256 / myCart.scale_y) << 8) | (256 % myCart.scale_y))
+
+#define  cxBG (myGame_offset_x<<8)
+#define  cyBG (myGame_offset_y<<8)
+#define  xdxBG (((320 / myGame_scale_x) << 8) | (320 % myGame_scale_x))
+#define  ydyBG (((256 / myGame_scale_y) << 8) | (256 % myGame_scale_y))
   
 unsigned int atari_pal16[256] = {0};
 unsigned char *filebuffer;
@@ -49,7 +53,7 @@ int alpha_2 = 8;
 
 #define MAX_DEBUG 7
 int debug[MAX_DEBUG]={0};
-#define DEBUG_DUMP
+//#define DEBUG_DUMP
 
 static void DumpDebugData(void)
 {
@@ -391,10 +395,10 @@ void dsLoadGame(char *filename)
       dsShowScreenEmu();
         
       //tbd-dsb put into binload?        
-      myCart.offset_x = 32;
-      myCart.offset_y = 20;
-      myCart.scale_x = 256;
-      myCart.scale_y = 256;
+      myGame_offset_x = 32;
+      myGame_offset_y = 20;
+      myGame_scale_x = 256;
+      myGame_scale_y = 256;
         
       memset(sound_buffer, 0x00, SNDLENGTH);
 
@@ -1060,6 +1064,7 @@ ITCM_CODE void dsMainLoop(void) {
                 { 
                     if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                     keys_touch = 1;
+                    Atari800_Initialise();
                     dsLoadGame(last_filename);
                     irqEnable(IRQ_TIMER2); 
                     fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
@@ -1116,10 +1121,10 @@ ITCM_CODE void dsMainLoop(void) {
         if (keys_pressed & KEY_SELECT) key_consol &= ~CONSOL_SELECT;
         if (gTotalAtariFrames & 1)  // Every other frame...
         {
-            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myCart.offset_y++;
-            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myCart.offset_y--;
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_UP))   if (myCart.scale_y <= 256) myCart.scale_y++;
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_DOWN)) if (myCart.scale_y >= 192) myCart.scale_y--;
+            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myGame_offset_y++;
+            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myGame_offset_y--;
+            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_UP))   if (myGame_scale_y <= 256) myGame_scale_y++;
+            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_DOWN)) if (myGame_scale_y >= 192) myGame_scale_y--;
         }            
         break;
     }
