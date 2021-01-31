@@ -35,7 +35,11 @@ Features :
 
 Missing :
 ---------
- All that is not yet emulated ;)
+ There is no multi-disk support. This is intended to be a simple gaming console
+ to allow the nearly infinite number of 8-bit games to run - as such it's only
+ going to load .XEX (Atari 8-bit executable files) and for convienence we also 
+ allow .ATR (diskette format) files but we stop at loading just 1 diskette. If
+ a game requires more than 1 diskette, this is not the emulator to use. 
 
 --------------------------------------------------------------------------------
 History :

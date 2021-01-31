@@ -47,9 +47,9 @@ signed char *psound_buffer;
 int alpha_1 = 8;
 int alpha_2 = 8;
 
-#define MAX_DEBUG 5
+#define MAX_DEBUG 7
 int debug[MAX_DEBUG]={0};
-//#define DEBUG_DUMP
+#define DEBUG_DUMP
 
 static void DumpDebugData(void)
 {
@@ -373,8 +373,11 @@ int load_os(char *filename )
  	return 0;
 } /* end load_os */
 
-void dsLoadGame(char *filename) {
+char last_filename[256] = {0};
+void dsLoadGame(char *filename) 
+{
   unsigned int index;
+  strcpy(last_filename, filename);
   
   // Free buffer if needed
   TIMER2_CR=0; irqDisable(IRQ_TIMER2); 
@@ -907,8 +910,6 @@ ITCM_CODE void dsMainLoop(void) {
   bool bShowHelp = false;
   bool bShowKeyboard = false;
   
-  myCart.use_analog = 0;
-  
   // Timers are fed with 33.513982 MHz clock.
   // With DIV_1024 the clock is 32,728.5 ticks per sec...
   TIMER0_DATA=0;
@@ -916,8 +917,10 @@ ITCM_CODE void dsMainLoop(void) {
   TIMER1_DATA=0;
   TIMER1_CR=TIMER_ENABLE | TIMER_DIV_1024;  
   
-  while(etatEmu != A5200_QUITSTDS) {
-    switch (etatEmu) {
+  while(etatEmu != A5200_QUITSTDS) 
+  {
+    switch (etatEmu) 
+    {
     
       case A5200_MENUINIT:
         dsShowScreenMain();
@@ -1053,9 +1056,13 @@ ITCM_CODE void dsMainLoop(void) {
                     key_consol &= ~CONSOL_OPTION;
                     keys_touch = 1;
                 }
-                else if ((iTx>215) && (iTx<240) && (iTy>122) && (iTy<150))  // RESET
+                else if ((iTx>215) && (iTx<240) && (iTy>122) && (iTy<150))  // RESET (just reloads the game... not sure what else to do here)
                 { 
-                    //????
+                    if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    keys_touch = 1;
+                    dsLoadGame(last_filename);
+                    irqEnable(IRQ_TIMER2); 
+                    fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                 }
                 else if ((iTx>130) && (iTx<157) && (iTy>160) && (iTy<180))  // HELP
                 { 
@@ -1096,21 +1103,18 @@ ITCM_CODE void dsMainLoop(void) {
           keys_touch=0;
         }
       
-        if (myCart.control == CTRL_JOY)
-        {
-          if (keys_pressed & KEY_UP) stick0 = STICK_FORWARD;
-          if (keys_pressed & KEY_LEFT) stick0 = STICK_LEFT;
-          if (keys_pressed & KEY_RIGHT) stick0 = STICK_RIGHT;
-          if (keys_pressed & KEY_DOWN) stick0 = STICK_BACK;
-          if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT)) stick0 = STICK_UL; 
-          if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_UR;
-          if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick0 = STICK_LL;
-          if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_LR;
-        }
+        if (keys_pressed & KEY_UP) stick0 = STICK_FORWARD;
+        if (keys_pressed & KEY_LEFT) stick0 = STICK_LEFT;
+        if (keys_pressed & KEY_RIGHT) stick0 = STICK_RIGHT;
+        if (keys_pressed & KEY_DOWN) stick0 = STICK_BACK;
+        if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT)) stick0 = STICK_UL; 
+        if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_UR;
+        if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick0 = STICK_LL;
+        if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_LR;
 
         if (keys_pressed & KEY_START) key_consol &= ~CONSOL_START;
         if (keys_pressed & KEY_SELECT) key_consol &= ~CONSOL_SELECT;
-        if (gTotalAtariFrames & 1)
+        if (gTotalAtariFrames & 1)  // Every other frame...
         {
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myCart.offset_y++;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myCart.offset_y--;
@@ -1119,7 +1123,7 @@ ITCM_CODE void dsMainLoop(void) {
         }            
         break;
     }
-	}
+  }
 }
 
 //----------------------------------------------------------------------------------
@@ -1131,7 +1135,8 @@ int a52Filescmp (const void *c1, const void *c2) {
   return strcmp (p1->filename, p2->filename);
 }
 
-void a52FindFiles(void) {
+void a52FindFiles(void) 
+{
 	struct stat statbuf;
   DIR *pdir;
   struct dirent *pent;
@@ -1143,11 +1148,13 @@ void a52FindFiles(void) {
 
   if (pdir) {
 
-    while (((pent=readdir(pdir))!=NULL)) {
+    while (((pent=readdir(pdir))!=NULL)) 
+    {
       stat(pent->d_name,&statbuf);
 
       strcpy(filenametmp,pent->d_name);
-      if(S_ISDIR(statbuf.st_mode)) {
+      if(S_ISDIR(statbuf.st_mode)) 
+      {
         if (!( (filenametmp[0] == '.') && (strlen(filenametmp) == 1))) {
           a5200romlist[counta5200].directory = true;
           strcpy(a5200romlist[counta5200].filename,filenametmp);

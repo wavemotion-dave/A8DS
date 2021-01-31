@@ -71,7 +71,7 @@ map_save save_map[2] = {
 
 static UBYTE under_atarixl_os[16384];
 static UBYTE under_atari_basic[8192];
-static UBYTE *atarixe_memory = (UBYTE *)0x06040000;	//A convienent 128k of memory...
+static UBYTE *atarixe_memory = (UBYTE *)0x06040000;	//A convienent 128k of memory... it's a bit faster when bank switching
 static ULONG atarixe_memory_size = 0;
 
 int have_basic = FALSE; /* Atari BASIC image has been successfully read (Atari 800 only) */
@@ -439,6 +439,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 			SetRAM(0x5000, 0x57ff);
 			selftest_enabled = FALSE;
 		}
+        
 		if (bank != xe_bank) 
         {
             unsigned int *src = (unsigned int *) (memory + 0x4000);
@@ -453,8 +454,6 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
             {
                 *dest2++ = *src2++;   
             }
-			//memcpy(atarixe_memory + (xe_bank << 14), memory + 0x4000, 16384);
-			//memcpy(memory + 0x4000, atarixe_memory + (bank << 14), 16384);
 			xe_bank = bank;
 		}
 		if (ram_size == 128 || ram_size == RAM_320_COMPY_SHOP)

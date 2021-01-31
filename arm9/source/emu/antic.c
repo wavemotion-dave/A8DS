@@ -92,94 +92,6 @@ int prior_pos_buf[PRIOR_BUF_SIZE];
 
 /* Video memory access is hidden behind these macros. It allows to track dirty video memory
    to improve video system performance */
-#ifdef DIRTYRECT
-
-static UWORD *scratchUWordPtr;
-static UWORD scratchUWord;
-static ULONG *scratchULongPtr;
-static ULONG scratchULong;
-static UBYTE *scratchUBytePtr;
-static UBYTE scratchUByte;
-
-#ifdef NODIRTYCOMPARE
-
-#define WRITE_VIDEO(ptr, val) \
-	do { \
-		scratchUWordPtr = (ptr); \
-		screen_dirty[((ULONG) scratchUWordPtr - (ULONG) atari_screen) >> 3] = 1; \
-		*scratchUWordPtr = (val); \
-	} while (0);
-#define WRITE_VIDEO_LONG(ptr, val) \
-	do { \
-		scratchULongPtr = (ptr); \
-		screen_dirty[((ULONG) scratchULongPtr - (ULONG) atari_screen) >> 3] = 1; \
-		*scratchULongPtr = (val); \
-	} while (0)
-#define WRITE_VIDEO_BYTE(ptr, val) \
-	do { \
-		scratchUBytePtr = (ptr); \
-		screen_dirty[((ULONG) scratchUBytePtr - (ULONG) atari_screen) >> 3] = 1; \
-		*scratchUBytePtr = (val); \
-	} while (0)
-#define FILL_VIDEO(ptr, val, size) \
-	do { \
-		scratchUBytePtr = (UBYTE*) (ptr); \
-		scratchULong = (ULONG) (size); \
-		memset(screen_dirty + (((ULONG) scratchUBytePtr - (ULONG) atari_screen) >> 3), 1, scratchULong >> 3); \
-		memset(scratchUBytePtr, (val), scratchULong); \
-	} while (0)
-
-#else /* NODIRTYCOMPARE */
-
-#define WRITE_VIDEO(ptr, val) \
-	do { \
-		scratchUWordPtr = (ptr); \
-		scratchUWord = (val); \
-		if (*scratchUWordPtr != scratchUWord) { \
-			screen_dirty[((ULONG) scratchUWordPtr - (ULONG) atari_screen) >> 3] = 1; \
-			*scratchUWordPtr = scratchUWord; \
-		} \
-	} while (0)
-#define WRITE_VIDEO_LONG(ptr, val) \
-	do { \
-		scratchULongPtr = (ptr); \
-		scratchULong = (val); \
-		if (*scratchULongPtr != scratchULong) { \
-			screen_dirty[((ULONG) scratchULongPtr - (ULONG) atari_screen) >> 3] = 1; \
-			*scratchULongPtr = scratchULong; \
-		} \
-	} while (0)
-#define WRITE_VIDEO_BYTE(ptr, val) \
-	do { \
-		scratchUBytePtr = (ptr); \
-		scratchUByte = (val); \
-		if (*scratchUBytePtr != scratchUByte) { \
-			screen_dirty[((ULONG) scratchUBytePtr - (ULONG) atari_screen) >> 3] = 1; \
-			*scratchUBytePtr = scratchUByte; \
-		} \
-	} while (0)
-static UBYTE *scratchFillLimit;
-#define FILL_VIDEO(ptr, val, size) \
-	do { \
-		scratchUBytePtr = (UBYTE *) (ptr); \
-		scratchUByte = (UBYTE) (val); \
-		scratchFillLimit = scratchUBytePtr + (size); \
-		for (; scratchUBytePtr < scratchFillLimit; scratchUBytePtr++) { \
-			if (*scratchUBytePtr != scratchUByte) { \
-				screen_dirty[((ULONG) scratchUBytePtr - (ULONG) atari_screen) >> 3] = 1; \
-				*scratchUBytePtr = scratchUByte; \
-			} \
-		} \
-	} while (0)
-
-#endif /* NODIRTYCOMPARE */
-
-void entire_screen_dirty(void)
-{
-	memset(screen_dirty, 1, ATARI_WIDTH * ATARI_HEIGHT / 8);
-}
-
-#else /* DIRTYRECT */
 
 #define WRITE_VIDEO(ptr, val) (*(ptr) = val)
 #define WRITE_VIDEO_LONG(ptr, val) (*(ptr) = val)
@@ -187,8 +99,6 @@ void entire_screen_dirty(void)
 #define FILL_VIDEO(ptr, val, size) memset(ptr, val, size)
 
 void entire_screen_dirty(void) {}
-
-#endif /* DIRTYRECT */
 
 #define READ_VIDEO_LONG(ptr) (*(ptr))
 
@@ -555,7 +465,7 @@ static UBYTE mode_e_an_lookup[256] __attribute__((section(".dtcm")));
    PF3 if (PRIOR & 0x1f) == 0x10, PF0 or PF1 otherwise.
    Additional column 'colls' holds collisions of playfields with PMG. */
 
-UWORD cl_lookup[128];
+UWORD cl_lookup[128] __attribute__((section(".dtcm")));
 
 #define C_PM0	0x01
 #define C_PM1	0x02
@@ -694,16 +604,16 @@ UWORD hires_lookup_l[128];	/* accessed in gtia.c */
 #define PF3PM (*(UBYTE *) &cl_lookup[C_PF3 | C_COLLS])
 #define PF_COLLS(x) (((UBYTE *) &cl_lookup)[(x) + L_COLLS])
 
-static UBYTE singleline;
-UBYTE player_dma_enabled;
-UBYTE player_gra_enabled;
-UBYTE missile_dma_enabled;
-UBYTE missile_gra_enabled;
-UBYTE player_flickering;
-UBYTE missile_flickering;
+static UBYTE singleline __attribute__((section(".dtcm")));
+UBYTE player_dma_enabled __attribute__((section(".dtcm")));
+UBYTE player_gra_enabled __attribute__((section(".dtcm")));
+UBYTE missile_dma_enabled __attribute__((section(".dtcm")));
+UBYTE missile_gra_enabled __attribute__((section(".dtcm")));
+UBYTE player_flickering __attribute__((section(".dtcm")));
+UBYTE missile_flickering __attribute__((section(".dtcm")));
 
-static UWORD pmbase_s;
-static UWORD pmbase_d;
+static UWORD pmbase_s __attribute__((section(".dtcm")));
+static UWORD pmbase_d __attribute__((section(".dtcm")));
 
 extern UBYTE pm_scanline[ATARI_WIDTH / 2 + 8];
 extern UBYTE pm_dirty;

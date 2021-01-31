@@ -36,61 +36,61 @@
 
 /* GTIA Registers ---------------------------------------------------------- */
 
-UBYTE M0PL;
-UBYTE M1PL;
-UBYTE M2PL;
-UBYTE M3PL;
-UBYTE P0PL;
-UBYTE P1PL;
-UBYTE P2PL;
-UBYTE P3PL;
-UBYTE HPOSP0;
-UBYTE HPOSP1;
-UBYTE HPOSP2;
-UBYTE HPOSP3;
-UBYTE HPOSM0;
-UBYTE HPOSM1;
-UBYTE HPOSM2;
-UBYTE HPOSM3;
-UBYTE SIZEP0;
-UBYTE SIZEP1;
-UBYTE SIZEP2;
-UBYTE SIZEP3;
-UBYTE SIZEM;
-UBYTE GRAFP0;
-UBYTE GRAFP1;
-UBYTE GRAFP2;
-UBYTE GRAFP3;
-UBYTE GRAFM;
-UBYTE COLPM0;
-UBYTE COLPM1;
-UBYTE COLPM2;
-UBYTE COLPM3;
-UBYTE COLPF0;
-UBYTE COLPF1;
-UBYTE COLPF2;
-UBYTE COLPF3;
-UBYTE COLBK;
-UBYTE PRIOR;
-UBYTE VDELAY;
-UBYTE GRACTL;
-UBYTE POTENA;
+UBYTE M0PL __attribute__((section(".dtcm")));
+UBYTE M1PL __attribute__((section(".dtcm")));
+UBYTE M2PL __attribute__((section(".dtcm")));
+UBYTE M3PL __attribute__((section(".dtcm")));
+UBYTE P0PL __attribute__((section(".dtcm")));
+UBYTE P1PL __attribute__((section(".dtcm")));
+UBYTE P2PL __attribute__((section(".dtcm")));
+UBYTE P3PL __attribute__((section(".dtcm")));
+UBYTE HPOSP0 __attribute__((section(".dtcm")));
+UBYTE HPOSP1 __attribute__((section(".dtcm")));
+UBYTE HPOSP2 __attribute__((section(".dtcm")));
+UBYTE HPOSP3 __attribute__((section(".dtcm")));
+UBYTE HPOSM0 __attribute__((section(".dtcm")));
+UBYTE HPOSM1 __attribute__((section(".dtcm")));
+UBYTE HPOSM2 __attribute__((section(".dtcm")));
+UBYTE HPOSM3 __attribute__((section(".dtcm")));
+UBYTE SIZEP0 __attribute__((section(".dtcm")));
+UBYTE SIZEP1 __attribute__((section(".dtcm")));
+UBYTE SIZEP2 __attribute__((section(".dtcm")));
+UBYTE SIZEP3 __attribute__((section(".dtcm")));
+UBYTE SIZEM __attribute__((section(".dtcm")));
+UBYTE GRAFP0 __attribute__((section(".dtcm")));
+UBYTE GRAFP1 __attribute__((section(".dtcm")));
+UBYTE GRAFP2 __attribute__((section(".dtcm")));
+UBYTE GRAFP3 __attribute__((section(".dtcm")));
+UBYTE GRAFM __attribute__((section(".dtcm")));
+UBYTE COLPM0 __attribute__((section(".dtcm")));
+UBYTE COLPM1 __attribute__((section(".dtcm")));
+UBYTE COLPM2 __attribute__((section(".dtcm")));
+UBYTE COLPM3 __attribute__((section(".dtcm")));
+UBYTE COLPF0 __attribute__((section(".dtcm")));
+UBYTE COLPF1 __attribute__((section(".dtcm")));
+UBYTE COLPF2 __attribute__((section(".dtcm")));
+UBYTE COLPF3 __attribute__((section(".dtcm")));
+UBYTE COLBK __attribute__((section(".dtcm")));
+UBYTE PRIOR __attribute__((section(".dtcm")));
+UBYTE VDELAY __attribute__((section(".dtcm")));
+UBYTE GRACTL __attribute__((section(".dtcm")));
+UBYTE POTENA __attribute__((section(".dtcm")));
 
 /* Internal GTIA state ----------------------------------------------------- */
 
-int atari_speaker;
-int consol_index = 0;
-UBYTE consol_table[3];
-UBYTE consol_mask;
-UBYTE TRIG[4];
-UBYTE TRIG_latch[4];
+int atari_speaker __attribute__((section(".dtcm")));
+int consol_index  __attribute__((section(".dtcm"))) = 0;
+UBYTE consol_table[3] __attribute__((section(".dtcm")));
+UBYTE consol_mask __attribute__((section(".dtcm")));
+UBYTE TRIG[4] __attribute__((section(".dtcm")));
+UBYTE TRIG_latch[4] __attribute__((section(".dtcm")));
 
 #if defined(BASIC) || defined(CURSES_BASIC)
 
-static UBYTE PF0PM = 0;
-static UBYTE PF1PM = 0;
-static UBYTE PF2PM = 0;
-static UBYTE PF3PM = 0;
+static UBYTE PF0PM  __attribute__((section(".dtcm")))= 0;
+static UBYTE PF1PM  __attribute__((section(".dtcm")))= 0;
+static UBYTE PF2PM  __attribute__((section(".dtcm")))= 0;
+static UBYTE PF3PM  __attribute__((section(".dtcm")))= 0;
 #define collisions_mask_missile_playfield 0
 #define collisions_mask_player_playfield 0
 #define collisions_mask_missile_player 0
@@ -103,10 +103,10 @@ void set_prior(UBYTE byte);			/* in antic.c */
 /* Player/Missile stuff ---------------------------------------------------- */
 
 /* change to 0x00 to disable collisions */
-UBYTE collisions_mask_missile_playfield = 0x0f;
-UBYTE collisions_mask_player_playfield = 0x0f;
-UBYTE collisions_mask_missile_player = 0x0f;
-UBYTE collisions_mask_player_player = 0x0f;
+UBYTE collisions_mask_missile_playfield  __attribute__((section(".dtcm")))= 0x0f;
+UBYTE collisions_mask_player_playfield  __attribute__((section(".dtcm")))= 0x0f;
+UBYTE collisions_mask_missile_player  __attribute__((section(".dtcm")))= 0x0f;
+UBYTE collisions_mask_player_player  __attribute__((section(".dtcm")))= 0x0f;
 
 #ifdef NEW_CYCLE_EXACT
 /* temporary collision registers for the current scanline only */
@@ -143,15 +143,15 @@ extern UBYTE missile_gra_enabled;
 extern UBYTE player_flickering;
 extern UBYTE missile_flickering;
 
-static UBYTE *hposp_ptr[4];
-static UBYTE *hposm_ptr[4];
-static ULONG hposp_mask[4];
+static UBYTE *hposp_ptr[4] __attribute__((section(".dtcm")));
+static UBYTE *hposm_ptr[4] __attribute__((section(".dtcm")));
+static ULONG hposp_mask[4] __attribute__((section(".dtcm")));
 
 static ULONG grafp_lookup[4][256];
-static ULONG *grafp_ptr[4];
-static int global_sizem[4];
+static ULONG *grafp_ptr[4] __attribute__((section(".dtcm")));
+static int global_sizem[4] __attribute__((section(".dtcm")));
 
-static const UBYTE PM_Width[4] = {1, 2, 1, 4};
+static UBYTE PM_Width[4]  __attribute__((section(".dtcm"))) = {1, 2, 1, 4};
 
 /* Meaning of bits in pm_scanline:
 bit 0 - Player 0
@@ -164,8 +164,8 @@ bit 6 - Missile 2
 bit 7 - Missile 3
 */
 
-UBYTE pm_scanline[ATARI_WIDTH / 2 + 8];	/* there's a byte for every *pair* of pixels */
-UBYTE pm_dirty = TRUE;
+UBYTE pm_scanline[ATARI_WIDTH / 2 + 8] __attribute__((section(".dtcm")));	/* there's a byte for every *pair* of pixels */
+UBYTE pm_dirty  __attribute__((section(".dtcm"))) = TRUE;
 
 #define C_PM0	0x01
 #define C_PM1	0x02
@@ -200,7 +200,7 @@ extern UWORD cl_lookup[128];
 #ifdef USE_COLOUR_TRANSLATION_TABLE
 UWORD colour_translation_table[256];
 #else
-extern UWORD hires_lookup_l[128];
+extern UWORD hires_lookup_l[128] __attribute__((section(".dtcm")));
 #endif /* USE_COLOUR_TRANSLATION_TABLE */
 
 extern ULONG lookup_gtia9[16];
