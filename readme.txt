@@ -31,7 +31,9 @@ help you.
 
 Features :
 ----------
- Most things you should expect from an emulator.
+Most things you should expect from an emulator. Games generally run full-speed
+with just a handful of exceptions. If you load a game and it doesn't load properly,
+just load it again or hit the RESET button which will re-initialize the XEGS machine.
 
 Missing :
 ---------
