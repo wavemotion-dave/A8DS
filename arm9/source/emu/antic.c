@@ -28,7 +28,7 @@
 #include <nds.h>
 
 #define ALEKSCR_DIRECT 1
-#include "a5200utils.h"
+#include "8bitutils.h"
 
 #define NO_YPOS_BREAK_FLICKER
 

@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "main.h"
-#include "a5200utils.h"
+#include "8bitutils.h"
 
 #include "atari.h"
 #include "global.h"

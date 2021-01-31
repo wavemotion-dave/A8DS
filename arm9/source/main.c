@@ -7,7 +7,7 @@
 #include "main.h"
 #include "atari.h"
 #include "intro.h"
-#include "a5200utils.h"
+#include "8bitutils.h"
 
 extern int bg0, bg1;
 int bg2, bg3;             // BG pointers 

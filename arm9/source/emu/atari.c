@@ -407,19 +407,10 @@ int Atari800_Exit(int run_monitor) {
 	return restart;
 }
 
-UBYTE Atari800_GetByte(UWORD addr) {
+UBYTE Atari800_GetByte(UWORD addr) 
+{
 	UBYTE byte = 0xff;
 	switch (addr & 0xff00) {
-	case 0x4f00:
-	case 0x8f00:
-		CART_BountyBob1(addr);
-		byte = 0;
-		break;
-	case 0x5f00:
-	case 0x9f00:
-		CART_BountyBob2(addr);
-		byte = 0;
-		break;
 	case 0xd000:				/* GTIA */
 	case 0xc000:				/* GTIA - 5200 */
 		byte = GTIA_GetByte(addr);
@@ -435,9 +426,6 @@ UBYTE Atari800_GetByte(UWORD addr) {
 	case 0xd400:				/* ANTIC */
 		byte = ANTIC_GetByte(addr);
 		break;
-	case 0xd500:				/* bank-switching cartridges, RTIME-8 */
-		byte = CART_GetByte(addr);
-		break;
 	default:
 		break;
 	}
@@ -446,15 +434,8 @@ UBYTE Atari800_GetByte(UWORD addr) {
 }
 
 void Atari800_PutByte(UWORD addr, UBYTE byte) {
-	switch (addr & 0xff00) {
-    case 0x4f00:
-    case 0x8f00:
-      CART_BountyBob1(addr);
-      break;
-    case 0x5f00:
-    case 0x9f00:
-      CART_BountyBob2(addr);
-      break;
+	switch (addr & 0xff00) 
+    {
     case 0xd000:				/* GTIA */
     case 0xc000:				/* GTIA - 5200 */
       GTIA_PutByte(addr, byte);
@@ -469,9 +450,6 @@ void Atari800_PutByte(UWORD addr, UBYTE byte) {
       break;
     case 0xd400:				/* ANTIC */
       ANTIC_PutByte(addr, byte);
-      break;
-    case 0xd500:				/* bank-switching cartridges, RTIME-8 */
-      CART_PutByte(addr, byte);
       break;
     default:
       break;

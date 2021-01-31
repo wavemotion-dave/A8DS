@@ -282,15 +282,7 @@ void MemStateRead(UBYTE SaveVerbose) {
 				break;
 			case ROM:
 				if (i != 0xd1 && attrib_page[0xf6] == HARDWARE) {
-					if (i == 0x4f || i == 0x8f) {
-						readmap[i] = BountyBob1_GetByte;
-						writemap[i] = BountyBob1_PutByte;
-					}
-					else if (i == 0x5f || i == 0x9f) {
-						readmap[i] = BountyBob2_GetByte;
-						writemap[i] = BountyBob2_PutByte;
-					}
-					/* else something's wrong, so we keep current values */
+					/* something's wrong, so we keep current values */
 				}
 				else {
 					readmap[i] = NULL;

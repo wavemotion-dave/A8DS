@@ -1,7 +1,7 @@
 #include <nds.h>
 #include <stdio.h>
 
-#include "a5200utils.h"
+#include "8bitutils.h"
 
 #include "mus_intro_wav.h"
 #include "pdev_tbg0.h"
