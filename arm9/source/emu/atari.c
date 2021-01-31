@@ -407,7 +407,6 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
 {
     // Remove cart if exist
     CART_Remove();
-    Atari800_InitialiseMachine();
   
 	int type = Atari800_DetectFileType(filename);
 

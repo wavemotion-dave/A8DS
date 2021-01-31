@@ -22,7 +22,9 @@ void irqVBlank(void) {
 }
 
 // Program entry point
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
+    char *bios_filename = "atarixl.rom";
   // Init sound
   consoleDemoInit();
   soundEnable();
@@ -35,16 +37,21 @@ int main(int argc, char **argv) {
 	}
 
   // Init Timer
-	dsInitTimer();
+  dsInitTimer();
   dsInstallSoundEmuFIFO();
+    
+  if (keysCurrent() & KEY_R)
+  {
+       bios_filename = "XYZZY.~01"; // Won't be found... Altria bios instead...
+  }
+    
   
   // Intro and main screen
   intro_logo();  
   dsInitScreenMain();
   etatEmu = A5200_MENUINIT;
 
-  // 
-  if (!load_os("atarixl.rom")) 
+  if (!load_os(bios_filename)) 
   {
       //load rom file via args if a rom path is supplied
       if(argc > 1) 

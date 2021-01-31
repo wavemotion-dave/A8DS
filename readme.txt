@@ -14,11 +14,17 @@ drive encapsulated format and is a little tricker and compatibility will not
 be as high. You can often find binary files in both formats - so stry to find
 the .xex if you can.
 
-Optional (but recommended) is to have the atarixl.rom in the same folder as
-the XEGS.DS.NDS emulator. This is the 16k bios file and must be exactly so named.
+Optional is to have the atarixl.rom in the same folder as the XEGS-DS.NDS emulator. 
+This is the 16k bios file and must be exactly so named.
 If you don't have the BIOS, a generic one is provided from the good folks who
 made Altirra have released open-source. This will get the job done 90% of the time
 but is not as fully compatible as the original atarixl.rom bios.
+
+I've not done exhaustive testing, but in some cases I find the Altirra BIOS does 
+a better job than the original Atari BIOS - so you may want to switch them in
+or out - one easy way to do this is to hold down either Right or Left Trigger 
+when you launch the emulator which will force the Altirra bios to be used
+even if the atarixl.rom bios is found.
 
 Do not ask me about such files, I don't have them. A search with Google will certainly 
 help you. 
