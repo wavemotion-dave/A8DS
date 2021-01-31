@@ -34,6 +34,9 @@ Missing :
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V0.9 : 31-Jan-2021 by wavemotion-dave
+  * Added keyboard support. Cleaned up on-screen graphics. Added button support.
+
 V0.8 : 30-Jan-2021 by wavemotion-dave
   * Alpha release with support for .XEX and .ATR and generally runs well enough.
 
