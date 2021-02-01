@@ -57,7 +57,7 @@ int main(int argc, char **argv)
       if(argc > 1) 
       {
         dsShowScreenMain();
-        dsLoadGame(argv[1]);
+        dsLoadGame(argv[1], 1, true, true);
         Atari800_Initialise();
         etatEmu = A5200_PLAYINIT;
       }

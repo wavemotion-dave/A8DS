@@ -50,7 +50,7 @@ extern void dsShowScreenEmu(void);
 extern void dsShowScreenMain(void);
 extern void dsFreeEmu(void);
 extern void VsoundHandler(void);
-extern void dsLoadGame(char *filename);
+extern void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly);
 extern unsigned int dsReadPad(void);
 extern bool dsWaitOnQuit(void);
 extern void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel);

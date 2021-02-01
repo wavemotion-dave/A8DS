@@ -16,6 +16,7 @@
 #include "emu/pia.h"
 
 #include "clickNoQuit_wav.h"
+#include "keyclick_wav.h"
 #include "bgBottom.h"
 #include "bgTop.h"
 #include "bgFileSel.h"
@@ -378,7 +379,7 @@ int load_os(char *filename )
 } /* end load_os */
 
 char last_filename[256] = {0};
-void dsLoadGame(char *filename) 
+void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly) 
 {
   unsigned int index;
   strcpy(last_filename, filename);
@@ -389,7 +390,7 @@ void dsLoadGame(char *filename)
 		free(filebuffer);
   
     // load card game if ok
-    if (Atari800_OpenFile(filename, true, 1, true) != AFILE_ERROR) 
+    if (Atari800_OpenFile(filename, bRestart, disk_num, bReadOnly) != AFILE_ERROR) 
     {	
       // Initialize the virtual console emulation 
       dsShowScreenEmu();
@@ -487,8 +488,19 @@ bool dsWaitOnQuit(void) {
   return bRet;
 }
 
+bool bLoadReadOnly = true;
+bool bLoadAndBoot = true;
+void dsDisplayLoadOptions(void)
+{
+  char tmpBuf[32];
+  sprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
+  dsPrintValue(14,1,0,tmpBuf);
+  sprintf(tmpBuf, "[%c]  BOOT LOAD", (bLoadAndBoot ? 'Y':' '));
+  dsPrintValue(14,2,0,tmpBuf);    
+}
 
-void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel) {
+void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel) 
+{
   unsigned int ucBcl,ucGame;
   u8 maxLen;
   char szName[256];
@@ -496,8 +508,11 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel) {
   // Display all games if possible
   unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) (bgGetMapPtr(bg1b)),32*24*2);
+    
+  dsDisplayLoadOptions();
   countfiles ? sprintf(szName,"%04d/%04d GAMES",(int)(1+ucSel+NoDebGame),countfiles) : sprintf(szName,"%04d/%04d FOLDERS",(int)(1+ucSel+NoDebGame),counta5200);
-  dsPrintValue(22-strlen(szName)/2,3,0,szName);
+  dsPrintValue(14,3,0,szName);
+    
   dsPrintValue(31,5,0,(char *) (NoDebGame>0 ? "<" : " "));
   dsPrintValue(31,22,0,(char *) (NoDebGame+14<counta5200 ? ">" : " "));
   sprintf(szName,"%s","A TO SELECT A GAME, B TO GO BACK");
@@ -661,6 +676,29 @@ unsigned int dsWaitForRom(void)
         while (keysCurrent() & KEY_A);
       }
     }
+    
+    static int last_x_key = 0;
+    if (keysCurrent() & KEY_X)
+    {
+        if (last_x_key != KEY_X)
+        {
+            bLoadReadOnly = (bLoadReadOnly ? false:true);
+            dsDisplayLoadOptions();
+            last_x_key = KEY_X;
+        }
+    } else last_x_key = 0;
+      
+    static int last_y_key = 0;
+    if (keysCurrent() & KEY_Y)
+    {
+        if (last_y_key != KEY_Y)
+        {
+            bLoadAndBoot = (bLoadAndBoot ? false:true);
+            dsDisplayLoadOptions();
+            last_y_key = KEY_Y;
+        }
+    } else last_y_key = 0;      
+      
     // Scroll la selection courante
     if (strlen(a5200romlist[ucFicAct].filename) > 29) {
       ucFlip++;
@@ -748,7 +786,7 @@ unsigned int dsWaitOnMenu(unsigned int actState) {
         a52FindFiles();
         romSel=dsWaitForRom();
         if (romSel) { uState=A5200_PLAYINIT; 
-          dsLoadGame(a5200romlist[ucFicAct].filename); }
+          dsLoadGame(a5200romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
         else { uState=actState; }
       }
     }
@@ -788,103 +826,81 @@ void dsPrintValue(int x, int y, unsigned int isSelect, char *pchStr)
 
 int dsHandleKeyboard(int Tx, int Ty)
 {
+    int keyPress = AKEY_NONE;
     debug[3] = Tx;
     debug[4] = Ty;
     if (Ty <= 100) return AKEY_NONE;
-    
+
     if (Ty > 100 && Ty < 115)       // Top Row
     {
-        if (Tx >  14 && Tx <  32) return AKEY_1;
-        if (Tx >  32 && Tx <  49) return AKEY_2;
-        if (Tx >  49 && Tx <  71) return AKEY_3;
-        if (Tx >  71 && Tx <  92) return AKEY_4;
-        if (Tx >  92 && Tx < 109) return AKEY_5;
-        if (Tx > 109 && Tx < 129) return AKEY_6;
-        if (Tx > 129 && Tx < 150) return AKEY_7;
-        if (Tx > 150 && Tx < 168) return AKEY_8;
-        if (Tx > 168 && Tx < 188) return AKEY_9;
-        if (Tx > 188 && Tx < 208) return AKEY_0;
-        if (Tx > 208 && Tx < 229) return AKEY_MINUS;
-        if (Tx > 229 && Tx < 250) return AKEY_EQUAL;
+        if (Tx >  14 && Tx <  32) keyPress = AKEY_1;
+        if (Tx >  32 && Tx <  49) keyPress = AKEY_2;
+        if (Tx >  49 && Tx <  71) keyPress = AKEY_3;
+        if (Tx >  71 && Tx <  92) keyPress = AKEY_4;
+        if (Tx >  92 && Tx < 109) keyPress = AKEY_5;
+        if (Tx > 109 && Tx < 129) keyPress = AKEY_6;
+        if (Tx > 129 && Tx < 150) keyPress = AKEY_7;
+        if (Tx > 150 && Tx < 168) keyPress = AKEY_8;
+        if (Tx > 168 && Tx < 188) keyPress = AKEY_9;
+        if (Tx > 188 && Tx < 208) keyPress = AKEY_0;
+        if (Tx > 208 && Tx < 229) keyPress = AKEY_MINUS;
+        if (Tx > 229 && Tx < 250) keyPress = AKEY_EQUAL;
     }
     else if (Ty < 131)  // QWERTY Row
     {
-        if (Tx >  23 && Tx <  40) return AKEY_Q;
-        if (Tx >  40 && Tx <  58) return AKEY_W;
-        if (Tx >  58 && Tx <  76) return AKEY_E;
-        if (Tx >  76 && Tx <  95) return AKEY_R;
-        if (Tx >  95 && Tx < 116) return AKEY_T;
-        if (Tx > 116 && Tx < 134) return AKEY_Y;
-        if (Tx > 134 && Tx < 157) return AKEY_U;
-        if (Tx > 134 && Tx < 157) return AKEY_U;
-        if (Tx > 157 && Tx < 177) return AKEY_I;
-        if (Tx > 157 && Tx < 177) return AKEY_I;
-        if (Tx > 177 && Tx < 197) return AKEY_O;
-        if (Tx > 197 && Tx < 215) return AKEY_P;
-        if (Tx > 215 && Tx < 250) return AKEY_BACKSPACE;
+        if (Tx >  23 && Tx <  40) keyPress = AKEY_Q;
+        if (Tx >  40 && Tx <  58) keyPress = AKEY_W;
+        if (Tx >  58 && Tx <  76) keyPress = AKEY_E;
+        if (Tx >  76 && Tx <  95) keyPress = AKEY_R;
+        if (Tx >  95 && Tx < 116) keyPress = AKEY_T;
+        if (Tx > 116 && Tx < 134) keyPress = AKEY_Y;
+        if (Tx > 134 && Tx < 157) keyPress = AKEY_U;
+        if (Tx > 134 && Tx < 157) keyPress = AKEY_U;
+        if (Tx > 157 && Tx < 177) keyPress = AKEY_I;
+        if (Tx > 157 && Tx < 177) keyPress = AKEY_I;
+        if (Tx > 177 && Tx < 197) keyPress = AKEY_O;
+        if (Tx > 197 && Tx < 215) keyPress = AKEY_P;
+        if (Tx > 215 && Tx < 250) keyPress = AKEY_BACKSPACE;
     }
     else if (Ty < 148)  // Home Row ASDF
     {
-        if (Tx >  33 && Tx <  51) return AKEY_A;
-        if (Tx >  51 && Tx <  71) return AKEY_S;
-        if (Tx >  71 && Tx <  91) return AKEY_D;
-        if (Tx >  91 && Tx < 111) return AKEY_F;
-        if (Tx > 111 && Tx < 131) return AKEY_G;
-        if (Tx > 131 && Tx < 151) return AKEY_H;
-        if (Tx > 151 && Tx < 171) return AKEY_J;
-        if (Tx > 171 && Tx < 191) return AKEY_K;
-        if (Tx > 191 && Tx < 210) return AKEY_L;
-        if (Tx > 212 && Tx < 255) return AKEY_RETURN;
+        if (Tx >  33 && Tx <  51) keyPress = AKEY_A;
+        if (Tx >  51 && Tx <  71) keyPress = AKEY_S;
+        if (Tx >  71 && Tx <  91) keyPress = AKEY_D;
+        if (Tx >  91 && Tx < 111) keyPress = AKEY_F;
+        if (Tx > 111 && Tx < 131) keyPress = AKEY_G;
+        if (Tx > 131 && Tx < 151) keyPress = AKEY_H;
+        if (Tx > 151 && Tx < 171) keyPress = AKEY_J;
+        if (Tx > 171 && Tx < 191) keyPress = AKEY_K;
+        if (Tx > 191 && Tx < 210) keyPress = AKEY_L;
+        if (Tx > 212 && Tx < 255) keyPress = AKEY_RETURN;
     }
     else if (Ty < 167)  // Bottom Row ZXCV
     {
-        if (Tx >  40 && Tx <  59) return AKEY_Z;
-        if (Tx >  59 && Tx <  78) return AKEY_X;
-        if (Tx >  78 && Tx <  99) return AKEY_C;
-        if (Tx >  99 && Tx < 119) return AKEY_V;
-        if (Tx > 119 && Tx < 139) return AKEY_B;
-        if (Tx > 139 && Tx < 157) return AKEY_N;
-        if (Tx > 157 && Tx < 176) return AKEY_M;
-        if (Tx > 176 && Tx < 196) return AKEY_COMMA;
-        if (Tx > 196 && Tx < 217) return AKEY_FULLSTOP;
-        if (Tx > 217 && Tx < 236) return AKEY_SLASH;
+        if (Tx >  40 && Tx <  59) keyPress = AKEY_Z;
+        if (Tx >  59 && Tx <  78) keyPress = AKEY_X;
+        if (Tx >  78 && Tx <  99) keyPress = AKEY_C;
+        if (Tx >  99 && Tx < 119) keyPress = AKEY_V;
+        if (Tx > 119 && Tx < 139) keyPress = AKEY_B;
+        if (Tx > 139 && Tx < 157) keyPress = AKEY_N;
+        if (Tx > 157 && Tx < 176) keyPress = AKEY_M;
+        if (Tx > 176 && Tx < 196) keyPress = AKEY_COMMA;
+        if (Tx > 196 && Tx < 217) keyPress = AKEY_FULLSTOP;
+        if (Tx > 217 && Tx < 236) keyPress = AKEY_SLASH;
     }
     else if (Ty < 183)  // Space Bar Row
     {
-        if (Tx >  52 && Tx < 71) return AKEY_SEMICOLON;
-        if (Tx >  90 && Tx < 170) return AKEY_SPACE;
+        if (Tx >  52 && Tx < 71) keyPress = AKEY_SEMICOLON;
+        if (Tx >  90 && Tx < 170) keyPress = AKEY_SPACE;
     }
     
-    return AKEY_NONE; 
+    if (keyPress != AKEY_NONE)
+    {
+        soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
+    }
+    return keyPress; 
 }
     
-#define AKEY_A (AKEY_SHFT | AKEY_a)
-#define AKEY_B (AKEY_SHFT | AKEY_b)
-#define AKEY_C (AKEY_SHFT | AKEY_c)
-#define AKEY_D (AKEY_SHFT | AKEY_d)
-#define AKEY_E (AKEY_SHFT | AKEY_e)
-#define AKEY_F (AKEY_SHFT | AKEY_f)
-#define AKEY_G (AKEY_SHFT | AKEY_g)
-#define AKEY_H (AKEY_SHFT | AKEY_h)
-#define AKEY_I (AKEY_SHFT | AKEY_i)
-#define AKEY_J (AKEY_SHFT | AKEY_j)
-#define AKEY_K (AKEY_SHFT | AKEY_k)
-#define AKEY_L (AKEY_SHFT | AKEY_l)
-#define AKEY_M (AKEY_SHFT | AKEY_m)
-#define AKEY_N (AKEY_SHFT | AKEY_n)
-#define AKEY_O (AKEY_SHFT | AKEY_o)
-#define AKEY_P (AKEY_SHFT | AKEY_p)
-#define AKEY_Q (AKEY_SHFT | AKEY_q)
-#define AKEY_R (AKEY_SHFT | AKEY_r)
-#define AKEY_S (AKEY_SHFT | AKEY_s)
-#define AKEY_T (AKEY_SHFT | AKEY_t)
-#define AKEY_U (AKEY_SHFT | AKEY_u)
-#define AKEY_V (AKEY_SHFT | AKEY_v)
-#define AKEY_W (AKEY_SHFT | AKEY_w)
-#define AKEY_X (AKEY_SHFT | AKEY_x)
-#define AKEY_Y (AKEY_SHFT | AKEY_y)
-#define AKEY_Z (AKEY_SHFT | AKEY_z)    
-
 //---------------------------------------------------------------------------------
 void dsInstallSoundEmuFIFO(void) 
 {
@@ -1016,6 +1032,7 @@ ITCM_CODE void dsMainLoop(void) {
                       {
                          key_code = dsHandleKeyboard(iTx, iTy);
                       }
+                      keys_touch=1;
                   }
                   else
                   {
@@ -1065,7 +1082,7 @@ ITCM_CODE void dsMainLoop(void) {
                     if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                     keys_touch = 1;
                     Atari800_Initialise();
-                    dsLoadGame(last_filename);
+                    dsLoadGame(last_filename, 1, true, bLoadReadOnly);   // Force Restart 
                     irqEnable(IRQ_TIMER2); 
                     fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                 }
@@ -1096,7 +1113,7 @@ ITCM_CODE void dsMainLoop(void) {
                   keys_touch=1;
                   a52FindFiles();
                   romSel=dsWaitForRom();
-                  if (romSel) { etatEmu=A5200_PLAYINIT; dsLoadGame(a5200romlist[ucFicAct].filename); }
+                  if (romSel) { etatEmu=A5200_PLAYINIT; dsLoadGame(a5200romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
                   else { irqEnable(IRQ_TIMER2); }
                   fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                 }
