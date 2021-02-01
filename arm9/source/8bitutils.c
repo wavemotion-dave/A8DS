@@ -829,70 +829,101 @@ int dsHandleKeyboard(int Tx, int Ty)
     int keyPress = AKEY_NONE;
     debug[3] = Tx;
     debug[4] = Ty;
-    if (Ty <= 100) return AKEY_NONE;
+    
+    if (Ty <= 8) return AKEY_NONE;
 
-    if (Ty > 100 && Ty < 115)       // Top Row
+    if (Ty > 8 && Ty < 30)       // Top Row 0-9
     {
-        if (Tx >  14 && Tx <  32) keyPress = AKEY_1;
-        if (Tx >  32 && Tx <  49) keyPress = AKEY_2;
-        if (Tx >  49 && Tx <  71) keyPress = AKEY_3;
-        if (Tx >  71 && Tx <  92) keyPress = AKEY_4;
-        if (Tx >  92 && Tx < 109) keyPress = AKEY_5;
-        if (Tx > 109 && Tx < 129) keyPress = AKEY_6;
-        if (Tx > 129 && Tx < 150) keyPress = AKEY_7;
-        if (Tx > 150 && Tx < 168) keyPress = AKEY_8;
-        if (Tx > 168 && Tx < 188) keyPress = AKEY_9;
-        if (Tx > 188 && Tx < 208) keyPress = AKEY_0;
-        if (Tx > 208 && Tx < 229) keyPress = AKEY_MINUS;
-        if (Tx > 229 && Tx < 250) keyPress = AKEY_EQUAL;
+        if (Tx <  30) keyPress = AKEY_LEFT;
+        else if (Tx <  56) keyPress = AKEY_RIGHT;
+        else if (Tx <  80) keyPress = AKEY_UP;
+        else if (Tx < 104) keyPress = AKEY_DOWN;
+        else if (Tx < 130) keyPress = AKEY_QUESTION;
+        else if (Tx < 152) keyPress = AKEY_DOLLAR;
+        else if (Tx < 179) keyPress = AKEY_EXCLAMATION;
+        else if (Tx < 204) keyPress = AKEY_PARENLEFT;
+        else if (Tx < 229) keyPress = AKEY_PARENRIGHT;
+        else if (Tx < 255) keyPress = AKEY_BACKSPACE;
     }
-    else if (Ty < 131)  // QWERTY Row
+    else if (Ty < 56)  // Row QWERTY
     {
-        if (Tx >  23 && Tx <  40) keyPress = AKEY_Q;
-        if (Tx >  40 && Tx <  58) keyPress = AKEY_W;
-        if (Tx >  58 && Tx <  76) keyPress = AKEY_E;
-        if (Tx >  76 && Tx <  95) keyPress = AKEY_R;
-        if (Tx >  95 && Tx < 116) keyPress = AKEY_T;
-        if (Tx > 116 && Tx < 134) keyPress = AKEY_Y;
-        if (Tx > 134 && Tx < 157) keyPress = AKEY_U;
-        if (Tx > 134 && Tx < 157) keyPress = AKEY_U;
-        if (Tx > 157 && Tx < 177) keyPress = AKEY_I;
-        if (Tx > 157 && Tx < 177) keyPress = AKEY_I;
-        if (Tx > 177 && Tx < 197) keyPress = AKEY_O;
-        if (Tx > 197 && Tx < 215) keyPress = AKEY_P;
-        if (Tx > 215 && Tx < 250) keyPress = AKEY_BACKSPACE;
+        if (Tx <  30) keyPress = AKEY_PLUS;
+        else if (Tx <  56) keyPress = AKEY_MINUS;
+        else if (Tx <  80) keyPress = AKEY_SLASH;
+        else if (Tx < 104) keyPress = AKEY_ASTERISK;
+        else if (Tx < 130) keyPress = AKEY_EQUAL;
+        else if (Tx < 152) keyPress = AKEY_LESS;
+        else if (Tx < 179) keyPress = AKEY_GREATER;
+        else if (Tx < 204) keyPress = AKEY_BRACKETLEFT;
+        else if (Tx < 229) keyPress = AKEY_BRACKETRIGHT;
+        else if (Tx < 255) keyPress = AKEY_DBLQUOTE;
     }
-    else if (Ty < 148)  // Home Row ASDF
+    else if (Ty < 84)  // Numbers Row 1-9,0
     {
-        if (Tx >  33 && Tx <  51) keyPress = AKEY_A;
-        if (Tx >  51 && Tx <  71) keyPress = AKEY_S;
-        if (Tx >  71 && Tx <  91) keyPress = AKEY_D;
-        if (Tx >  91 && Tx < 111) keyPress = AKEY_F;
-        if (Tx > 111 && Tx < 131) keyPress = AKEY_G;
-        if (Tx > 131 && Tx < 151) keyPress = AKEY_H;
-        if (Tx > 151 && Tx < 171) keyPress = AKEY_J;
-        if (Tx > 171 && Tx < 191) keyPress = AKEY_K;
-        if (Tx > 191 && Tx < 210) keyPress = AKEY_L;
-        if (Tx > 212 && Tx < 255) keyPress = AKEY_RETURN;
+        if (Tx <  30) keyPress = AKEY_1;
+        else if (Tx <  56) keyPress = AKEY_2;
+        else if (Tx <  80) keyPress = AKEY_3;
+        else if (Tx < 104) keyPress = AKEY_4;
+        else if (Tx < 130) keyPress = AKEY_5;
+        else if (Tx < 152) keyPress = AKEY_6;
+        else if (Tx < 179) keyPress = AKEY_7;
+        else if (Tx < 204) keyPress = AKEY_8;
+        else if (Tx < 229) keyPress = AKEY_9;
+        else if (Tx < 255) keyPress = AKEY_0;
     }
-    else if (Ty < 167)  // Bottom Row ZXCV
+    else if (Ty < 107)  // QWERTY Row
     {
-        if (Tx >  40 && Tx <  59) keyPress = AKEY_Z;
-        if (Tx >  59 && Tx <  78) keyPress = AKEY_X;
-        if (Tx >  78 && Tx <  99) keyPress = AKEY_C;
-        if (Tx >  99 && Tx < 119) keyPress = AKEY_V;
-        if (Tx > 119 && Tx < 139) keyPress = AKEY_B;
-        if (Tx > 139 && Tx < 157) keyPress = AKEY_N;
-        if (Tx > 157 && Tx < 176) keyPress = AKEY_M;
-        if (Tx > 176 && Tx < 196) keyPress = AKEY_COMMA;
-        if (Tx > 196 && Tx < 217) keyPress = AKEY_FULLSTOP;
-        if (Tx > 217 && Tx < 236) keyPress = AKEY_SLASH;
+        if (Tx <  30) keyPress = AKEY_Q;
+        else if (Tx <  56) keyPress = AKEY_W;
+        else if (Tx <  80) keyPress = AKEY_E;
+        else if (Tx < 104) keyPress = AKEY_R;
+        else if (Tx < 130) keyPress = AKEY_T;
+        else if (Tx < 152) keyPress = AKEY_Y;
+        else if (Tx < 179) keyPress = AKEY_U;
+        else if (Tx < 204) keyPress = AKEY_I;
+        else if (Tx < 229) keyPress = AKEY_O;
+        else if (Tx < 255) keyPress = AKEY_P;
     }
-    else if (Ty < 183)  // Space Bar Row
+    else if (Ty < 134)  // Home Row ASDF-JKL;
     {
-        if (Tx >  52 && Tx < 71) keyPress = AKEY_SEMICOLON;
-        if (Tx >  90 && Tx < 170) keyPress = AKEY_SPACE;
+        if (Tx <  30) keyPress = AKEY_A;
+        else if (Tx <  56) keyPress = AKEY_S;
+        else if (Tx <  80) keyPress = AKEY_D;
+        else if (Tx < 104) keyPress = AKEY_F;
+        else if (Tx < 130) keyPress = AKEY_G;
+        else if (Tx < 152) keyPress = AKEY_H;
+        else if (Tx < 179) keyPress = AKEY_J;
+        else if (Tx < 204) keyPress = AKEY_K;
+        else if (Tx < 229) keyPress = AKEY_L;
+        else if (Tx < 255) keyPress = AKEY_SEMICOLON;
     }
+    else if (Ty < 162)  // Bottom Row ZXCV...
+    {
+        if (Tx <  30) keyPress = AKEY_Z;
+        else if (Tx <  56) keyPress = AKEY_X;
+        else if (Tx <  80) keyPress = AKEY_C;
+        else if (Tx < 104) keyPress = AKEY_V;
+        else if (Tx < 130) keyPress = AKEY_B;
+        else if (Tx < 152) keyPress = AKEY_N;
+        else if (Tx < 179) keyPress = AKEY_M;
+        else if (Tx < 204) keyPress = AKEY_COMMA;
+        else if (Tx < 229) keyPress = AKEY_FULLSTOP;
+        else if (Tx < 255) keyPress = AKEY_COLON;
+    }
+    else
+    {
+        if (Tx <  30) keyPress = AKEY_NONE;
+        else if (Tx <  56) keyPress = AKEY_NONE;
+        else if (Tx <  80) keyPress = AKEY_NONE;
+        else if (Tx < 104) keyPress = AKEY_NONE;
+        else if (Tx < 130) keyPress = AKEY_NONE;
+        else if (Tx < 152) keyPress = AKEY_NONE;
+        else if (Tx < 179) keyPress = AKEY_SPACE;
+        else if (Tx < 204) keyPress = AKEY_SPACE;
+        else if (Tx < 229) keyPress = AKEY_RETURN;
+        else if (Tx < 255) keyPress = AKEY_RETURN;
+    }
+        
     
     if (keyPress != AKEY_NONE)
     {
@@ -1022,7 +1053,7 @@ ITCM_CODE void dsMainLoop(void) {
             {
                   if (bShowKeyboard)
                   {
-                      if (iTy < 80) // Touch in the upper part of the screen closes the keyboard...
+                      if ((iTy > 165) && (iTx < 30)) // Touch in the lower corner of the screen closes the keyboard...
                       {
                           bShowKeyboard = false;
                           keys_touch = 1;
