@@ -46,6 +46,12 @@ Missing :
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V1.0 : 02-Feb-2021 by wavemotion-dave
+  * Improved keyboard support. 
+  * PAL/NTSC toggle (in game select). 
+  * Ability to load multiple disks for multi-disk games (in game select).
+  * Other cleanups as time permits...
+
 V0.9 : 31-Jan-2021 by wavemotion-dave
   * Added keyboard support. Cleaned up on-screen graphics. Added button support.
 
