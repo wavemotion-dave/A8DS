@@ -314,11 +314,13 @@ static void SizeOfSector(UBYTE unit, int sector, int *sz, ULONG *ofs)
 		*ofs = offset;
 }
 
+extern void dsShowDiskActivity(void);
+
 static int SeekSector(int unit, int sector)
 {
 	ULONG offset;
 	int size;
-
+    dsShowDiskActivity();
 	sio_last_sector = sector;
 	sprintf(sio_status, "%d: %d", unit + 1, sector);
 	SizeOfSector((UBYTE) unit, sector, &size, &offset);
@@ -333,6 +335,8 @@ static int ReadSector(int unit, int sector, UBYTE *buffer)
 	int size;
 	if (start_binloading)
 		return BIN_loader_start(buffer);
+    
+    dsShowDiskActivity();
 
 	io_success[unit] = -1;
 	if (drive_status[unit] == Off)
@@ -354,6 +358,7 @@ static int ReadSector(int unit, int sector, UBYTE *buffer)
 static int WriteSector(int unit, int sector, const UBYTE *buffer)
 {
 	int size;
+    dsShowDiskActivity();
 	io_success[unit] = -1;
 	if (drive_status[unit] == Off)
 		return 0;
@@ -479,6 +484,8 @@ static int ReadStatusBlock(int unit, UBYTE *buffer)
 	int spt;
 	if (drive_status[unit] == Off)
 		return 0;
+
+    dsShowDiskActivity();
 	/* default to 1 track, 1 side for non-standard images */
 	tracks = 1;
 	heads = 1;
@@ -549,6 +556,7 @@ static int DriveStatus(int unit, UBYTE *buffer)
 
 	if (drive_status[unit] == Off)
 		return 0;
+    dsShowDiskActivity();
 	buffer[0] = 16;         /* drive active */
 	buffer[1] = disk[unit] != NULL ? 255 /* WD 177x OK */ : 127 /* no disk */;
 	if (io_success[unit] != 0)
@@ -999,6 +1007,7 @@ static UBYTE WriteSectorBack(void)
 /* Put a byte that comes out of POKEY. So get it here... */
 void SIO_PutByte(int byte)
 {
+    dsShowDiskActivity();
 	switch (TransferStatus) {
 	case SIO_CommandFrame:
 		if (CommandIndex < ExpectedBytes) {
@@ -1057,6 +1066,8 @@ int SIO_GetByte(void)
 {
 	int byte = 0;
 
+    dsShowDiskActivity();
+    
 	switch (TransferStatus) {
 	case SIO_StatusRead:
 		byte = Command_Frame();		/* Handle now the command */

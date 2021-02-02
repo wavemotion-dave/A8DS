@@ -52,7 +52,7 @@ signed char *psound_buffer;
 int alpha_1 = 8;
 int alpha_2 = 8;
 
-#define MAX_DEBUG 7
+#define MAX_DEBUG 8
 int debug[MAX_DEBUG]={0};
 //#define DEBUG_DUMP
 
@@ -90,6 +90,26 @@ static void DumpDebugData(void)
         dsPrintValue(0,3+i,0, dbgbuf);
     }
 #endif
+}
+
+void dsClearDiskActivity(void)
+{
+    char buf[5];
+    
+    buf[0] = ' ';
+    buf[1] = 0;
+    dsPrintValue(15,0,0, buf);
+}
+
+void dsShowDiskActivity(void)
+{
+    static char activity[7] = {'-','+','*','*','+','+','+'};
+    char buf[5];
+    static u8 actidx=0;
+    
+    buf[1] = 0;
+    buf[0] = activity[++actidx & 0x7];
+    dsPrintValue(15,0,0, buf);
 }
 
 void VsoundHandler(void) 
@@ -494,6 +514,9 @@ bool bLoadAndBoot = true;
 void dsDisplayLoadOptions(void)
 {
   char tmpBuf[32];
+    
+  sprintf(tmpBuf, "     %s", (tv_mode == TV_NTSC ? "NTSC":"PAL "));
+  dsPrintValue(14,0,0,tmpBuf);
   sprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
   dsPrintValue(14,1,0,tmpBuf);
   sprintf(tmpBuf, "[%c]  BOOT LOAD", (bLoadAndBoot ? 'Y':' '));
@@ -516,7 +539,7 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
     
   dsPrintValue(31,5,0,(char *) (NoDebGame>0 ? "<" : " "));
   dsPrintValue(31,22,0,(char *) (NoDebGame+14<counta5200 ? ">" : " "));
-  sprintf(szName,"%s","A TO SELECT A GAME, B TO GO BACK");
+  sprintf(szName,"%s","A=CHOOSE, B=BACK, SEL=PAL/NTSC");
   dsPrintValue(16-strlen(szName)/2,23,0,szName);
   for (ucBcl=0;ucBcl<17; ucBcl++) {
     ucGame= ucBcl+NoDebGame;
@@ -653,7 +676,20 @@ unsigned int dsWaitForRom(void)
       bDone=true;
       while (keysCurrent() & KEY_B);
     }
-
+    static int last_sel_key = 0;
+    if (keysCurrent() & KEY_SELECT) 
+    {
+        if (last_sel_key != KEY_SELECT)
+        {
+            if (tv_mode == TV_NTSC) 
+                tv_mode = TV_PAL;
+            else
+                tv_mode = TV_NTSC;
+            dsDisplayLoadOptions();
+            last_sel_key = KEY_SELECT;
+        }
+    } else last_sel_key=0;
+      
     if (keysCurrent() & KEY_A) {
       if (!a5200romlist[ucFicAct].directory) {
         bRet=true;
@@ -1061,6 +1097,7 @@ ITCM_CODE void dsMainLoop(void) {
             if (showFps) { siprintf(fpsbuf,"%03d",gTotalAtariFrames); dsPrintValue(0,0,0, fpsbuf); } // Show FPS
             gTotalAtariFrames = 0;
             DumpDebugData();
+            dsClearDiskActivity();
         }
         
         // Execute one frame
