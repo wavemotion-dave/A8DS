@@ -24,7 +24,13 @@ void irqVBlank(void) {
 // Program entry point
 int main(int argc, char **argv) 
 {
-    char *bios_filename = "atarixl.rom";
+  char *bios_filename = "atarixl.rom";
+    
+  if (machine_type == MACHINE_OSB)
+  {
+      bios_filename = "atariosb.rom";
+  }
+    
   // Init sound
   consoleDemoInit();
   soundEnable();

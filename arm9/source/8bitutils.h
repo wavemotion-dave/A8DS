@@ -16,7 +16,7 @@ typedef enum {
 } FifoMesType;
 
 typedef struct FICtoLoad {
-  char filename[255];
+  char filename[300];
   bool directory;
   unsigned int uCrc;
 } FICA5200;

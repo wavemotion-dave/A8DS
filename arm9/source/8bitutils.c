@@ -371,14 +371,21 @@ int load_os(char *filename )
   }
   else
   {
-    fread(atari_os, 0x4000, 1, romfile);
+    if (machine_type == MACHINE_OSB)
+    {
+        fread(atari_os, 0x2800, 1, romfile);
+    }
+    else
+    {
+        fread(atari_os, 0x4000, 1, romfile);
+    }
     fclose(romfile);  
   }
   
  	return 0;
 } /* end load_os */
 
-char last_filename[256] = {0};
+char last_filename[300] = {0};
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly) 
 {
   unsigned int index;
@@ -394,12 +401,6 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
     {	
       // Initialize the virtual console emulation 
       dsShowScreenEmu();
-        
-      //tbd-dsb put into binload?        
-      myGame_offset_x = 32;
-      myGame_offset_y = 20;
-      myGame_scale_x = 256;
-      myGame_scale_y = 256;
         
       memset(sound_buffer, 0x00, SNDLENGTH);
 
@@ -503,7 +504,7 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
 {
   unsigned int ucBcl,ucGame;
   u8 maxLen;
-  char szName[256];
+  char szName[300];
   
   // Display all games if possible
   unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
@@ -520,7 +521,7 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
   for (ucBcl=0;ucBcl<17; ucBcl++) {
     ucGame= ucBcl+NoDebGame;
     if (ucGame < counta5200) {
-      char szName2[256];
+      char szName2[300];
       maxLen=strlen(a5200romlist[ucGame].filename);
       strcpy(szName,a5200romlist[ucGame].filename);
       if (maxLen>29) szName[29]='\0';
@@ -544,7 +545,7 @@ unsigned int dsWaitForRom(void)
 {
   bool bDone=false, bRet=false;
   u32 ucHaut=0x00, ucBas=0x00,ucSHaut=0x00, ucSBas=0x00,romSelected= 0, firstRomDisplay=0,nbRomPerPage, uNbRSPage, uLenFic=0,ucFlip=0, ucFlop=0;
-  char szName[64];
+  char szName[300];
 
   decompress(bgFileSelTiles, bgGetGfxPtr(bg0b), LZ77Vram);
   decompress(bgFileSelMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -731,6 +732,10 @@ unsigned int dsWaitForRom(void)
   return bRet;
 }
 
+static u16 shift=0;
+static u16 ctrl=0;
+static u16 sav1 = 0;
+static u16 sav2 = 0;
 void dsShowKeyboard(void)
 {
   decompress(bgKeyboardTiles, bgGetGfxPtr(bg0b), LZ77Vram);
@@ -739,6 +744,8 @@ void dsShowKeyboard(void)
   unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
   swiWaitForVBlank();
+  sav1 = *(bgGetMapPtr(bg1b) + 680);
+  sav2 = *(bgGetMapPtr(bg1b) + 683);
 }
 
 void dsShowHelp(void)
@@ -873,39 +880,39 @@ int dsHandleKeyboard(int Tx, int Ty)
     }
     else if (Ty < 107)  // QWERTY Row
     {
-        if (Tx <  30) keyPress = AKEY_Q;
-        else if (Tx <  56) keyPress = AKEY_W;
-        else if (Tx <  80) keyPress = AKEY_E;
-        else if (Tx < 104) keyPress = AKEY_R;
-        else if (Tx < 130) keyPress = AKEY_T;
-        else if (Tx < 152) keyPress = AKEY_Y;
-        else if (Tx < 179) keyPress = AKEY_U;
-        else if (Tx < 204) keyPress = AKEY_I;
-        else if (Tx < 229) keyPress = AKEY_O;
-        else if (Tx < 255) keyPress = AKEY_P;
+        if (Tx <  30) keyPress = (shift ? AKEY_q : AKEY_Q);
+        else if (Tx <  56) keyPress = (shift ? AKEY_w : AKEY_W);
+        else if (Tx <  80) keyPress = (shift ? AKEY_e : AKEY_E);
+        else if (Tx < 104) keyPress = (shift ? AKEY_r : AKEY_R);
+        else if (Tx < 130) keyPress = (shift ? AKEY_t : AKEY_T);
+        else if (Tx < 152) keyPress = (shift ? AKEY_y : AKEY_Y);
+        else if (Tx < 179) keyPress = (shift ? AKEY_u : AKEY_U);
+        else if (Tx < 204) keyPress = (shift ? AKEY_i : AKEY_I);
+        else if (Tx < 229) keyPress = (shift ? AKEY_o : AKEY_O);
+        else if (Tx < 255) keyPress = (shift ? AKEY_p : AKEY_P);
     }
     else if (Ty < 134)  // Home Row ASDF-JKL;
     {
-        if (Tx <  30) keyPress = AKEY_A;
-        else if (Tx <  56) keyPress = AKEY_S;
-        else if (Tx <  80) keyPress = AKEY_D;
-        else if (Tx < 104) keyPress = AKEY_F;
-        else if (Tx < 130) keyPress = AKEY_G;
-        else if (Tx < 152) keyPress = AKEY_H;
-        else if (Tx < 179) keyPress = AKEY_J;
-        else if (Tx < 204) keyPress = AKEY_K;
-        else if (Tx < 229) keyPress = AKEY_L;
+        if (Tx <  30) keyPress = (shift ? AKEY_a : AKEY_A);
+        else if (Tx <  56) keyPress = (shift ? AKEY_s : AKEY_S);
+        else if (Tx <  80) keyPress = (shift ? AKEY_d : AKEY_D);
+        else if (Tx < 104) keyPress = (shift ? AKEY_f : AKEY_F);
+        else if (Tx < 130) keyPress = (shift ? AKEY_g : AKEY_G);
+        else if (Tx < 152) keyPress = (shift ? AKEY_h : AKEY_H);
+        else if (Tx < 179) keyPress = (shift ? AKEY_j : AKEY_J);
+        else if (Tx < 204) keyPress = (shift ? AKEY_k : AKEY_K);
+        else if (Tx < 229) keyPress = (shift ? AKEY_l : AKEY_L);
         else if (Tx < 255) keyPress = AKEY_SEMICOLON;
     }
     else if (Ty < 162)  // Bottom Row ZXCV...
     {
-        if (Tx <  30) keyPress = AKEY_Z;
-        else if (Tx <  56) keyPress = AKEY_X;
-        else if (Tx <  80) keyPress = AKEY_C;
-        else if (Tx < 104) keyPress = AKEY_V;
-        else if (Tx < 130) keyPress = AKEY_B;
-        else if (Tx < 152) keyPress = AKEY_N;
-        else if (Tx < 179) keyPress = AKEY_M;
+        if (Tx <  30) keyPress = (shift ? AKEY_z : AKEY_Z);
+        else if (Tx <  56) keyPress = (shift ? AKEY_x : AKEY_X);
+        else if (Tx <  80) keyPress = (shift ? AKEY_c : AKEY_C);
+        else if (Tx < 104) keyPress = (shift ? AKEY_v : AKEY_V);
+        else if (Tx < 130) keyPress = (shift ? AKEY_b : AKEY_B);
+        else if (Tx < 152) keyPress = (shift ? AKEY_n : AKEY_N);
+        else if (Tx < 179) keyPress = (shift ? AKEY_m : AKEY_M);
         else if (Tx < 204) keyPress = AKEY_COMMA;
         else if (Tx < 229) keyPress = AKEY_FULLSTOP;
         else if (Tx < 255) keyPress = AKEY_COLON;
@@ -914,16 +921,51 @@ int dsHandleKeyboard(int Tx, int Ty)
     {
         if (Tx <  30) keyPress = AKEY_NONE;
         else if (Tx <  56) keyPress = AKEY_NONE;
-        else if (Tx <  80) keyPress = AKEY_NONE;
-        else if (Tx < 104) keyPress = AKEY_NONE;
-        else if (Tx < 130) keyPress = AKEY_NONE;
-        else if (Tx < 152) keyPress = AKEY_NONE;
+        else if (Tx <  80) keyPress = AKEY_SHFT;
+        else if (Tx < 104) keyPress = AKEY_CTRL;
+        else if (Tx < 130) keyPress = AKEY_CTRL_C;
+        else if (Tx < 152) keyPress = AKEY_ESCAPE;
         else if (Tx < 179) keyPress = AKEY_SPACE;
         else if (Tx < 204) keyPress = AKEY_SPACE;
         else if (Tx < 229) keyPress = AKEY_RETURN;
         else if (Tx < 255) keyPress = AKEY_RETURN;
     }
-        
+    
+    if (keyPress == AKEY_SHFT)
+    {
+        if (shift == 0)
+        {
+            *(bgGetMapPtr(bg1b)+680) = 60;
+            shift = 1;
+        }
+        else
+        {
+            *(bgGetMapPtr(bg1b)+680) = sav1;
+            shift = 0;
+        }
+        keyPress = AKEY_NONE;
+    }
+
+    if (keyPress == AKEY_CTRL)
+    {
+        if (ctrl == 0)
+        {
+            *(bgGetMapPtr(bg1b)+683) = 60;
+            ctrl = 1;
+        }
+        else
+        {
+            *(bgGetMapPtr(bg1b)+683) = sav2;
+            ctrl = 0;
+        }
+        keyPress = AKEY_NONE;
+    }
+    else if (ctrl)  
+    {
+        keyPress |= AKEY_CTRL;
+        ctrl=0;
+        *(bgGetMapPtr(bg1b)+683) = sav2;
+    }
     
     if (keyPress != AKEY_NONE)
     {
@@ -967,6 +1009,11 @@ ITCM_CODE void dsMainLoop(void) {
   TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
   TIMER1_DATA=0;
   TIMER1_CR=TIMER_ENABLE | TIMER_DIV_1024;  
+    
+  myGame_offset_x = 32;
+  myGame_offset_y = 20;
+  myGame_scale_x = 256;
+  myGame_scale_y = 256;
   
   while(etatEmu != A5200_QUITSTDS) 
   {
@@ -1053,7 +1100,7 @@ ITCM_CODE void dsMainLoop(void) {
             {
                   if (bShowKeyboard)
                   {
-                      if ((iTy > 165) && (iTx < 30)) // Touch in the lower corner of the screen closes the keyboard...
+                      if ((iTy > 165) && (iTx < 50)) // Touch in the lower corner of the screen closes the keyboard...
                       {
                           bShowKeyboard = false;
                           keys_touch = 1;
@@ -1193,7 +1240,7 @@ void a52FindFiles(void)
 	struct stat statbuf;
   DIR *pdir;
   struct dirent *pent;
-  char filenametmp[255];
+  char filenametmp[300];
   
   counta5200 = countfiles= 0;
   
