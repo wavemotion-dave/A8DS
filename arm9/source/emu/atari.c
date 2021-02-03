@@ -371,37 +371,23 @@ UNALIGNED_STAT_DEF(memory_write_word_stat)
 UNALIGNED_STAT_DEF(memory_read_aligned_word_stat)
 UNALIGNED_STAT_DEF(memory_write_aligned_word_stat)
 
-int Atari800_Exit(int run_monitor) {
+int Atari800_Exit(int run_monitor) 
+{
+    extern bool bAtariCrash;
 	int restart;
 
-#ifdef STAT_UNALIGNED_WORDS
-	printf("(ptr&7) atari_screen  pm_scanline  _____ memory ______  memory (aligned addr)\n");
-	printf("          32-bit W      32-bit R   16-bit R   16-bit W   16-bit R   16-bit W\n");
-	{
-		unsigned int sums[6] = {0, 0, 0, 0, 0, 0};
-		int i;
-		for (i = 0; i < 8; i++) {
-			printf("%6d%12u%14u%11u%11u%11u%11u\n", i,
-				atari_screen_write_long_stat[i], pm_scanline_read_long_stat[i],
-				memory_read_word_stat[i], memory_write_word_stat[i],
-				memory_read_aligned_word_stat[i], memory_write_aligned_word_stat[i]);
-			sums[0] += atari_screen_write_long_stat[i];
-			sums[1] += pm_scanline_read_long_stat[i];
-			sums[2] += memory_read_word_stat[i];
-			sums[3] += memory_write_word_stat[i];
-			sums[4] += memory_read_aligned_word_stat[i];
-			sums[5] += memory_write_aligned_word_stat[i];
-		}
-		printf("total:%12u%14u%11u%11u%11u%11u\n",
-			sums[0], sums[1], sums[2], sums[3], sums[4], sums[5]);
-	}
-#endif /* STAT_UNALIGNED_WORDS */
 	restart = Atari_Exit(run_monitor);
-#ifndef __PLUS
-	if (!restart) {
+	if (!restart) 
+    {
 		SIO_Exit();	/* umount disks, so temporary files are deleted */
 	}
-#endif /* __PLUS */
+    
+    //TBD-DSB For now we are keeping the system alive. 
+    // Mainly so the user can click into another game 
+    // rather than have the emulator just exit.
+    bAtariCrash = true;
+    
+    restart = 1;
 	return restart;
 }
 

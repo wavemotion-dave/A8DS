@@ -56,6 +56,8 @@ int alpha_2 = 8;
 int debug[MAX_DEBUG]={0};
 //#define DEBUG_DUMP
 
+bool bAtariCrash = false;
+
 static void DumpDebugData(void)
 {
 #ifdef DEBUG_DUMP
@@ -421,6 +423,8 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
     {	
       // Initialize the virtual console emulation 
       dsShowScreenEmu();
+      
+      bAtariCrash = false;
         
       memset(sound_buffer, 0x00, SNDLENGTH);
 
@@ -916,39 +920,39 @@ int dsHandleKeyboard(int Tx, int Ty)
     }
     else if (Ty < 107)  // QWERTY Row
     {
-        if (Tx <  30) keyPress = (shift ? AKEY_q : AKEY_Q);
-        else if (Tx <  56) keyPress = (shift ? AKEY_w : AKEY_W);
-        else if (Tx <  80) keyPress = (shift ? AKEY_e : AKEY_E);
-        else if (Tx < 104) keyPress = (shift ? AKEY_r : AKEY_R);
-        else if (Tx < 130) keyPress = (shift ? AKEY_t : AKEY_T);
-        else if (Tx < 152) keyPress = (shift ? AKEY_y : AKEY_Y);
-        else if (Tx < 179) keyPress = (shift ? AKEY_u : AKEY_U);
-        else if (Tx < 204) keyPress = (shift ? AKEY_i : AKEY_I);
-        else if (Tx < 229) keyPress = (shift ? AKEY_o : AKEY_O);
-        else if (Tx < 255) keyPress = (shift ? AKEY_p : AKEY_P);
+        if (Tx <  30) keyPress = (shift ? AKEY_Q : AKEY_q);
+        else if (Tx <  56) keyPress = (shift ? AKEY_W : AKEY_w);
+        else if (Tx <  80) keyPress = (shift ? AKEY_E : AKEY_e);
+        else if (Tx < 104) keyPress = (shift ? AKEY_R : AKEY_r);
+        else if (Tx < 130) keyPress = (shift ? AKEY_T : AKEY_t);
+        else if (Tx < 152) keyPress = (shift ? AKEY_Y : AKEY_y);
+        else if (Tx < 179) keyPress = (shift ? AKEY_U : AKEY_u);
+        else if (Tx < 204) keyPress = (shift ? AKEY_I : AKEY_i);
+        else if (Tx < 229) keyPress = (shift ? AKEY_O : AKEY_o);
+        else if (Tx < 255) keyPress = (shift ? AKEY_P : AKEY_p);
     }
     else if (Ty < 134)  // Home Row ASDF-JKL;
     {
-        if (Tx <  30) keyPress = (shift ? AKEY_a : AKEY_A);
-        else if (Tx <  56) keyPress = (shift ? AKEY_s : AKEY_S);
-        else if (Tx <  80) keyPress = (shift ? AKEY_d : AKEY_D);
-        else if (Tx < 104) keyPress = (shift ? AKEY_f : AKEY_F);
-        else if (Tx < 130) keyPress = (shift ? AKEY_g : AKEY_G);
-        else if (Tx < 152) keyPress = (shift ? AKEY_h : AKEY_H);
-        else if (Tx < 179) keyPress = (shift ? AKEY_j : AKEY_J);
-        else if (Tx < 204) keyPress = (shift ? AKEY_k : AKEY_K);
-        else if (Tx < 229) keyPress = (shift ? AKEY_l : AKEY_L);
+        if (Tx <  30) keyPress = (shift ? AKEY_A : AKEY_a);
+        else if (Tx <  56) keyPress = (shift ? AKEY_S : AKEY_s);
+        else if (Tx <  80) keyPress = (shift ? AKEY_D : AKEY_d);
+        else if (Tx < 104) keyPress = (shift ? AKEY_F : AKEY_f);
+        else if (Tx < 130) keyPress = (shift ? AKEY_G : AKEY_g);
+        else if (Tx < 152) keyPress = (shift ? AKEY_H : AKEY_h);
+        else if (Tx < 179) keyPress = (shift ? AKEY_J : AKEY_j);
+        else if (Tx < 204) keyPress = (shift ? AKEY_K : AKEY_k);
+        else if (Tx < 229) keyPress = (shift ? AKEY_L : AKEY_l);
         else if (Tx < 255) keyPress = AKEY_SEMICOLON;
     }
     else if (Ty < 162)  // Bottom Row ZXCV...
     {
-        if (Tx <  30) keyPress = (shift ? AKEY_z : AKEY_Z);
-        else if (Tx <  56) keyPress = (shift ? AKEY_x : AKEY_X);
-        else if (Tx <  80) keyPress = (shift ? AKEY_c : AKEY_C);
-        else if (Tx < 104) keyPress = (shift ? AKEY_v : AKEY_V);
-        else if (Tx < 130) keyPress = (shift ? AKEY_b : AKEY_B);
-        else if (Tx < 152) keyPress = (shift ? AKEY_n : AKEY_N);
-        else if (Tx < 179) keyPress = (shift ? AKEY_m : AKEY_M);
+        if (Tx <  30) keyPress = (shift ? AKEY_Z : AKEY_z);
+        else if (Tx <  56) keyPress = (shift ? AKEY_X : AKEY_x);
+        else if (Tx <  80) keyPress = (shift ? AKEY_C : AKEY_c);
+        else if (Tx < 104) keyPress = (shift ? AKEY_V : AKEY_v);
+        else if (Tx < 130) keyPress = (shift ? AKEY_B : AKEY_b);
+        else if (Tx < 152) keyPress = (shift ? AKEY_N : AKEY_n);
+        else if (Tx < 179) keyPress = (shift ? AKEY_M : AKEY_m);
         else if (Tx < 204) keyPress = AKEY_COMMA;
         else if (Tx < 229) keyPress = AKEY_FULLSTOP;
         else if (Tx < 255) keyPress = AKEY_COLON;
@@ -959,7 +963,7 @@ int dsHandleKeyboard(int Tx, int Ty)
         else if (Tx <  56) keyPress = AKEY_NONE;
         else if (Tx <  80) keyPress = AKEY_SHFT;
         else if (Tx < 104) keyPress = AKEY_CTRL;
-        else if (Tx < 130) keyPress = AKEY_CTRL_C;
+        else if (Tx < 130) keyPress = AKEY_BREAK;
         else if (Tx < 152) keyPress = AKEY_ESCAPE;
         else if (Tx < 179) keyPress = AKEY_SPACE;
         else if (Tx < 204) keyPress = AKEY_SPACE;
@@ -1098,6 +1102,7 @@ ITCM_CODE void dsMainLoop(void) {
             gTotalAtariFrames = 0;
             DumpDebugData();
             dsClearDiskActivity();
+            if(bAtariCrash) dsPrintValue(1,23,0, "GAME CRASH - PICK ANOTHER GAME");
         }
         
         // Execute one frame

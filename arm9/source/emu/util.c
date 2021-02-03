@@ -177,7 +177,7 @@ void *Util_malloc(size_t size)
 		printf("Fatal error: out of memory\n");
 		exit(1);
 	}
-  memset(ptr, 0, size);
+    memset(ptr, 0, size);
 	return ptr;
 }
 

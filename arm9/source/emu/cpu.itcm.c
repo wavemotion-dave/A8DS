@@ -1233,10 +1233,14 @@ void GO(int limit)
 	OPCODE(93)				/* SHA (ab),y [unofficial, UNSTABLE - Store A AND X AND (H+1) ?] (Fox) */
 		/* It seems previous memory value is important - also in 9f */
 		ZPAGE;
-		data = dGetByte((UBYTE) (addr + 1));	/* Get high byte from zpage */
-		data = A & X & (data + 1);
-		addr = dGetWord(addr) + Y;
-		PutByte(addr, data);
+		addr = zGetWord(addr);
+		data = A & X & ((addr >> 8) + 1);
+		if ((addr & 0xff) + Y > 0xff) { /* if it crosses a page */
+			PutByte(((addr + Y) & 0xff) | (data << 8), data);
+		}
+		else {
+			PutByte(addr + Y, data);
+		}
 		DONE
 
 	OPCODE(94)				/* STY ab,x */
@@ -1279,8 +1283,12 @@ void GO(int limit)
 		ABSOLUTE;
 		S = A & X;
 		data = S & ((addr >> 8) + 1);
-		addr += Y;
-		PutByte(addr, data);
+		if ((addr & 0xff) + Y > 0xff) { /* if it crosses a page */
+			PutByte(((addr + Y) & 0xff) | (data << 8), data);
+		}
+		else {
+			PutByte(addr + Y, data);
+		}
 		DONE
 
 	OPCODE(9c)				/* SHY abcd,x [unofficial - Store Y and (H+1)] (Fox) */
@@ -1288,8 +1296,12 @@ void GO(int limit)
 		ABSOLUTE;
 		/* MPC 05/24/00 */
 		data = Y & ((UBYTE) ((addr >> 8) + 1));
-		addr += X;
-		PutByte(addr, data);
+		if ((addr & 0xff) + X > 0xff) { /* if it crosses a page */
+			PutByte(((addr + X) & 0xff) | (data << 8), data);
+		}
+		else {
+			PutByte(addr + X, data);
+		}
 		DONE
 
 	OPCODE(9d)				/* STA abcd,x */
@@ -1302,15 +1314,23 @@ void GO(int limit)
 		ABSOLUTE;
 		/* MPC 05/24/00 */
 		data = X & ((UBYTE) ((addr >> 8) + 1));
-		addr += Y;
-		PutByte(addr, data);
+		if ((addr & 0xff) + Y > 0xff) { /* if it crosses a page */
+			PutByte(((addr + Y) & 0xff) | (data << 8), data);
+		}
+		else {
+			PutByte(addr + Y, data);
+		}
 		DONE
 
 	OPCODE(9f)				/* SHA abcd,y [unofficial, UNSTABLE - Store A AND X AND (H+1) ?] (Fox) */
 		ABSOLUTE;
 		data = A & X & ((addr >> 8) + 1);
-		addr += Y;
-		PutByte(addr, data);
+		if ((addr & 0xff) + Y > 0xff) { /* if it crosses a page */
+			PutByte(((addr + Y) & 0xff) | (data << 8), data);
+		}
+		else {
+			PutByte(addr + Y, data);
+		}
 		DONE
 
 	OPCODE(a0)				/* LDY #ab */
@@ -1579,8 +1599,8 @@ void GO(int limit)
 	OPCODE(d5)				/* CMP ab,x */
 		ZPAGE_X;
 		CMP(dGetByte(addr));
-		Z = N = A - data;
-		C = (A >= data);
+		//Z = N = A - data;
+		//C = (A >= data);
 		DONE
 
 	OPCODE(d6)				/* DEC ab,x */

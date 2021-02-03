@@ -7,6 +7,8 @@
 #include <windows.h>
 #endif
 
+extern int debug[];
+
 /* Fundamental declarations ---------------------------------------------- */
 
 //#define DIRTYRECT
