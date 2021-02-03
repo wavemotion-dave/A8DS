@@ -46,6 +46,12 @@ Missing :
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V1.1 : 03-Feb-2021 by wavemotion-dave
+  * Fixed BRK on keyboard.
+  * If game crashes, message is shown and emulator no longer auto-quits.
+  * Improved loading of games so first load doesn't fail.
+  * Drive activity light, file read activity for large directories, etc.
+  
 V1.0 : 02-Feb-2021 by wavemotion-dave
   * Improved keyboard support. 
   * PAL/NTSC toggle (in game select). 

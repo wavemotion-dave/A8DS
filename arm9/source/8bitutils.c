@@ -36,6 +36,12 @@ int myGame_offset_y = 20;
 int myGame_scale_x = 256;
 int myGame_scale_y = 256;
 
+extern u32 trig0, trig1;
+extern u32 stick0;
+extern u32 stick1;
+int full_speed = 0;
+
+
 
 #define  cxBG (myGame_offset_x<<8)
 #define  cyBG (myGame_offset_y<<8)
@@ -410,15 +416,25 @@ int load_os(char *filename )
 char last_filename[300] = {0};
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly) 
 {
-  unsigned int index;
-  strcpy(last_filename, filename);
+    unsigned int index;
+    strcpy(last_filename, filename);
   
-  // Free buffer if needed
-  TIMER2_CR=0; irqDisable(IRQ_TIMER2); 
-	if (filebuffer != 0)
-		free(filebuffer);
-  
-    // load card game if ok
+    // Free buffer if needed
+    TIMER2_CR=0; irqDisable(IRQ_TIMER2); 
+    if (filebuffer != 0) free(filebuffer);
+
+    // If we are cold starting, make sure we have a clean slate...
+    if (bRestart)
+    {
+      full_speed = 0;  
+      myGame_offset_x = 32;
+      myGame_offset_y = 20;
+      myGame_scale_x = 256;
+      myGame_scale_y = 256;
+      Atari800_Initialise();   
+    }
+    
+      // load card game if ok
     if (Atari800_OpenFile(filename, bRestart, disk_num, bReadOnly) != AFILE_ERROR) 
     {	
       // Initialize the virtual console emulation 
@@ -440,7 +456,7 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
       psound_buffer=sound_buffer;
       TIMER2_DATA = TIMER_FREQ(SOUND_FREQ);                        
       TIMER2_CR = TIMER_DIV_1 | TIMER_IRQ_REQ | TIMER_ENABLE;	     
-      irqSet(IRQ_TIMER2, VsoundHandler);                           
+      irqSet(IRQ_TIMER2, VsoundHandler);        
     }
 }
 
@@ -475,7 +491,7 @@ bool dsWaitOnQuit(void) {
   unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
   
-  strcpy(szName,"Quit A5200DS ?");
+  strcpy(szName,"Quit XEGS-DS?");
   dsPrintValue(17,2,0,szName);
   sprintf(szName,"%s","A TO CONFIRM, B TO GO BACK");
   dsPrintValue(16-strlen(szName)/2,23,0,szName);
@@ -1030,12 +1046,10 @@ void dsInstallSoundEmuFIFO(void)
     fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
 }
 
-extern u32 trig0, trig1;
-extern u32 stick0;
-extern u32 stick1;
-int full_speed = 0;
 
-ITCM_CODE void dsMainLoop(void) {
+ITCM_CODE void dsMainLoop(void) 
+{
+  static bool bFirstLoad = true;
   char fpsbuf[32];
   unsigned int keys_pressed,keys_touch=0, romSel=0;
   int iTx,iTy;
@@ -1088,7 +1102,7 @@ ITCM_CODE void dsMainLoop(void) {
         TIMER0_CR=0;
         TIMER0_DATA=0;
         TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
-
+            
         // -------------------------------------------------------------
         // Stuff to do once/second such as FPS display and Debug Data
         // -------------------------------------------------------------
@@ -1201,7 +1215,6 @@ ITCM_CODE void dsMainLoop(void) {
                 { 
                     if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                     keys_touch = 1;
-                    Atari800_Initialise();
                     dsLoadGame(last_filename, 1, true, bLoadReadOnly);   // Force Restart 
                     irqEnable(IRQ_TIMER2); 
                     fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
@@ -1263,6 +1276,16 @@ ITCM_CODE void dsMainLoop(void) {
             if ((keys_pressed & KEY_L) && (keys_pressed & KEY_UP))   if (myGame_scale_y <= 256) myGame_scale_y++;
             if ((keys_pressed & KEY_L) && (keys_pressed & KEY_DOWN)) if (myGame_scale_y >= 192) myGame_scale_y--;
         }            
+           
+        // A bit of a hack... the first load requires a cold restart after the OS is running....
+        if (bFirstLoad)
+        {
+            bFirstLoad = false;
+            dsLoadGame(last_filename, 1, true, bLoadReadOnly);   // Force Restart 
+            irqEnable(IRQ_TIMER2); 
+            fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+        }
+
         break;
     }
   }
@@ -1316,9 +1339,17 @@ void a52FindFiles(void)
             counta5200++;countfiles++;
           }
       }
+        
+      if ((countfiles % 50) == 0)
+      {
+          sprintf(filenametmp, "READING %3d", countfiles);
+          dsPrintValue(4,0,0, filenametmp);
+      }
+        
     }
     closedir(pdir);
   }
+  dsPrintValue(4,0,0,"           ");
   if (counta5200)
     qsort (a5200romlist, counta5200, sizeof (FICA5200), a52Filescmp);
 }
