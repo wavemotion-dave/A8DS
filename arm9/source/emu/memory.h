@@ -56,7 +56,7 @@ typedef UBYTE (*rdfunc)(UWORD addr);
 typedef void (*wrfunc)(UWORD addr, UBYTE value);
 extern rdfunc readmap[256];
 extern wrfunc writemap[256];
-void ROM_PutByte(UWORD addr, UBYTE byte);
+void ROM_PutByte(UWORD addr, UBYTE byte); 
 #define GetByte(addr)		(readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : memory[addr])
 #define PutByte(addr,byte)	(writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (memory[addr] = byte))
 #define SetRAM(addr1, addr2) do { \
@@ -76,7 +76,6 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
 
 #endif /* PAGED_ATTRIB */
 
-extern int have_basic;
 extern int cartA0BF_enabled;
 
 void MEMORY_InitialiseMachine(void);

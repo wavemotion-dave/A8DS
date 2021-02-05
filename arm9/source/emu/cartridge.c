@@ -33,6 +33,8 @@
 #include "atari.h"
 #include "binload.h"
 #include "cartridge.h"
+#include "memory.h"
+#include "altirra_basic.h"
 
 int CART_Checksum(const UBYTE *image, int nbytes)
 {
@@ -41,11 +43,19 @@ int CART_Checksum(const UBYTE *image, int nbytes)
 
 int CART_Insert(const char *filename) 
 {
-    return 0;
+    // The only cart we support is an 8K built-in BASIC cart
+    Cart809F_Disable();
+    CartA0BF_Enable();
+    SetROM(0xa000, 0xbfff);
+    CopyROM(0xa000, 0xbfff, ROM_altirra_basic);
+    return 1;
 }
 
 void CART_Remove(void) 
 {
+    Cart809F_Disable();
+    CartA0BF_Disable();
+    SetRAM(0xa000, 0xbfff);
 }
 
 void CART_Start(void) 

@@ -40,8 +40,8 @@ extern u32 trig0, trig1;
 extern u32 stick0;
 extern u32 stick1;
 int full_speed = 0;
-
-
+int bAltirraOS = false;
+int bHaveBASIC = false;
 
 #define  cxBG (myGame_offset_x<<8)
 #define  cyBG (myGame_offset_y<<8)
@@ -395,7 +395,8 @@ int load_os(char *filename )
   FILE *romfile = fopen(filename, "rb");
   if (romfile == NULL)
   {
-     memcpy(atari_os, ROM_altirraos_xl, 0x4000);
+      bAltirraOS = true;
+      memcpy(atari_os, ROM_altirraos_xl, 0x4000);
   }
   else
   {
@@ -435,12 +436,13 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
     }
     
       // load card game if ok
-    if (Atari800_OpenFile(filename, bRestart, disk_num, bReadOnly) != AFILE_ERROR) 
+    if (Atari800_OpenFile(filename, bRestart, disk_num, bReadOnly, bHaveBASIC) != AFILE_ERROR) 
     {	
       // Initialize the virtual console emulation 
       dsShowScreenEmu();
       
       bAtariCrash = false;
+      dsPrintValue(1,23,0, "                              ");
         
       memset(sound_buffer, 0x00, SNDLENGTH);
 
@@ -453,8 +455,10 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
         atari_pal16[index] = index;
       }
 
+      // In case we switched PAL/NTSC
+      dsInstallSoundEmuFIFO();
       psound_buffer=sound_buffer;
-      TIMER2_DATA = TIMER_FREQ(SOUND_FREQ);                        
+      TIMER2_DATA = TIMER_FREQ(SOUND_FREQ);
       TIMER2_CR = TIMER_DIV_1 | TIMER_IRQ_REQ | TIMER_ENABLE;	     
       irqSet(IRQ_TIMER2, VsoundHandler);        
     }
@@ -535,8 +539,8 @@ void dsDisplayLoadOptions(void)
 {
   char tmpBuf[32];
     
-  sprintf(tmpBuf, "     %s", (tv_mode == TV_NTSC ? "NTSC":"PAL "));
-  dsPrintValue(14,0,0,tmpBuf);
+  sprintf(tmpBuf, "%-4s %s", (tv_mode == TV_NTSC ? "NTSC":"PAL"), (bHaveBASIC ? "W BASIC":"       "));
+  dsPrintValue(19,0,0,tmpBuf);
   sprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
   dsPrintValue(14,1,0,tmpBuf);
   sprintf(tmpBuf, "[%c]  BOOT LOAD", (bLoadAndBoot ? 'Y':' '));
@@ -559,8 +563,8 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
     
   dsPrintValue(31,5,0,(char *) (NoDebGame>0 ? "<" : " "));
   dsPrintValue(31,22,0,(char *) (NoDebGame+14<counta5200 ? ">" : " "));
-  sprintf(szName,"%s","A=CHOOSE, B=BACK, SEL=PAL/NTSC");
-  dsPrintValue(16-strlen(szName)/2,23,0,szName);
+  sprintf(szName,"%s","A=PICK B=BACK SEL=PAL STA=BASIC");
+  dsPrintValue(0,23,0,szName);
   for (ucBcl=0;ucBcl<17; ucBcl++) {
     ucGame= ucBcl+NoDebGame;
     if (ucGame < counta5200) {
@@ -709,6 +713,17 @@ unsigned int dsWaitForRom(void)
             last_sel_key = KEY_SELECT;
         }
     } else last_sel_key=0;
+
+    static int last_sta_key = 0;
+    if (keysCurrent() & KEY_START) 
+    {
+        if (last_sta_key != KEY_START)
+        {
+            bHaveBASIC = 1-bHaveBASIC;
+            dsDisplayLoadOptions();
+            last_sta_key = KEY_START;
+        }    
+    } else last_sta_key=0;
       
     if (keysCurrent() & KEY_A) {
       if (!a5200romlist[ucFicAct].directory) {
@@ -890,8 +905,6 @@ void dsPrintValue(int x, int y, unsigned int isSelect, char *pchStr)
 int dsHandleKeyboard(int Tx, int Ty)
 {
     int keyPress = AKEY_NONE;
-    debug[3] = Tx;
-    debug[4] = Ty;
     
     if (Ty <= 8) return AKEY_NONE;
 
@@ -1096,7 +1109,7 @@ ITCM_CODE void dsMainLoop(void)
         // 656 -> 50 fps et 546 -> 60 fps
         if (!full_speed)
         {
-          while(TIMER0_DATA < 546)
+          while(TIMER0_DATA < (tv_mode == TV_NTSC ? 546:656))
               ;
         }
         TIMER0_CR=0;

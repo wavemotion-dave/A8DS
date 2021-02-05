@@ -39,6 +39,11 @@ int start_binloading = FALSE;
 int loading_basic = 0;
 FILE *bin_file = NULL;
 
+/* Inticates that the next call to loader_cont will overwrite INITAD. */
+static int init2e3 = FALSE;
+/* Indicates that we are currently not during loading of a segment. */
+static int segfinished = TRUE;
+
 /* Read a word from file */
 static int BIN_read_word(void)
 {
@@ -57,6 +62,9 @@ static int BIN_read_word(void)
 	return buf[0] + (buf[1] << 8);
 }
 
+static UWORD from = 0;
+static UWORD to = 0;
+
 /* Start or continue loading */
 void BIN_loader_cont(void)
 {
@@ -69,29 +77,33 @@ void BIN_loader_cont(void)
 	else
 		regS += 2;	/* pop ESC code */
 
-	dPutByte(0x2e3, 0xd7);
+    if (init2e3)
+	    dPutByte(0x2e3, 0xd7);
+    init2e3=false;
 	do {
-		int temp;
-		UWORD from;
-		UWORD to;
-		do
-			temp = BIN_read_word();
-		while (temp == 0xffff);
-		if (temp < 0)
-			return;
-		from = (UWORD) temp;
+        if (segfinished)
+        {
+            int temp;
+            do
+                temp = BIN_read_word();
+            while (temp == 0xffff);
+            if (temp < 0)
+                return;
+            from = (UWORD) temp;
 
-		temp = BIN_read_word();
-		if (temp < 0)
-			return;
-		to = (UWORD) temp;
+            temp = BIN_read_word();
+            if (temp < 0)
+                return;
+            to = (UWORD) temp;
 
-		if (start_binloading) {
-			dPutWordAligned(0x2e0, from);
-			start_binloading = FALSE;
-		}
+            if (start_binloading) {
+                dPutWordAligned(0x2e0, from);
+                start_binloading = FALSE;
+            }
+    		to++;
+            segfinished = false;
+        }
 
-		to++;
 		do {
 			int byte = fgetc(bin_file);
 			if (byte == EOF) {
@@ -110,6 +122,7 @@ void BIN_loader_cont(void)
 			PutByte(from, (UBYTE) byte);
 			from++;
 		} while (from != to);
+        segfinished = TRUE;
 	} while (dGetByte(0x2e3) == 0xd7);
 
 	regS--;
@@ -120,8 +133,8 @@ void BIN_loader_cont(void)
 	regS--;
 	regPC = dGetWordAligned(0x2e2);
 	SetC;
-
 	dPutByte(0x0300, 0x31);	/* for "Studio Dream" */
+    init2e3=true;
 }
 
 /* Fake boot sector to call BIN_loader_cont at boot time */
@@ -136,6 +149,8 @@ int BIN_loader_start(UBYTE *buffer)
 	buffer[6] = 0xf2;	/* ESC */
 	buffer[7] = ESC_BINLOADER_CONT;
 	Atari800_AddEsc(0x706, ESC_BINLOADER_CONT, BIN_loader_cont);
+    init2e3=true;
+    segfinished = TRUE;
 	return 'C';
 }
 
@@ -165,17 +180,20 @@ int BIN_loader(const char *filename) {
 		SIO_DisableDrive(1);
 	if (fread(buf, 1, 2, bin_file) == 2) {
 		if (buf[0] == 0xff && buf[1] == 0xff) {
+            debug[5] = 33;
 			start_binloading = TRUE; /* force SIO to call BIN_loader_start at boot */
 			Coldstart();             /* reboot */
 			return TRUE;
 		}
 		else if (buf[0] == 0 && buf[1] == 0) {
+            debug[5] = 44;
 			loading_basic = LOADING_BASIC_SAVED;
 			Device_PatchOS();
 			Coldstart();
 			return TRUE;
 		}
 		else if (buf[0] >= '0' && buf[0] <= '9') {
+            debug[5] = 55;
 			loading_basic = LOADING_BASIC_LISTED;
 			Device_PatchOS();
 			Coldstart();

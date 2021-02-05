@@ -318,7 +318,7 @@ int Atari800_DetectFileType(const char *filename)
 	return AFILE_ERROR;
 }
 
-int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly) 
+int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly, int bEnableBasic) 
 {
     // Remove cart if exist
     CART_Remove();
@@ -328,6 +328,10 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
 	switch (type) 
     {
     case AFILE_ATR:
+      if (bEnableBasic)
+      {
+        CART_Insert(filename); /// Always load BASIC with an ATR? Probably need switch...
+      }
       if (!SIO_Mount(diskno, filename, readonly))
         return AFILE_ERROR;
       if (reboot)

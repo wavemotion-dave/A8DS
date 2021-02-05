@@ -954,6 +954,11 @@ void GO(int limit)
 		if (break_ret && --ret_nesting <= 0)
 			break_step = TRUE;
 #endif
+        if (rts_handler != NULL)
+        {
+            rts_handler();
+            rts_handler = NULL;
+        }
 		DONE
 
 	OPCODE(61)				/* ADC (ab,x) */

@@ -74,8 +74,6 @@ static UBYTE under_atari_basic[8192];
 static UBYTE *atarixe_memory = (UBYTE *)0x06040000;	//A convienent 128k of memory... it's a bit faster when bank switching
 static ULONG atarixe_memory_size = 0;
 
-int have_basic = FALSE; /* Atari BASIC image has been successfully read (Atari 800 only) */
-
 extern const UBYTE *antic_xe_ptr;	/* Separate ANTIC access to extended memory */
 
 static void AllocXEMemory(void)
@@ -100,7 +98,13 @@ static void AllocXEMemory(void)
 	}
 }
 
-void MEMORY_InitialiseMachine(void) {
+void MEMORY_InitialiseMachine(void) 
+{
+	int const os_size = 0x4000;
+	int const os_rom_start = 0x10000 - os_size;
+    int const base_ram = ram_size > 64 ? 64 * 1024 : ram_size * 1024;
+    int const hole_end = (os_rom_start < 0xd000 ? os_rom_start : 0xd000);
+    int const hole_start = base_ram > hole_end ? hole_end : base_ram;
 	antic_xe_ptr = NULL;
 
 	switch (machine_type) {
@@ -137,18 +141,21 @@ void MEMORY_InitialiseMachine(void) {
 		SetROM(0xd800, 0xffff);
 		break;
 	case MACHINE_XLXE:
+            
 		memcpy(memory + 0xc000, atari_os, 0x4000);
 		Atari800_PatchOS();
-		if (ram_size == 16) {
-			dFillMem(0x0000, 0x00, 0x4000);
-			SetRAM(0x0000, 0x3fff);
-			dFillMem(0x4000, 0xff, 0x8000);
-			SetROM(0x4000, 0xcfff);
-		} else {
-			dFillMem(0x0000, 0x00, 0xc000);
-			SetRAM(0x0000, 0xbfff);
-			SetROM(0xc000, 0xcfff);
-		}
+            
+        dFillMem(0x0000, 0x00, hole_start);
+        SetRAM(0x0000, hole_start - 1);
+        if (hole_start < hole_end) 
+        {
+            dFillMem(hole_start, 0xff, hole_end - hole_start);
+            SetROM(hole_start, hole_end - 1);
+        }
+        if (hole_end < 0xd000)
+            SetROM(hole_end, 0xcfff);
+        SetROM(0xd800, 0xffff);
+
 #ifndef PAGED_ATTRIB
 		SetHARDWARE(0xd000, 0xd7ff);
 #else
@@ -200,6 +207,10 @@ void MEMORY_InitialiseMachine(void) {
 		break;
 	}
 	AllocXEMemory();
+    
+    Cart809F_Disable();    
+    CartA0BF_Disable();    
+    
 	Coldstart();
 }
 
