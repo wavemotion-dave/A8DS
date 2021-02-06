@@ -51,7 +51,9 @@ disk and you can continue to run.
 The emulator has the built-in Altirra BASIC 1.55 which is a drop-in replacement for the
 Atari Basic Rev C (only more full-featured). Normally you can leave this disabled but
 a few games require the BASIC cart be present and you can toggle this with the START button
-when you load a game. If you want to play around with BASIC, enable the BASIC cart and
+when you load a game.  If you try to load a game and it crashes, most likely you need
+to have BASIC enabled. Most games don't want it enabled so that's the default. 
+If you want to play around with BASIC, enable the BASIC cart and
 pick a DOS II disk of some kind to get drive support and you can have fun writing programs.
 
 Missing :
@@ -61,6 +63,11 @@ Not much.
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V1.2 : 03-Feb-2021 by wavemotion-dave
+  * Altirra BASIC 1.55 is now baked into the software (thanks to Avery Lee).
+  * Fixed PAL sound and framerate.
+  * Cleanups and optmizations as time permitted.
+
 V1.1 : 03-Feb-2021 by wavemotion-dave
   * Fixed BRK on keyboard.
   * If game crashes, message is shown and emulator no longer auto-quits.

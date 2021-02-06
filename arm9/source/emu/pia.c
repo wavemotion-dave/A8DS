@@ -35,20 +35,20 @@
 #include "statesav.h"
 #endif
 
-UBYTE PACTL;
-UBYTE PBCTL;
-UBYTE PORTA;
-UBYTE PORTB;
-UBYTE PORT_input[2];
+UBYTE PACTL __attribute__((section(".dtcm")));
+UBYTE PBCTL __attribute__((section(".dtcm")));
+UBYTE PORTA __attribute__((section(".dtcm")));
+UBYTE PORTB __attribute__((section(".dtcm")));
+UBYTE PORT_input[2] __attribute__((section(".dtcm")));
 
-int xe_bank = 0;
+int xe_bank __attribute__((section(".dtcm")))= 0;
 int selftest_enabled = 0;
 
 UBYTE atari_basic[8192];
 UBYTE atari_os[16384];
 
-UBYTE PORTA_mask;
-UBYTE PORTB_mask;
+UBYTE PORTA_mask __attribute__((section(".dtcm")));
+UBYTE PORTB_mask __attribute__((section(".dtcm")));
 
 void PIA_Initialise(void) {
 	PACTL = 0x3f;

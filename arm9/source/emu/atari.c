@@ -322,16 +322,17 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
 {
     // Remove cart if exist
     CART_Remove();
+    CART_Insert("basic");  // Always load BASIC CART (resident on XEGS anyway)
+    if (!bEnableBasic)     // But disable it if we aren't asked to keep it active....
+    {
+        CartA0BF_Disable();
+    }
   
 	int type = Atari800_DetectFileType(filename);
 
 	switch (type) 
     {
     case AFILE_ATR:
-      if (bEnableBasic)
-      {
-        CART_Insert(filename); /// Always load BASIC with an ATR? Probably need switch...
-      }
       if (!SIO_Mount(diskno, filename, readonly))
         return AFILE_ERROR;
       if (reboot)

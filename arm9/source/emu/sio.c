@@ -764,23 +764,13 @@ void SIO(void)
 
 UBYTE SIO_ChkSum(const UBYTE *buffer, int length)
 {
-#if 0
-	/* old, less efficient version */
-	int i;
-	int checksum = 0;
-	for (i = 0; i < length; i++, buffer++) {
-		checksum += *buffer;
-		while (checksum > 255)
-			checksum -= 255;
-	}
-#else
 	int checksum = 0;
 	while (--length >= 0)
 		checksum += *buffer++;
 	do
 		checksum = (checksum & 0xff) + (checksum >> 8);
 	while (checksum > 255);
-#endif
+
 	return checksum;
 }
 

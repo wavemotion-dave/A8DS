@@ -56,7 +56,7 @@
 #define LCHOP 3			/* do not build lefmost 0..3 characters in wide mode */
 #define RCHOP 3			/* do not build rightmost 0..3 characters in wide mode */
 
-int break_ypos = 999;
+int break_ypos __attribute__((section(".dtcm"))) = 999;
 #ifdef NEW_CYCLE_EXACT
 void draw_partial_scanline(int l,int r);
 void update_scanline(void);
@@ -64,24 +64,24 @@ void update_scanline_prior(UBYTE byte);
 void update_scanline_chbase(void);
 void update_scanline_invert(void);
 void update_scanline_blank(void);
-const int *cpu2antic_ptr;
-const int *antic2cpu_ptr;
-int delayed_wsync = 0;
-int dmactl_changed = 0;
-UBYTE DELAYED_DMACTL;
-int draw_antic_ptr_changed = 0;
-UBYTE need_load;
-int dmactl_bug_chdata;
+const int *cpu2antic_ptr __attribute__((section(".dtcm")));
+const int *antic2cpu_ptr __attribute__((section(".dtcm")));
+int delayed_wsync __attribute__((section(".dtcm")))= 0;
+int dmactl_changed __attribute__((section(".dtcm")))= 0;
+UBYTE DELAYED_DMACTL __attribute__((section(".dtcm")));
+int draw_antic_ptr_changed __attribute__((section(".dtcm")))= 0;
+UBYTE need_load __attribute__((section(".dtcm")));
+int dmactl_bug_chdata __attribute__((section(".dtcm")));
 #ifndef NO_GTIA11_DELAY
 /* the position in the ring buffer where the last change before */
 /* the previous line occured to PRIOR */
-int prevline_prior_pos = 0;
+int prevline_prior_pos __attribute__((section(".dtcm")))= 0;
 /* the position in the ring buffer where the last change before */
 /* the current line occured to PRIOR */
-int curline_prior_pos = 0;
+int curline_prior_pos __attribute__((section(".dtcm")))= 0;
 /* the current position in the ring buffer where the most recent */
 /* change to PRIOR occured */
-int prior_curpos = 0;
+int prior_curpos __attribute__((section(".dtcm")))= 0;
 /* ring buffer to hold the previous values of PRIOR */
 UBYTE prior_val_buf[PRIOR_BUF_SIZE];
 /* can be negative, leave as signed ints */

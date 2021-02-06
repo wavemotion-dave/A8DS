@@ -24,8 +24,8 @@
 #include "bgKeyboard.h"
 #include "altirraos_xl.h"
 
-FICA5200 a5200romlist[1024];  
-unsigned int counta5200=0, countfiles=0, ucFicAct=0;
+FICA5200 a8romlist[1024];  
+unsigned int count8bit=0, countfiles=0, ucFicAct=0;
 int gTotalAtariFrames = 0;
 int bg0, bg1, bg0b,bg1b;
 unsigned int etatEmu;
@@ -111,7 +111,7 @@ void dsClearDiskActivity(void)
 
 void dsShowDiskActivity(void)
 {
-    static char activity[7] = {'-','+','*','*','+','+','+'};
+    static char activity[7] = {'*','+','*','*','+','+','+'};
     char buf[5];
     static u8 actidx=0;
     
@@ -558,24 +558,26 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) (bgGetMapPtr(bg1b)),32*24*2);
     
   dsDisplayLoadOptions();
-  countfiles ? sprintf(szName,"%04d/%04d GAMES",(int)(1+ucSel+NoDebGame),countfiles) : sprintf(szName,"%04d/%04d FOLDERS",(int)(1+ucSel+NoDebGame),counta5200);
+  countfiles ? sprintf(szName,"%04d/%04d GAMES",(int)(1+ucSel+NoDebGame),countfiles) : sprintf(szName,"%04d/%04d FOLDERS",(int)(1+ucSel+NoDebGame),count8bit);
   dsPrintValue(14,3,0,szName);
     
   dsPrintValue(31,5,0,(char *) (NoDebGame>0 ? "<" : " "));
-  dsPrintValue(31,22,0,(char *) (NoDebGame+14<counta5200 ? ">" : " "));
+  dsPrintValue(31,22,0,(char *) (NoDebGame+14<count8bit ? ">" : " "));
   sprintf(szName,"%s","A=PICK B=BACK SEL=PAL STA=BASIC");
   dsPrintValue(0,23,0,szName);
-  for (ucBcl=0;ucBcl<17; ucBcl++) {
+  for (ucBcl=0;ucBcl<17; ucBcl++) 
+  {
     ucGame= ucBcl+NoDebGame;
-    if (ucGame < counta5200) {
+    if (ucGame < count8bit) 
+    {
       char szName2[300];
-      maxLen=strlen(a5200romlist[ucGame].filename);
-      strcpy(szName,a5200romlist[ucGame].filename);
+      maxLen=strlen(a8romlist[ucGame].filename);
+      strcpy(szName,a8romlist[ucGame].filename);
       if (maxLen>29) szName[29]='\0';
-      if (a5200romlist[ucGame].directory) 
+      if (a8romlist[ucGame].directory) 
       {
-        a5200romlist[ucGame].filename[29] = 0;
-        sprintf(szName,"[%s]",a5200romlist[ucGame].filename);
+        a8romlist[ucGame].filename[29] = 0;
+        sprintf(szName,"[%s]",a8romlist[ucGame].filename);
         sprintf(szName2,"%-29s",szName);
         dsPrintValue(0,5+ucBcl,(ucSel == ucBcl ? 1 :  0),szName2);
       }
@@ -600,11 +602,11 @@ unsigned int dsWaitForRom(void)
   unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
   
-  nbRomPerPage = (counta5200>=17 ? 17 : counta5200);
-  uNbRSPage = (counta5200>=5 ? 5 : counta5200);
-  if (ucFicAct>counta5200-nbRomPerPage) {
-    firstRomDisplay=counta5200-nbRomPerPage;
-    romSelected=ucFicAct-counta5200+nbRomPerPage;
+  nbRomPerPage = (count8bit>=17 ? 17 : count8bit);
+  uNbRSPage = (count8bit>=5 ? 5 : count8bit);
+  if (ucFicAct>count8bit-nbRomPerPage) {
+    firstRomDisplay=count8bit-nbRomPerPage;
+    romSelected=ucFicAct-count8bit+nbRomPerPage;
   }
   else {
     firstRomDisplay=ucFicAct;
@@ -614,14 +616,14 @@ unsigned int dsWaitForRom(void)
   while (!bDone) {
     if (keysCurrent() & KEY_UP) {
       if (!ucHaut) {
-        ucFicAct = (ucFicAct>0 ? ucFicAct-1 : counta5200-1);
+        ucFicAct = (ucFicAct>0 ? ucFicAct-1 : count8bit-1);
         if (romSelected>uNbRSPage) { romSelected -= 1; }
         else {
           if (firstRomDisplay>0) { firstRomDisplay -= 1; }
           else {
             if (romSelected>0) { romSelected -= 1; }
             else {
-              firstRomDisplay=counta5200-nbRomPerPage;
+              firstRomDisplay=count8bit-nbRomPerPage;
               romSelected=nbRomPerPage-1;
             }
           }
@@ -639,10 +641,10 @@ unsigned int dsWaitForRom(void)
     }  
     if (keysCurrent() & KEY_DOWN) {
       if (!ucBas) {
-        ucFicAct = (ucFicAct< counta5200-1 ? ucFicAct+1 : 0);
+        ucFicAct = (ucFicAct< count8bit-1 ? ucFicAct+1 : 0);
         if (romSelected<uNbRSPage-1) { romSelected += 1; }
         else {
-          if (firstRomDisplay<counta5200-nbRomPerPage) { firstRomDisplay += 1; }
+          if (firstRomDisplay<count8bit-nbRomPerPage) { firstRomDisplay += 1; }
           else {
             if (romSelected<nbRomPerPage-1) { romSelected += 1; }
             else {
@@ -664,10 +666,10 @@ unsigned int dsWaitForRom(void)
     }  
     if ((keysCurrent() & KEY_R) || (keysCurrent() & KEY_RIGHT)) {
       if (!ucSBas) {
-        ucFicAct = (ucFicAct< counta5200-nbRomPerPage ? ucFicAct+nbRomPerPage : counta5200-nbRomPerPage);
-        if (firstRomDisplay<counta5200-nbRomPerPage) { firstRomDisplay += nbRomPerPage; }
-        else { firstRomDisplay = counta5200-nbRomPerPage; }
-        if (ucFicAct == counta5200-nbRomPerPage) romSelected = 0;
+        ucFicAct = (ucFicAct< count8bit-nbRomPerPage ? ucFicAct+nbRomPerPage : count8bit-nbRomPerPage);
+        if (firstRomDisplay<count8bit-nbRomPerPage) { firstRomDisplay += nbRomPerPage; }
+        else { firstRomDisplay = count8bit-nbRomPerPage; }
+        if (ucFicAct == count8bit-nbRomPerPage) romSelected = 0;
         ucSBas=0x01;
         dsDisplayFiles(firstRomDisplay,romSelected);
       }
@@ -726,19 +728,19 @@ unsigned int dsWaitForRom(void)
     } else last_sta_key=0;
       
     if (keysCurrent() & KEY_A) {
-      if (!a5200romlist[ucFicAct].directory) {
+      if (!a8romlist[ucFicAct].directory) {
         bRet=true;
         bDone=true;
       }
       else {
-        chdir(a5200romlist[ucFicAct].filename);
+        chdir(a8romlist[ucFicAct].filename);
         a52FindFiles();
         ucFicAct = 0;
-        nbRomPerPage = (counta5200>=16 ? 16 : counta5200);
-        uNbRSPage = (counta5200>=5 ? 5 : counta5200);
-        if (ucFicAct>counta5200-nbRomPerPage) {
-          firstRomDisplay=counta5200-nbRomPerPage;
-          romSelected=ucFicAct-counta5200+nbRomPerPage;
+        nbRomPerPage = (count8bit>=16 ? 16 : count8bit);
+        uNbRSPage = (count8bit>=5 ? 5 : count8bit);
+        if (ucFicAct>count8bit-nbRomPerPage) {
+          firstRomDisplay=count8bit-nbRomPerPage;
+          romSelected=ucFicAct-count8bit+nbRomPerPage;
         }
         else {
           firstRomDisplay=ucFicAct;
@@ -772,12 +774,12 @@ unsigned int dsWaitForRom(void)
     } else last_y_key = 0;      
       
     // Scroll la selection courante
-    if (strlen(a5200romlist[ucFicAct].filename) > 29) {
+    if (strlen(a8romlist[ucFicAct].filename) > 29) {
       ucFlip++;
       if (ucFlip >= 8) {
         ucFlip = 0;
         uLenFic++;
-        if ((uLenFic+29)>strlen(a5200romlist[ucFicAct].filename)) {
+        if ((uLenFic+29)>strlen(a8romlist[ucFicAct].filename)) {
           ucFlop++;
           if (ucFlop >= 8) {
             uLenFic=0;
@@ -786,7 +788,7 @@ unsigned int dsWaitForRom(void)
           else
             uLenFic--;
         }
-        strncpy(szName,a5200romlist[ucFicAct].filename+uLenFic,29);
+        strncpy(szName,a8romlist[ucFicAct].filename+uLenFic,29);
         szName[29] = '\0';
         dsPrintValue(1,5+romSelected,1,szName);
       }
@@ -864,7 +866,7 @@ unsigned int dsWaitOnMenu(unsigned int actState) {
         a52FindFiles();
         romSel=dsWaitForRom();
         if (romSel) { uState=A5200_PLAYINIT; 
-          dsLoadGame(a5200romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
+          dsLoadGame(a8romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
         else { uState=actState; }
       }
     }
@@ -1259,7 +1261,7 @@ ITCM_CODE void dsMainLoop(void)
                   keys_touch=1;
                   a52FindFiles();
                   romSel=dsWaitForRom();
-                  if (romSel) { etatEmu=A5200_PLAYINIT; dsLoadGame(a5200romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
+                  if (romSel) { etatEmu=A5200_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
                   else { irqEnable(IRQ_TIMER2); }
                   fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                 }
@@ -1320,7 +1322,7 @@ void a52FindFiles(void)
   struct dirent *pent;
   char filenametmp[300];
   
-  counta5200 = countfiles= 0;
+  count8bit = countfiles= 0;
   
   pdir = opendir(".");
 
@@ -1334,22 +1336,22 @@ void a52FindFiles(void)
       if(S_ISDIR(statbuf.st_mode)) 
       {
         if (!( (filenametmp[0] == '.') && (strlen(filenametmp) == 1))) {
-          a5200romlist[counta5200].directory = true;
-          strcpy(a5200romlist[counta5200].filename,filenametmp);
-          counta5200++;
+          a8romlist[count8bit].directory = true;
+          strcpy(a8romlist[count8bit].filename,filenametmp);
+          count8bit++;
         }
       }
       else 
       {
           if ( (strcasecmp(strrchr(filenametmp, '.'), ".xex") == 0) )  {
-            a5200romlist[counta5200].directory = false;
-            strcpy(a5200romlist[counta5200].filename,filenametmp);
-            counta5200++;countfiles++;
+            a8romlist[count8bit].directory = false;
+            strcpy(a8romlist[count8bit].filename,filenametmp);
+            count8bit++;countfiles++;
           }
           if ( (strcasecmp(strrchr(filenametmp, '.'), ".atr") == 0) )  {
-            a5200romlist[counta5200].directory = false;
-            strcpy(a5200romlist[counta5200].filename,filenametmp);
-            counta5200++;countfiles++;
+            a8romlist[count8bit].directory = false;
+            strcpy(a8romlist[count8bit].filename,filenametmp);
+            count8bit++;countfiles++;
           }
       }
         
@@ -1363,6 +1365,6 @@ void a52FindFiles(void)
     closedir(pdir);
   }
   dsPrintValue(4,0,0,"           ");
-  if (counta5200)
-    qsort (a5200romlist, counta5200, sizeof (FICA5200), a52Filescmp);
+  if (count8bit)
+    qsort (a8romlist, count8bit, sizeof (FICA5200), a52Filescmp);
 }
