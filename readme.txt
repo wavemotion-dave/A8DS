@@ -67,6 +67,10 @@ V1.2 : 03-Feb-2021 by wavemotion-dave
   * Altirra BASIC 1.55 is now baked into the software (thanks to Avery Lee).
   * Fixed PAL sound and framerate.
   * Cleanups and optmizations as time permitted.
+  * Tap lower right corner of touch screen to toggle A=UP (to allow the A key
+    to work like the UP direction which is useful for games that have a lot
+    of jumping via UP (+Left or +Right). It makes playing Alley Cat and similar
+    games much more enjoyable on a D-Pad.
 
 V1.1 : 03-Feb-2021 by wavemotion-dave
   * Fixed BRK on keyboard.

@@ -42,6 +42,7 @@ extern u32 stick1;
 int full_speed = 0;
 int bAltirraOS = false;
 int bHaveBASIC = false;
+int bUseA_KeyAsUP = false;
 
 #define  cxBG (myGame_offset_x<<8)
 #define  cyBG (myGame_offset_y<<8)
@@ -1143,7 +1144,15 @@ ITCM_CODE void dsMainLoop(void)
             
         key_shift = 0;
         key_code = AKEY_NONE;
-        trig0 = ((keys_pressed & KEY_A) || (keys_pressed & KEY_B)) ? 0 : 1;
+        if (bUseA_KeyAsUP)
+        {
+            if (keys_pressed & KEY_A) keys_pressed |= KEY_UP;
+            trig0 = (keys_pressed & KEY_B) ? 0 : 1;
+        }
+        else
+        {
+            trig0 = ((keys_pressed & KEY_A) || (keys_pressed & KEY_B)) ? 0 : 1;
+        }
         stick0 = STICK_CENTRE;
         stick1 = STICK_CENTRE;
                   
@@ -1207,6 +1216,14 @@ ITCM_CODE void dsMainLoop(void)
                        dsPrintValue(0,0,0, "   "); 
                        keys_touch = 1;
                    }
+                }
+                else if ((iTx>=240) && (iTx<256) && (iTy>180) && (iTy<193))  { // Toggle A as UP
+                   if (keys_touch == 0)
+                   {
+                       bUseA_KeyAsUP = 1-bUseA_KeyAsUP;
+                       dsPrintValue(28,23,0, (bUseA_KeyAsUP ? "A=UP": "    ")); 
+                       keys_touch = 1;
+                    }
                 }
                 else if ((iTx>130) && (iTx<157) && (iTy>122) && (iTy<150))  // START
                 { 
@@ -1288,8 +1305,13 @@ ITCM_CODE void dsMainLoop(void)
         {
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myGame_offset_y++;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myGame_offset_y--;
+            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_LEFT))  myGame_offset_x++;
+            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_RIGHT)) myGame_offset_x--;
+
             if ((keys_pressed & KEY_L) && (keys_pressed & KEY_UP))   if (myGame_scale_y <= 256) myGame_scale_y++;
             if ((keys_pressed & KEY_L) && (keys_pressed & KEY_DOWN)) if (myGame_scale_y >= 192) myGame_scale_y--;
+            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_RIGHT))  if (myGame_scale_x <= 320) myGame_scale_x++;
+            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_LEFT)) if (myGame_scale_x >= 192) myGame_scale_x--;
         }            
            
         // A bit of a hack... the first load requires a cold restart after the OS is running....
