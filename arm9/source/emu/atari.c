@@ -320,13 +320,7 @@ int Atari800_DetectFileType(const char *filename)
 
 int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly, int bEnableBasic) 
 {
-    // Remove cart if exist
-    CART_Remove();
-    CART_Insert("basic");  // Always load BASIC CART (resident on XEGS anyway)
-    if (!bEnableBasic)     // But disable it if we aren't asked to keep it active....
-    {
-        CartA0BF_Disable();
-    }
+    CART_Insert(bEnableBasic);
   
 	int type = Atari800_DetectFileType(filename);
 
@@ -471,29 +465,16 @@ void Atari800_UpdatePatches(void) {
 	}
 }
 
-#ifndef __PLUS
-
-u32 refresh_counter;
-
-void Atari800_Frame(unsigned int refresh_rate) {
+void Atari800_Frame() 
+{
 	Device_Frame();
 	INPUT_Frame();
 	GTIA_Frame();
-
-	if (++refresh_counter >= refresh_rate) {
-		refresh_counter = 0;
-		ANTIC_Frame(TRUE);
-	}
-	else {
-		ANTIC_Frame(TRUE);
-	}
+    ANTIC_Frame(TRUE);
     POKEY_Frame();
     
-    extern int gTotalAtariFrames;
     gTotalAtariFrames++;
 }
-
-#endif /* __PLUS */
 
 #ifndef BASIC
 

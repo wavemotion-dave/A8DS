@@ -14,7 +14,8 @@ int bg2, bg3;             // BG pointers
 int bg0s, bg1s, bg2s, bg3s;         // sub BG pointers 
 extern volatile u16 vusCptVBL;             // VBL test
 
-extern int load_os(char *filename );
+extern void load_os(void);
+extern void install_os(void);
 
 void irqVBlank(void) { 
   // Manage time
@@ -24,60 +25,42 @@ void irqVBlank(void) {
 // Program entry point
 int main(int argc, char **argv) 
 {
-  char *bios_filename = "atarixl.rom";
-    
-  if (machine_type == MACHINE_OSB)
-  {
-      bios_filename = "atariosb.rom";
-  }
-    
-  // Init sound
-  consoleDemoInit();
-  soundEnable();
-  lcdMainOnTop();
+    // Init sound
+    consoleDemoInit();
+    soundEnable();
+    lcdMainOnTop();
 
-  // Init Fat
-	if (!fatInitDefault()) {
-		iprintf("Unable to initialize libfat!\n");
-		return -1;
-	}
+    // Init Fat
+    if (!fatInitDefault()) 
+    {
+        iprintf("Unable to initialize libfat!\n");
+        return -1;
+    }
 
-  // Init Timer
-  dsInitTimer();
-  dsInstallSoundEmuFIFO();
-    
-  if (keysCurrent() & KEY_R)
-  {
-       bios_filename = "XYZZY.~01"; // Won't be found... Altria bios instead...
-  }
-    
-  
-  // Intro and main screen
-  intro_logo();  
-  dsInitScreenMain();
-  etatEmu = A5200_MENUINIT;
+    // Init Timer
+    dsInitTimer();
+    dsInstallSoundEmuFIFO();
 
-  if (!load_os(bios_filename)) 
-  {
-      //load rom file via args if a rom path is supplied
-      if(argc > 1) 
-      {
+    // Intro and main screen
+    intro_logo();  
+    dsInitScreenMain();
+    etatEmu = A5200_MENUINIT;
+
+    load_os();          // Read in the "atarixl.rom" file or use the built-in Altirra OS
+    install_os();       // And install the right OS into our system...
+
+    // Load the game file if supplied on the command line (mostly for TWL++)
+    if(argc > 1) 
+    {
         dsShowScreenMain();
         dsLoadGame(argv[1], 1, true, true);
         Atari800_Initialise();
         etatEmu = A5200_PLAYINIT;
-      }
+    }
     // Main loop of emulation
     dsMainLoop();
-  }
-  else {
-    dsShowScreenMain();
-    dsPrintValue(0,0,0, "Can't find 5200.rom BIOS"); 
-    dsReadPad();
-  }
   
-  // Free memory to be correct 
-  dsFreeEmu();
-  
-  return(0);
+    // Free memory on the way out...
+    dsFreeEmu();
+    return(0);
 }

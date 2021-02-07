@@ -201,6 +201,13 @@ void INPUT_Frame(void)
 				last_stick[i] |= STICK[i] & 0x03;
 			}
 		TRIG_input[i] = Atari_TRIG(i);
+        
+        extern int auto_fire;
+        if (auto_fire)
+        {
+            if (!TRIG_input[i])  TRIG_input[i] = (gTotalAtariFrames & 2) ? 1 : 0;
+        }
+            
 		//ALEK if ((joy_autofire[i] == AUTOFIRE_FIRE && !TRIG_input[i]) || (joy_autofire[i] == AUTOFIRE_CONT))
 		//ALEK 	TRIG_input[i] = (nframes & 2) ? 1 : 0;
 	}

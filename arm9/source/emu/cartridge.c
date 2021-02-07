@@ -41,13 +41,30 @@ int CART_Checksum(const UBYTE *image, int nbytes)
     return 0;
 }
 
-int CART_Insert(const char *filename) 
+extern UBYTE ROM_basic[];
+extern int basic_type;
+int CART_Insert(int enabled) 
 {
-    // The only cart we support is an 8K built-in BASIC cart
-    Cart809F_Disable();
-    CartA0BF_Enable();
-    SetROM(0xa000, 0xbfff);
-    CopyROM(0xa000, 0xbfff, ROM_altirra_basic);
+    if (enabled)
+    {
+        // The only cart we support is an 8K built-in BASIC cart
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        SetROM(0xa000, 0xbfff);
+        if (basic_type == BASIC_ALTIRRA)
+        {
+            CopyROM(0xa000, 0xbfff, ROM_altirra_basic);
+        }
+        else
+        {
+            CopyROM(0xa000, 0xbfff, ROM_basic);
+
+        }
+    }
+    else
+    {
+        CART_Remove();
+    }
     return 1;
 }
 

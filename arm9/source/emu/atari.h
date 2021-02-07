@@ -9,6 +9,13 @@
 
 extern int debug[];
 
+#define OS_ALTIRRA      0
+#define OS_ATARI        1
+
+#define BASIC_ALTIRRA   0
+#define BASIC_ATARIREVC 1
+
+
 /* Fundamental declarations ---------------------------------------------- */
 
 //#define DIRTYRECT
@@ -149,12 +156,13 @@ extern int sprite_collisions_in_skipped_frames;
 #define AFILE_STATE      13
 #define AFILE_STATE_GZ   14
 
+extern int gTotalAtariFrames;
+
 /* Initializes Atari800 emulation core. */
 int Atari800_Initialise(void);
 
 /* Emulates one frame (1/50sec for PAL, 1/60sec for NTSC). */
-//void Atari800_Frame(void);
-void Atari800_Frame(unsigned int refresh_rate);
+void Atari800_Frame(void);
 
 /* Reboots the emulated Atari. */
 void Coldstart(void);

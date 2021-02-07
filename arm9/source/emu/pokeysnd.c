@@ -75,9 +75,10 @@ static uint32 Div_n_cnt[4 * MAXPOKEYS],		/* Divide by n counter. one for each ch
 static uint32 Samp_n_max,		/* Sample max.  For accuracy, it is *256 */
  Samp_n_cnt[2] __attribute__ ((aligned (4)));					/* Sample cnt. */
 
+extern int sound_quality;
 /* Volume only emulations declarations */
 static uint32 snd_freq17 = FREQ_17_EXACT;
-int32 snd_playback_freq = 22050;
+int32 snd_playback_freq = 32000;
 uint8 snd_num_pokeys = 1;
 static int snd_flags = 0;
 

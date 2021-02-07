@@ -59,7 +59,7 @@ extern unsigned int dsWaitOnMenu(unsigned int actState);
 extern void dsPrintValue(int x, int y, unsigned int isSelect, char *pchStr);
 extern void dsInstallSoundEmuFIFO(void);
 extern ITCM_CODE void dsMainLoop(void);
-extern int a52Filescmp (const void *c1, const void *c2);
-extern void a52FindFiles(void);
+extern int a8Filescmp (const void *c1, const void *c2);
+extern void a8FindFiles(void);
 
 #endif

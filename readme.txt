@@ -63,7 +63,7 @@ Not much.
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
-V1.2 : 03-Feb-2021 by wavemotion-dave
+V1.2 : 06-Feb-2021 by wavemotion-dave
   * Altirra BASIC 1.55 is now baked into the software (thanks to Avery Lee).
   * Fixed PAL sound and framerate.
   * Cleanups and optmizations as time permitted.

@@ -26,10 +26,7 @@ GRAPHICS	:=	gfx
 #ARCH	:=	-mthumb -mthumb-interwork
 ARCH	:=	
 
-#CFLAGS	:=	-g -Wall -O2 -march=armv5te -mtune=arm946e-s -fomit-frame-pointer -ffast-math $(ARCH)
 CFLAGS	:= -Wall -O3 -march=armv5te -mtune=arm946e-s -fomit-frame-pointer -ffast-math $(ARCH)
-#CFLAGS	:= -Wall -O3 -march=armv5te -mtune=arm946e-s -fsigned-char -funroll-loops -ffast-math -fomit-frame-pointer -fno-strength-reduce -finline-functions
-
 
 CFLAGS	+=	$(INCLUDE) -DARM9
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions

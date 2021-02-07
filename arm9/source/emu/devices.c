@@ -2193,7 +2193,7 @@ static void Device_CloseBasicFile(void)
 int enable_h_patch = TRUE;
 int enable_p_patch = TRUE;
 int enable_r_patch = FALSE;
-extern int bAltirraOS;
+extern int os_type;
 
 /* Device_PatchOS is called by Atari800_PatchOS to modify standard device
    handlers in Atari OS. It puts escape codes at beginnings of OS routines,
@@ -2215,7 +2215,7 @@ int Device_PatchOS(void)
 		addr = 0xf0e3;
 		break;
 	case MACHINE_XLXE:
-        if (bAltirraOS)
+        if (os_type == OS_ALTIRRA)
             addr = 0xee90;  // Altirra OS!
         else
 		    addr = 0xc42e;  // Atari OS! XL Rev 04
