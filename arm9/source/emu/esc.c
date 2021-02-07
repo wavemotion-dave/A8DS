@@ -168,10 +168,13 @@ void ESC_PatchOS(void)
 	};
 	if (patched && Atari800_machine_type == Atari800_MACHINE_XLXE) {
 		/* Disable Checksum Test */
-		MEMORY_dPutByte(0xc314, 0x8e);
-		MEMORY_dPutByte(0xc315, 0xff);
-		MEMORY_dPutByte(0xc319, 0x8e);
-		MEMORY_dPutByte(0xc31a, 0xff);
+		if (os_type != OS_ALTIRRA)
+		{
+		  MEMORY_dPutByte(0xc31d, 0xea);
+		  MEMORY_dPutByte(0xc31e, 0xea);
+		}
+		//MEMORY_dPutByte(0xc319, 0x8e);
+		//MEMORY_dPutByte(0xc31a, 0xff);
 	}
 }
 
