@@ -59,7 +59,7 @@ void GTIAStateSave(void);
 void PIAStateSave(void);
 void POKEYStateSave(void);
 void CARTStateSave(void);
-void SIOStateSave(void);
+void SIO_StateSave(void);
 
 void AnticStateRead(void);
 void MainStateRead(void);
@@ -68,7 +68,7 @@ void GTIAStateRead(void);
 void PIAStateRead(void);
 void POKEYStateRead(void);
 void CARTStateRead(void);
-void SIOStateRead(void);
+void SIO_StateRead(void);
 
 #if defined(MEMCOMPR)
 static gzFile *mem_open(const char *name, const char *mode);
@@ -353,7 +353,7 @@ int SaveAtariState(const char *filename, const char *mode, UBYTE SaveVerbose)
 	   decisions on what to save/not save are made based off that later in the process */
 	MainStateSave();
 	CARTStateSave();
-	SIOStateSave();
+	SIO_StateSave();
 	AnticStateSave();
 	CpuStateSave(SaveVerbose);
 	GTIAStateSave();
@@ -426,7 +426,7 @@ int ReadAtariState(const char *filename, const char *mode)
 	MainStateRead();
 	if (StateVersion != 3) {
 		CARTStateRead();
-		SIOStateRead();
+		SIO_StateRead();
 	}
 	AnticStateRead();
 	CpuStateRead(SaveVerbose);

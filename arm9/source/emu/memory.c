@@ -30,6 +30,7 @@
 #include "atari.h"
 #include "antic.h"
 #include "cpu.h"
+#include "esc.h"
 #include "cartridge.h"
 #include "gtia.h"
 #include "memory.h"
@@ -71,7 +72,7 @@ map_save save_map[2] = {
 
 static UBYTE under_atarixl_os[16384];
 static UBYTE under_atari_basic[8192];
-static UBYTE *atarixe_memory = (UBYTE *)0x06040000;	//A convienent 128k of memory... it's a bit faster when bank switching
+static UBYTE *atarixe_memory = NULL;
 static ULONG atarixe_memory_size = 0;
 
 extern const UBYTE *antic_xe_ptr;	/* Separate ANTIC access to extended memory */
@@ -82,18 +83,30 @@ static void AllocXEMemory(void)
 		/* don't count 64 KB of base memory */
 		/* count number of 16 KB banks, add 1 for saving base memory 0x4000-0x7fff */
 		ULONG size = (1 + (ram_size - 64) / 16) * 16384;
-		if (size != atarixe_memory_size) {
-			//if (atarixe_memory != NULL)
-			//	free(atarixe_memory);
-			//atarixe_memory = (UBYTE *) Util_malloc(size);
+		if (size != atarixe_memory_size) 
+        {
+            if (ram_size <= 128)
+            {
+                atarixe_memory = (UBYTE *)0x06040000;	//A convienent 128k of memory... it's a bit faster when bank switching
+            }
+            else
+            {
+                if (atarixe_memory != NULL)
+                    free(atarixe_memory);
+                atarixe_memory = (UBYTE *) Util_malloc(size);
+            }
 			atarixe_memory_size = size;
 			memset(atarixe_memory, 0, size);
 		}
 	}
 	/* atarixe_memory not needed, free it */
-	else if (atarixe_memory != NULL) {
-		//free(atarixe_memory);
-		//atarixe_memory = NULL;
+	else if (atarixe_memory != NULL) 
+    {
+        if (ram_size > 128)
+        {
+		    free(atarixe_memory);
+		    atarixe_memory = NULL;
+        }
 		atarixe_memory_size = 0;
 	}
 }
@@ -111,7 +124,7 @@ void MEMORY_InitialiseMachine(void)
 	case MACHINE_OSA:
 	case MACHINE_OSB:
 		memcpy(memory + 0xd800, atari_os, 0x2800);
-		Atari800_PatchOS();
+		ESC_PatchOS();
 		dFillMem(0x0000, 0x00, ram_size * 1024 - 1);
 		SetRAM(0x0000, ram_size * 1024 - 1);
 		if (ram_size < 52) {
@@ -143,7 +156,7 @@ void MEMORY_InitialiseMachine(void)
 	case MACHINE_XLXE:
             
 		memcpy(memory + 0xc000, atari_os, 0x4000);
-		Atari800_PatchOS();
+		ESC_PatchOS();
             
         dFillMem(0x0000, 0x00, hole_start);
         SetRAM(0x0000, hole_start - 1);
@@ -488,7 +501,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 			}
 			memcpy(memory + 0xc000, atari_os, 0x1000);
 			memcpy(memory + 0xd800, atari_os + 0x1800, 0x2800);
-			Atari800_PatchOS();
+			ESC_PatchOS();
 		}
 		else {
 			/* Disable OS ROM */

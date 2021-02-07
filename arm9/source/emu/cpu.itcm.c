@@ -66,6 +66,7 @@
 #include "antic.h"
 #include "atari.h"
 #include "memory.h"
+#include "esc.h"
 //#include "monitor.h"
 #ifndef BASIC
 #include "statesav.h"
@@ -1800,7 +1801,7 @@ void GO(int limit)
 		data = IMMEDIATE;
 		UPDATE_GLOBAL_REGS;
 		CPU_GetStatus();
-		Atari800_RunEsc(data);
+		ESC_Run(data);
 		CPU_PutStatus();
 		UPDATE_LOCAL_REGS;
 		data = PL;
@@ -1816,7 +1817,7 @@ void GO(int limit)
 		data = IMMEDIATE;
 		UPDATE_GLOBAL_REGS;
 		CPU_GetStatus();
-		Atari800_RunEsc(data);
+		ESC_Run(data);
 		CPU_PutStatus();
 		UPDATE_LOCAL_REGS;
 		DONE

@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Atari800; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "config.h"
@@ -32,17 +32,17 @@
 
 #include "atari.h"
 #include "compfile.h"
-//#include "log.h"
+#include "log.h"
 #include "util.h"
 
 /* GZ decompression ------------------------------------------------------ */
 
 /* Opens a GZIP compressed file and decompresses its contents to outfp.
    Returns TRUE on success. */
-int CompressedFile_ExtractGZ(const char *infilename, FILE *outfp)
+int CompFile_ExtractGZ(const char *infilename, FILE *outfp)
 {
 #ifndef HAVE_LIBZ
-	iprintf("This executable cannot decompress ZLIB files");
+	Log_print("This executable cannot decompress ZLIB files");
 	return FALSE;
 #else
 	/* TODO: replace gz* with low-level light-weight ZLIB functions. */
@@ -50,7 +50,7 @@ int CompressedFile_ExtractGZ(const char *infilename, FILE *outfp)
 	void *buf;
 	int result;
 	if (gzf == NULL) {
-		iprintf("ZLIB could not open file %s", infilename);
+		Log_print("ZLIB could not open file %s", infilename);
 		return FALSE;
 	}
 #define UNCOMPRESS_BUFFER_SIZE 32768
@@ -106,15 +106,15 @@ static int write_atr_header(const ATR_Info *pai)
 	int sectorcount;
 	int sectorsize;
 	ULONG paras;
-	struct ATR_Header header;
+	struct AFILE_ATR_Header header;
 	sectorcount = pai->sectorcount;
 	sectorsize = pai->sectorsize;
 	paras = (sectorsize != 256 || sectorcount <= 3)
 		? (sectorcount << 3) /* single density or only boot sectors: sectorcount * 128 / 16 */
 		: (sectorcount << 4) - 0x18; /* double density with 128-byte boot sectors: (sectorcount * 256 - 3 * 128) / 16 */
 	memset(&header, 0, sizeof(header));
-	header.magic1 = MAGIC1;
-	header.magic2 = MAGIC2;
+	header.magic1 = AFILE_ATR_MAGIC1;
+	header.magic2 = AFILE_ATR_MAGIC2;
 	header.secsizelo = (UBYTE) sectorsize;
 	header.secsizehi = (UBYTE) (sectorsize >> 8);
 	header.seccountlo = (UBYTE) paras;
@@ -152,7 +152,7 @@ static int dcm_pass(FILE *infp, ATR_Info *pai)
 		if (sector_type == 0x45)
 			return TRUE;
 		if (sector_no < pai->current_sector) {
-			iprintf("Error: current sector is %d, next sector group at %d", pai->current_sector, sector_no);
+			Log_print("Error: current sector is %d, next sector group at %d", pai->current_sector, sector_no);
 			return FALSE;
 		}
 		if (!pad_till_sector(pai, sector_no))
@@ -218,7 +218,7 @@ static int dcm_pass(FILE *infp, ATR_Info *pai)
 					return FALSE;
 				break;
 			default:
-				iprintf("Unrecognized sector coding type 0x%02X", sector_type);
+				Log_print("Unrecognized sector coding type 0x%02X", sector_type);
 				return FALSE;
 			}
 			if (!write_atr_sector(pai, sector_buf))
@@ -232,7 +232,7 @@ static int dcm_pass(FILE *infp, ATR_Info *pai)
 	}
 }
 
-int CompressedFile_DCMtoATR(FILE *infp, FILE *outfp)
+int CompFile_DCMtoATR(FILE *infp, FILE *outfp)
 {
 	int archive_type;
 	int archive_flags;
@@ -241,14 +241,14 @@ int CompressedFile_DCMtoATR(FILE *infp, FILE *outfp)
 	int last_sector;
 	archive_type = fgetc(infp);
 	if (archive_type != 0xf9 && archive_type != 0xfa) {
-		iprintf("This is not a DCM image");
+		Log_print("This is not a DCM image");
 		return FALSE;
 	}
 	archive_flags = fgetc(infp);
 	if ((archive_flags & 0x1f) != 1) {
-		iprintf("Expected pass one first");
+		Log_print("Expected pass one first");
 		if (archive_type == 0xf9)
-			iprintf("It seems that DCMs of a multi-file archive have been combined in wrong order");
+			Log_print("It seems that DCMs of a multi-file archive have been combined in wrong order");
 		return FALSE;
 	}
 	ai.fp = outfp;
@@ -267,7 +267,7 @@ int CompressedFile_DCMtoATR(FILE *infp, FILE *outfp)
 		ai.sectorsize = 128;
 		break;
 	default:
-		iprintf("Unrecognized density");
+		Log_print("Unrecognized density");
 		return FALSE;
 	}
 	if (!write_atr_header(&ai))
@@ -283,19 +283,19 @@ int CompressedFile_DCMtoATR(FILE *infp, FILE *outfp)
 		block_type = fgetc(infp);
 		if (block_type != archive_type) {
 			if (block_type == EOF && archive_type == 0xf9) {
-				iprintf("Multi-part archive error.");
-				iprintf("To process these files, you must first combine the files into a single file.");
-#if defined(WIN32) || defined(DJGPP)
-				iprintf("COPY /B file1.dcm+file2.dcm+file3.dcm newfile.dcm from the DOS prompt");
-#elif defined(linux) || defined(unix)
-				iprintf("cat file1.dcm file2.dcm file3.dcm >newfile.dcm from the shell");
+				Log_print("Multi-part archive error.");
+				Log_print("To process these files, you must first combine the files into a single file.");
+#if defined(HAVE_WINDOWS_H) || defined(DJGPP)
+				Log_print("COPY /B file1.dcm+file2.dcm+file3.dcm newfile.dcm from the DOS prompt");
+#elif defined(__linux__) || defined(__unix__)
+				Log_print("cat file1.dcm file2.dcm file3.dcm >newfile.dcm from the shell");
 #endif
 			}
 			return FALSE;
 		}
 		pass_flags = fgetc(infp);
 		if ((pass_flags ^ archive_flags) & 0x60) {
-			iprintf("Density changed inside DCM archive?");
+			Log_print("Density changed inside DCM archive?");
 			return FALSE;
 		}
 		/* TODO: check pass number, this is tricky for >31 */

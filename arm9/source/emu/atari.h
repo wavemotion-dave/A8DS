@@ -15,6 +15,8 @@ extern int debug[];
 #define BASIC_ALTIRRA   0
 #define BASIC_ATARIREVC 1
 
+extern int os_type;
+
 
 /* Fundamental declarations ---------------------------------------------- */
 
@@ -64,7 +66,14 @@ extern int debug[];
 #define MACHINE_OSB   1
 #define MACHINE_XLXE  2
 #define MACHINE_5200  3
+
+#define Atari800_MACHINE_OSA   0
+#define Atari800_MACHINE_OSB   1
+#define Atari800_MACHINE_XLXE  2
+#define Atari800_MACHINE_5200  3
+
 extern int machine_type;
+#define Atari800_machine_type machine_type
 
 /* RAM size in kilobytes.
    Valid values for MACHINE_OSA and MACHINE_OSB are: 16, 48, 52.
@@ -139,7 +148,7 @@ extern int sprite_collisions_in_skipped_frames;
 #define MENU_EXIT             17
 #define MENU_CASSETTE         18
 
-/* File types returned by Atari800_DetectFileType() and Atari800_OpenFile(). */
+/* File types returned by AFILE_DetectFileType() and AFILE_OpenFile(). */
 #define AFILE_ERROR      0
 #define AFILE_ATR        1
 #define AFILE_XFD        2
@@ -155,6 +164,29 @@ extern int sprite_collisions_in_skipped_frames;
 #define AFILE_BOOT_TAPE  12
 #define AFILE_STATE      13
 #define AFILE_STATE_GZ   14
+#define AFILE_PRO        15
+#define AFILE_ATX        16
+
+#define ATR_Header AFILE_ATR_Header
+/* ATR format header */
+struct AFILE_ATR_Header {
+	unsigned char magic1;
+	unsigned char magic2;
+	unsigned char seccountlo;
+	unsigned char seccounthi;
+	unsigned char secsizelo;
+	unsigned char secsizehi;
+	unsigned char hiseccountlo;
+	unsigned char hiseccounthi;
+	unsigned char gash[7];
+	unsigned char writeprotect;
+};
+
+/* First two bytes of an ATR file. */
+#define AFILE_ATR_MAGIC1  0x96
+#define AFILE_ATR_MAGIC2  0x02
+#define MAGIC1  0x96
+#define MAGIC2  0x02
 
 extern int gTotalAtariFrames;
 
@@ -163,6 +195,9 @@ int Atari800_Initialise(void);
 
 /* Emulates one frame (1/50sec for PAL, 1/60sec for NTSC). */
 void Atari800_Frame(void);
+
+#define Atari800_Coldstart Coldstart
+#define Atari800_Warmstart Warmstart
 
 /* Reboots the emulated Atari. */
 void Coldstart(void);
@@ -202,27 +237,6 @@ int Atari800_WriteConfig(void);
 int Atari800_Exit(int run_monitor);
 
 
-/* Private interface ----------------------------------------------------- */
-/* Don't use outside the emulation core! */
-
-/* ATR format header */
-struct ATR_Header {
-	unsigned char magic1;
-	unsigned char magic2;
-	unsigned char seccountlo;
-	unsigned char seccounthi;
-	unsigned char secsizelo;
-	unsigned char secsizehi;
-	unsigned char hiseccountlo;
-	unsigned char hiseccounthi;
-	unsigned char gash[7];
-	unsigned char writeprotect;
-};
-
-/* First two bytes of an ATR file. */
-#define MAGIC1  0x96
-#define MAGIC2  0x02
-
 /* Current clock cycle in a scanline.
    Normally 0 <= xpos && xpos < LINE_C, but in some cases xpos >= LINE_C,
    which means that we are already in line (ypos + 1). */
@@ -251,111 +265,12 @@ extern unsigned int screenline_cpu_clock;
 /* Current main clock value. */
 #define cpu_clock (screenline_cpu_clock + xpos)
 
-/* STAT_UNALIGNED_WORDS is solely for benchmarking purposes.
-   8-element arrays (stat_arr) represent number of accesses with the given
-   value of 3 least significant bits of address. This gives us information
-   about the ratio of aligned vs unaligned accesses. */
-#ifdef STAT_UNALIGNED_WORDS
-#define UNALIGNED_STAT_DEF(stat_arr)             unsigned int stat_arr[8];
-#define UNALIGNED_STAT_DECL(stat_arr)            extern unsigned int stat_arr[8];
-#define UNALIGNED_GET_WORD(ptr, stat_arr)        (stat_arr[(unsigned int) (ptr) & 7]++, *(const UWORD *) (ptr))
-#define UNALIGNED_PUT_WORD(ptr, value, stat_arr) (stat_arr[(unsigned int) (ptr) & 7]++, *(UWORD *) (ptr) = (value))
-#define UNALIGNED_GET_LONG(ptr, stat_arr)        (stat_arr[(unsigned int) (ptr) & 7]++, *(const ULONG *) (ptr))
-#define UNALIGNED_PUT_LONG(ptr, value, stat_arr) (stat_arr[(unsigned int) (ptr) & 7]++, *(ULONG *) (ptr) = (value))
-UNALIGNED_STAT_DECL(atari_screen_write_long_stat)
-UNALIGNED_STAT_DECL(pm_scanline_read_long_stat)
-UNALIGNED_STAT_DECL(memory_read_word_stat)
-UNALIGNED_STAT_DECL(memory_write_word_stat)
-UNALIGNED_STAT_DECL(memory_read_aligned_word_stat)
-UNALIGNED_STAT_DECL(memory_write_aligned_word_stat)
-#else
 #define UNALIGNED_STAT_DEF(stat_arr)
 #define UNALIGNED_STAT_DECL(stat_arr)
 #define UNALIGNED_GET_WORD(ptr, stat_arr)        (*(const UWORD *) (ptr))
 #define UNALIGNED_PUT_WORD(ptr, value, stat_arr) (*(UWORD *) (ptr) = (value))
 #define UNALIGNED_GET_LONG(ptr, stat_arr)        (*(const ULONG *) (ptr))
 #define UNALIGNED_PUT_LONG(ptr, value, stat_arr) (*(ULONG *) (ptr) = (value))
-#endif
-
-/* Escape codes used to mark places in 6502 code that must
-   be handled specially by the emulator. An escape sequence
-   is an illegal 6502 opcode 0xF2 or 0xD2 followed
-   by one of these escape codes: */
-enum ESCAPE {
-
-	/* SIO patch. */
-	ESC_SIOV,
-
-	/* stdio-based handlers for the BASIC version
-	   and handlers for Atari Basic loader. */
-	ESC_EHOPEN,
-	ESC_EHCLOS,
-	ESC_EHREAD,
-	ESC_EHWRIT,
-	ESC_EHSTAT,
-	ESC_EHSPEC,
-
-	ESC_KHOPEN,
-	ESC_KHCLOS,
-	ESC_KHREAD,
-	ESC_KHWRIT,
-	ESC_KHSTAT,
-	ESC_KHSPEC,
-
-	/* Atari executable loader. */
-	ESC_BINLOADER_CONT,
-
-	/* Cassette emulation. */
-	ESC_COPENLOAD = 0xa8,
-	ESC_COPENSAVE = 0xa9,
-
-	/* Printer. */
-	ESC_PHOPEN = 0xb0,
-	ESC_PHCLOS = 0xb1,
-	ESC_PHREAD = 0xb2,
-	ESC_PHWRIT = 0xb3,
-	ESC_PHSTAT = 0xb4,
-	ESC_PHSPEC = 0xb5,
-	ESC_PHINIT = 0xb6,
-
-#ifdef R_IO_DEVICE
-	/* R: device. */
-	ESC_ROPEN = 0xd0,
-	ESC_RCLOS = 0xd1,
-	ESC_RREAD = 0xd2,
-	ESC_RWRIT = 0xd3,
-	ESC_RSTAT = 0xd4,
-	ESC_RSPEC = 0xd5,
-	ESC_RINIT = 0xd6,
-#endif
-
-	/* H: device. */
-	ESC_HHOPEN = 0xc0,
-	ESC_HHCLOS = 0xc1,
-	ESC_HHREAD = 0xc2,
-	ESC_HHWRIT = 0xc3,
-	ESC_HHSTAT = 0xc4,
-	ESC_HHSPEC = 0xc5,
-	ESC_HHINIT = 0xc6
-};
-
-/* A function called to handle an escape sequence. */
-typedef void (*EscFunctionType)(void);
-
-/* Puts an escape sequence at the specified address. */
-void Atari800_AddEsc(UWORD address, UBYTE esc_code, EscFunctionType function);
-
-/* Puts an escape sequence followed by the RTS instruction. */
-void Atari800_AddEscRts(UWORD address, UBYTE esc_code, EscFunctionType function);
-
-/* Puts an escape sequence with an integrated RTS. */
-void Atari800_AddEscRts2(UWORD address, UBYTE esc_code, EscFunctionType function);
-
-/* Unregisters an escape sequence. You must cleanup the Atari memory yourself. */
-void Atari800_RemoveEsc(UBYTE esc_code);
-
-/* Handles an escape sequence. */
-void Atari800_RunEsc(UBYTE esc_code);
 
 /* Reads a byte from the specified special address (not RAM or ROM). */
 UBYTE Atari800_GetByte(UWORD addr);

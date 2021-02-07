@@ -21,22 +21,10 @@ typedef struct FICtoLoad {
   unsigned int uCrc;
 } FICA5200;
 
-typedef struct {
-  unsigned int sndLevel;
-  unsigned int m_ScreenRatio; // 0 = original show, 1 = full screen
-  unsigned short DS_Pad[12]; // each key mapping
-  unsigned int m_DisplayFPS;
-} gamecfg;
-
 #define ds_GetTicks() (TIMER0_DATA)
-
-extern gamecfg GameConf;
 
 extern int bg0, bg1, bg0b,bg1b;
 extern unsigned int video_height;                  // Actual video height
-//extern unsigned short *bufVideo;   // Video buffer
-extern unsigned char bufVideo[512*512]; 
-extern unsigned int gameCRC;               // crc checksum of file  
 
 extern void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr, unsigned char valEnd, unsigned char uWait);
 

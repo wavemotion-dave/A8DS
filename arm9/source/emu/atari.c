@@ -60,6 +60,7 @@
 
 #include "antic.h"
 #include "atari.h"
+#include "esc.h"
 #include "binload.h"
 #include "cartridge.h"
 #include "cassette.h"
@@ -118,138 +119,6 @@ int verbose = FALSE;
 
 int sprite_collisions_in_skipped_frames = FALSE;
 
-
-//int emuos_mode = 1;	/* 0 = never use EmuOS, 1 = use EmuOS if real OS not available, 2 = always use EmuOS */
-
-/* Now we check address of every escape code, to make sure that the patch
-   has been set by the emulator and is not a CIM in Atari program.
-   Also switch() for escape codes has been changed to array of pointers
-   to functions. This allows adding port-specific patches (e.g. modem device)
-   using Atari800_AddEsc, Device_UpdateHATABSEntry etc. without modifying
-   atari.c/devices.c. Unfortunately it can't be done for patches in Atari OS,
-   because the OS in XL/XE can be disabled.
-*/
-static UWORD esc_address[256];
-static EscFunctionType esc_function[256];
-
-void Atari800_ClearAllEsc(void) {
-	int i;
-	for (i = 0; i < 256; i++)
-		esc_function[i] = NULL;
-}
-
-void Atari800_AddEsc(UWORD address, UBYTE esc_code, EscFunctionType function) {
-	esc_address[esc_code] = address;
-	esc_function[esc_code] = function;
-	dPutByte(address, 0xf2);			/* ESC */
-	dPutByte(address + 1, esc_code);	/* ESC CODE */
-}
-
-void Atari800_AddEscRts(UWORD address, UBYTE esc_code, EscFunctionType function) {
-	esc_address[esc_code] = address;
-	esc_function[esc_code] = function;
-	dPutByte(address, 0xf2);			/* ESC */
-	dPutByte(address + 1, esc_code);	/* ESC CODE */
-	dPutByte(address + 2, 0x60);		/* RTS */
-}
-
-/* 0xd2 is ESCRTS, which works same as pair of ESC and RTS (I think so...).
-   So this function does effectively the same as Atari800_AddEscRts,
-   except that it modifies 2, not 3 bytes in Atari memory.
-   I don't know why it is done that way, so I simply leave it
-   unchanged (0xf2/0xd2 are used as in previous versions).
-*/
-void Atari800_AddEscRts2(UWORD address, UBYTE esc_code, EscFunctionType function)
-{
-	esc_address[esc_code] = address;
-	esc_function[esc_code] = function;
-	dPutByte(address, 0xd2);			/* ESCRTS */
-	dPutByte(address + 1, esc_code);	/* ESC CODE */
-}
-
-void Atari800_RemoveEsc(UBYTE esc_code)
-{
-	esc_function[esc_code] = NULL;
-}
-
-void Atari800_RunEsc(UBYTE esc_code)
-{
-	if (esc_address[esc_code] == regPC - 2 && esc_function[esc_code] != NULL) {
-		esc_function[esc_code]();
-		return;
-	}
-#ifdef CRASH_MENU
-	regPC -= 2;
-	crash_address = regPC;
-	crash_afterCIM = regPC + 2;
-	crash_code = dGetByte(crash_address);
-	ui();
-#else /* CRASH_MENU */
-	cim_encountered = 1;
-	iprintf("Invalid ESC code %02x at address %04x", esc_code, regPC - 2);
-#ifndef __PLUS
-	if (!Atari800_Exit(TRUE))
-		exit(0);
-#else /* __PLUS */
-	Atari800_Exit(TRUE);
-#endif /* __PLUS */
-#endif /* CRASH_MENU */
-}
-
-void Atari800_PatchOS(void) {
-	int patched = Device_PatchOS();
-
-	if (enable_sio_patch) {
-		UWORD addr_l;
-		UWORD addr_s;
-		UBYTE check_s_0;
-		UBYTE check_s_1;
-		/* patch Open() of C: so we know when a leader is processed */
-		switch (machine_type) {
-		case MACHINE_OSA:
-		case MACHINE_OSB:
-			addr_l = 0xef74;
-			addr_s = 0xefbc;
-			check_s_0 = 0xa0;
-			check_s_1 = 0x80;
-			break;
-		case MACHINE_XLXE:
-			addr_l = 0xfd13;
-			addr_s = 0xfd60;
-			check_s_0 = 0xa9;
-			check_s_1 = 0x03;
-			break;
-		default:
-			return;
-		}
-		/* don't hurt non-standard OSes that may not support cassette at all  */
-		if (dGetByte(addr_l)     == 0xa9 && dGetByte(addr_l + 1) == 0x03
-		 && dGetByte(addr_l + 2) == 0x8d && dGetByte(addr_l + 3) == 0x2a
-		 && dGetByte(addr_l + 4) == 0x02
-		 && dGetByte(addr_s)     == check_s_0
-		 && dGetByte(addr_s + 1) == check_s_1
-		 && dGetByte(addr_s + 2) == 0x20 && dGetByte(addr_s + 3) == 0x5c
-		 && dGetByte(addr_s + 4) == 0xe4) {
-			Atari800_AddEsc(addr_l, ESC_COPENLOAD, CASSETTE_LeaderLoad);
-			Atari800_AddEsc(addr_s, ESC_COPENSAVE, CASSETTE_LeaderSave);
-		}
-		Atari800_AddEscRts(0xe459, ESC_SIOV, SIO);
-		patched = TRUE;
-	}
-	else {
-		Atari800_RemoveEsc(ESC_COPENLOAD);
-		Atari800_RemoveEsc(ESC_COPENSAVE);
-		Atari800_RemoveEsc(ESC_SIOV);
-	};
-	if (patched && machine_type == MACHINE_XLXE) {
-		/* Disable Checksum Test */
-		dPutByte(0xc314, 0x8e);
-		dPutByte(0xc315, 0xff);
-		dPutByte(0xc319, 0x8e);
-		dPutByte(0xc31a, 0xff);
-	}
-}
-
 void Warmstart(void) {
 	if (machine_type == MACHINE_OSA || machine_type == MACHINE_OSB) {
 		/* RESET key in 400/800 does not reset chips,
@@ -289,11 +158,11 @@ void Coldstart(void) {
 	   and Start key (boot from cassette) */
 	consol_index = 2;
 	consol_table[2] = 0x0f;
-	if (disable_basic && !loading_basic) {
+	if (disable_basic && !BINLOAD_loading_basic) {
 		/* hold Option during reboot */
 		consol_table[2] &= ~CONSOL_OPTION;
 	}
-	if (hold_start) {
+	if (CASSETTE_hold_start) {
 		/* hold Start during reboot */
 		consol_table[2] &= ~CONSOL_START;
 	}
@@ -302,9 +171,9 @@ void Coldstart(void) {
 
 int Atari800_InitialiseMachine(void) 
 {
-	Atari800_ClearAllEsc();
+	ESC_ClearAll();
 	MEMORY_InitialiseMachine();
-	Device_UpdatePatches();
+	Devices_UpdatePatches();
 	return TRUE;
 }
 
@@ -333,7 +202,7 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
         Coldstart();
       break;
     case AFILE_XEX:
-      if (!BIN_loader(filename))
+      if (!BINLOAD_Loader(filename))
         return AFILE_ERROR;
       break;
 	}
@@ -342,10 +211,10 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
 
 int Atari800_Initialise(void) 
 {
-    Device_Initialise();
+    Devices_Initialise(NULL, NULL);
     RTIME_Initialise();
-    SIO_Initialise ();
-    CASSETTE_Initialise();
+    SIO_Initialise (NULL, NULL);
+    CASSETTE_Initialise(NULL,NULL);
 
     INPUT_Initialise();
 
@@ -446,8 +315,8 @@ void Atari800_UpdatePatches(void) {
 		/* Restore unpatched OS */
 		dCopyToMem(atari_os, 0xd800, 0x2800);
 		/* Set patches */
-		Atari800_PatchOS();
-		Device_UpdatePatches();
+		ESC_PatchOS();
+		Devices_UpdatePatches();
 		break;
 	case MACHINE_XLXE:
 		/* Don't patch if OS disabled */
@@ -457,8 +326,8 @@ void Atari800_UpdatePatches(void) {
 		dCopyToMem(atari_os, 0xc000, 0x1000);
 		dCopyToMem(atari_os + 0x1800, 0xd800, 0x2800);
 		/* Set patches */
-		Atari800_PatchOS();
-		Device_UpdatePatches();
+		ESC_PatchOS();
+		Devices_UpdatePatches();
 		break;
 	default:
 		break;
@@ -467,7 +336,7 @@ void Atari800_UpdatePatches(void) {
 
 void Atari800_Frame() 
 {
-	Device_Frame();
+	Devices_Frame();
 	INPUT_Frame();
 	GTIA_Frame();
     ANTIC_Frame(TRUE);

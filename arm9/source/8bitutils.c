@@ -30,7 +30,6 @@ unsigned int count8bit=0, countfiles=0, ucFicAct=0;
 int gTotalAtariFrames = 0;
 int bg0, bg1, bg0b,bg1b;
 unsigned int etatEmu;
-gamecfg GameConf;                       // Game Config svg
 
 int myGame_offset_x = 32;
 int myGame_offset_y = 20;
@@ -622,6 +621,8 @@ void dsChooseOptions(int bOkayToChangePalette)
         if (Option_Table[idx].label == NULL) break;   
     }
     
+    dsPrintValue(3,22, 0, "UP/DOWN TO SELECT OPTION");
+    dsPrintValue(3,23, 0, "A=TOGGLE OPTION, B=EXIT");
     optionHighlighted = 0;
     while (!bDone) 
     {

@@ -30,12 +30,20 @@ extern void CPUGET(void);		/* put from CCR, N & Z FLAG into regP */
 extern void CPUPUT(void);		/* put from regP into CCR, N & Z FLAG */
 #endif
 
+
 extern UWORD regPC;
 extern UBYTE regA;
 extern UBYTE regP;
 extern UBYTE regS;
 extern UBYTE regY;
 extern UBYTE regX;
+
+#define CPU_regPC regPC
+#define CPU_regA  regA
+#define CPU_regP  regP
+#define CPU_regS  regS
+#define CPU_regY  regY
+#define CPU_regX  regX
 
 #define SetN regP |= N_FLAG
 #define ClrN regP &= (~N_FLAG)
@@ -52,11 +60,24 @@ extern UBYTE regX;
 #define SetC regP |= C_FLAG
 #define ClrC regP &= (~C_FLAG)
 
+#define CPU_SetN SetN
+#define CPU_ClrN ClrN
+#define CPU_SetV SetV
+#define CPU_ClrV ClrV
+#define CPU_SetZ SetZ
+#define CPU_ClrZ ClrZ
+#define CPU_SetC SetC
+#define CPU_ClrC ClrC
+
 extern UBYTE IRQ;
+
+#define CPU_rts_handler rts_handler
 
 extern void (*rts_handler)(void);
 
 extern UBYTE cim_encountered;
+
+#define CPU_cim_encountered cim_encountered
 
 #define REMEMBER_PC_STEPS 64
 extern UWORD remember_PC[REMEMBER_PC_STEPS];

@@ -55,6 +55,16 @@ char *Util_stpcpy(char *dest, const char *src)
 	return dest + len;
 }
 
+char *Util_strncpy(char *dest, const char *src, size_t size) {
+	while (size-- > 0) {
+		if ((*dest++ = *src++) == '\0')
+			break;
+	}
+	while (size-- > 0)
+		*dest++ = '\0';
+	return dest;
+}
+
 char *Util_strlcpy(char *dest, const char *src, size_t size)
 {
 	strncpy(dest, src, size);

@@ -34,6 +34,8 @@ char *Util_stpcpy(char *dest, const char *src);
    to dest (the result may be truncated). Returns dest. */
 char *Util_strlcpy(char *dest, const char *src, size_t size);
 
+char *Util_strncpy(char *dest, const char *src, size_t size);
+
 /* Modifies the string to uppercase and returns it. */
 char *Util_strupper(char *s);
 
@@ -84,6 +86,9 @@ char *Util_strdup(const char *s);
 #define DIR_SEP_CHAR '/'
 #define DIR_SEP_STR  "/"
 #endif
+
+#define Util_DIR_SEP_CHAR DIR_SEP_CHAR
+#define Util_DIR_SEP_STR DIR_SEP_STR
 
 /* Splits a filename into directory part and file part. */
 /* dir_part or file_part may be NULL. */

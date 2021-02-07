@@ -136,10 +136,10 @@ void INPUT_Frame(void)
 
 	if (key_code < 0) 
     {
-		if (press_space) 
+		if (CASSETTE_press_space) 
         {
 			key_code = AKEY_SPACE;
-			press_space = 0;
+			CASSETTE_press_space = 0;
 		}
 		else 
         {

@@ -37,6 +37,12 @@ extern int break_ypos;
 extern int ypos;
 extern UBYTE wsync_halt;
 
+extern unsigned int screenline_cpu_clock;
+
+#define ANTIC_CPU_CLOCK (screenline_cpu_clock + xpos)
+#define ANTIC_xpos xpos
+#define ANTIC_ypos ypos
+
 #define NMIST_C	6
 #define NMI_C	12
 

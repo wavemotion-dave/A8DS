@@ -49,8 +49,13 @@ extern UBYTE SKSTAT;
 extern int DELAYED_SERIN_IRQ;
 extern int DELAYED_SEROUT_IRQ;
 extern int DELAYED_XMTDONE_IRQ;
-
 extern UBYTE POT_input[8];
+
+#define POKEY_DELAYED_SERIN_IRQ  DELAYED_SERIN_IRQ
+#define POKEY_AUDF AUDF
+#define POKEY_AUDC AUDC
+#define POKEY_CHAN3 CHAN3
+#define POKEY_CHAN4 CHAN4
 
 ULONG POKEY_GetRandomCounter(void);
 void POKEY_SetRandomCounter(ULONG value);
