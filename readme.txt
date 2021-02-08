@@ -63,6 +63,11 @@ Not much.
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V1.3 : 08-Feb-2021 by wavemotion-dave
+  * Fixed ICON
+  * Major overhaul to bring the SIO and Disk Loading up to Atari800 4.2 standards.
+  * New options menu with a variety of options accessed via the GEAR icon.
+
 V1.2 : 06-Feb-2021 by wavemotion-dave
   * Altirra BASIC 1.55 is now baked into the software (thanks to Avery Lee).
   * Fixed PAL sound and framerate.
