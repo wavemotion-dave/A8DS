@@ -44,6 +44,7 @@ int os_type = OS_ALTIRRA;
 int basic_type = BASIC_ALTIRRA;
 int bHaveBASIC = false;
 int bUseA_KeyAsUP = false;
+int bUseX_KeyAsCR = false;
 int showFps=false;
 int palett_type = 1;
 int auto_fire=0;
@@ -585,6 +586,7 @@ struct options_t Option_Table[] =
     {"BASIC",       {"DISABLED",    "ENABLED"},         &bHaveBASIC,    2},
     {"BASIC TYPE",  {"ALTIRRA",     "ATARIBAS.ROM"},    &basic_type,    2},    
     {"A BUTTON",    {"FIRE",        "UP"},              &bUseA_KeyAsUP, 2},
+    {"X BUTTON",    {"SPACE",       "RETURN"},          &bUseX_KeyAsCR, 2},
     {"AUTOFIRE",    {"OFF",         "ON"},              &auto_fire,     2},
     {"SHOW FPS",    {"OFF",         "ON"},              &showFps,       2},
     {"TURBO MODE",  {"OFF",         "ON"},              &full_speed,    2},
@@ -1316,7 +1318,7 @@ ITCM_CODE void dsMainLoop(void)
         {
             if (keys_pressed & KEY_L) key_code = AKEY_ESCAPE;
             else if (keys_pressed & KEY_R) key_code = AKEY_RETURN;
-            else key_code = AKEY_SPACE;
+            else key_code = (bUseX_KeyAsCR ? AKEY_RETURN:AKEY_SPACE);
         }
             
         // if touch screen pressed

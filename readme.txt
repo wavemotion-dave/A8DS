@@ -63,6 +63,11 @@ Not much.
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V1.4 : 08-Feb-2021 by wavemotion-dave
+  * Fixed Crash on DS-LITE and DS-PHAT
+  * Improved speed of file listing
+  * Added option for X button to be SPACE or RETURN 
+
 V1.3 : 08-Feb-2021 by wavemotion-dave
   * Fixed ICON
   * Major overhaul to bring the SIO and Disk Loading up to Atari800 4.2 standards.

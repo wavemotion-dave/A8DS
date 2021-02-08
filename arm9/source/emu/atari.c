@@ -211,10 +211,12 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
 
 int Atari800_Initialise(void) 
 {
-    Devices_Initialise(NULL, NULL);
+    int argc=0;
+    char *argv[]={""};
+    Devices_Initialise(&argc, argv);
     RTIME_Initialise();
-    SIO_Initialise (NULL, NULL);
-    CASSETTE_Initialise(NULL,NULL);
+    SIO_Initialise (&argc, argv);
+    CASSETTE_Initialise(&argc, argv);
 
     INPUT_Initialise();
 
