@@ -1443,14 +1443,18 @@ ITCM_CODE void dsMainLoop(void)
           keys_touch=0;
         }
       
-        if (keys_pressed & KEY_UP) stick0 = STICK_FORWARD;
-        if (keys_pressed & KEY_LEFT) stick0 = STICK_LEFT;
-        if (keys_pressed & KEY_RIGHT) stick0 = STICK_RIGHT;
-        if (keys_pressed & KEY_DOWN) stick0 = STICK_BACK;
-        if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT)) stick0 = STICK_UL; 
-        if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_UR;
-        if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick0 = STICK_LL;
-        if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_LR;
+        // Only handle UP/DOWN/LEFT/RIGHT if shoulder buttons are not pressed (those are handled below)
+        if ((keys_pressed & (KEY_R|KEY_L)) == 0)
+        {
+            if (keys_pressed & KEY_UP) stick0 = STICK_FORWARD;
+            if (keys_pressed & KEY_LEFT) stick0 = STICK_LEFT;
+            if (keys_pressed & KEY_RIGHT) stick0 = STICK_RIGHT;
+            if (keys_pressed & KEY_DOWN) stick0 = STICK_BACK;
+            if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT)) stick0 = STICK_UL; 
+            if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_UR;
+            if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick0 = STICK_LL;
+            if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_LR;
+        }
 
         if (keys_pressed & KEY_START) key_consol &= ~CONSOL_START;
         if (keys_pressed & KEY_SELECT) key_consol &= ~CONSOL_SELECT;
@@ -1487,12 +1491,11 @@ int a8Filescmp (const void *c1, const void *c2) {
   FICA5200 *p1 = (FICA5200 *) c1;
   FICA5200 *p2 = (FICA5200 *) c2;
   
-  return strcmp (p1->filename, p2->filename);
+  return strcasecmp (p1->filename, p2->filename);
 }
 
 void a8FindFiles(void) 
 {
-	struct stat statbuf;
   DIR *pdir;
   struct dirent *pent;
   char filenametmp[300];
@@ -1505,10 +1508,8 @@ void a8FindFiles(void)
 
     while (((pent=readdir(pdir))!=NULL)) 
     {
-      stat(pent->d_name,&statbuf);
-
       strcpy(filenametmp,pent->d_name);
-      if(S_ISDIR(statbuf.st_mode)) 
+      if (pent->d_type == DT_DIR)
       {
         if (!( (filenametmp[0] == '.') && (strlen(filenametmp) == 1))) {
           a8romlist[count8bit].directory = true;
