@@ -139,6 +139,15 @@ UBYTE POKEY_GetByte(UWORD addr)
 void Update_Counter(int chan_mask);
 
 
+static int POKEY_siocheck(void)
+{
+	return (((AUDF[CHAN3] == 0x28 || AUDF[CHAN3] == 0x10
+	        || AUDF[CHAN3] == 0x08 || AUDF[CHAN3] == 0x0a)
+		&& AUDF[CHAN4] == 0x00) /* intelligent peripherals speeds */
+		|| (SKCTLS & 0x78) == 0x28) /* cassette save mode */
+		&& (AUDCTL[0] & 0x28) == 0x28;
+}
+
 #ifndef SOUND_GAIN /* sound gain can be pre-defined in the configure/Makefile */
 #define SOUND_GAIN 4
 #endif
@@ -216,6 +225,34 @@ void POKEY_PutByte(UWORD addr, UBYTE byte)
     }  
 		break;
 	case _SEROUT:
+		if ((SKCTLS & 0x70) == 0x20 && POKEY_siocheck())
+        {
+			SIO_PutByte(byte);
+        }
+		/* check if cassette 2-tone mode has been enabled */
+		if ((SKCTLS & 0x08) == 0x00) 
+        {
+			/* intelligent device */
+			DELAYED_SEROUT_IRQ = SIO_SEROUT_INTERVAL;
+			IRQST |= 0x08;
+			DELAYED_XMTDONE_IRQ = SIO_XMTDONE_INTERVAL;
+		}
+		else 
+        {
+			/* cassette */
+			/* some savers patch the cassette baud rate, so we evaluate it here */
+			/* scanlines per second*10 bit*audiofrequency/(1.79 MHz/2) */
+            DELAYED_SEROUT_IRQ = 312*50*10*(AUDF[CHAN3] + AUDF[CHAN4]*0x100)/895000;
+			/* safety check */
+			if (DELAYED_SEROUT_IRQ >= 3) {
+                        	IRQST |= 0x08;
+                        	DELAYED_XMTDONE_IRQ = 2*DELAYED_SEROUT_IRQ - 2;
+			}
+			else {
+				DELAYED_SEROUT_IRQ = 0;
+				DELAYED_XMTDONE_IRQ = 0;
+			}
+		};
 		break;
 	case _STIMER:
 		DivNIRQ[CHAN1] = DivNMax[CHAN1];
@@ -228,6 +265,17 @@ void POKEY_PutByte(UWORD addr, UBYTE byte)
         Update_pokey_sound(_SKCTLS, byte, 0, SOUND_GAIN);
 		if (byte & 4)
 			pot_scanline = 228;	/* fast pot mode - return results immediately */
+		if ((byte & 0x03) == 0) 
+        {
+			/* POKEY reset. */
+			/* Stop serial IO. */
+			DELAYED_SERIN_IRQ = 0;
+			DELAYED_SEROUT_IRQ = 0;
+			DELAYED_XMTDONE_IRQ = 0;
+			//CASSETTE_ResetPOKEY();
+			/* TODO other registers should also be reset. */
+		}
+            
 		break;
 	}
 }
@@ -301,7 +349,53 @@ void POKEY_Scanline(void)
     POT_input[0] = PCPOT_input[0]; POT_input[1] = PCPOT_input[1]; POT_input[2] = PCPOT_input[2]; POT_input[3] = PCPOT_input[3];
 
 	random_scanline_counter += LINE_C;
+    
+	if (DELAYED_SERIN_IRQ > 0) 
+    {
+		if (--DELAYED_SERIN_IRQ == 0) 
+        {
+			/* Load a byte to SERIN - even when the IRQ is disabled. */
+			SERIN = SIO_GetByte();
+			if (IRQEN & 0x20) 
+            {
+				if (IRQST & 0x20) 
+                {
+					IRQST &= 0xdf;
+				}
+				else 
+                {
+					SKSTAT &= 0xdf;
+				}
+				GenerateIRQ();
+			}
+		}
+	}    
 
+	if (DELAYED_SEROUT_IRQ > 0) 
+    {
+		if (--DELAYED_SEROUT_IRQ == 0) 
+        {
+			if (IRQEN & 0x10) 
+            {
+				IRQST &= 0xef;
+				GenerateIRQ();
+			}
+		}
+	}
+
+	if (DELAYED_XMTDONE_IRQ > 0)
+    {
+		if (--DELAYED_XMTDONE_IRQ == 0) 
+        {
+			IRQST &= 0xf7;
+			if (IRQEN & 0x08) 
+            {
+				GenerateIRQ();
+			}
+
+		}
+    }
+    
 	if ((DivNIRQ[CHAN1] -= LINE_C) < 0 ) {
 		DivNIRQ[CHAN1] += DivNMax[CHAN1];
 		if (IRQEN & 0x01) {
