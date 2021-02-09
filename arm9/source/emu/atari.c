@@ -119,6 +119,8 @@ int verbose = FALSE;
 
 int sprite_collisions_in_skipped_frames = FALSE;
 
+int skip_frames = FALSE;
+
 void Warmstart(void) {
 	if (machine_type == MACHINE_OSA || machine_type == MACHINE_OSB) {
 		/* RESET key in 400/800 does not reset chips,
@@ -341,7 +343,7 @@ void Atari800_Frame()
 	Devices_Frame();
 	INPUT_Frame();
 	GTIA_Frame();
-    ANTIC_Frame(TRUE);
+    ANTIC_Frame(skip_frames ? (gTotalAtariFrames & 3) : TRUE);  // Skip every 4th frame...
     POKEY_Frame();
     
     gTotalAtariFrames++;

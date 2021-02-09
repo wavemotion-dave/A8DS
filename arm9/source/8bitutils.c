@@ -30,6 +30,7 @@ unsigned int count8bit=0, countfiles=0, ucFicAct=0;
 int gTotalAtariFrames = 0;
 int bg0, bg1, bg0b,bg1b;
 unsigned int etatEmu;
+int atari_frames = 0;
 
 int myGame_offset_x = 32;
 int myGame_offset_y = 20;
@@ -39,6 +40,7 @@ int myGame_scale_y = 256;
 extern u32 trig0, trig1;
 extern u32 stick0;
 extern u32 stick1;
+extern int skip_frames;
 int full_speed = 0;
 int os_type = OS_ALTIRRA;
 int basic_type = BASIC_ALTIRRA;
@@ -499,6 +501,11 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
       TIMER2_DATA = TIMER_FREQ(SOUND_FREQ);
       TIMER2_CR = TIMER_DIV_1 | TIMER_IRQ_REQ | TIMER_ENABLE;	     
       irqSet(IRQ_TIMER2, VsoundHandler);        
+        
+      atari_frames = 0;
+      TIMER0_CR=0;
+      TIMER0_DATA=0;
+      TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;        
     }
 }
 
@@ -592,6 +599,7 @@ struct options_t Option_Table[] =
     {"TURBO MODE",  {"OFF",         "ON"},              &full_speed,    2},
     {"TV TYPE",     {"NTSC",        "PAL"},             &tv_type2,      2},
     {"PALETTE",     {"BRIGHT",      "NORMAL"},          &palett_type,   2},
+    {"SKIP FRAMES", {"NO",          "YES"},             &skip_frames,   2},   
     
     {NULL,          {"",            ""},                NULL,           2},
 };
@@ -1219,7 +1227,6 @@ void dsInstallSoundEmuFIFO(void)
     fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
 }
 
-
 ITCM_CODE void dsMainLoop(void) 
 {
   static bool bFirstLoad = true;
@@ -1263,18 +1270,28 @@ ITCM_CODE void dsMainLoop(void)
         break;
         
       case A5200_PLAYGAME:
-        // 65535 = 1 frame
-        // 1 frame = 1/50 ou 1/60 (0.02 ou 0.016 
-        // 656 -> 50 fps et 546 -> 60 fps
+            
+            
+        // 32,728.5 ticks = 1 second
+        // 1 frame = 1/50 or 1/60 (0.02 or 0.016)
+        // 655 -> 50 fps and 546 -> 60 fps
         if (!full_speed)
         {
-          while(TIMER0_DATA < (tv_mode == TV_NTSC ? 546:656))
-              ;
+            while(TIMER0_DATA < ((tv_mode == TV_NTSC ? 546:656)*atari_frames))
+                ;
         }
-        TIMER0_CR=0;
-        TIMER0_DATA=0;
-        TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
+
+        // Execute one frame
+        Atari800_Frame();
             
+        if (++atari_frames == (tv_mode == TV_NTSC ? 60:50))
+        {
+            TIMER0_CR=0;
+            TIMER0_DATA=0;
+            TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
+            atari_frames=0;
+        }
+
         // -------------------------------------------------------------
         // Stuff to do once/second such as FPS display and Debug Data
         // -------------------------------------------------------------
@@ -1292,9 +1309,6 @@ ITCM_CODE void dsMainLoop(void)
             if(bAtariCrash) dsPrintValue(1,23,0, "GAME CRASH - PICK ANOTHER GAME");
         }
         
-        // Execute one frame
-        Atari800_Frame();
-
         // Read keys
         keys_pressed=keysCurrent();
         key_consol = CONSOL_NONE;

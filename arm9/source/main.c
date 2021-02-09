@@ -22,6 +22,7 @@ void irqVBlank(void) {
   vusCptVBL++;
 }
 
+extern int skip_frames;
 // Program entry point
 int main(int argc, char **argv) 
 {
@@ -29,6 +30,8 @@ int main(int argc, char **argv)
     consoleDemoInit();
     soundEnable();
     lcdMainOnTop();
+    
+    skip_frames = (isDSiMode() ? FALSE:TRUE);   // For older DS models, we skip frames to get full speed...
 
     // Init Fat
     if (!fatInitDefault()) 

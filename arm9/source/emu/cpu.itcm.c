@@ -152,17 +152,7 @@ void (*rts_handler)(void) = NULL;
 
 UBYTE cim_encountered = FALSE;
 
-/* Execution history */
-#ifdef MONITOR_BREAK
-UWORD remember_PC[REMEMBER_PC_STEPS];
-unsigned int remember_PC_curpos = 0;
-int remember_xpos[REMEMBER_PC_STEPS];
-UWORD remember_JMP[REMEMBER_JMP_STEPS];
-unsigned int remember_jmp_curpos = 0;
-#define INC_RET_NESTING ret_nesting++
-#else /* MONITOR_BREAK */
 #define INC_RET_NESTING
-#endif /* MONITOR_BREAK */
 
 /* Addressing modes */
 #ifdef WRAP_ZPAGE
@@ -291,7 +281,7 @@ void GO(int limit)
 {
 #define OPCODE_ALIAS(code)	opcode_##code:
 #define DONE				goto next;
-	static const void *opcode[256] __attribute__((section(".dtcm"))) =
+	static void *opcode[256] __attribute__((section(".dtcm"))) =
 	{
 		&&opcode_00, &&opcode_01, &&opcode_02, &&opcode_03,
 		&&opcode_04, &&opcode_05, &&opcode_06, &&opcode_07,

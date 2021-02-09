@@ -49,46 +49,11 @@
 #ifndef BASIC
 #include "statesav.h"
 #endif
-#ifdef NEW_CYCLE_EXACT
-#include "cycle_map.h"
-#endif
 
 #define LCHOP 3			/* do not build lefmost 0..3 characters in wide mode */
 #define RCHOP 3			/* do not build rightmost 0..3 characters in wide mode */
 
 int break_ypos __attribute__((section(".dtcm"))) = 999;
-#ifdef NEW_CYCLE_EXACT
-void draw_partial_scanline(int l,int r);
-void update_scanline(void);
-void update_scanline_prior(UBYTE byte);
-void update_scanline_chbase(void);
-void update_scanline_invert(void);
-void update_scanline_blank(void);
-const int *cpu2antic_ptr __attribute__((section(".dtcm")));
-const int *antic2cpu_ptr __attribute__((section(".dtcm")));
-int delayed_wsync __attribute__((section(".dtcm")))= 0;
-int dmactl_changed __attribute__((section(".dtcm")))= 0;
-UBYTE DELAYED_DMACTL __attribute__((section(".dtcm")));
-int draw_antic_ptr_changed __attribute__((section(".dtcm")))= 0;
-UBYTE need_load __attribute__((section(".dtcm")));
-int dmactl_bug_chdata __attribute__((section(".dtcm")));
-#ifndef NO_GTIA11_DELAY
-/* the position in the ring buffer where the last change before */
-/* the previous line occured to PRIOR */
-int prevline_prior_pos __attribute__((section(".dtcm")))= 0;
-/* the position in the ring buffer where the last change before */
-/* the current line occured to PRIOR */
-int curline_prior_pos __attribute__((section(".dtcm")))= 0;
-/* the current position in the ring buffer where the most recent */
-/* change to PRIOR occured */
-int prior_curpos __attribute__((section(".dtcm")))= 0;
-/* ring buffer to hold the previous values of PRIOR */
-UBYTE prior_val_buf[PRIOR_BUF_SIZE];
-/* can be negative, leave as signed ints */
-/* ring buffer to hold the positions where PRIOR changed */
-int prior_pos_buf[PRIOR_BUF_SIZE];
-#endif /* NO_GTIA11_DELAY */
-#endif /* NEW_CYCLE_EXACT */
 
 /* Video memory access is hidden behind these macros. It allows to track dirty video memory
    to improve video system performance */
@@ -136,6 +101,16 @@ void video_putbyte(UBYTE *ptr, UBYTE val) {
         } \
     }
 
+
+/* ANTIC Memory ------------------------------------------------------------ */
+
+UBYTE ANTIC_memory[52] __attribute__((section(".dtcm")));
+#define ANTIC_margin 4
+/* It's number of bytes in ANTIC_memory, which are never loaded, but may be
+   read in wide playfield mode. These bytes are uninitialized, because on
+   real computer there's some kind of 'garbage'. Possibly 1 is enough, but
+   4 bytes surely won't cause negative indexes. :) */
+
 /* ANTIC Registers --------------------------------------------------------- */
 
 UBYTE DMACTL __attribute__((section(".dtcm")));
@@ -148,21 +123,12 @@ UBYTE CHBASE __attribute__((section(".dtcm")));
 UBYTE NMIEN __attribute__((section(".dtcm")));
 UBYTE NMIST __attribute__((section(".dtcm")));
 
-/* ANTIC Memory ------------------------------------------------------------ */
-
-UBYTE ANTIC_memory[52] __attribute__((section(".dtcm")));
-#define ANTIC_margin 4
-/* It's number of bytes in ANTIC_memory, which are never loaded, but may be
-   read in wide playfield mode. These bytes are uninitialized, because on
-   real computer there's some kind of 'garbage'. Possibly 1 is enough, but
-   4 bytes surely won't cause negative indexes. :) */
-
 /* Screen -----------------------------------------------------------------
    Define screen as ULONG to ensure that it is Longword aligned.
    This allows special optimisations under certain conditions.
    ------------------------------------------------------------------------ */
 
-UWORD *scrn_ptr;
+UWORD *scrn_ptr __attribute__((section(".dtcm")));
 
 /* Separate access to XE extended memory ----------------------------------- */
 /* It's available in 130 XE and 320 KB Compy Shop.
@@ -176,7 +142,7 @@ UWORD *scrn_ptr;
 /* Pointer to 16 KB seen by ANTIC in 0x4000-0x7fff.
    If it's the same what the CPU sees (and what's in memory[0x4000..0x7fff],
    then NULL. */
-const UBYTE *antic_xe_ptr = NULL;
+const UBYTE *antic_xe_ptr __attribute__((section(".dtcm")))= NULL;
 
 /* ANTIC Timing --------------------------------------------------------------
 
@@ -394,7 +360,7 @@ static UBYTE vscrol_off __attribute__((section(".dtcm")));		/* boolean: displayi
 #define SCROLL0 3				/* modes 2,3,4,5,0xd,0xe,0xf with HSC */
 #define SCROLL1 4				/* modes 6,7,0xa,0xb,0xc with HSC */
 #define SCROLL2 5				/* modes 8,9 with HSC */
-static int md;					/* current mode NORMAL0..SCROLL2 */
+static int md __attribute__((section(".dtcm")));					/* current mode NORMAL0..SCROLL2 */
 /* tables for modes NORMAL0..SCROLL2 */
 static int chars_read[6] __attribute__((section(".dtcm")));
 static int chars_displayed[6] __attribute__((section(".dtcm")));
@@ -406,11 +372,11 @@ static int before_cycles[6] __attribute__((section(".dtcm")));
 static int extra_cycles[6] __attribute__((section(".dtcm")));
 
 /* border parameters for current display width */
-static int left_border_chars;
-static int right_border_start;
+static int left_border_chars __attribute__((section(".dtcm")));
+static int right_border_start __attribute__((section(".dtcm")));
 #ifdef NEW_CYCLE_EXACT
-static int left_border_start = LCHOP * 4;
-static int right_border_end = (48 - RCHOP) * 4;
+static int left_border_start __attribute__((section(".dtcm")))= LCHOP * 4;
+static int right_border_end __attribute__((section(".dtcm")))= (48 - RCHOP) * 4;
 #define LBORDER_START left_border_start
 #define RBORDER_END right_border_end
 #else
@@ -521,16 +487,14 @@ UWORD cl_lookup[128] __attribute__((section(".dtcm")));
    the platform doesn't allow unaligned long access.
    Artifacting also uses unaligned long access if it's supported. */
 
-//ALEK
-#ifdef WORDS_UNALIGNED_OK
-
 #define INIT_BACKGROUND_6 ULONG background = cl_lookup[C_PF2] | (((ULONG) cl_lookup[C_PF2]) << 16);
 #define INIT_BACKGROUND_8 ULONG background = lookup_gtia9[0];
+
 #define DRAW_BACKGROUND(colreg) {\
     if (((ULONG)ptr & 0x03) == 0) { \
-		WRITE_VIDEO_LONG_UNALIGNED((ULONG *) ptr,       background); \
-		WRITE_VIDEO_LONG_UNALIGNED(((ULONG *) ptr) + 1, background); \
-		ptr += 4; \
+		WRITE_VIDEO_LONG_UNALIGNED(((ULONG *) ptr), background); \
+		WRITE_VIDEO_LONG_UNALIGNED(((ULONG *) ptr)+1, background); \
+        ptr += 4; \
 	} else \
         { \
          WRITE_VIDEO(ptr++, cl_lookup[colreg]); \
@@ -538,18 +502,6 @@ UWORD cl_lookup[128] __attribute__((section(".dtcm")));
          WRITE_VIDEO(ptr++, cl_lookup[colreg]); \
          WRITE_VIDEO(ptr++, cl_lookup[colreg]); \
         } \
-	}
-
-#else
-
-#define INIT_BACKGROUND_6
-#define INIT_BACKGROUND_8
-#define DRAW_BACKGROUND(colreg) {\
-		WRITE_VIDEO(ptr,     cl_lookup[colreg]); \
-		WRITE_VIDEO(ptr + 1, cl_lookup[colreg]); \
-		WRITE_VIDEO(ptr + 2, cl_lookup[colreg]); \
-		WRITE_VIDEO(ptr + 3, cl_lookup[colreg]); \
-		ptr += 4;\
 	}
 #define DRAW_ARTIF {\
     if (((ULONG)ptr & 0x03) == 0) { \
@@ -563,36 +515,25 @@ UWORD cl_lookup[128] __attribute__((section(".dtcm")));
 		WRITE_VIDEO(ptr++, ((UWORD *) art_curtable)[((screendata_tally & 0x003fc0) >> 5) + 1]); \
 	}
 
-#endif /* WORDS_UNALIGNED_OK */
 
 /* Hi-res modes optimizations
    Now hi-res modes are drawn with words, not bytes. Endianess defaults
-   to little-endian. WORDS_BIGENDIAN should be defined when compiling on
-   a big-endian machine. */
+   to little-endian. */
 
-#ifdef WORDS_BIGENDIAN
-#define BYTE0_MASK		0xff00
-#define BYTE1_MASK		0x00ff
-#define HIRES_MASK_01	0xfff0
-#define HIRES_MASK_10	0xf0ff
-#define HIRES_LUM_01	0x000f
-#define HIRES_LUM_10	0x0f00
-#else
 #define BYTE0_MASK		0x00ff
 #define BYTE1_MASK		0xff00
 #define HIRES_MASK_01	0xf0ff
 #define HIRES_MASK_10	0xfff0
 #define HIRES_LUM_01	0x0f00
 #define HIRES_LUM_10	0x000f
-#endif
 
-static UWORD hires_lookup_n[128];
-static UWORD hires_lookup_m[128];
+static UWORD hires_lookup_n[128] __attribute__((section(".dtcm")));
+static UWORD hires_lookup_m[128] __attribute__((section(".dtcm")));
 #define hires_norm(x)	hires_lookup_n[(x) >> 1]
 #define hires_mask(x)	hires_lookup_m[(x) >> 1]
 
 #ifndef USE_COLOUR_TRANSLATION_TABLE
-UWORD hires_lookup_l[128];	/* accessed in gtia.c */
+UWORD hires_lookup_l[128] __attribute__((section(".dtcm")));	/* accessed in gtia.c */
 #define hires_lum(x)	hires_lookup_l[(x) >> 1]
 #endif
 
@@ -615,13 +556,13 @@ UBYTE missile_flickering __attribute__((section(".dtcm")));
 static UWORD pmbase_s __attribute__((section(".dtcm")));
 static UWORD pmbase_d __attribute__((section(".dtcm")));
 
-extern UBYTE pm_scanline[ATARI_WIDTH / 2 + 8];
-extern UBYTE pm_dirty;
+extern UBYTE pm_scanline[ATARI_WIDTH / 2 + 8] __attribute__((section(".dtcm")));
+extern UBYTE pm_dirty __attribute__((section(".dtcm")));
 
 /* PMG lookup tables */
 UBYTE pm_lookup_table[20][256];
 /* current PMG lookup table */
-static const UBYTE *pm_lookup_ptr;
+static const UBYTE *pm_lookup_ptr __attribute__((section(".dtcm")));
 
 #define PL_00	0	/* 0x00,0x01,0x02,0x03,0x04,0x06,0x08,0x09,0x0a,0x0b */
 #define PL_05	1	/* 0x05,0x07,0x0c,0x0d,0x0e,0x0f */
@@ -718,7 +659,7 @@ static void init_pm_lookup(void) {
 	}
 }
 
-static const UBYTE hold_missiles_tab[16] = {
+static UBYTE hold_missiles_tab[16] __attribute__((section(".dtcm"))) = {
 	0x00,0x03,0x0c,0x0f,0x30,0x33,0x3c,0x3f,
 	0xc0,0xc3,0xcc,0xcf,0xf0,0xf3,0xfc,0xff};
 
@@ -1041,10 +982,10 @@ static void draw_antic_0_gtia11(void)
 
 /* ANTIC modes ------------------------------------------------------------- */
 
-static const UBYTE gtia_10_lookup[] =
+static UBYTE gtia_10_lookup[] __attribute__((section(".dtcm"))) =
 {L_BAK, L_BAK, L_BAK, L_BAK, L_PF0, L_PF1, L_PF2, L_PF3,
  L_BAK, L_BAK, L_BAK, L_BAK, L_PF0, L_PF1, L_PF2, L_PF3};
-static const UBYTE gtia_10_pm[] =
+static UBYTE gtia_10_pm[] __attribute__((section(".dtcm")))=
 {1, 2, 4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 static void draw_an_gtia9(const ULONG *t_pm_scanline_ptr)
