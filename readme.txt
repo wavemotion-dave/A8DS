@@ -40,11 +40,12 @@ Features :
 Most things you should expect from an emulator. Games generally run full-speed
 with just a handful of exceptions. If you load a game and it doesn't load properly,
 just load it again or hit the RESET button which will re-initialize the XEGS machine.
-If a game crashes, you will get a message at the bottom of the screen after loading.
-Not every game runs with this emulator - but most do.  I'll try to improve compatibilty
-as time permits.
+If a game crashes, you will get a message at the bottom of the screen after loading - 
+a crash usually means that the game requires the BASIC cart to be inserted and you can
+toggle that when loading a game (or using the GEAR icon). Not every game runs with this 
+emulator - but most do.  I'll try to improve compatibilty as time permits.
 
-The emulator does support multi-disk games. When you need to load a subsequent disk for
+The emulator supports multi-disk games. When you need to load a subsequent disk for
 a game, just use the Y button to disable Boot-Load which will simply just insert the new
 disk and you can continue to run. 
 
@@ -58,7 +59,11 @@ pick a DOS II disk of some kind to get drive support and you can have fun writin
 
 Missing :
 ---------
-Not much.
+Not much.  In order to get proper speed on the older DS-LITE and DS-PHAT hardware, there
+is a Frame Skip option that defaults to ON for the older hardware (and OFF for the DSi 
+or above). This is not perfect - some games will not be happy to have frames skipped as
+collisions are skipped in those frames. Notably: Caverns of Mars and Buried Bucks will 
+not run right with Frame Skip ON. But this does render most games playable on older hardware.
 
 --------------------------------------------------------------------------------
 History :
