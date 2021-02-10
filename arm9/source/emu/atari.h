@@ -23,8 +23,6 @@ extern int os_type;
 //#define DIRTYRECT
 #define NODIRTYCOMPARE
 
-//#define PAGED_MEM
-
 #define PAGED_ATTRIB 1
 
 #define ATARI_TITLE  "XEGS-DS"

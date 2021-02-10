@@ -63,6 +63,10 @@ Not much.
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V1.5 : 10-Feb-2021 by wavemotion-dave
+  * Added Frame Skip option - enabled by default on DS-LITE/PHAT to gain speed.
+  * Minor cleanups and code refactor.
+
 V1.4 : 08-Feb-2021 by wavemotion-dave
   * Fixed Crash on DS-LITE and DS-PHAT
   * Improved speed of file listing
