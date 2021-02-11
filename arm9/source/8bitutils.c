@@ -50,6 +50,7 @@ int bUseX_KeyAsCR = false;
 int showFps=false;
 int palett_type = 1;
 int auto_fire=0;
+int ram_type=0;     // default is 128k
 
 #define  cxBG (myGame_offset_x<<8)
 #define  cyBG (myGame_offset_y<<8)
@@ -353,14 +354,33 @@ void vblankIntr()
     
 }
 
+/*
+A: ARM9 0x06800000 - 0x0681FFFF (128KB)
+B: ARM9 0x06820000 - 0x0683FFFF (128KB)
+C: ARM9 0x06840000 - 0x0685FFFF (128KB)
+D: ARM9 0x06860000 - 0x0687FFFF (128KB)
+E: ARM9 0x06880000 - 0x0688FFFF ( 64KB)
+F: ARM9 0x06890000 - 0x06893FFF ( 16KB)
+G: ARM9 0x06894000 - 0x06897FFF ( 16KB)
+H: ARM9 0x06898000 - 0x0689FFFF ( 32KB)
+I: ARM9 0x068A0000 - 0x068A3FFF ( 16KB)
+*/
+
 void dsInitScreenMain(void) 
 {
     // Init vbl and hbl func
     SetYtrigger(190); //trigger 2 lines before vsync
     irqSet(IRQ_VBLANK, vblankIntr);
     irqEnable(IRQ_VBLANK | IRQ_VCOUNT);
-    vramSetBankD(VRAM_D_MAIN_BG_0x06040000 ); // Not using this for video but for cartridge bank swap area... it's faster!
-    vramSetBankE(VRAM_E_LCD );                // Not using this for video but 64K of faster RAM always useful!  Mapped at 0x06880000
+    vramSetBankA(VRAM_A_MAIN_BG); 
+    vramSetBankB(VRAM_B_LCD);
+    vramSetBankC(VRAM_C_SUB_BG);
+    vramSetBankD(VRAM_D_LCD );                // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000
+    vramSetBankE(VRAM_E_LCD );                // Not using this for video but  64K of faster RAM always useful!  Mapped at 0x06880000
+    vramSetBankF(VRAM_F_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06890000
+    vramSetBankG(VRAM_G_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06894000
+    vramSetBankH(VRAM_H_LCD );                // Not using this for video but  32K of faster RAM always useful!  Mapped at 0x06898000
+    vramSetBankI(VRAM_I_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x068A0000
 }
 
 void dsInitTimer(void) 
@@ -373,9 +393,7 @@ void dsShowScreenEmu(void)
 {
   // Change vram
   videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE);
-  vramSetBankA(VRAM_A_MAIN_BG_0x06000000);
   bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
-
   REG_BG2PB = 0;
   REG_BG2PC = 0;
 
@@ -390,7 +408,7 @@ void dsShowScreenMain(void) {
   // Init BG mode for 16 bits colors
   videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE );
   videoSetModeSub(MODE_0_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE);
-  vramSetBankA(VRAM_A_MAIN_BG); vramSetBankC(VRAM_C_SUB_BG);
+  
   bg0 = bgInit(0, BgType_Text8bpp, BgSize_T_256x256, 31,0);
   bg0b = bgInitSub(0, BgType_Text8bpp, BgSize_T_256x256, 31,0);
   bg1b = bgInitSub(1, BgType_Text8bpp, BgSize_T_256x256, 30,0);
@@ -586,22 +604,22 @@ struct options_t
     int   option_max;
 };
 
+static int basic_opt=0;
 static int tv_type2=0;
 struct options_t Option_Table[] =
 {
-    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},     &os_type,       2},
-    {"BASIC",       {"DISABLED",    "ENABLED"},         &bHaveBASIC,    2},
-    {"BASIC TYPE",  {"ALTIRRA",     "ATARIBAS.ROM"},    &basic_type,    2},    
-    {"A BUTTON",    {"FIRE",        "UP"},              &bUseA_KeyAsUP, 2},
-    {"X BUTTON",    {"SPACE",       "RETURN"},          &bUseX_KeyAsCR, 2},
-    {"AUTOFIRE",    {"OFF",         "ON"},              &auto_fire,     2},
-    {"SHOW FPS",    {"OFF",         "ON"},              &showFps,       2},
-    {"TURBO MODE",  {"OFF",         "ON"},              &full_speed,    2},
-    {"TV TYPE",     {"NTSC",        "PAL"},             &tv_type2,      2},
-    {"PALETTE",     {"BRIGHT",      "NORMAL"},          &palett_type,   2},
-    {"SKIP FRAMES", {"NO",          "YES"},             &skip_frames,   2},   
-    
-    {NULL,          {"",            ""},                NULL,           2},
+    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,      2},
+    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,   3},   
+    {"RAM TYPE",    {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,      2},   
+    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},                     &os_type,       2},
+    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,     3},
+    {"PALETTE",     {"BRIGHT",      "NORMAL"},                          &palett_type,   2},
+    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP, 2},
+    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR, 2},
+    {"AUTOFIRE",    {"OFF",         "ON"},                              &auto_fire,     2},
+    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,       2},
+    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,    2},
+    {NULL,          {"",            ""},                                NULL,           2},
 };
 
 
@@ -622,6 +640,13 @@ void dsChooseOptions(int bOkayToChangePalette)
     dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
     
     tv_type2 =  (tv_mode == TV_NTSC ? 0:1); 
+
+    basic_opt = 0;
+    if (bHaveBASIC) 
+    {
+        basic_opt = (basic_type == BASIC_ALTIRRA ? 1:2);
+    }
+    
     idx=0;
     while (true)
     {
@@ -644,7 +669,7 @@ void dsChooseOptions(int bOkayToChangePalette)
             {
                 sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,0, strBuf);
-                if (optionHighlighted > 0) optionHighlighted--;
+                if (optionHighlighted > 0) optionHighlighted--; else optionHighlighted=(idx-1);
                 sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
             }
@@ -652,7 +677,7 @@ void dsChooseOptions(int bOkayToChangePalette)
             {
                 sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,0, strBuf);
-                if (optionHighlighted < (idx-1)) optionHighlighted++;  
+                if (optionHighlighted < (idx-1)) optionHighlighted++;  else optionHighlighted=0;
                 sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
             }
@@ -671,6 +696,9 @@ void dsChooseOptions(int bOkayToChangePalette)
     }
   
     tv_mode = (tv_type2 == 0 ? TV_NTSC:TV_PAL);
+    
+    bHaveBASIC = (basic_opt ? 1:0);
+    basic_type = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);
 
     install_os();
     if (bOkayToChangePalette) dsSetAtariPalette();

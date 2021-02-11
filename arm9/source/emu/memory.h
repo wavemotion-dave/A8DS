@@ -17,10 +17,10 @@
 #define dFillMem(addr1, value, length)	memset(memory + (addr1), value, length)
 
 // For the newer SIO stuff....
-#define MEMORY_dGetByte(x)				(memory[x])
-#define MEMORY_dPutByte(x, y)			(memory[x] = y)
-#define MEMORY_dGetWord(x)				(memory[x] + (memory[(x) + 1] << 8))
-#define MEMORY_dPutWord(x, y)		    (memory[x] = (UBYTE) (y), memory[(x) + 1] = (UBYTE) ((y) >> 8))
+#define MEMORY_dGetByte(x)				dGetByte(x)
+#define MEMORY_dPutByte(x, y)			dPutByte(x,y)
+#define MEMORY_dGetWord(x)				dGetWord(x)
+#define MEMORY_dPutWord(x, y)		    dPutWord(x,y)
 #define MEMORY_dGetWordAligned(x)	    dGetWord(x)
 #define MEMORY_dPutWordAligned(x, y)    dPutWord(x, y)
 #define MEMORY_dCopyFromMem(from, to, size)	memcpy(to, memory + (from), size)

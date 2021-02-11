@@ -22,6 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <nds.h>
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,25 +77,19 @@ static UBYTE *atarixe_memory = NULL;
 static ULONG atarixe_memory_size = 0;
 
 extern const UBYTE *antic_xe_ptr;	/* Separate ANTIC access to extended memory */
+extern int ram_type;
 
 static void AllocXEMemory(void)
 {
+    if (ram_type == 1) ram_size = RAM_320_RAMBO; else ram_size = 128;
+    
 	if (ram_size > 64) {
 		/* don't count 64 KB of base memory */
 		/* count number of 16 KB banks, add 1 for saving base memory 0x4000-0x7fff */
 		ULONG size = (1 + (ram_size - 64) / 16) * 16384;
 		if (size != atarixe_memory_size) 
         {
-            if (ram_size <= 128)
-            {
-                atarixe_memory = (UBYTE *)0x06040000;	//A convienent 128k of memory... it's a bit faster when bank switching
-            }
-            else
-            {
-                if (atarixe_memory != NULL)
-                    free(atarixe_memory);
-                atarixe_memory = (UBYTE *) Util_malloc(size);
-            }
+            atarixe_memory = (UBYTE *)0x06860000;	//A convienent 272k of memory... it's a bit faster when bank switching
 			atarixe_memory_size = size;
 			memset(atarixe_memory, 0, size);
 		}
@@ -102,11 +97,7 @@ static void AllocXEMemory(void)
 	/* atarixe_memory not needed, free it */
 	else if (atarixe_memory != NULL) 
     {
-        if (ram_size > 128)
-        {
-		    free(atarixe_memory);
-		    atarixe_memory = NULL;
-        }
+        atarixe_memory = NULL;
 		atarixe_memory_size = 0;
 	}
 }
@@ -419,6 +410,40 @@ static int basic_disabled(UBYTE portb)
 	 || ((portb & 0x10) == 0 && (ram_size == 576 || ram_size == 1088));
 }
 
+ITCM_CODE void SwitchBanks(int bank)
+{
+    if (bank != xe_bank) 
+    {
+        unsigned int *src = (unsigned int *) (memory + 0x4000);
+        unsigned int *dest = (unsigned int *) (atarixe_memory + (xe_bank << 14));
+        for (int i=0; i<0x1000/8; i++)
+        {
+            *dest++ = *src++;   
+            *dest++ = *src++;
+            *dest++ = *src++;
+            *dest++ = *src++;
+            *dest++ = *src++;   
+            *dest++ = *src++;
+            *dest++ = *src++;
+            *dest++ = *src++;
+        }
+        unsigned int *src2 = (unsigned int *) (atarixe_memory + (bank << 14));
+        unsigned int *dest2 = (unsigned int *) (memory + 0x4000);
+        for (int i=0; i<0x1000/8; i++)
+        {
+            *dest2++ = *src2++;   
+            *dest2++ = *src2++;   
+            *dest2++ = *src2++;   
+            *dest2++ = *src2++;   
+            *dest2++ = *src2++;   
+            *dest2++ = *src2++;   
+            *dest2++ = *src2++;   
+            *dest2++ = *src2++;   
+        }
+        xe_bank = bank;
+    }
+}
+
 /* Note: this function is only for XL/XE! */
 void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 {
@@ -456,22 +481,17 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 			selftest_enabled = FALSE;
 		}
         
-		if (bank != xe_bank) 
-        {
-            unsigned int *src = (unsigned int *) (memory + 0x4000);
-            unsigned int *dest = (unsigned int *) (atarixe_memory + (xe_bank << 14));
-            for (int i=0; i<0x1000; i++)
-            {
-                *dest++ = *src++;   
-            }
-            unsigned int *src2 = (unsigned int *) (atarixe_memory + (bank << 14));
-            unsigned int *dest2 = (unsigned int *) (memory + 0x4000);
-            for (int i=0; i<0x1000; i++)
-            {
-                *dest2++ = *src2++;   
-            }
-			xe_bank = bank;
-		}
+        // --------------------------------------------------------------------------------
+        // This is the bank switching area for memory > 64k... it's basically a 16k
+        // bank that is always swapped in/out from memory address 0x4000 to 0x7FFF
+        // To test this range: (addr & 0xC000 == 0x4000) <== middle "bankswap" bank
+        // --------------------------------------------------------------------------------
+        SwitchBanks(bank);
+        
+        // -----------------------------------------------------
+        // The 128k XE RAM and the COMPY RAM allow the Antic to 
+        // index into the RAM independently ... tricky stuff!
+        // -----------------------------------------------------
 		if (ram_size == 128 || ram_size == RAM_320_COMPY_SHOP)
 			switch (byte & 0x30) {
 			case 0x20:	/* ANTIC: base, CPU: extended */
