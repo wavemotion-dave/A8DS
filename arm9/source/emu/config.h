@@ -15,7 +15,3 @@
 
 //#undef PAGED_ATTRIB
 
-// Define to allow stereo sound. 
-//#define STEREO_SOUND 1
-
-//#define USE_COLOUR_TRANSLATION_TABLE

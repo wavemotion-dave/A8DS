@@ -602,24 +602,30 @@ struct options_t
     char *option[5];
     int  *option_val;
     int   option_max;
+    char *help1;
+    char *help2;
+    char *help3;
+    char *help4;
 };
 
+extern int global_artif_mode;
 static int basic_opt=0;
 static int tv_type2=0;
-struct options_t Option_Table[] =
+const struct options_t Option_Table[] =
 {
-    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,      2},
-    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,   3},   
-    {"RAM TYPE",    {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,      2},   
-    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},                     &os_type,       2},
-    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,     3},
-    {"PALETTE",     {"BRIGHT",      "NORMAL"},                          &palett_type,   2},
-    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP, 2},
-    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR, 2},
-    {"AUTOFIRE",    {"OFF",         "ON"},                              &auto_fire,     2},
-    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,       2},
-    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,    2},
-    {NULL,          {"",            ""},                                NULL,           2},
+    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,      2,          "NTSC=60 FPS       ",   "W 262 SCANLINES ",  "PAL=50 FPS      ",  "W 312 SCANLINES  "},
+    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,   3,          "OFF NORMALLY AS   ",   "SOME GAMES CAN  ",  "GLITCH WHEN SET ",  "TO FRAMESKIP     "},
+    {"RAM TYPE",    {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,      2,          "128K IS STANDARD  ",   "RUNS MOST GAMES ",  "320K ONLY FOR   ",  "A FEW BIG GAMES  "},
+    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},                     &os_type,       2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
+    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,     3,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
+    {"PALETTE",     {"BRIGHT",      "NORMAL"},                          &palett_type,   2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
+    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP, 2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
+    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR, 2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
+    {"AUTOFIRE",    {"OFF",         "ON"},                              &auto_fire,     2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
+    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,       2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
+    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,    2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
+    {"ARTIFACTING", {"OFF",         "MODE1", "MODE2","MODE3","MODE4"},  &global_artif_mode,5,       "A FEW HIRES GAMES ",   "NEED ARTIFACING ",  "TO LOOK RIGHT   ",  "OTHERWISE SET OFF"},
+    {NULL,          {"",            ""},                                NULL,           2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
 };
 
 
@@ -691,6 +697,11 @@ void dsChooseOptions(int bOkayToChangePalette)
             {
                 break;
             }
+            
+            dsPrintValue(14,0,0,Option_Table[optionHighlighted].help1);
+            dsPrintValue(14,1,0,Option_Table[optionHighlighted].help2);
+            dsPrintValue(14,2,0,Option_Table[optionHighlighted].help3);
+            dsPrintValue(14,3,0,Option_Table[optionHighlighted].help4);
         }
         swiWaitForVBlank();
     }
@@ -1534,7 +1545,10 @@ ITCM_CODE void dsMainLoop(void)
 int a8Filescmp (const void *c1, const void *c2) {
   FICA5200 *p1 = (FICA5200 *) c1;
   FICA5200 *p2 = (FICA5200 *) c2;
-  
+  if (p1->directory && !(p2->directory))
+      return -1;
+  if (p2->directory && !(p1->directory))
+      return 1;
   return strcasecmp (p1->filename, p2->filename);
 }
 
