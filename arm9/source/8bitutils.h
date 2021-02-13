@@ -24,6 +24,7 @@ typedef struct FICtoLoad {
 #define ds_GetTicks() (TIMER0_DATA)
 
 extern int bg0, bg1, bg0b,bg1b;
+extern int bg2, bg3;
 extern unsigned int video_height;                  // Actual video height
 
 extern void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr, unsigned char valEnd, unsigned char uWait);

@@ -68,6 +68,13 @@ not run right with Frame Skip ON. But this does render most games playable on ol
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V1.6 : 13-Feb-2021 by wavemotion-dave
+  * Added 320KB RAMBO memory expanstion emulation for the really big games!
+  * Added Artifacting modes that are used by some high-res games.
+  * Improved option selection - added brief help description to each.
+  * Improved video rendering to display high-res graphics cleaner.
+  * Fixed directory/file selection so it can handle directories > 29 length.
+
 V1.5 : 10-Feb-2021 by wavemotion-dave
   * Added Frame Skip option - enabled by default on DS-LITE/PHAT to gain speed.
   * Minor cleanups and code refactor.

@@ -10,6 +10,7 @@
 #include "8bitutils.h"
 
 #include "atari.h"
+#include "antic.h"
 #include "global.h"
 #include "cartridge.h"
 #include "input.h"
@@ -31,6 +32,7 @@ int gTotalAtariFrames = 0;
 int bg0, bg1, bg0b,bg1b;
 unsigned int etatEmu;
 int atari_frames = 0;
+extern int global_artif_mode;
 
 int myGame_offset_x = 32;
 int myGame_offset_y = 20;
@@ -336,22 +338,27 @@ void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr,
   }
 }
 
+static int sIndex __attribute__((section(".dtcm")))= 0;
+static u8 jitter[] __attribute__((section(".dtcm"))) = 
+{
+    0x00, 0x00, 
+    0xAA, 0x11,
+    0x22, 0x22,
+    0xCC, 0x33, 
+};
 void vblankIntr() 
 {
-    static int sIndex = 0;
-    static const u8 jitter[] = 
-    {
-        0x00, 0x33, 
-        0x88, 0x44
-    };
-
     REG_BG2PA = xdxBG; 
     REG_BG2PD = ydyBG; 
+    
+    REG_BG3PA = xdxBG; 
+    REG_BG3PD = ydyBG; 
 
     REG_BG2X = cxBG+jitter[sIndex++]; 
     REG_BG2Y = cyBG+jitter[sIndex++]; 
-    sIndex = sIndex & 3;
-    
+    REG_BG3X = cxBG+jitter[sIndex++]; 
+    REG_BG3Y = cyBG+jitter[sIndex++]; 
+    sIndex = sIndex & 7;    
 }
 
 /*
@@ -372,9 +379,9 @@ void dsInitScreenMain(void)
     SetYtrigger(190); //trigger 2 lines before vsync
     irqSet(IRQ_VBLANK, vblankIntr);
     irqEnable(IRQ_VBLANK | IRQ_VCOUNT);
-    vramSetBankA(VRAM_A_MAIN_BG); 
-    vramSetBankB(VRAM_B_LCD);
-    vramSetBankC(VRAM_C_SUB_BG);
+    vramSetBankA(VRAM_A_MAIN_BG);             // This is the main Emulation screen - Background 1 (we ALPHA blend this with BG2)
+    vramSetBankB(VRAM_B_MAIN_BG);             // This is the main Emulation screen - Background 2 (we ALPHA blend this with BG1)
+    vramSetBankC(VRAM_C_SUB_BG);              // This is the Sub-Screen (touch screen) display
     vramSetBankD(VRAM_D_LCD );                // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000
     vramSetBankE(VRAM_E_LCD );                // Not using this for video but  64K of faster RAM always useful!  Mapped at 0x06880000
     vramSetBankF(VRAM_F_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06890000
@@ -392,8 +399,14 @@ void dsInitTimer(void)
 void dsShowScreenEmu(void) 
 {
   // Change vram
-  videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE);
+  //videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE);
+  videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
   bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
+  bg3 = bgInit(3, BgType_Bmp8, BgSize_B8_512x512, 0,0);
+    
+  REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
+  REG_BLDALPHA = (10 << 8) | 10; // 50% / 50% 
+    
   REG_BG2PB = 0;
   REG_BG2PC = 0;
 
@@ -401,10 +414,19 @@ void dsShowScreenEmu(void)
   REG_BG2Y = cyBG; 
   REG_BG2PA = xdxBG; 
   REG_BG2PD = ydyBG; 
+    
+  REG_BG3PB = 0;
+  REG_BG3PC = 0;
+
+  REG_BG3X = cxBG; 
+  REG_BG3Y = cyBG; 
+  REG_BG3PA = xdxBG; 
+  REG_BG3PD = ydyBG;     
 }
 
 
-void dsShowScreenMain(void) {
+void dsShowScreenMain(void) 
+{
   // Init BG mode for 16 bits colors
   videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE );
   videoSetModeSub(MODE_0_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE);
@@ -497,6 +519,7 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
       myGame_scale_x = 256;
       myGame_scale_y = 256;
       bUseA_KeyAsUP=false;
+      global_artif_mode=0;
       Atari800_Initialise();   
     }
     
@@ -608,24 +631,23 @@ struct options_t
     char *help4;
 };
 
-extern int global_artif_mode;
 static int basic_opt=0;
 static int tv_type2=0;
 const struct options_t Option_Table[] =
 {
-    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,      2,          "NTSC=60 FPS       ",   "W 262 SCANLINES ",  "PAL=50 FPS      ",  "W 312 SCANLINES  "},
-    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,   3,          "OFF NORMALLY AS   ",   "SOME GAMES CAN  ",  "GLITCH WHEN SET ",  "TO FRAMESKIP     "},
-    {"RAM TYPE",    {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,      2,          "128K IS STANDARD  ",   "RUNS MOST GAMES ",  "320K ONLY FOR   ",  "A FEW BIG GAMES  "},
-    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},                     &os_type,       2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
-    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,     3,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
-    {"PALETTE",     {"BRIGHT",      "NORMAL"},                          &palett_type,   2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
-    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP, 2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
-    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR, 2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
-    {"AUTOFIRE",    {"OFF",         "ON"},                              &auto_fire,     2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
-    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,       2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
-    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,    2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
-    {"ARTIFACTING", {"OFF",         "MODE1", "MODE2","MODE3","MODE4"},  &global_artif_mode,5,       "A FEW HIRES GAMES ",   "NEED ARTIFACING ",  "TO LOOK RIGHT   ",  "OTHERWISE SET OFF"},
-    {NULL,          {"",            ""},                                NULL,           2,          "HELP1             ",   "HELP2           ",  "HELP3           ",  "HELP4            "},
+    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,      2,          "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
+    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,   3,          "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
+    {"RAM TYPE",    {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,      2,          "128K IS STANDARD  ",   "RUNS MOST GAMES   ",  "320K ONLY FOR     ",  "A FEW BIG GAMES   "},
+    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},                     &os_type,       2,          "BUILT-IN ALTIRRA  ",   "IS VERY COMPATIBLE",  "BUT A FEW GAMES   ",  "REQUIRE REAL ATARI"},
+    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,     3,          "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
+    {"PALETTE",     {"BRIGHT",      "NORMAL"},                          &palett_type,   2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
+    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP, 2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
+    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR, 2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
+    {"AUTOFIRE",    {"OFF",         "ON"},                              &auto_fire,     2,          "TOGGLE AUTOFIRE   ",   "                  ",  "                  ",  "                  "},
+    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,       2,          "SHOW FPS ON MAIN  ",   "DISPLAY           ",  "                  ",  "                  "},
+    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,    2,          "RUN EMULATOR AS   ",   "FAST AS POSSIBLE  ",  "                  ",  "                  "},
+    {"ARTIFACTING", {"OFF",         "MODE1", "MODE2","MODE3","MODE4"},  &global_artif_mode,5,       "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
+    {NULL,          {"",            ""},                                NULL,           2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
 
 
@@ -715,6 +737,9 @@ void dsChooseOptions(int bOkayToChangePalette)
     if (bOkayToChangePalette) dsSetAtariPalette();
     dsInstallSoundEmuFIFO();
     
+    // In case the Artifacting global changed....
+    ANTIC_UpdateArtifacting();
+    
     // Restore original bottom graphic
     decompress(bgBottomTiles, bgGetGfxPtr(bg0b), LZ77Vram);
     decompress(bgBottomMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -774,9 +799,9 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
       if (maxLen>29) szName[29]='\0';
       if (a8romlist[ucGame].directory) 
       {
-        a8romlist[ucGame].filename[29] = 0;
-        sprintf(szName,"[%s]",a8romlist[ucGame].filename);
-        sprintf(szName2,"%-29s",szName);
+        char szName3[36];
+        sprintf(szName3,"[%s]",szName);
+        sprintf(szName2,"%-29s",szName3);
         dsPrintValue(0,5+ucBcl,(ucSel == ucBcl ? 1 :  0),szName2);
       }
       else 
@@ -1522,7 +1547,7 @@ ITCM_CODE void dsMainLoop(void)
 
             if ((keys_pressed & KEY_L) && (keys_pressed & KEY_UP))   if (myGame_scale_y <= 256) myGame_scale_y++;
             if ((keys_pressed & KEY_L) && (keys_pressed & KEY_DOWN)) if (myGame_scale_y >= 192) myGame_scale_y--;
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_RIGHT))  if (myGame_scale_x <= 320) myGame_scale_x++;
+            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_RIGHT))  if (myGame_scale_x < 320) myGame_scale_x++;
             if ((keys_pressed & KEY_L) && (keys_pressed & KEY_LEFT)) if (myGame_scale_x >= 192) myGame_scale_x--;
         }            
            

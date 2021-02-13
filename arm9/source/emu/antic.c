@@ -2392,7 +2392,7 @@ ITCM_CODE void ANTIC_Frame(int draw_display)
 	} while (ypos < 8);
 
     // Direct screen write...
-    scrn_ptr = bgGetGfxPtr(bg0);
+    scrn_ptr = bgGetGfxPtr((gTotalAtariFrames & 1) ? bg2:bg3);
 
 	need_dl = TRUE;
 	do {
@@ -2492,30 +2492,7 @@ ITCM_CODE void ANTIC_Frame(int draw_display)
 				}
 			}
 		}
-#if 0        
-		if (!draw_display) {
-			xpos += DMAR;
-			if (anticmode < 2 || (DMACTL & 3) == 0) {
-				GOEOL;
-				if (no_jvb) {
-					dctr++;
-					dctr &= 0xf;
-				}
-				continue;
-			}
-			if (need_load) {
-				xpos += load_cycles[md];
-				if (anticmode <= 5)	// extra cycles in font modes 
-					xpos += before_cycles[md] - extra_cycles[md];
-			}
-			if (anticmode < 8)
-				xpos += font_cycles[md];
-			GOEOL;
-			dctr++;
-			dctr &= 0xf;
-			continue;
-		}
-#endif
+
 		if (need_load && anticmode <= 5 && DMACTL & 3)
 			xpos += before_cycles[md];
 
@@ -2524,7 +2501,8 @@ ITCM_CODE void ANTIC_Frame(int draw_display)
 
 		xpos += DMAR;
         
-		if (anticmode < 2 || (DMACTL & 3) == 0) {
+		if (anticmode < 2 || (DMACTL & 3) == 0) 
+        {
 			if (draw_display) draw_antic_0_ptr();
 			GOEOL;
             scrn_ptr += 256;
