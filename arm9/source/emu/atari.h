@@ -75,19 +75,17 @@ extern int machine_type;
 
 /* RAM size in kilobytes.
    Valid values for MACHINE_OSA and MACHINE_OSB are: 16, 48, 52.
-   Valid values for MACHINE_XLXE are: 16, 64, 128, 192, RAM_320_RAMBO,
-   RAM_320_COMPY_SHOP, 576, 1088.
-   The only valid value for MACHINE_5200 is 16. */
+   Valid values for MACHINE_XLXE are: 128, RAM_320_RAMBO */
+#define RAM_128K            128
 #define RAM_320_RAMBO       320
-#define RAM_320_COMPY_SHOP  321
 extern int ram_size;
 
 /* Always call Atari800_InitialiseMachine() after changing machine_type
    or ram_size! */
 
 /* Video system. */
-#define TV_PAL 312
 #define TV_NTSC 262
+#define TV_PAL  312
 extern int tv_mode;
 
 /* TRUE to disable Atari BASIC when booting Atari (hold Option in XL/XE). */
@@ -212,12 +210,6 @@ int Atari800_DetectFileType(const char *filename);
    readonly: mount disks as read-only */
 int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly, int bEnableBasic);
 
-/* Checks for "popular" filenames of ROM images in the specified directory
-   and sets atari_*_filename to the ones found.
-   If only_if_not_set is TRUE, then atari_*_filename is modified only when
-   Util_filenamenotset() is TRUE for it. */
-void Atari800_FindROMImages(const char *directory, int only_if_not_set);
-
 /* Load Atari800 text configuration file. */
 int Atari800_LoadConfig(const char *alternate_config_filename);
 
@@ -271,8 +263,5 @@ void Atari800_PutByte(UWORD addr, UBYTE byte);
 
 /* Installs SIO patch and disables ROM checksum test. */
 void Atari800_PatchOS(void);
-
-/* Sleeps until it's time to emulate next Atari frame. */
-void atari_sync(void);
 
 #endif /* _ATARI_H_ */

@@ -29,7 +29,7 @@
 FICA_A8 a8romlist[1024];  
 unsigned int count8bit=0, countfiles=0, ucFicAct=0;
 int gTotalAtariFrames = 0;
-int bg0, bg1, bg0b,bg1b;
+int bg0, bg1, bg2, bg3, bg0b, bg1b;
 unsigned int etatEmu;
 int atari_frames = 0;
 extern int global_artif_mode;
@@ -1108,7 +1108,7 @@ void dsRestoreBottomScreen(void)
 
 unsigned int dsWaitOnMenu(unsigned int actState) 
 {
-  unsigned int uState=A5200_PLAYINIT;
+  unsigned int uState=A8_PLAYINIT;
   unsigned int keys_pressed;
   bool bDone=false, romSel;
   int iTx,iTy;
@@ -1124,7 +1124,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
       if ((iTx>206) && (iTx<250) && (iTy>110) && (iTy<129))  { // 207,111  -> 249,128   quit
         soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
         bDone=dsWaitOnQuit();
-        if (bDone) uState=A5200_QUITSTDS;
+        if (bDone) uState=A8_QUITSTDS;
       }
         else if ((iTx>220) && (iTx<250) && (iTy>160) && (iTy<185)) {     // Gear Icon = Settings
           dsChooseOptions(FALSE);
@@ -1135,7 +1135,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
         // Find files in current directory and show it 
         a8FindFiles();
         romSel=dsWaitForRom();
-        if (romSel) { uState=A5200_PLAYINIT; 
+        if (romSel) { uState=A8_PLAYINIT; 
           dsLoadGame(a8romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
         else { uState=actState; }
       }
@@ -1352,28 +1352,28 @@ ITCM_CODE void dsMainLoop(void)
   myGame_scale_x = 256;
   myGame_scale_y = 256;
   
-  while(etatEmu != A5200_QUITSTDS) 
+  while(etatEmu != A8_QUITSTDS) 
   {
     switch (etatEmu) 
     {
     
-      case A5200_MENUINIT:
+      case A8_MENUINIT:
         dsShowScreenMain();
-        etatEmu = A5200_MENUSHOW;
+        etatEmu = A8_MENUSHOW;
         break;
         
-      case A5200_MENUSHOW:
-        etatEmu =  dsWaitOnMenu(A5200_MENUSHOW);
+      case A8_MENUSHOW:
+        etatEmu =  dsWaitOnMenu(A8_MENUSHOW);
         Atari800_Initialise();
         break;
         
-      case A5200_PLAYINIT:
+      case A8_PLAYINIT:
         dsShowScreenEmu();
         irqEnable(IRQ_TIMER2);  
-        etatEmu = A5200_PLAYGAME;
+        etatEmu = A8_PLAYGAME;
         break;
         
-      case A5200_PLAYGAME:
+      case A8_PLAYGAME:
             
             
         // 32,728.5 ticks = 1 second
@@ -1536,7 +1536,7 @@ ITCM_CODE void dsMainLoop(void)
                 { 
                   irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                   soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
-                  if (dsWaitOnQuit()) etatEmu=A5200_QUITSTDS;
+                  if (dsWaitOnQuit()) etatEmu=A8_QUITSTDS;
                   else { irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); }
                 }
                 else if ((iTx>220) && (iTx<250) && (iTy>160) && (iTy<185)) {     // Gear Icon = Settings
@@ -1551,7 +1551,7 @@ ITCM_CODE void dsMainLoop(void)
                   // Find files in current directory and show it 
                   keys_touch=1;
                   romSel=dsWaitForRom();
-                  if (romSel) { etatEmu=A5200_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
+                  if (romSel) { etatEmu=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
                   else { irqEnable(IRQ_TIMER2); }
                   fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                 }

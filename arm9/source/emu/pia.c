@@ -130,9 +130,6 @@ void PIA_PutByte(UWORD addr, UBYTE byte) {
 			/* set output register */
 			PORTA = byte;		/* change from thor */
 		}
-#ifndef BASIC
-		//INPUT_SelectMultiJoy((PORTA | PORTA_mask) >> 4);
-#endif
 		break;
 	case _PORTB:
 		if (machine_type == MACHINE_XLXE) {
@@ -161,49 +158,6 @@ void PIA_PutByte(UWORD addr, UBYTE byte) {
 	}
 }
 
-#ifndef BASIC
+void PIAStateSave(void) {}
+void PIAStateRead(void) {}
 
-void PIAStateSave(void) {
-	int Ram256 = 0;
-	if (ram_size == RAM_320_RAMBO)
-		Ram256 = 1;
-	else if (ram_size == RAM_320_COMPY_SHOP)
-		Ram256 = 2;
-
-	SaveUBYTE( &PACTL, 1 );
-	SaveUBYTE( &PBCTL, 1 );
-	SaveUBYTE( &PORTA, 1 );
-	SaveUBYTE( &PORTB, 1 );
-
-	SaveINT( &xe_bank, 1 );
-	SaveINT( &selftest_enabled, 1 );
-	SaveINT( &Ram256, 1 );
-
-	SaveINT( &cartA0BF_enabled, 1 );
-
-	SaveUBYTE( &PORTA_mask, 1 );
-	SaveUBYTE( &PORTB_mask, 1 );
-}
-
-void PIAStateRead(void) {
-	int Ram256 = 0;
-
-	ReadUBYTE( &PACTL, 1 );
-	ReadUBYTE( &PBCTL, 1 );
-	ReadUBYTE( &PORTA, 1 );
-	ReadUBYTE( &PORTB, 1 );
-
-	ReadINT( &xe_bank, 1 );
-	ReadINT( &selftest_enabled, 1 );
-	ReadINT( &Ram256, 1 );
-
-	if (Ram256 == 1 && machine_type == MACHINE_XLXE && ram_size == RAM_320_COMPY_SHOP)
-		ram_size = RAM_320_RAMBO;
-
-	ReadINT( &cartA0BF_enabled, 1 );
-
-	ReadUBYTE( &PORTA_mask, 1 );
-	ReadUBYTE( &PORTB_mask, 1 );
-}
-
-#endif /* BASIC */

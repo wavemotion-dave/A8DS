@@ -55,7 +55,7 @@
 // This is a bit of a "custom" machine but is capable of running 98% of all games.
 // ----------------------------------------------------------------------------------
 int machine_type     = MACHINE_XLXE;
-int ram_size         = 128;
+int ram_size         = RAM_128K;        // We only allow RAM_128K or RAM_320_RAMBO
 int tv_mode          = TV_NTSC;
 int disable_basic    = TRUE;
 int enable_sio_patch = TRUE;

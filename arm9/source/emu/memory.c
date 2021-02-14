@@ -39,51 +39,33 @@
 #include "pia.h"
 #include "pokeysnd.h"
 #include "util.h"
-#ifndef BASIC
 #include "statesav.h"
-#endif
 
 UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));
 
-#ifndef PAGED_ATTRIB
+rdfunc readmap[256] __attribute__((section(".dtcm")));
+wrfunc writemap[256] __attribute__((section(".dtcm")));
 
-UBYTE attrib[65536];
-
-#else /* PAGED_ATTRIB */
-
-rdfunc readmap[256];
-wrfunc writemap[256];
-
-typedef struct map_save {
-	int     code;
-	rdfunc  rdptr;
-	wrfunc  wrptr;
-} map_save;
-
-void ROM_PutByte(UWORD addr, UBYTE value)
-{
-}
-
-map_save save_map[2] = {
-	{0, NULL, NULL},          /* RAM */
-	{1, NULL, ROM_PutByte}    /* ROM */
-};
-
-#endif /* PAGED_ATTRIB */
-
-static UBYTE under_atarixl_os[16384];
-static UBYTE under_atari_basic[8192];
-static UBYTE *atarixe_memory = NULL;
+static UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));
+static UBYTE under_atari_basic[8192] __attribute__ ((aligned (4)));
+static UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;
 static ULONG atarixe_memory_size = 0;
 
 extern const UBYTE *antic_xe_ptr;	/* Separate ANTIC access to extended memory */
 extern int ram_type;
 
+void ROM_PutByte(UWORD addr, UBYTE value) {}
+
+// ---------------------------------------------------------------------------------------
+// Note: We support exactly 2 memory configurations... Standard 130XE compatible 128K 
+// and the RAMBO 320K and nothing else. Streamlined and compatible with most everything.
+// ---------------------------------------------------------------------------------------
 static void AllocXEMemory(void)
 {
-    if (ram_type == 1) ram_size = RAM_320_RAMBO; else ram_size = 128;
+    if (ram_type == 1) ram_size = RAM_320_RAMBO; else ram_size = RAM_128K;
     
-	if (ram_size > 64) {
+	if (ram_size > 64) 
+    {
 		/* don't count 64 KB of base memory */
 		/* count number of 16 KB banks, add 1 for saving base memory 0x4000-0x7fff */
 		ULONG size = (1 + (ram_size - 64) / 16) * 16384;
@@ -111,7 +93,8 @@ void MEMORY_InitialiseMachine(void)
     int const hole_start = base_ram > hole_end ? hole_end : base_ram;
 	antic_xe_ptr = NULL;
 
-	switch (machine_type) {
+	switch (machine_type) 
+    {
 	case MACHINE_OSA:
 	case MACHINE_OSB:
 		memcpy(memory + 0xd800, atari_os, 0x2800);
@@ -122,9 +105,6 @@ void MEMORY_InitialiseMachine(void)
 			dFillMem(ram_size * 1024, 0xff, 0xd000 - ram_size * 1024);
 			SetROM(ram_size * 1024, 0xcfff);
 		}
-#ifndef PAGED_ATTRIB
-		SetHARDWARE(0xd000, 0xd7ff);
-#else
 		readmap[0xd0] = GTIA_GetByte;
 		readmap[0xd1] = PBI_GetByte;
 		readmap[0xd2] = POKEY_GetByte;
@@ -141,7 +121,6 @@ void MEMORY_InitialiseMachine(void)
 		writemap[0xd5] = CART_PutByte;
 		writemap[0xd6] = PBIM1_PutByte;
 		writemap[0xd7] = PBIM2_PutByte;
-#endif
 		SetROM(0xd800, 0xffff);
 		break;
 	case MACHINE_XLXE:
@@ -160,9 +139,6 @@ void MEMORY_InitialiseMachine(void)
             SetROM(hole_end, 0xcfff);
         SetROM(0xd800, 0xffff);
 
-#ifndef PAGED_ATTRIB
-		SetHARDWARE(0xd000, 0xd7ff);
-#else
 		readmap[0xd0] = GTIA_GetByte;
 		readmap[0xd1] = PBI_GetByte;
 		readmap[0xd2] = POKEY_GetByte;
@@ -179,35 +155,7 @@ void MEMORY_InitialiseMachine(void)
 		writemap[0xd5] = CART_PutByte;
 		writemap[0xd6] = PBIM1_PutByte;
 		writemap[0xd7] = PBIM2_PutByte;
-#endif
 		SetROM(0xd800, 0xffff);
-		break;
-	case MACHINE_5200:
-		memcpy(memory + 0xf800, atari_os, 0x800);
-		dFillMem(0x0000, 0x00, 0xf800);
-		SetRAM(0x0000, 0x3fff);
-		SetROM(0x4000, 0xffff);
-#ifndef PAGED_ATTRIB
-		SetHARDWARE(0xc000, 0xc0ff);	/* 5200 GTIA Chip */
-		SetHARDWARE(0xd400, 0xd4ff);	/* 5200 ANTIC Chip */
-		SetHARDWARE(0xe800, 0xe8ff);	/* 5200 POKEY Chip */
-		SetHARDWARE(0xeb00, 0xebff);	/* 5200 POKEY Chip */
-#else
-		readmap[0xc0] = GTIA_GetByte;
-		readmap[0xd4] = ANTIC_GetByte;
-		readmap[0xe8] = POKEY_GetByte;
-		readmap[0xeb] = POKEY_GetByte;
-		writemap[0xc0] = GTIA_PutByte;
-		writemap[0xd4] = ANTIC_PutByte;
-		writemap[0xe8] = POKEY_PutByte;
-		writemap[0xeb] = POKEY_PutByte;
-    unsigned int i;
-		for ( i = 0xe9; i < 0xf0; i++ ) {
-			readmap[i] = POKEY_GetByte;
-			writemap[i] = POKEY_PutByte;
-		}
-
-#endif
 		break;
 	}
 	AllocXEMemory();
@@ -217,26 +165,6 @@ void MEMORY_InitialiseMachine(void)
     
 	Coldstart();
 }
-
-void CopyFromMem(UWORD from, UBYTE *to, int size)
-{
-	while (--size >= 0) {
-		*to++ = GetByte(from);
-		from++;
-	}
-}
-
-void CopyToMem(const UBYTE *from, UWORD to, int size)
-{
-	while (--size >= 0) {
-		PutByte(to, *from);
-		from++;
-		to++;
-	}
-}
-
-void MemStateSave(UBYTE SaveVerbose){}
-void MemStateRead(UBYTE SaveVerbose) {}
 
 /*
  * Returns non-zero, if Atari BASIC is disabled by given PORTB output.
@@ -250,13 +178,48 @@ static int basic_disabled(UBYTE portb)
 	 || ((portb & 0x10) == 0 && (ram_size == 576 || ram_size == 1088));
 }
 
+
+ITCM_CODE inline void CopyFromMem(UWORD from, UBYTE *to, int size)
+{
+	while (--size >= 0) {
+		*to++ = GetByte(from);
+		from++;
+	}
+}
+
+ITCM_CODE inline void CopyToMem(const UBYTE *from, UWORD to, int size)
+{
+	while (--size >= 0) {
+		PutByte(to, *from);
+		from++;
+		to++;
+	}
+}
+
 ITCM_CODE void SwitchBanks(int bank)
 {
     unsigned int *main_memory = (unsigned int *) (memory + 0x4000);
     unsigned int *old_bank    = (unsigned int *) (atarixe_memory + (xe_bank << 14));
     unsigned int *new_bank    = (unsigned int *) (atarixe_memory + (bank << 14));
-    for (int i=0; i<256; i++)
+    for (int i=0; i<128; i++)
     {
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+
         *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
         *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
         *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
@@ -280,33 +243,21 @@ ITCM_CODE void SwitchBanks(int bank)
 void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 {
 	/* Switch XE memory bank in 0x4000-0x7fff */
-	if (ram_size > 64) {
+	if (ram_size > 64) 
+    {
 		int bank = 0;
 		/* bank = 0 : base RAM */
 		/* bank = 1..64 : extended RAM */
 		if ((byte & 0x10) == 0)
-			switch (ram_size) {
-			case 128:
+        {
+			if (ram_size == RAM_128K)
 				bank = ((byte & 0x0c) >> 2) + 1;
-				break;
-			case 192:
-				bank = (((byte & 0x0c) + ((byte & 0x40) >> 2)) >> 2) + 1;
-				break;
-			case RAM_320_RAMBO:
+            else
 				bank = (((byte & 0x0c) + ((byte & 0x60) >> 1)) >> 2) + 1;
-				break;
-			case RAM_320_COMPY_SHOP:
-				bank = (((byte & 0x0c) + ((byte & 0xc0) >> 2)) >> 2) + 1;
-				break;
-			case 576:
-				bank = (((byte & 0x0e) + ((byte & 0x60) >> 1)) >> 1) + 1;
-				break;
-			case 1088:
-				bank = (((byte & 0x0e) + ((byte & 0xe0) >> 1)) >> 1) + 1;
-				break;
-			}
-		/* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
-		if (selftest_enabled && (bank != xe_bank || (ram_size == RAM_320_COMPY_SHOP && (byte & 0x20) == 0))) {
+        }
+        /* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
+		if (selftest_enabled && (bank != xe_bank)) 
+        {
 			/* Disable Self Test ROM */
 			memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
 			SetRAM(0x5000, 0x57ff);
@@ -328,21 +279,21 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         // The 128k XE RAM and the COMPY RAM allow the Antic to 
         // index into the RAM independently ... tricky stuff!
         // -----------------------------------------------------
-		if (ram_size == 128 || ram_size == RAM_320_COMPY_SHOP)
-			switch (byte & 0x30) {
+		if (ram_size == RAM_128K)
+        {
+			switch (byte & 0x30) 
+            {
 			case 0x20:	/* ANTIC: base, CPU: extended */
 				antic_xe_ptr = atarixe_memory;
 				break;
 			case 0x10:	/* ANTIC: extended, CPU: base */
-				if (ram_size == 128)
-					antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) >> 2) + 1) << 14);
-				else	/* 320 Compy Shop */
-					antic_xe_ptr = atarixe_memory + (((((byte & 0x0c) + ((byte & 0xc0) >> 2)) >> 2) + 1) << 14);
+    			antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) >> 2) + 1) << 14);
 				break;
 			default:	/* ANTIC same as CPU */
 				antic_xe_ptr = NULL;
 				break;
 			}
+        }
 	}
 
 	/* Enable/disable OS ROM in 0xc000-0xcfff and 0xd800-0xffff */
@@ -423,11 +374,8 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 	}
 	else {
 		/* We can enable Self Test only if the OS ROM is enabled */
-		/* and we're not accessing extended 320K Compy Shop or 1088K memory */
-		/* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
-		if (!selftest_enabled && (byte & 0x01)
-		&& !((byte & 0x30) != 0x30 && ram_size == RAM_320_COMPY_SHOP)
-		&& !((byte & 0x10) == 0 && ram_size == 1088)) {
+		if (!selftest_enabled && (byte & 0x01))
+        {
 			/* Enable Self Test ROM */
 			if (ram_size > 20) {
 				memcpy(under_atarixl_os + 0x1000, memory + 0x5000, 0x800);
@@ -496,9 +444,8 @@ void CartA0BF_Enable(void)
 {
 	if (!cartA0BF_enabled) {
 		/* No BASIC if not XL/XE or bit 1 of PORTB set */
-		/* or accessing extended 576K or 1088K memory */
-		if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02)
-		|| ((PORTB & 0x10) == 0 && (ram_size == 576 || ram_size == 1088)))) {
+		if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02)))
+        {
 			/* Back-up 0xa000-0xbfff RAM */
 			memcpy(under_cartA0BF, memory + 0xa000, 0x2000);
 			SetROM(0xa000, 0xbfff);
@@ -519,9 +466,6 @@ void get_charset(UBYTE *cs)
 		break;
 	case MACHINE_XLXE:
 		p = atari_os + 0x2000;
-		break;
-	case MACHINE_5200:
-		p = memory + 0xf800;
 		break;
 	default:
 		/* shouldn't happen */

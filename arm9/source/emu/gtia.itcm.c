@@ -710,7 +710,3 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
 	}
 }
 
-/* State ------------------------------------------------------------------- */
-
-void GTIAStateSave(void) {}
-void GTIAStateRead(void) {}

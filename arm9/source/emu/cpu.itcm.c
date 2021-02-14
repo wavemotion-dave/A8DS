@@ -58,23 +58,12 @@
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>	/* exit() */
-
 #include "cpu.h"
-#ifdef ASAP /* external project, see http://asap.sf.net */
-#include "asap_internal.h"
-#else
 #include "antic.h"
 #include "atari.h"
 #include "memory.h"
 #include "esc.h"
-//#include "monitor.h"
-#ifndef BASIC
 #include "statesav.h"
-#ifndef __PLUS
-//#include "ui.h"
-#endif
-#endif /* BASIC */
-#endif /* ASAP */
 
 /* Windows headers define it */
 #undef ABSOLUTE
@@ -107,8 +96,6 @@ UBYTE regS __attribute__((section(".dtcm")));
 UBYTE IRQ __attribute__((section(".dtcm")));
 
 /* Transfer 6502 registers between global variables and local variables inside GO() */
-//#define UPDATE_GLOBAL_REGS  regPC = GET_PC(); regS = S; regA = A; regX = X; regY = Y
-//#define UPDATE_LOCAL_REGS   SET_PC(regPC); S = regS; A = regA; X = regX; Y = regY
 #define UPDATE_GLOBAL_REGS  regS = S; 
 #define UPDATE_LOCAL_REGS   S = regS;
 
@@ -239,11 +226,8 @@ void NMI(void)
 	}
 
 /* Enter monitor */
-#ifdef __PLUS
-#define ENTER_MONITOR  Atari800_Exit(TRUE)
-#else
 #define ENTER_MONITOR  if (!Atari800_Exit(TRUE)) exit(0)
-#endif
+
 #define DO_BREAK \
 	UPDATE_GLOBAL_REGS; \
 	CPU_GetStatus(); \
@@ -1966,17 +1950,8 @@ void CPU_Reset(void)
 {
 	IRQ = 0;
 
-	regP = 0x34;				/* The unused bit is always 1, I flag set! */
+	regP = 0x34;		/* The unused bit is always 1, I flag set! */
 	CPU_PutStatus();	/* Make sure flags are all updated */
 	regS = 0xff;
 	regPC = dGetWordAligned(0xfffc);
 }
-
-void CpuStateSave(UBYTE SaveVerbose)
-{
-}
-
-void CpuStateRead(UBYTE SaveVerbose)
-{
-}
-

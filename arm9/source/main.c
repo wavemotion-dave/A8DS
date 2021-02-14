@@ -9,20 +9,10 @@
 #include "intro.h"
 #include "8bitutils.h"
 
-extern int bg0, bg1;
-int bg2, bg3;             // BG pointers 
-int bg0s, bg1s, bg2s, bg3s;         // sub BG pointers 
-extern volatile u16 vusCptVBL;             // VBL test
-
 extern void load_os(void);
 extern void install_os(void);
-
-void irqVBlank(void) { 
-  // Manage time
-  vusCptVBL++;
-}
-
 extern int skip_frames;
+
 // Program entry point
 int main(int argc, char **argv) 
 {
@@ -31,7 +21,7 @@ int main(int argc, char **argv)
     soundEnable();
     lcdMainOnTop();
     
-    skip_frames = (isDSiMode() ? FALSE:TRUE);   // For older DS models, we skip frames to get full speed...
+    skip_frames = (isDSiMode() ? FALSE:TRUE);   // For older DS models, we force skip frames to get full speed...
 
     // Init Fat
     if (!fatInitDefault()) 
@@ -47,7 +37,7 @@ int main(int argc, char **argv)
     // Intro and main screen
     intro_logo();  
     dsInitScreenMain();
-    etatEmu = A5200_MENUINIT;
+    etatEmu = A8_MENUINIT;
 
     load_os();          // Read in the "atarixl.rom" file or use the built-in Altirra OS
     install_os();       // And install the right OS into our system...
@@ -58,7 +48,7 @@ int main(int argc, char **argv)
         dsShowScreenMain();
         dsLoadGame(argv[1], 1, true, true);
         Atari800_Initialise();
-        etatEmu = A5200_PLAYINIT;
+        etatEmu = A8_PLAYINIT;
     }
     // Main loop of emulation
     dsMainLoop();

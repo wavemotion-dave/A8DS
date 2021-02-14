@@ -1,11 +1,11 @@
-#ifndef _A5200UTILS_H
-#define _A5200UTILS_H
+#ifndef _A8UTILS_H
+#define _A8UTILS_H
 
-#define A5200_MENUINIT 0x01
-#define A5200_MENUSHOW 0x02
-#define A5200_PLAYINIT 0x03 
-#define A5200_PLAYGAME 0x04 
-#define A5200_QUITSTDS 0x05
+#define A8_MENUINIT 0x01
+#define A8_MENUSHOW 0x02
+#define A8_PLAYINIT 0x03 
+#define A8_PLAYGAME 0x04 
+#define A8_QUITSTDS 0x05
 
 extern unsigned int etatEmu;
 
@@ -21,18 +21,12 @@ typedef struct FICtoLoad {
   unsigned int uCrc;
 } FICA_A8;
 
-#define ds_GetTicks() (TIMER0_DATA)
-
 extern int bg0, bg1, bg0b,bg1b;
 extern int bg2, bg3;
 extern unsigned int video_height;                  // Actual video height
 
 extern void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr, unsigned char valEnd, unsigned char uWait);
-
-extern unsigned int crc32 (unsigned int crc, const unsigned char *buf, unsigned int len);
-
 extern void vblankIntr();
-
 extern void dsInitScreenMain(void);
 extern void dsInitTimer(void);
 extern void dsShowScreenEmu(void);
@@ -51,4 +45,4 @@ extern ITCM_CODE void dsMainLoop(void);
 extern int a8Filescmp (const void *c1, const void *c2);
 extern void a8FindFiles(void);
 
-#endif
+#endif // _A8UTILS_H
