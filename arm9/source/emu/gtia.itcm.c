@@ -24,14 +24,11 @@
 
 #include "config.h"
 #include <string.h>
-
 #include "antic.h"
 #include "cassette.h"
 #include "gtia.h"
-#ifndef BASIC
 #include "input.h"
 #include "statesav.h"
-#endif
 #include "pokeysnd.h"
 
 /* GTIA Registers ---------------------------------------------------------- */
@@ -85,19 +82,6 @@ UBYTE consol_mask __attribute__((section(".dtcm")));
 UBYTE TRIG[4] __attribute__((section(".dtcm")));
 UBYTE TRIG_latch[4] __attribute__((section(".dtcm")));
 
-#if defined(BASIC) || defined(CURSES_BASIC)
-
-static UBYTE PF0PM  __attribute__((section(".dtcm")))= 0;
-static UBYTE PF1PM  __attribute__((section(".dtcm")))= 0;
-static UBYTE PF2PM  __attribute__((section(".dtcm")))= 0;
-static UBYTE PF3PM  __attribute__((section(".dtcm")))= 0;
-#define collisions_mask_missile_playfield 0
-#define collisions_mask_player_playfield 0
-#define collisions_mask_missile_player 0
-#define collisions_mask_player_player 0
-
-#else /* defined(BASIC) || defined(CURSES_BASIC) */
-
 void set_prior(UBYTE byte);			/* in antic.c */
 
 /* Player/Missile stuff ---------------------------------------------------- */
@@ -108,25 +92,6 @@ UBYTE collisions_mask_player_playfield  __attribute__((section(".dtcm")))= 0x0f;
 UBYTE collisions_mask_missile_player  __attribute__((section(".dtcm")))= 0x0f;
 UBYTE collisions_mask_player_player  __attribute__((section(".dtcm")))= 0x0f;
 
-#ifdef NEW_CYCLE_EXACT
-/* temporary collision registers for the current scanline only */
-UBYTE P1PL_T;
-UBYTE P2PL_T;
-UBYTE P3PL_T;
-UBYTE M0PL_T;
-UBYTE M1PL_T;
-UBYTE M2PL_T;
-UBYTE M3PL_T;
-/* If partial collisions have been generated during a scanline, this
- * is the position of the up-to-date collision point , otherwise it is 0
- */
-int collision_curpos;
-/* if hitclr has been written to during a scanline, this is the position
- * within pm_scaline at which it was written to, and collisions should
- * only be generated from this point on, otherwise it is 0
- */
-int hitclr_pos;
-#else
 #define P1PL_T P1PL
 #define P2PL_T P2PL
 #define P3PL_T P3PL
@@ -134,7 +99,6 @@ int hitclr_pos;
 #define M1PL_T M1PL
 #define M2PL_T M2PL
 #define M3PL_T M3PL
-#endif /* NEW_CYCLE_EXACT */
 
 extern UBYTE player_dma_enabled;
 extern UBYTE missile_dma_enabled;
@@ -197,28 +161,12 @@ extern UWORD cl_lookup[128];
 
 /* Colours ----------------------------------------------------------------- */
 
-#ifdef USE_COLOUR_TRANSLATION_TABLE
-UWORD colour_translation_table[256];
-#else
 extern UWORD hires_lookup_l[128] __attribute__((section(".dtcm")));
-#endif /* USE_COLOUR_TRANSLATION_TABLE */
-
 extern ULONG lookup_gtia9[16];
 extern ULONG lookup_gtia11[16];
 
 void setup_gtia9_11(void) {
 	int i;
-#ifdef USE_COLOUR_TRANSLATION_TABLE
-	UWORD temp;
-	temp = colour_translation_table[COLBK & 0xf0];
-	lookup_gtia11[0] = ((ULONG) temp << 16) + temp;
-	for (i = 1; i < 16; i++) {
-		temp = colour_translation_table[COLBK | i];
-		lookup_gtia9[i] = ((ULONG) temp << 16) + temp;
-		temp = colour_translation_table[COLBK | (i << 4)];
-		lookup_gtia11[i] = ((ULONG) temp << 16) + temp;
-	}
-#else
 	ULONG count9 = 0;
 	ULONG count11 = 0;
 	lookup_gtia11[0] = lookup_gtia9[0] & 0xf0f0f0f0;
@@ -226,15 +174,12 @@ void setup_gtia9_11(void) {
 		lookup_gtia9[i] = lookup_gtia9[0] | (count9 += 0x01010101);
 		lookup_gtia11[i] = lookup_gtia9[0] | (count11 += 0x10101010);
 	}
-#endif
 }
 
-#endif /* defined(BASIC) || defined(CURSES_BASIC) */
 
 /* Initialization ---------------------------------------------------------- */
 
 void GTIA_Initialise(void) {
-#if !defined(BASIC) && !defined(CURSES_BASIC)
 	int i;
 	for (i = 0; i < 256; i++) {
 		int tmp = i + 0x100;
@@ -259,94 +204,15 @@ void GTIA_Initialise(void) {
 	memset(cl_lookup, COLOUR_BLACK, sizeof(cl_lookup));
 	for (i = 0; i < 32; i++)
 		GTIA_PutByte((UWORD) i, 0);
-#endif /* !defined(BASIC) && !defined(CURSES_BASIC) */
   POTENA=0;
 }
 
-#ifdef NEW_CYCLE_EXACT
-
-/* generate updated PxPL and MxPL for part of a scanline */
-/* slow, but should be called rarely */
-void generate_partial_pmpl_colls(int l, int r)
-{
-	int i;
-	if (r < 0 || l >= (int) sizeof(pm_scanline) / (int) sizeof(pm_scanline[0]))
-		return;
-	if (r >= (int) sizeof(pm_scanline) / (int) sizeof(pm_scanline[0])) {
-		r = (int) sizeof(pm_scanline) / (int) sizeof(pm_scanline[0]);
-	}
-	if (l < 0)
-		l = 0;
-
-	for (i = l; i <= r; i++) {
-		UBYTE p = pm_scanline[i];
-/* It is possible that some bits are set in PxPL/MxPL here, which would
- * not otherwise be set ever in new_pm_scanline.  This is because the
- * player collisions are always generated in order in new_pm_scanline.
- * However this does not cause any problem because we never use those bits
- * of PxPL/MxPL in the collision reading code.
- */
-		P1PL |= (p & (1 << 1)) ?  p : 0;
-		P2PL |= (p & (1 << 2)) ?  p : 0;
-		P3PL |= (p & (1 << 3)) ?  p : 0;
-		M0PL |= (p & (0x10 << 0)) ?  p : 0;
-		M1PL |= (p & (0x10 << 1)) ?  p : 0;
-		M2PL |= (p & (0x10 << 2)) ?  p : 0;
-		M3PL |= (p & (0x10 << 3)) ?  p : 0;
-	}
-
-}
-
-/* update pm->pl collisions for a partial scanline */
-void update_partial_pmpl_colls(void)
-{
-	int l = collision_curpos;
-	int r = XPOS * 2 - 37;
-	generate_partial_pmpl_colls(l, r);
-	collision_curpos = r;
-}
-
-/* update pm-> pl collisions at the end of a scanline */
-void update_pmpl_colls(void)
-{
-	if (hitclr_pos != 0){
-		generate_partial_pmpl_colls(hitclr_pos,
-				sizeof(pm_scanline) / sizeof(pm_scanline[0]) - 1);
-/* If hitclr was written to, then only part of pm_scanline should be used
- * for collisions */
-
-	}
-	else {
-/* otherwise the whole of pm_scaline can be used for collisions.  This will
- * update the collision registers based on the generated collisions for the
- * current line */
-		P1PL |= P1PL_T;
-		P2PL |= P2PL_T;
-		P3PL |= P3PL_T;
-		M0PL |= M0PL_T;
-		M1PL |= M1PL_T;
-		M2PL |= M2PL_T;
-		M3PL |= M3PL_T;
-	}
-	collision_curpos = 0;
-	hitclr_pos = 0;
-}
-
-#else
 #define update_partial_pmpl_colls()
-#endif /* NEW_CYCLE_EXACT */
 
 /* Prepare PMG scanline ---------------------------------------------------- */
 
-#if !defined(BASIC) && !defined(CURSES_BASIC)
-
 void new_pm_scanline(void)
 {
-#ifdef NEW_CYCLE_EXACT
-/* reset temporary pm->pl collisions */
-	P1PL_T = P2PL_T = P3PL_T = 0;
-	M0PL_T = M1PL_T = M2PL_T = M3PL_T = 0;
-#endif /* NEW_CYCLE_EXACT */
 /* Clear if necessary */
 	if (pm_dirty) {
 		memset(pm_scanline, 0, ATARI_WIDTH / 2);
@@ -420,16 +286,10 @@ void new_pm_scanline(void)
 	}
 }
 
-#endif /* !defined(BASIC) && !defined(CURSES_BASIC) */
-
 /* GTIA registers ---------------------------------------------------------- */
 
 void GTIA_Frame(void) {
-#ifdef BASIC
-	int consol = 0xf;
-#else
 	int consol = key_consol | 0x08;
-#endif
 
 	consol_table[0] = consol;
 	consol_table[1] = consol_table[2] &= consol;
@@ -548,275 +408,19 @@ UBYTE GTIA_GetByte(UWORD addr)
 	return 0xf;
 }
 
+#define UPDATE_PM_CYCLE_EXACT
 void GTIA_PutByte(UWORD addr, UBYTE byte)
 {
-#if !defined(BASIC) && !defined(CURSES_BASIC)
 	UWORD cword;
 	UWORD cword2;
-
-#ifdef NEW_CYCLE_EXACT
-	int x; /* the cycle-exact update position in pm_scanline */
-	if (DRAWING_SCREEN) {
-		if ((addr & 0x1f) != PRIOR) {
-			update_scanline();
-		} else {
-			update_scanline_prior(byte);
-		}
-	}
-#define UPDATE_PM_CYCLE_EXACT if(DRAWING_SCREEN) new_pm_scanline();
-#else
-#define UPDATE_PM_CYCLE_EXACT
-#endif
-
-#endif /* !defined(BASIC) && !defined(CURSES_BASIC) */
 
 	switch (addr & 0x1f) {
 	case _CONSOL:
 		atari_speaker = !(byte & 0x08);
-#ifdef CONSOLE_SOUND
-		Update_consol_sound(1);
-#endif
 		consol_mask = (~byte) & 0x0f;
     POTENA = byte & 0x04;
 		break;
 
-#if defined(BASIC) || defined(CURSES_BASIC)
-
-	/* We use these for Antic modes 6, 7 on Curses */
-	case _COLPF0:
-		COLPF0 = byte;
-		break;
-	case _COLPF1:
-		COLPF1 = byte;
-		break;
-	case _COLPF2:
-		COLPF2 = byte;
-		break;
-	case _COLPF3:
-		COLPF3 = byte;
-		break;
-
-#else
-
-#ifdef USE_COLOUR_TRANSLATION_TABLE
-	case _COLBK:
-		COLBK = byte &= 0xfe;
-		cl_lookup[C_BAK] = cword = colour_translation_table[byte];
-		if (cword != (UWORD) (lookup_gtia9[0]) ) {
-			lookup_gtia9[0] = cword + (cword << 16);
-			if (PRIOR & 0x40)
-				setup_gtia9_11();
-		}
-		break;
-	case _COLPF0:
-		COLPF0 = byte &= 0xfe;
-		cl_lookup[C_PF0] = cword = colour_translation_table[byte];
-		if ((PRIOR & 1) == 0) {
-			cl_lookup[C_PF0 | C_PM23] = cl_lookup[C_PF0 | C_PM3] = cl_lookup[C_PF0 | C_PM2] = cword;
-			if ((PRIOR & 3) == 0) {
-				if (PRIOR & 0xf) {
-					cl_lookup[C_PF0 | C_PM01] = cl_lookup[C_PF0 | C_PM1] = cl_lookup[C_PF0 | C_PM0] = cword;
-					if ((PRIOR & 0xf) == 0xc)
-						cl_lookup[C_PF0 | C_PM0123] = cl_lookup[C_PF0 | C_PM123] = cl_lookup[C_PF0 | C_PM023] = cword;
-				}
-				else {
-					cl_lookup[C_PF0 | C_PM0] = colour_translation_table[byte | COLPM0];
-					cl_lookup[C_PF0 | C_PM1] = colour_translation_table[byte | COLPM1];
-					cl_lookup[C_PF0 | C_PM01] = colour_translation_table[byte | COLPM0 | COLPM1];
-				}
-			}
-			if ((PRIOR & 0xf) >= 0xa)
-				cl_lookup[C_PF0 | C_PM25] = cword;
-		}
-		break;
-	case _COLPF1:
-		COLPF1 = byte &= 0xfe;
-		cl_lookup[C_PF1] = cword = colour_translation_table[byte];
-		if ((PRIOR & 1) == 0) {
-			cl_lookup[C_PF1 | C_PM23] = cl_lookup[C_PF1 | C_PM3] = cl_lookup[C_PF1 | C_PM2] = cword;
-			if ((PRIOR & 3) == 0) {
-				if (PRIOR & 0xf) {
-					cl_lookup[C_PF1 | C_PM01] = cl_lookup[C_PF1 | C_PM1] = cl_lookup[C_PF1 | C_PM0] = cword;
-					if ((PRIOR & 0xf) == 0xc)
-						cl_lookup[C_PF1 | C_PM0123] = cl_lookup[C_PF1 | C_PM123] = cl_lookup[C_PF1 | C_PM023] = cword;
-				}
-				else {
-					cl_lookup[C_PF1 | C_PM0] = colour_translation_table[byte | COLPM0];
-					cl_lookup[C_PF1 | C_PM1] = colour_translation_table[byte | COLPM1];
-					cl_lookup[C_PF1 | C_PM01] = colour_translation_table[byte | COLPM0 | COLPM1];
-				}
-			}
-		}
-		{
-			UBYTE byte2 = (COLPF2 & 0xf0) + (byte & 0xf);
-			cl_lookup[C_HI2] = cword = colour_translation_table[byte2];
-			cl_lookup[C_HI3] = colour_translation_table[(COLPF3 & 0xf0) | (byte & 0xf)];
-			if (PRIOR & 4)
-				cl_lookup[C_HI2 | C_PM01] = cl_lookup[C_HI2 | C_PM1] = cl_lookup[C_HI2 | C_PM0] = cword;
-			if ((PRIOR & 9) == 0) {
-				if (PRIOR & 0xf)
-					cl_lookup[C_HI2 | C_PM23] = cl_lookup[C_HI2 | C_PM3] = cl_lookup[C_HI2 | C_PM2] = cword;
-				else {
-					cl_lookup[C_HI2 | C_PM2] = colour_translation_table[byte2 | (COLPM2 & 0xf0)];
-					cl_lookup[C_HI2 | C_PM3] = colour_translation_table[byte2 | (COLPM3 & 0xf0)];
-					cl_lookup[C_HI2 | C_PM23] = colour_translation_table[byte2 | ((COLPM2 | COLPM3) & 0xf0)];
-				}
-			}
-		}
-		break;
-	case _COLPF2:
-		COLPF2 = byte &= 0xfe;
-		cl_lookup[C_PF2] = cword = colour_translation_table[byte];
-		{
-			UBYTE byte2 = (byte & 0xf0) + (COLPF1 & 0xf);
-			cl_lookup[C_HI2] = cword2 = colour_translation_table[byte2];
-			if (PRIOR & 4) {
-				cl_lookup[C_PF2 | C_PM01] = cl_lookup[C_PF2 | C_PM1] = cl_lookup[C_PF2 | C_PM0] = cword;
-				cl_lookup[C_HI2 | C_PM01] = cl_lookup[C_HI2 | C_PM1] = cl_lookup[C_HI2 | C_PM0] = cword2;
-			}
-			if ((PRIOR & 9) == 0) {
-				if (PRIOR & 0xf) {
-					cl_lookup[C_PF2 | C_PM23] = cl_lookup[C_PF2 | C_PM3] = cl_lookup[C_PF2 | C_PM2] = cword;
-					cl_lookup[C_HI2 | C_PM23] = cl_lookup[C_HI2 | C_PM3] = cl_lookup[C_HI2 | C_PM2] = cword2;
-				}
-				else {
-					cl_lookup[C_PF2 | C_PM2] = colour_translation_table[byte | COLPM2];
-					cl_lookup[C_PF2 | C_PM3] = colour_translation_table[byte | COLPM3];
-					cl_lookup[C_PF2 | C_PM23] = colour_translation_table[byte | COLPM2 | COLPM3];
-					cl_lookup[C_HI2 | C_PM2] = colour_translation_table[byte2 | (COLPM2 & 0xf0)];
-					cl_lookup[C_HI2 | C_PM3] = colour_translation_table[byte2 | (COLPM3 & 0xf0)];
-					cl_lookup[C_HI2 | C_PM23] = colour_translation_table[byte2 | ((COLPM2 | COLPM3) & 0xf0)];
-				}
-			}
-		}
-		break;
-	case _COLPF3:
-		COLPF3 = byte &= 0xfe;
-		cl_lookup[C_PF3] = cword = colour_translation_table[byte];
-		cl_lookup[C_HI3] = cword2 = colour_translation_table[(byte & 0xf0) | (COLPF1 & 0xf)];
-		if (PRIOR & 4)
-			cl_lookup[C_PF3 | C_PM01] = cl_lookup[C_PF3 | C_PM1] = cl_lookup[C_PF3 | C_PM0] = cword;
-		if ((PRIOR & 9) == 0) {
-			if (PRIOR & 0xf)
-				cl_lookup[C_PF3 | C_PM23] = cl_lookup[C_PF3 | C_PM3] = cl_lookup[C_PF3 | C_PM2] = cword;
-			else {
-				cl_lookup[C_PF3 | C_PM25] = cl_lookup[C_PF2 | C_PM25] = cl_lookup[C_PM25] = cl_lookup[C_PF3 | C_PM2] = colour_translation_table[byte | COLPM2];
-				cl_lookup[C_PF3 | C_PM35] = cl_lookup[C_PF2 | C_PM35] = cl_lookup[C_PM35] = cl_lookup[C_PF3 | C_PM3] = colour_translation_table[byte | COLPM3];
-				cl_lookup[C_PF3 | C_PM235] = cl_lookup[C_PF2 | C_PM235] = cl_lookup[C_PM235] = cl_lookup[C_PF3 | C_PM23] = colour_translation_table[byte | COLPM2 | COLPM3];
-				cl_lookup[C_PF0 | C_PM235] = cl_lookup[C_PF0 | C_PM35] = cl_lookup[C_PF0 | C_PM25] =
-				cl_lookup[C_PF1 | C_PM235] = cl_lookup[C_PF1 | C_PM35] = cl_lookup[C_PF1 | C_PM25] = cword;
-			}
-		}
-		break;
-	case _COLPM0:
-		COLPM0 = byte &= 0xfe;
-		cl_lookup[C_PM023] = cl_lookup[C_PM0] = cword = colour_translation_table[byte];
-		{
-			UBYTE byte2 = byte | COLPM1;
-			cl_lookup[C_PM0123] = cl_lookup[C_PM01] = cword2 = colour_translation_table[byte2];
-			if ((PRIOR & 4) == 0) {
-				cl_lookup[C_PF2 | C_PM0] = cl_lookup[C_PF3 | C_PM0] = cword;
-				cl_lookup[C_PF2 | C_PM01] = cl_lookup[C_PF3 | C_PM01] = cword2;
-				cl_lookup[C_HI2 | C_PM0] = colour_translation_table[(byte & 0xf0) | (COLPF1 & 0xf)];
-				cl_lookup[C_HI2 | C_PM01] = colour_translation_table[(byte2 & 0xf0) | (COLPF1 & 0xf)];
-				if ((PRIOR & 0xc) == 0) {
-					if (PRIOR & 3) {
-						cl_lookup[C_PF0 | C_PM0] = cl_lookup[C_PF1 | C_PM0] = cword;
-						cl_lookup[C_PF0 | C_PM01] = cl_lookup[C_PF1 | C_PM01] = cword2;
-					}
-					else {
-						cl_lookup[C_PF0 | C_PM0] = colour_translation_table[byte | COLPF0];
-						cl_lookup[C_PF1 | C_PM0] = colour_translation_table[byte | COLPF1];
-						cl_lookup[C_PF0 | C_PM01] = colour_translation_table[byte2 | COLPF0];
-						cl_lookup[C_PF1 | C_PM01] = colour_translation_table[byte2 | COLPF1];
-					}
-				}
-			}
-		}
-		break;
-	case _COLPM1:
-		COLPM1 = byte &= 0xfe;
-		cl_lookup[C_PM123] = cl_lookup[C_PM1] = cword = colour_translation_table[byte];
-		{
-			UBYTE byte2 = byte | COLPM0;
-			cl_lookup[C_PM0123] = cl_lookup[C_PM01] = cword2 = colour_translation_table[byte2];
-			if ((PRIOR & 4) == 0) {
-				cl_lookup[C_PF2 | C_PM1] = cl_lookup[C_PF3 | C_PM1] = cword;
-				cl_lookup[C_PF2 | C_PM01] = cl_lookup[C_PF3 | C_PM01] = cword2;
-				cl_lookup[C_HI2 | C_PM1] = colour_translation_table[(byte & 0xf0) | (COLPF1 & 0xf)];
-				cl_lookup[C_HI2 | C_PM01] = colour_translation_table[(byte2 & 0xf0) | (COLPF1 & 0xf)];
-				if ((PRIOR & 0xc) == 0) {
-					if (PRIOR & 3) {
-						cl_lookup[C_PF0 | C_PM1] = cl_lookup[C_PF1 | C_PM1] = cword;
-						cl_lookup[C_PF0 | C_PM01] = cl_lookup[C_PF1 | C_PM01] = cword2;
-					}
-					else {
-						cl_lookup[C_PF0 | C_PM1] = colour_translation_table[byte | COLPF0];
-						cl_lookup[C_PF1 | C_PM1] = colour_translation_table[byte | COLPF1];
-						cl_lookup[C_PF0 | C_PM01] = colour_translation_table[byte2 | COLPF0];
-						cl_lookup[C_PF1 | C_PM01] = colour_translation_table[byte2 | COLPF1];
-					}
-				}
-			}
-		}
-		break;
-	case _COLPM2:
-		COLPM2 = byte &= 0xfe;
-		cl_lookup[C_PM2] = cword = colour_translation_table[byte];
-		{
-			UBYTE byte2 = byte | COLPM3;
-			cl_lookup[C_PM23] = cword2 = colour_translation_table[byte2];
-			if (PRIOR & 1) {
-				cl_lookup[C_PF0 | C_PM2] = cl_lookup[C_PF1 | C_PM2] = cword;
-				cl_lookup[C_PF0 | C_PM23] = cl_lookup[C_PF1 | C_PM23] = cword2;
-			}
-			if ((PRIOR & 6) == 0) {
-				if (PRIOR & 9) {
-					cl_lookup[C_PF2 | C_PM2] = cl_lookup[C_PF3 | C_PM2] = cword;
-					cl_lookup[C_PF2 | C_PM23] = cl_lookup[C_PF3 | C_PM23] = cword2;
-					cl_lookup[C_HI2 | C_PM2] = colour_translation_table[(byte & 0xf0) | (COLPF1 & 0xf)];
-					cl_lookup[C_HI2 | C_PM23] = colour_translation_table[(byte2 & 0xf0) | (COLPF1 & 0xf)];
-				}
-				else {
-					cl_lookup[C_PF2 | C_PM2] = colour_translation_table[byte | COLPF2];
-					cl_lookup[C_PF3 | C_PM25] = cl_lookup[C_PF2 | C_PM25] = cl_lookup[C_PM25] = cl_lookup[C_PF3 | C_PM2] = colour_translation_table[byte | COLPF3];
-					cl_lookup[C_PF2 | C_PM23] = colour_translation_table[byte2 | COLPF2];
-					cl_lookup[C_PF3 | C_PM235] = cl_lookup[C_PF2 | C_PM235] = cl_lookup[C_PM235] = cl_lookup[C_PF3 | C_PM23] = colour_translation_table[byte2 | COLPF3];
-					cl_lookup[C_HI2 | C_PM2] = colour_translation_table[((byte | COLPF2) & 0xf0) | (COLPF1 & 0xf)];
-					cl_lookup[C_HI2 | C_PM25] = colour_translation_table[((byte | COLPF3) & 0xf0) | (COLPF1 & 0xf)];
-					cl_lookup[C_HI2 | C_PM23] = colour_translation_table[((byte2 | COLPF2) & 0xf0) | (COLPF1 & 0xf)];
-					cl_lookup[C_HI2 | C_PM235] = colour_translation_table[((byte2 | COLPF3) & 0xf0) | (COLPF1 & 0xf)];
-				}
-			}
-		}
-		break;
-	case _COLPM3:
-		COLPM3 = byte &= 0xfe;
-		cl_lookup[C_PM3] = cword = colour_translation_table[byte];
-		{
-			UBYTE byte2 = byte | COLPM2;
-			cl_lookup[C_PM23] = cword2 = colour_translation_table[byte2];
-			if (PRIOR & 1) {
-				cl_lookup[C_PF0 | C_PM3] = cl_lookup[C_PF1 | C_PM3] = cword;
-				cl_lookup[C_PF0 | C_PM23] = cl_lookup[C_PF1 | C_PM23] = cword2;
-			}
-			if ((PRIOR & 6) == 0) {
-				if (PRIOR & 9) {
-					cl_lookup[C_PF2 | C_PM3] = cl_lookup[C_PF3 | C_PM3] = cword;
-					cl_lookup[C_PF2 | C_PM23] = cl_lookup[C_PF3 | C_PM23] = cword2;
-				}
-				else {
-					cl_lookup[C_PF2 | C_PM3] = colour_translation_table[byte | COLPF2];
-					cl_lookup[C_PF3 | C_PM35] = cl_lookup[C_PF2 | C_PM35] = cl_lookup[C_PM35] = cl_lookup[C_PF3 | C_PM3] = colour_translation_table[byte | COLPF3];
-					cl_lookup[C_PF2 | C_PM23] = colour_translation_table[byte2 | COLPF2];
-					cl_lookup[C_PF3 | C_PM235] = cl_lookup[C_PF2 | C_PM235] = cl_lookup[C_PM235] = cl_lookup[C_PF3 | C_PM23] = colour_translation_table[byte2 | COLPF3];
-					cl_lookup[C_HI2 | C_PM3] = colour_translation_table[((byte | COLPF2) & 0xf0) | (COLPF1 & 0xf)];
-					cl_lookup[C_HI2 | C_PM23] = colour_translation_table[((byte2 | COLPF2) & 0xf0) | (COLPF1 & 0xf)];
-				}
-			}
-		}
-		break;
-#else /* USE_COLOUR_TRANSLATION_TABLE */
 	case _COLBK:
 		COLBK = byte &= 0xfe;
 		COLOUR_TO_WORD(cword,byte);
@@ -984,22 +588,12 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
 			}
 		}
 		break;
-#endif /* USE_COLOUR_TRANSLATION_TABLE */
 	case _GRAFM:
 		GRAFM = byte;
 		UPDATE_PM_CYCLE_EXACT
 		break;
 
-#ifdef NEW_CYCLE_EXACT
-#define CYCLE_EXACT_GRAFP(n) x = XPOS * 2 - 3;\
-	if (HPOSP##n >= x) {\
-	/* hpos right of x */\
-		/* redraw */  \
-		UPDATE_PM_CYCLE_EXACT\
-	}
-#else
 #define CYCLE_EXACT_GRAFP(n)
-#endif /* NEW_CYCLE_EXACT */
 
 #define DO_GRAFP(n) case _GRAFP##n:\
 	GRAFP##n = byte;\
@@ -1015,10 +609,6 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
 		M0PL = M1PL = M2PL = M3PL = 0;
 		P0PL = P1PL = P2PL = P3PL = 0;
 		PF0PM = PF1PM = PF2PM = PF3PM = 0;
-#ifdef NEW_CYCLE_EXACT
-		hitclr_pos = XPOS * 2 - 37;
-		collision_curpos = hitclr_pos;
-#endif
 		break;
 /* TODO: cycle-exact missile HPOS, GRAF, SIZE */
 /* this is only an approximation */
@@ -1043,38 +633,7 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
 		UPDATE_PM_CYCLE_EXACT
 		break;
 
-#ifdef NEW_CYCLE_EXACT
-#define CYCLE_EXACT_HPOSP(n) x = XPOS * 2 - 1;\
-	if (HPOSP##n < x && byte < x) {\
-	/* case 1: both left of x */\
-		/* do nothing */\
-	}\
-	else if (HPOSP##n >= x && byte >= x ) {\
-	/* case 2: both right of x */\
-		/* redraw, clearing first */\
-		UPDATE_PM_CYCLE_EXACT\
-	}\
-	else if (HPOSP##n <x && byte >= x) {\
-	/* case 3: new value is right, old value is left */\
-		/* redraw without clearning first */\
-		/* note: a hack, we can get away with it unless another change occurs */\
-		/* before the original copy that wasn't erased due to changing */\
-		/* pm_dirty is drawn */\
-		pm_dirty = FALSE;\
-		UPDATE_PM_CYCLE_EXACT\
-		pm_dirty = TRUE; /* can't trust that it was reset correctly */\
-	}\
-	else {\
-	/* case 4: new value is left, old value is right */\
-		/* remove old player and don't draw the new one */\
-		UBYTE save_graf = GRAFP##n;\
-		GRAFP##n = 0;\
-		UPDATE_PM_CYCLE_EXACT\
-		GRAFP##n = save_graf;\
-	}
-#else
 #define CYCLE_EXACT_HPOSP(n)
-#endif /* NEW_CYCLE_EXACT */
 #define DO_HPOSP(n)	case _HPOSP##n:								\
 	hposp_ptr[n] = pm_scanline + byte - 0x20;					\
 	if (byte >= 0x22) {											\
@@ -1131,14 +690,6 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
 		UPDATE_PM_CYCLE_EXACT
 		break;
 	case _PRIOR:
-#ifdef NEW_CYCLE_EXACT
-#ifndef NO_GTIA11_DELAY
-		/* update prior change ring buffer */
-  		prior_curpos = (prior_curpos + 1) % PRIOR_BUF_SIZE;
-		prior_pos_buf[prior_curpos] = XPOS * 2 - 37 + 2;
-		prior_val_buf[prior_curpos] = byte;
-#endif
-#endif
 		set_prior(byte);
 		PRIOR = byte;
 		if (byte & 0x40)
@@ -1156,147 +707,10 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
 		if ((byte & 4) == 0)
 			TRIG_latch[0] = TRIG_latch[1] = TRIG_latch[2] = TRIG_latch[3] = 1;
 		break;
-
-#endif /* defined(BASIC) || defined(CURSES_BASIC) */
 	}
 }
 
 /* State ------------------------------------------------------------------- */
 
-#ifndef BASIC
-
-void GTIAStateSave(void)
-{
-	int next_console_value = 7;
-
-	SaveUBYTE(&HPOSP0, 1);
-	SaveUBYTE(&HPOSP1, 1);
-	SaveUBYTE(&HPOSP2, 1);
-	SaveUBYTE(&HPOSP3, 1);
-	SaveUBYTE(&HPOSM0, 1);
-	SaveUBYTE(&HPOSM1, 1);
-	SaveUBYTE(&HPOSM2, 1);
-	SaveUBYTE(&HPOSM3, 1);
-	SaveUBYTE(&PF0PM, 1);
-	SaveUBYTE(&PF1PM, 1);
-	SaveUBYTE(&PF2PM, 1);
-	SaveUBYTE(&PF3PM, 1);
-	SaveUBYTE(&M0PL, 1);
-	SaveUBYTE(&M1PL, 1);
-	SaveUBYTE(&M2PL, 1);
-	SaveUBYTE(&M3PL, 1);
-	SaveUBYTE(&P0PL, 1);
-	SaveUBYTE(&P1PL, 1);
-	SaveUBYTE(&P2PL, 1);
-	SaveUBYTE(&P3PL, 1);
-	SaveUBYTE(&SIZEP0, 1);
-	SaveUBYTE(&SIZEP1, 1);
-	SaveUBYTE(&SIZEP2, 1);
-	SaveUBYTE(&SIZEP3, 1);
-	SaveUBYTE(&SIZEM, 1);
-	SaveUBYTE(&GRAFP0, 1);
-	SaveUBYTE(&GRAFP1, 1);
-	SaveUBYTE(&GRAFP2, 1);
-	SaveUBYTE(&GRAFP3, 1);
-	SaveUBYTE(&GRAFM, 1);
-	SaveUBYTE(&COLPM0, 1);
-	SaveUBYTE(&COLPM1, 1);
-	SaveUBYTE(&COLPM2, 1);
-	SaveUBYTE(&COLPM3, 1);
-	SaveUBYTE(&COLPF0, 1);
-	SaveUBYTE(&COLPF1, 1);
-	SaveUBYTE(&COLPF2, 1);
-	SaveUBYTE(&COLPF3, 1);
-	SaveUBYTE(&COLBK, 1);
-	SaveUBYTE(&PRIOR, 1);
-	SaveUBYTE(&VDELAY, 1);
-	SaveUBYTE(&GRACTL, 1);
-
-	SaveUBYTE(&consol_mask, 1);
-	SaveINT(&atari_speaker, 1);
-	SaveINT(&next_console_value, 1);
-}
-
-void GTIAStateRead(void)
-{
-	int next_console_value;	/* ignored */
-
-	ReadUBYTE(&HPOSP0, 1);
-	ReadUBYTE(&HPOSP1, 1);
-	ReadUBYTE(&HPOSP2, 1);
-	ReadUBYTE(&HPOSP3, 1);
-	ReadUBYTE(&HPOSM0, 1);
-	ReadUBYTE(&HPOSM1, 1);
-	ReadUBYTE(&HPOSM2, 1);
-	ReadUBYTE(&HPOSM3, 1);
-	ReadUBYTE(&PF0PM, 1);
-	ReadUBYTE(&PF1PM, 1);
-	ReadUBYTE(&PF2PM, 1);
-	ReadUBYTE(&PF3PM, 1);
-	ReadUBYTE(&M0PL, 1);
-	ReadUBYTE(&M1PL, 1);
-	ReadUBYTE(&M2PL, 1);
-	ReadUBYTE(&M3PL, 1);
-	ReadUBYTE(&P0PL, 1);
-	ReadUBYTE(&P1PL, 1);
-	ReadUBYTE(&P2PL, 1);
-	ReadUBYTE(&P3PL, 1);
-	ReadUBYTE(&SIZEP0, 1);
-	ReadUBYTE(&SIZEP1, 1);
-	ReadUBYTE(&SIZEP2, 1);
-	ReadUBYTE(&SIZEP3, 1);
-	ReadUBYTE(&SIZEM, 1);
-	ReadUBYTE(&GRAFP0, 1);
-	ReadUBYTE(&GRAFP1, 1);
-	ReadUBYTE(&GRAFP2, 1);
-	ReadUBYTE(&GRAFP3, 1);
-	ReadUBYTE(&GRAFM, 1);
-	ReadUBYTE(&COLPM0, 1);
-	ReadUBYTE(&COLPM1, 1);
-	ReadUBYTE(&COLPM2, 1);
-	ReadUBYTE(&COLPM3, 1);
-	ReadUBYTE(&COLPF0, 1);
-	ReadUBYTE(&COLPF1, 1);
-	ReadUBYTE(&COLPF2, 1);
-	ReadUBYTE(&COLPF3, 1);
-	ReadUBYTE(&COLBK, 1);
-	ReadUBYTE(&PRIOR, 1);
-	ReadUBYTE(&VDELAY, 1);
-	ReadUBYTE(&GRACTL, 1);
-
-	ReadUBYTE(&consol_mask, 1);
-	ReadINT(&atari_speaker, 1);
-	ReadINT(&next_console_value, 1);
-
-	GTIA_PutByte(_HPOSP0, HPOSP0);
-	GTIA_PutByte(_HPOSP1, HPOSP1);
-	GTIA_PutByte(_HPOSP2, HPOSP2);
-	GTIA_PutByte(_HPOSP3, HPOSP3);
-	GTIA_PutByte(_HPOSM0, HPOSM0);
-	GTIA_PutByte(_HPOSM1, HPOSM1);
-	GTIA_PutByte(_HPOSM2, HPOSM2);
-	GTIA_PutByte(_HPOSM3, HPOSM3);
-	GTIA_PutByte(_SIZEP0, SIZEP0);
-	GTIA_PutByte(_SIZEP1, SIZEP1);
-	GTIA_PutByte(_SIZEP2, SIZEP2);
-	GTIA_PutByte(_SIZEP3, SIZEP3);
-	GTIA_PutByte(_SIZEM, SIZEM);
-	GTIA_PutByte(_GRAFP0, GRAFP0);
-	GTIA_PutByte(_GRAFP1, GRAFP1);
-	GTIA_PutByte(_GRAFP2, GRAFP2);
-	GTIA_PutByte(_GRAFP3, GRAFP3);
-	GTIA_PutByte(_GRAFM, GRAFM);
-	GTIA_PutByte(_COLPM0, COLPM0);
-	GTIA_PutByte(_COLPM1, COLPM1);
-	GTIA_PutByte(_COLPM2, COLPM2);
-	GTIA_PutByte(_COLPM3, COLPM3);
-	GTIA_PutByte(_COLPF0, COLPF0);
-	GTIA_PutByte(_COLPF1, COLPF1);
-	GTIA_PutByte(_COLPF2, COLPF2);
-	GTIA_PutByte(_COLPF3, COLPF3);
-	GTIA_PutByte(_COLBK, COLBK);
-	GTIA_PutByte(_PRIOR, PRIOR);
-	GTIA_PutByte(_GRACTL, GRACTL);
-}
-
-#endif /* BASIC */
+void GTIAStateSave(void) {}
+void GTIAStateRead(void) {}

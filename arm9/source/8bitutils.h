@@ -19,7 +19,7 @@ typedef struct FICtoLoad {
   char filename[300];
   bool directory;
   unsigned int uCrc;
-} FICA5200;
+} FICA_A8;
 
 #define ds_GetTicks() (TIMER0_DATA)
 

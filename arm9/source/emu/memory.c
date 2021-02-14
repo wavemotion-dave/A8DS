@@ -218,169 +218,6 @@ void MEMORY_InitialiseMachine(void)
 	Coldstart();
 }
 
-#ifndef BASIC
-
-void MemStateSave(UBYTE SaveVerbose)
-{
-	SaveUBYTE(&memory[0], 65536);
-#ifndef PAGED_ATTRIB
-	SaveUBYTE(&attrib[0], 65536);
-#else
-	{
-		/* I assume here that consecutive calls to SaveUBYTE()
-		   are equivalent to a single call with all the values
-		   (i.e. SaveUBYTE() doesn't write any headers). */
-		UBYTE attrib_page[256];
-		int i;
-		for (i = 0; i < 256; i++) {
-			if (writemap[i] == NULL)
-				memset(attrib_page, RAM, 256);
-			else if (writemap[i] == ROM_PutByte)
-				memset(attrib_page, ROM, 256);
-			else if (i == 0x4f || i == 0x5f || i == 0x8f || i == 0x9f) {
-				/* special case: Bounty Bob bank switching registers */
-				memset(attrib_page, ROM, 256);
-				attrib_page[0xf6] = HARDWARE;
-				attrib_page[0xf7] = HARDWARE;
-				attrib_page[0xf8] = HARDWARE;
-				attrib_page[0xf9] = HARDWARE;
-			}
-			else {
-				memset(attrib_page, HARDWARE, 256);
-			}
-			SaveUBYTE(&attrib_page[0], 256);
-		}
-	}
-#endif
-
-	if (machine_type == MACHINE_XLXE) {
-		if (SaveVerbose != 0)
-			SaveUBYTE(&atari_basic[0], 8192);
-		SaveUBYTE(&under_atari_basic[0], 8192);
-
-		if (SaveVerbose != 0)
-			SaveUBYTE(&atari_os[0], 16384);
-		SaveUBYTE(&under_atarixl_os[0], 16384);
-	}
-
-	if (ram_size > 64) {
-		SaveUBYTE(&atarixe_memory[0], atarixe_memory_size);
-		/* a hack that makes state files compatible with previous versions:
-           for 130 XE there's written 192 KB of unused data */
-		if (ram_size == 128) {
-			UBYTE buffer[256];
-			int i;
-			memset(buffer, 0, 256);
-			for (i = 0; i < 192 * 4; i++)
-				SaveUBYTE(&buffer[0], 256);
-		}
-	}
-
-}
-
-void MemStateRead(UBYTE SaveVerbose) {
-	ReadUBYTE(&memory[0], 65536);
-#ifndef PAGED_ATTRIB
-	ReadUBYTE(&attrib[0], 65536);
-#else
-	{
-		UBYTE attrib_page[256];
-		int i;
-		for (i = 0; i < 256; i++) {
-			ReadUBYTE(&attrib_page[0], 256);
-			/* note: 0x40 is intentional here:
-			   we want ROM on page 0xd1 if H: patches are enabled */
-			switch (attrib_page[0x40]) {
-			case RAM:
-				readmap[i] = NULL;
-				writemap[i] = NULL;
-				break;
-			case ROM:
-				if (i != 0xd1 && attrib_page[0xf6] == HARDWARE) {
-					/* something's wrong, so we keep current values */
-				}
-				else {
-					readmap[i] = NULL;
-					writemap[i] = ROM_PutByte;
-				}
-				break;
-			case HARDWARE:
-				switch (i) {
-				case 0xc0:
-				case 0xd0:
-					readmap[i] = GTIA_GetByte;
-					writemap[i] = GTIA_PutByte;
-					break;
-				case 0xd1:
-					readmap[i] = PBI_GetByte;
-					writemap[i] = PBI_PutByte;
-					break;
-				case 0xd2:
-				case 0xe8:
-				case 0xeb:
-					readmap[i] = POKEY_GetByte;
-					writemap[i] = POKEY_PutByte;
-				case 0xd3:
-					readmap[i] = PIA_GetByte;
-					writemap[i] = PIA_PutByte;
-					break;
-				case 0xd4:
-					readmap[i] = ANTIC_GetByte;
-					writemap[i] = ANTIC_PutByte;
-					break;
-				case 0xd5:
-					readmap[i] = CART_GetByte;
-					writemap[i] = CART_PutByte;
-					break;
-				case 0xd6:
-					readmap[i] = PBIM1_GetByte;
-					readmap[i] = PBIM2_GetByte;
-					break;
-				case 0xd7:
-					writemap[i] = PBIM1_PutByte;
-					writemap[i] = PBIM2_PutByte;
-					break;
-				default:
-					/* something's wrong, so we keep current values */
-					break;
-				}
-				break;
-			default:
-				/* something's wrong, so we keep current values */
-				break;
-			}
-		}
-	}
-#endif
-
-	if (machine_type == MACHINE_XLXE) {
-		if (SaveVerbose != 0)
-			ReadUBYTE(&atari_basic[0], 8192);
-		ReadUBYTE(&under_atari_basic[0], 8192);
-
-		if (SaveVerbose != 0)
-			ReadUBYTE(&atari_os[0], 16384);
-		ReadUBYTE(&under_atarixl_os[0], 16384);
-	}
-
-	antic_xe_ptr = NULL;
-	AllocXEMemory();
-	if (ram_size > 64) {
-		ReadUBYTE(&atarixe_memory[0], atarixe_memory_size);
-		/* a hack that makes state files compatible with previous versions:
-           for 130 XE there's written 192 KB of unused data */
-		if (ram_size == 128) {
-			UBYTE buffer[256];
-			int i;
-			for (i = 0; i < 192 * 4; i++)
-				ReadUBYTE(&buffer[0], 256);
-		}
-	}
-
-}
-
-#endif /* BASIC */
-
 void CopyFromMem(UWORD from, UBYTE *to, int size)
 {
 	while (--size >= 0) {
@@ -398,6 +235,9 @@ void CopyToMem(const UBYTE *from, UWORD to, int size)
 	}
 }
 
+void MemStateSave(UBYTE SaveVerbose){}
+void MemStateRead(UBYTE SaveVerbose) {}
+
 /*
  * Returns non-zero, if Atari BASIC is disabled by given PORTB output.
  * Normally BASIC is disabled by setting bit 1, but it's also disabled
@@ -412,35 +252,27 @@ static int basic_disabled(UBYTE portb)
 
 ITCM_CODE void SwitchBanks(int bank)
 {
-    if (bank != xe_bank) 
+    unsigned int *main_memory = (unsigned int *) (memory + 0x4000);
+    unsigned int *old_bank    = (unsigned int *) (atarixe_memory + (xe_bank << 14));
+    unsigned int *new_bank    = (unsigned int *) (atarixe_memory + (bank << 14));
+    for (int i=0; i<256; i++)
     {
-        unsigned int *src = (unsigned int *) (memory + 0x4000);
-        unsigned int *dest = (unsigned int *) (atarixe_memory + (xe_bank << 14));
-        for (int i=0; i<0x1000/8; i++)
-        {
-            *dest++ = *src++;   
-            *dest++ = *src++;
-            *dest++ = *src++;
-            *dest++ = *src++;
-            *dest++ = *src++;   
-            *dest++ = *src++;
-            *dest++ = *src++;
-            *dest++ = *src++;
-        }
-        unsigned int *src2 = (unsigned int *) (atarixe_memory + (bank << 14));
-        unsigned int *dest2 = (unsigned int *) (memory + 0x4000);
-        for (int i=0; i<0x1000/8; i++)
-        {
-            *dest2++ = *src2++;   
-            *dest2++ = *src2++;   
-            *dest2++ = *src2++;   
-            *dest2++ = *src2++;   
-            *dest2++ = *src2++;   
-            *dest2++ = *src2++;   
-            *dest2++ = *src2++;   
-            *dest2++ = *src2++;   
-        }
-        xe_bank = bank;
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
+        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
     }
 }
 
@@ -486,7 +318,11 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         // bank that is always swapped in/out from memory address 0x4000 to 0x7FFF
         // To test this range: (addr & 0xC000 == 0x4000) <== middle "bankswap" bank
         // --------------------------------------------------------------------------------
-        SwitchBanks(bank);
+        if (bank != xe_bank) 
+        {
+            SwitchBanks(bank);
+            xe_bank = bank;
+        }
         
         // -----------------------------------------------------
         // The 128k XE RAM and the COMPY RAM allow the Antic to 

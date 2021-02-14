@@ -1858,183 +1858,8 @@ int Devices_SetPrintCommand(const char *command)
 	return TRUE;
 }
 
-#ifdef HAVE_SYSTEM
-
-static FILE *phf = NULL;
-static char spool_file[FILENAME_MAX];
-
-static void Devices_P_Close(void)
-{
-	if (devbug)
-		Log_print("PHCLOS");
-
-	if (phf != NULL) {
-		fclose(phf);
-		phf = NULL;
-
-#ifdef __PLUS
-		if (!Misc_ExecutePrintCmd(spool_file))
-#endif
-		{
-			char command[256 + FILENAME_MAX]; /* 256 for Devices_print_command + FILENAME_MAX for spool_file */
-			int retval;
-			sprintf(command, Devices_print_command, spool_file);
-			if ((retval = system(command)) == -1)
-				Log_print("Print command \"%s\' failed", command);
-#if defined(HAVE_UTIL_UNLINK) && !defined(VMS) && !defined(MACOSX)
-			if (Util_unlink(spool_file) != 0) {
-				perror(spool_file);
-			}
-#endif
-		}
-	}
-	CPU_regY = 1;
-	CPU_ClrN;
-}
-
-static void Devices_P_Open(void)
-{
-	if (devbug)
-		Log_print("PHOPEN");
-
-	if (phf != NULL)
-		Devices_P_Close();
-
-	phf = Util_uniqopen(spool_file, "w");
-	if (phf != NULL) {
-		CPU_regY = 1;
-		CPU_ClrN;
-	}
-	else {
-		CPU_regY = 144; /* device done error */
-		CPU_SetN;
-	}
-}
-
-static void Devices_P_Write(void)
-{
-	UBYTE byte;
-
-	if (devbug)
-		Log_print("PHWRIT");
-
-	byte = CPU_regA;
-	if (byte == 0x9b)
-		byte = '\n';
-
-	fputc(byte, phf);
-	CPU_regY = 1;
-	CPU_ClrN;
-}
-
-static void Devices_P_Status(void)
-{
-	if (devbug)
-		Log_print("PHSTAT");
-}
-
-static void Devices_P_Init(void)
-{
-	if (devbug)
-		Log_print("PHINIT");
-
-	if (phf != NULL) {
-		fclose(phf);
-		phf = NULL;
-#ifdef HAVE_UTIL_UNLINK
-		Util_unlink(spool_file);
-#endif
-	}
-	CPU_regY = 1;
-	CPU_ClrN;
-}
-
-#endif /* HAVE_SYSTEM */
-
-
 /* K: and E: handlers for BASIC version, using getchar() and putchar() --- */
 
-#ifdef BASIC
-
-static void Devices_E_Read(void)
-{
-	int ch;
-
-	ch = getchar();
-	switch (ch) {
-	case EOF:
-		Atari800_Exit(FALSE);
-		exit(0);
-		break;
-	case '\n':
-		ch = 0x9b;
-		break;
-	default:
-		break;
-	}
-	CPU_regA = (UBYTE) ch;
-	CPU_regY = 1;
-	CPU_ClrN;
-}
-
-static void Devices_E_Write(void)
-{
-	UBYTE ch;
-
-	ch = CPU_regA;
-	/* XXX: are '\f', '\b' and '\a' fully portable? */
-	switch (ch) {
-	case 0x7d: /* Clear Screen */
-		putchar('\x0c'); /* ASCII Form Feed */
-		break;
-	case 0x7e:
-		putchar('\x08'); /* ASCII Backspace */
-		break;
-	case 0x7f:
-		putchar('\t');
-		break;
-	case 0x9b:
-		putchar('\n');
-		break;
-	case 0xfd:
-		putchar('\x07'); /* ASCII Bell */
-		break;
-	default:
-		if ((ch >= 0x20) && (ch <= 0x7e))
-			putchar(ch);
-		break;
-	}
-	CPU_regY = 1;
-	CPU_ClrN;
-}
-
-static void Devices_K_Read(void)
-{
-	int ch;
-	int ch2;
-
-	ch = getchar();
-	switch (ch) {
-	case EOF:
-		Atari800_Exit(FALSE);
-		exit(0);
-		break;
-	case '\n':
-		ch = 0x9b;
-		break;
-	default:
-		/* ignore characters until EOF or EOL */
-		do
-			ch2 = getchar();
-		while (ch2 != EOF && ch2 != '\n');
-		break;
-	}
-	CPU_regA = (UBYTE) ch;
-	CPU_regY = 1;
-	CPU_ClrN;
-}
-
-#endif /* BASIC */
 
 /* B: device emulation --------------------------------------------------- */
 
@@ -2161,8 +1986,6 @@ static void Devices_RestoreEHCLOS(void)
 	Devices_RestoreHandler(ehclos_addr, ESC_EHCLOS);
 }
 
-#ifndef BASIC
-
 static void Devices_RestoreEHREAD(void)
 {
 	Devices_RestoreHandler(ehread_addr, ESC_EHREAD);
@@ -2178,7 +2001,6 @@ static void Devices_InstallIgnoreReady(void)
 	ESC_AddEscRts(ehwrit_addr, ESC_EHWRIT, Devices_IgnoreReady);
 }
 
-#endif
 
 /* Atari Basic loader step 1: ignore "READY" printed on E: after booting */
 /* or step 6: ignore "READY" printed on E: after the "ENTER" command */
@@ -2196,11 +2018,7 @@ static void Devices_IgnoreReady(void)
 		if (*ready_ptr == '\0') {
 			ready_ptr = NULL;
 			/* uninstall patch */
-#ifdef BASIC
-			ESC_AddEscRts(ehwrit_addr, ESC_EHWRIT, Devices_E_Write);
-#else
 			CPU_rts_handler = Devices_RestoreEHWRIT;
-#endif
 			if (BINLOAD_loading_basic == BINLOAD_LOADING_BASIC_SAVED) {
 				basic_command_ptr = (const UBYTE *) "RUN \"E:\"\x9b";
 				ESC_AddEscRts(ehread_addr, ESC_EHREAD, Devices_GetBasicCommand);
@@ -2231,13 +2049,9 @@ static void Devices_IgnoreReady(void)
 		ready_ptr = ready_prompt;
 	}
 	/* call original handler */
-#ifdef BASIC
-	Devices_E_Write();
-#else
 	CPU_rts_handler = Devices_InstallIgnoreReady;
 	Devices_RestoreEHWRIT();
 	CPU_regPC = ehwrit_addr;
-#endif
 }
 
 /* Atari Basic loader step 2: type command to load file from E: */
@@ -2255,11 +2069,7 @@ static void Devices_GetBasicCommand(void)
 			ESC_AddEscRts(ehopen_addr, ESC_EHOPEN, Devices_OpenBasicFile);
 		basic_command_ptr = NULL;
 	}
-#ifdef BASIC
-	ESC_AddEscRts(ehread_addr, ESC_EHREAD, Devices_E_Read);
-#else
 	CPU_rts_handler = Devices_RestoreEHREAD;
-#endif
 }
 
 /* Atari Basic loader step 3: open file */
@@ -2364,11 +2174,7 @@ static void Devices_CloseBasicFile(void)
 		else
 			BINLOAD_loading_basic = 0;
 	}
-#ifdef BASIC
-	ESC_AddEscRts(ehread_addr, ESC_EHREAD, Devices_E_Read);
-#else
 	Devices_RestoreEHREAD();
-#endif
 	CPU_rts_handler = Devices_RestoreEHCLOS;
 	CPU_regY = 1;
 	CPU_ClrN;
@@ -2415,31 +2221,6 @@ int Devices_PatchOS(void)
 	for (i = 0; i < 5; i++) {
 		UWORD devtab = MEMORY_dGetWord(addr + 1);
 		switch (MEMORY_dGetByte(addr)) {
-#ifdef HAVE_SYSTEM
-		case 'P':
-			if (Devices_enable_p_patch) {
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_OPEN) + 1),
-				                   ESC_PHOPEN, Devices_P_Open);
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_CLOS) + 1),
-				                   ESC_PHCLOS, Devices_P_Close);
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_WRIT) + 1),
-				                   ESC_PHWRIT, Devices_P_Write);
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_STAT) + 1),
-				                   ESC_PHSTAT, Devices_P_Status);
-				ESC_AddEscRts2((UWORD) (devtab + Devices_TABLE_INIT), ESC_PHINIT,
-				                    Devices_P_Init);
-				patched = TRUE;
-			}
-			else {
-				ESC_Remove(ESC_PHOPEN);
-				ESC_Remove(ESC_PHCLOS);
-				ESC_Remove(ESC_PHWRIT);
-				ESC_Remove(ESC_PHSTAT);
-				ESC_Remove(ESC_PHINIT);
-			}
-			break;
-#endif
-
 		case 'E':
 			if (BINLOAD_loading_basic) {
 				ehopen_addr = MEMORY_dGetWord(devtab + Devices_TABLE_OPEN) + 1;
@@ -2450,20 +2231,6 @@ int Devices_PatchOS(void)
 				ESC_AddEscRts(ehwrit_addr, ESC_EHWRIT, Devices_IgnoreReady);
 				patched = TRUE;
 			}
-#ifdef BASIC
-			else
-				ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_WRIT) + 1),
-				                   ESC_EHWRIT, Devices_E_Write);
-			ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_READ) + 1),
-			                   ESC_EHREAD, Devices_E_Read);
-			patched = TRUE;
-			break;
-		case 'K':
-			ESC_AddEscRts((UWORD) (MEMORY_dGetWord(devtab + Devices_TABLE_READ) + 1),
-			                   ESC_KHREAD, Devices_K_Read);
-			patched = TRUE;
-			break;
-#endif
 		default:
 			break;
 		}

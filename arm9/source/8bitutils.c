@@ -26,7 +26,7 @@
 #include "altirraos_xl.h"
 #include "altirra_basic.h"
 
-FICA5200 a8romlist[1024];  
+FICA_A8 a8romlist[1024];  
 unsigned int count8bit=0, countfiles=0, ucFicAct=0;
 int gTotalAtariFrames = 0;
 int bg0, bg1, bg0b,bg1b;
@@ -58,15 +58,15 @@ int ram_type=0;     // default is 128k
 #define  cyBG (myGame_offset_y<<8)
 #define  xdxBG (((320 / myGame_scale_x) << 8) | (320 % myGame_scale_x))
 #define  ydyBG (((256 / myGame_scale_y) << 8) | (256 % myGame_scale_y))
-  
+#define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
+
 unsigned int atari_pal16[256] = {0};
 unsigned char *filebuffer;
 
 signed char sound_buffer[SNDLENGTH];
 signed char *psound_buffer;
 
-int alpha_1 = 8;
-int alpha_2 = 8;
+int jitter_type = 0;        // Normal... 1=SHARP
 
 #define MAX_DEBUG 8
 int debug[MAX_DEBUG]={0};
@@ -109,6 +109,24 @@ static void DumpDebugData(void)
     }
 #endif
 }
+
+
+char last_filename[300] = {0};
+void dsWriteFavs(void)
+{
+    FILE *fp;
+    dsPrintValue(22,0,0, (char*)"SNAP");
+    fp = fopen("/roms/A800-Favs.txt", "a+");
+    if (fp != NULL)
+    {
+        fprintf(fp, "%s\n", last_filename);
+        fflush(fp);
+        fclose(fp);
+    }
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
+    dsPrintValue(22,0,0, (char*)"    ");
+}
+
 
 void dsClearDiskActivity(void)
 {
@@ -342,9 +360,16 @@ static int sIndex __attribute__((section(".dtcm")))= 0;
 static u8 jitter[] __attribute__((section(".dtcm"))) = 
 {
     0x00, 0x00, 
-    0xAA, 0x11,
+    0x88, 0x11,
+    0x44, 0x22,
+    0xAA, 0x33, 
+};
+static u8 jitter_sharp[] __attribute__((section(".dtcm"))) = 
+{
+    0x11, 0x11, 
+    0x33, 0x33,
     0x22, 0x22,
-    0xCC, 0x33, 
+    0x44, 0x44, 
 };
 void vblankIntr() 
 {
@@ -354,10 +379,20 @@ void vblankIntr()
     REG_BG3PA = xdxBG; 
     REG_BG3PD = ydyBG; 
 
-    REG_BG2X = cxBG+jitter[sIndex++]; 
-    REG_BG2Y = cyBG+jitter[sIndex++]; 
-    REG_BG3X = cxBG+jitter[sIndex++]; 
-    REG_BG3Y = cyBG+jitter[sIndex++]; 
+    if (jitter_type == 0)
+    {        
+        REG_BG2X = cxBG+jitter[sIndex++]; 
+        REG_BG2Y = cyBG+jitter[sIndex++]; 
+        REG_BG3X = cxBG+jitter[sIndex++]; 
+        REG_BG3Y = cyBG+jitter[sIndex++]; 
+    }
+    else
+    {
+        REG_BG2X = cxBG+jitter_sharp[sIndex++]; 
+        REG_BG2Y = cyBG+jitter_sharp[sIndex++]; 
+        REG_BG3X = cxBG+jitter_sharp[sIndex++]; 
+        REG_BG3Y = cyBG+jitter_sharp[sIndex++]; 
+    }
     sIndex = sIndex & 7;    
 }
 
@@ -501,7 +536,6 @@ void install_os(void)
 }
 
 
-char last_filename[300] = {0};
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly) 
 {
     strcpy(last_filename, filename);
@@ -635,24 +669,26 @@ static int basic_opt=0;
 static int tv_type2=0;
 const struct options_t Option_Table[] =
 {
-    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,      2,          "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
-    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,   3,          "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
-    {"RAM TYPE",    {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,      2,          "128K IS STANDARD  ",   "RUNS MOST GAMES   ",  "320K ONLY FOR     ",  "A FEW BIG GAMES   "},
-    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},                     &os_type,       2,          "BUILT-IN ALTIRRA  ",   "IS VERY COMPATIBLE",  "BUT A FEW GAMES   ",  "REQUIRE REAL ATARI"},
-    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,     3,          "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
-    {"PALETTE",     {"BRIGHT",      "NORMAL"},                          &palett_type,   2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
-    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP, 2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
-    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR, 2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
-    {"AUTOFIRE",    {"OFF",         "ON"},                              &auto_fire,     2,          "TOGGLE AUTOFIRE   ",   "                  ",  "                  ",  "                  "},
-    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,       2,          "SHOW FPS ON MAIN  ",   "DISPLAY           ",  "                  ",  "                  "},
-    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,    2,          "RUN EMULATOR AS   ",   "FAST AS POSSIBLE  ",  "                  ",  "                  "},
-    {"ARTIFACTING", {"OFF",         "MODE1", "MODE2","MODE3","MODE4"},  &global_artif_mode,5,       "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
-    {NULL,          {"",            ""},                                NULL,           2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
+    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,          2,          "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
+    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,       3,          "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
+    {"RAM TYPE",    {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,          2,          "128K IS STANDARD  ",   "RUNS MOST GAMES   ",  "320K ONLY FOR     ",  "A FEW BIG GAMES   "},
+    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},                     &os_type,           2,          "BUILT-IN ALTIRRA  ",   "IS VERY COMPATIBLE",  "BUT A FEW GAMES   ",  "REQUIRE REAL ATARI"},
+    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,         3,          "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
+    {"PALETTE",     {"BRIGHT",      "NORMAL"},                          &palett_type,       2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
+    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,     2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
+    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,     2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
+    {"AUTOFIRE",    {"OFF",         "ON"},                              &auto_fire,         2,          "TOGGLE AUTOFIRE   ",   "                  ",  "                  ",  "                  "},
+    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,           2,          "SHOW FPS ON MAIN  ",   "DISPLAY           ",  "                  ",  "                  "},
+    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,        2,          "RUN EMULATOR AS   ",   "FAST AS POSSIBLE  ",  "                  ",  "                  "},
+    {"ARTIFACTING", {"OFF",         "MODE1", "MODE2","MODE3","MODE4"},  &global_artif_mode, 5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
+    {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,       2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
+    {NULL,          {"",            ""},                                NULL,               2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
 
 
 void dsChooseOptions(int bOkayToChangePalette)
 {
+    static int last_art=-1;
     int optionHighlighted;
     int idx;
     bool bDone=false;
@@ -719,7 +755,13 @@ void dsChooseOptions(int bOkayToChangePalette)
             {
                 break;
             }
-            
+    
+            // In case the Artifacting global changed....
+            if (last_art != global_artif_mode)
+            {
+                last_art = global_artif_mode;
+                ANTIC_UpdateArtifacting();                
+            }
             dsPrintValue(14,0,0,Option_Table[optionHighlighted].help1);
             dsPrintValue(14,1,0,Option_Table[optionHighlighted].help2);
             dsPrintValue(14,2,0,Option_Table[optionHighlighted].help3);
@@ -737,8 +779,6 @@ void dsChooseOptions(int bOkayToChangePalette)
     if (bOkayToChangePalette) dsSetAtariPalette();
     dsInstallSoundEmuFIFO();
     
-    // In case the Artifacting global changed....
-    ANTIC_UpdateArtifacting();
     
     // Restore original bottom graphic
     decompress(bgBottomTiles, bgGetGfxPtr(bg0b), LZ77Vram);
@@ -1540,6 +1580,10 @@ ITCM_CODE void dsMainLoop(void)
         if (keys_pressed & KEY_SELECT) key_consol &= ~CONSOL_SELECT;
         if (gTotalAtariFrames & 1)  // Every other frame...
         {
+            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_L))
+            {
+                dsWriteFavs();
+            }
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myGame_offset_y++;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myGame_offset_y--;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_LEFT))  myGame_offset_x++;
@@ -1568,8 +1612,8 @@ ITCM_CODE void dsMainLoop(void)
 //----------------------------------------------------------------------------------
 // Find files game available
 int a8Filescmp (const void *c1, const void *c2) {
-  FICA5200 *p1 = (FICA5200 *) c1;
-  FICA5200 *p2 = (FICA5200 *) c2;
+  FICA_A8 *p1 = (FICA_A8 *) c1;
+  FICA_A8 *p2 = (FICA_A8 *) c2;
   if (p1->directory && !(p2->directory))
       return -1;
   if (p2->directory && !(p1->directory))
@@ -1625,5 +1669,5 @@ void a8FindFiles(void)
   }
   dsPrintValue(4,0,0,"           ");
   if (count8bit)
-    qsort (a8romlist, count8bit, sizeof (FICA5200), a8Filescmp);
+    qsort (a8romlist, count8bit, sizeof (FICA_A8), a8Filescmp);
 }

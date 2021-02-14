@@ -65,10 +65,10 @@ extern int os_type;
 #define MACHINE_XLXE  2
 #define MACHINE_5200  3
 
-#define Atari800_MACHINE_OSA   0
-#define Atari800_MACHINE_OSB   1
-#define Atari800_MACHINE_XLXE  2
-#define Atari800_MACHINE_5200  3
+#define Atari800_MACHINE_OSA   MACHINE_OSA
+#define Atari800_MACHINE_OSB   MACHINE_OSB
+#define Atari800_MACHINE_XLXE  MACHINE_XLXE
+#define Atari800_MACHINE_5200  MACHINE_5200
 
 extern int machine_type;
 #define Atari800_machine_type machine_type
@@ -103,13 +103,6 @@ extern int enable_sio_patch;
    You should never display anything outside the middle 336 columns. */
 #define ATARI_WIDTH  384
 #define ATARI_HEIGHT 240
-
-/* How often the screen is updated (1 = every Atari frame). */
-extern int refresh_rate;
-
-/* Set to TRUE for faster emulation with refresh_rate > 1.
-   Set to FALSE for accurate emulation with refresh_rate > 1. */
-extern int sprite_collisions_in_skipped_frames;
 
 /* Special key codes.
    Store in key_code. */
