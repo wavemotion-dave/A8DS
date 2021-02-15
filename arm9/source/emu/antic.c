@@ -24,9 +24,7 @@
 
 #include "config.h"
 #include <string.h>
-
 #include <nds.h>
-#define YPOS_BREAK_FLICKER
 
 #include "8bitutils.h"
 #include "antic.h"
@@ -40,7 +38,6 @@
 #include "input.h"
 #include "screen.h"
 #include "statesav.h"
-
 
 #define LCHOP 3			/* do not build lefmost 0..3 characters in wide mode */
 #define RCHOP 3			/* do not build rightmost 0..3 characters in wide mode */
@@ -56,25 +53,12 @@ int break_ypos __attribute__((section(".dtcm"))) = 999;
 #define FILL_VIDEO(ptr, val, size)  memset(ptr, val, size)
 #define READ_VIDEO_LONG(ptr)        (*(ptr))
 
-inline void video_memset(UBYTE *ptr, UBYTE val, ULONG size) {
-	FILL_VIDEO(ptr, val, size);
-}
-
-inline void video_putbyte(UBYTE *ptr, UBYTE val) {
-	WRITE_VIDEO_BYTE(ptr, val);
-}
-
 
 /* Memory access helpers----------------------------------------------------- */
 /* Some optimizations result in unaligned 32-bit accesses. These macros have
    been introduced for machines that don't allow unaligned memory accesses. */
 
-#ifdef DIRTYRECT
-/* STAT_UNALIGNED_WORDS doesn't work with DIRTYRECT */
-#define WRITE_VIDEO_LONG_UNALIGNED  WRITE_VIDEO_LONG
-#else
 #define WRITE_VIDEO_LONG_UNALIGNED(ptr, val)  UNALIGNED_PUT_LONG((ptr), (val), atari_screen_write_long_stat)
-#endif
 
 #define IS_ZERO_ULONG(x) (((ULONG)x & 3) ? (!((const UBYTE *)(x))[0] && !((const UBYTE *)(x))[1] && !((const UBYTE *)(x))[2] && !((const UBYTE *)(x))[3]) : (! UNALIGNED_GET_LONG(x, pm_scanline_read_long_stat)))
 
@@ -281,18 +265,8 @@ These are all cases:
 
 unsigned int screenline_cpu_clock __attribute__((section(".dtcm"))) = 0;
 
-#ifdef NEW_CYCLE_EXACT
-#define UPDATE_DMACTL if (dmactl_changed) { \
-		dmactl_changed = 0; \
-		ANTIC_PutByte(_DMACTL, DELAYED_DMACTL); \
-	} \
-	if (draw_antic_ptr_changed) { \
-		draw_antic_ptr_changed = 0; \
-		draw_antic_ptr = saved_draw_antic_ptr; \
-	}
-#else
 #define UPDATE_DMACTL
-#endif /* NEW_CYCLE_EXACT */
+
 #define GOEOL_CYCLE_EXACT  GO(antic2cpu_ptr[LINE_C]); \
 	xpos = cpu2antic_ptr[xpos]; \
 	xpos -= LINE_C; \
@@ -325,8 +299,6 @@ static UBYTE PENV __attribute__((section(".dtcm")));
 UBYTE PENH_input __attribute__((section(".dtcm")))= 0x00;
 UBYTE PENV_input __attribute__((section(".dtcm")))= 0xff;
 
-#ifndef BASIC
-
 /* Internal ANTIC registers ------------------------------------------------ */
 
 static UWORD screenaddr __attribute__((section(".dtcm")));		/* Screen Pointer */
@@ -336,8 +308,6 @@ static UBYTE dctr __attribute__((section(".dtcm")));				/* Delta Counter */
 static UBYTE lastline __attribute__((section(".dtcm")));			/* dctr limit */
 static UBYTE need_dl __attribute__((section(".dtcm")));			/* boolean: fetch DL next line */
 static UBYTE vscrol_off __attribute__((section(".dtcm")));		/* boolean: displaying line ending VSC */
-
-#endif
 
 /* Pre-computed values for improved performance ---------------------------- */
 
@@ -2370,17 +2340,17 @@ static void ANTIC_load(void)
 	}
 }
 
-/* This function emulates one frame drawing screen at atari_screen */
-ITCM_CODE void ANTIC_Frame(int draw_display) 
-{
-	static const UBYTE mode_type[32] = {
+UBYTE mode_type[32] __attribute__((section(".dtcm"))) = {
 		NORMAL0, NORMAL0, NORMAL0, NORMAL0, NORMAL0, NORMAL0, NORMAL1, NORMAL1,
 		NORMAL2, NORMAL2, NORMAL1, NORMAL1, NORMAL1, NORMAL0, NORMAL0, NORMAL0,
 		SCROLL0, SCROLL0, SCROLL0, SCROLL0, SCROLL0, SCROLL0, SCROLL1, SCROLL1,
 		SCROLL2, SCROLL2, SCROLL1, SCROLL1, SCROLL1, SCROLL0, SCROLL0, SCROLL0
 	};
-	static const UBYTE normal_lastline[16] =
-		{ 0, 0, 7, 9, 7, 15, 7, 15, 7, 3, 3, 1, 0, 1, 0, 0 };
+UBYTE normal_lastline[16] __attribute__((section(".dtcm"))) = { 0, 0, 7, 9, 7, 15, 7, 15, 7, 3, 3, 1, 0, 1, 0, 0 };
+
+/* This function emulates one frame drawing screen at atari_screen */
+ITCM_CODE void ANTIC_Frame(int draw_display) 
+{
 	UBYTE vscrol_flag = FALSE;
 	UBYTE no_jvb = TRUE;
 	UBYTE need_load;

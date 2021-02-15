@@ -57,14 +57,6 @@ void ReadINT(int *data, int num)
 {
 }
 
-void SaveFNAME(const char *filename)
-{
-}
-
-void ReadFNAME(char *filename)
-{
-}
-
 int SaveAtariState(const char *filename, const char *mode, UBYTE SaveVerbose)
 {
     return TRUE;

@@ -14,6 +14,7 @@
 #include "global.h"
 #include "cartridge.h"
 #include "input.h"
+#include "sound.h"
 #include "emu/pia.h"
 
 #include "clickNoQuit_wav.h"
@@ -39,9 +40,8 @@ int myGame_offset_y = 20;
 int myGame_scale_x = 256;
 int myGame_scale_y = 256;
 
-extern u32 trig0, trig1;
-extern u32 stick0;
-extern u32 stick1;
+extern u8 trig0, trig1;
+extern u8 stick0, stick1;
 extern int skip_frames;
 int full_speed = 0;
 int os_type = OS_ALTIRRA;
@@ -50,7 +50,7 @@ int bHaveBASIC = false;
 int bUseA_KeyAsUP = false;
 int bUseX_KeyAsCR = false;
 int showFps=false;
-int palett_type = 1;
+int palett_type = 0;
 int auto_fire=0;
 int ram_type=0;     // default is 128k
 
@@ -416,7 +416,7 @@ void dsInitScreenMain(void)
     irqEnable(IRQ_VBLANK | IRQ_VCOUNT);
     vramSetBankA(VRAM_A_MAIN_BG);             // This is the main Emulation screen - Background 1 (we ALPHA blend this with BG2)
     vramSetBankB(VRAM_B_MAIN_BG);             // This is the main Emulation screen - Background 2 (we ALPHA blend this with BG1)
-    vramSetBankC(VRAM_C_SUB_BG);              // This is the Sub-Screen (touch screen) display
+    vramSetBankC(VRAM_C_SUB_BG);              // This is the Sub-Screen (touch screen) display (2 layers)
     vramSetBankD(VRAM_D_LCD );                // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000
     vramSetBankE(VRAM_E_LCD );                // Not using this for video but  64K of faster RAM always useful!  Mapped at 0x06880000
     vramSetBankF(VRAM_F_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06890000
@@ -440,7 +440,7 @@ void dsShowScreenEmu(void)
   bg3 = bgInit(3, BgType_Bmp8, BgSize_B8_512x512, 0,0);
     
   REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
-  REG_BLDALPHA = (10 << 8) | 10; // 50% / 50% 
+  REG_BLDALPHA = (10 << 8) | 10; // 62% / 62% 
     
   REG_BG2PB = 0;
   REG_BG2PC = 0;
@@ -557,7 +557,7 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
       Atari800_Initialise();   
     }
     
-      // load card game if ok
+      // load game if ok
     if (Atari800_OpenFile(filename, bRestart, disk_num, bReadOnly, bHaveBASIC) != AFILE_ERROR) 
     {	
       // Initialize the virtual console emulation 
@@ -674,13 +674,14 @@ const struct options_t Option_Table[] =
     {"RAM TYPE",    {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,          2,          "128K IS STANDARD  ",   "RUNS MOST GAMES   ",  "320K ONLY FOR     ",  "A FEW BIG GAMES   "},
     {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},                     &os_type,           2,          "BUILT-IN ALTIRRA  ",   "IS VERY COMPATIBLE",  "BUT A FEW GAMES   ",  "REQUIRE REAL ATARI"},
     {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,         3,          "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
-    {"PALETTE",     {"BRIGHT",      "NORMAL"},                          &palett_type,       2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
+    {"PALETTE",     {"BRIGHT",      "MUTED"},                           &palett_type,       2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
     {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,     2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
     {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,     2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
     {"AUTOFIRE",    {"OFF",         "ON"},                              &auto_fire,         2,          "TOGGLE AUTOFIRE   ",   "                  ",  "                  ",  "                  "},
     {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,           2,          "SHOW FPS ON MAIN  ",   "DISPLAY           ",  "                  ",  "                  "},
     {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,        2,          "RUN EMULATOR AS   ",   "FAST AS POSSIBLE  ",  "                  ",  "                  "},
-    {"ARTIFACTING", {"OFF",         "MODE1", "MODE2","MODE3","MODE4"},  &global_artif_mode, 5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
+    {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
+                                    "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode, 5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
     {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,       2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
     {NULL,          {"",            ""},                                NULL,               2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
@@ -776,9 +777,10 @@ void dsChooseOptions(int bOkayToChangePalette)
     basic_type = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);
 
     install_os();
-    if (bOkayToChangePalette) dsSetAtariPalette();
-    dsInstallSoundEmuFIFO();
     
+    if (bOkayToChangePalette) dsSetAtariPalette();
+    
+    dsInstallSoundEmuFIFO();
     
     // Restore original bottom graphic
     decompress(bgBottomTiles, bgGetGfxPtr(bg0b), LZ77Vram);
@@ -1374,8 +1376,6 @@ ITCM_CODE void dsMainLoop(void)
         break;
         
       case A8_PLAYGAME:
-            
-            
         // 32,728.5 ticks = 1 second
         // 1 frame = 1/50 or 1/60 (0.02 or 0.016)
         // 655 -> 50 fps and 546 -> 60 fps
@@ -1388,7 +1388,7 @@ ITCM_CODE void dsMainLoop(void)
         // Execute one frame
         Atari800_Frame();
             
-        if (++atari_frames == (tv_mode == TV_NTSC ? 60:50))
+        if (++atari_frames >= (tv_mode == TV_NTSC ? 60:50))
         {
             TIMER0_CR=0;
             TIMER0_DATA=0;
@@ -1610,10 +1610,15 @@ ITCM_CODE void dsMainLoop(void)
 }
 
 //----------------------------------------------------------------------------------
-// Find files game available
+// Find files game available. We sort them directories first and then alphabetical.
+//----------------------------------------------------------------------------------
 int a8Filescmp (const void *c1, const void *c2) {
   FICA_A8 *p1 = (FICA_A8 *) c1;
   FICA_A8 *p2 = (FICA_A8 *) c2;
+  if (p1->filename[0] == '.' && p2->filename[0] != '.')
+      return -1;
+  if (p2->filename[0] == '.' && p1->filename[0] != '.')
+      return 1;
   if (p1->directory && !(p2->directory))
       return -1;
   if (p2->directory && !(p1->directory))
@@ -1635,6 +1640,7 @@ void a8FindFiles(void)
 
     while (((pent=readdir(pdir))!=NULL)) 
     {
+      if (count8bit > 1023) break;
       strcpy(filenametmp,pent->d_name);
       if (pent->d_type == DT_DIR)
       {
@@ -1657,17 +1663,9 @@ void a8FindFiles(void)
             count8bit++;countfiles++;
           }
       }
-        
-      if ((countfiles % 50) == 0)
-      {
-          sprintf(filenametmp, "READING %3d", countfiles);
-          dsPrintValue(4,0,0, filenametmp);
-      }
-        
     }
     closedir(pdir);
   }
-  dsPrintValue(4,0,0,"           ");
   if (count8bit)
     qsort (a8romlist, count8bit, sizeof (FICA_A8), a8Filescmp);
 }

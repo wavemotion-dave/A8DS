@@ -42,12 +42,11 @@
 #include "statesav.h"
 
 UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));
+static UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));
+static UBYTE under_atari_basic[8192] __attribute__ ((aligned (4)));
 
 rdfunc readmap[256] __attribute__((section(".dtcm")));
 wrfunc writemap[256] __attribute__((section(".dtcm")));
-
-static UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));
-static UBYTE under_atari_basic[8192] __attribute__ ((aligned (4)));
 static UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;
 static ULONG atarixe_memory_size = 0;
 
@@ -168,14 +167,11 @@ void MEMORY_InitialiseMachine(void)
 
 /*
  * Returns non-zero, if Atari BASIC is disabled by given PORTB output.
- * Normally BASIC is disabled by setting bit 1, but it's also disabled
- * when using 576K and 1088K memory expansions, where bit 1 is used
- * for selecting extended memory bank number.
+ * BASIC is disabled by setting bit 1 in PortB
  */
 static int basic_disabled(UBYTE portb)
 {
-	return (portb & 0x02) != 0
-	 || ((portb & 0x10) == 0 && (ram_size == 576 || ram_size == 1088));
+	return ((portb & 0x02) != 0);
 }
 
 
@@ -196,6 +192,10 @@ ITCM_CODE inline void CopyToMem(const UBYTE *from, UWORD to, int size)
 	}
 }
 
+// ---------------------------------------------------------------------------------
+// This is a bit faster than memcpy() as we know we are 32-bit aligned and
+// can blast 32-bit values back and forth between main RAM and the XE banked RAM
+// ---------------------------------------------------------------------------------
 ITCM_CODE void SwitchBanks(int bank)
 {
     unsigned int *main_memory = (unsigned int *) (memory + 0x4000);
@@ -252,7 +252,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         {
 			if (ram_size == RAM_128K)
 				bank = ((byte & 0x0c) >> 2) + 1;
-            else
+            else // Assume RAMBO 320K
 				bank = (((byte & 0x0c) + ((byte & 0x60) >> 1)) >> 2) + 1;
         }
         /* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
@@ -420,7 +420,6 @@ void CartA0BF_Disable(void)
 {
 	if (cartA0BF_enabled) {
 		/* No BASIC if not XL/XE or bit 1 of PORTB set */
-		/* or accessing extended 576K or 1088K memory */
 		if ((machine_type != MACHINE_XLXE) || basic_disabled((UBYTE) (PORTB | PORTB_mask))) {
 			if (ram_size > 40) {
 				memcpy(memory + 0xa000, under_cartA0BF, 0x2000);

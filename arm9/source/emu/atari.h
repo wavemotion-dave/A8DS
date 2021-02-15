@@ -38,8 +38,8 @@ extern int os_type;
 #define TV_NTSC 262
 
 // Some global sound defines
-#define SOUND_FREQ  (tv_mode == TV_NTSC ? 15720:15600)     // 60 frames per second. 264 scanlines per frame. 1 samples per scanline. 60*264*1 = 15720... slightly different for pal 50*312*1=15600
-#define SNDLENGTH  4096           // Must be power of 2... so we can quicly mask it
+#define SOUND_FREQ  (tv_mode == TV_NTSC ? 15720:15600)      // 60 frames per second. 264 scanlines per frame. 1 samples per scanline. 60*264*1 = 15720... slightly different for pal 50*312*1=15600
+#define SNDLENGTH  4096                                     // Must be power of 2... so we can quicly mask it
 
 /* SBYTE and UBYTE must be exactly 1 byte long. */
 /* SWORD and UWORD must be exactly 2 bytes long. */
@@ -84,8 +84,8 @@ extern int ram_size;
    or ram_size! */
 
 /* Video system. */
-#define TV_NTSC 262
-#define TV_PAL  312
+#define TV_NTSC         262
+#define TV_PAL          312
 extern int tv_mode;
 
 /* TRUE to disable Atari BASIC when booting Atari (hold Option in XL/XE). */
