@@ -45,4 +45,10 @@ extern ITCM_CODE void dsMainLoop(void);
 extern int a8Filescmp (const void *c1, const void *c2);
 extern void a8FindFiles(void);
 
+extern void InitGameSettings(void);
+extern void WriteGameSettings(void);
+extern void ReadGameSettings(void);
+extern void ApplyGameSpecificSettings(void);
+
+
 #endif // _A8UTILS_H

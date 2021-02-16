@@ -27,6 +27,8 @@
 #include "altirraos_xl.h"
 #include "altirra_basic.h"
 
+#define DISK_1      1
+
 FICA_A8 a8romlist[1024];  
 unsigned int count8bit=0, countfiles=0, ucFicAct=0;
 int gTotalAtariFrames = 0;
@@ -35,10 +37,10 @@ unsigned int etatEmu;
 int atari_frames = 0;
 extern int global_artif_mode;
 
-int myGame_offset_x = 32;
-int myGame_offset_y = 20;
-int myGame_scale_x = 256;
-int myGame_scale_y = 256;
+short int myGame_offset_x = 32;
+short int myGame_offset_y = 20;
+short int myGame_scale_x = 256;
+short int myGame_scale_y = 256;
 
 extern u8 trig0, trig1;
 extern u8 stick0, stick1;
@@ -53,6 +55,7 @@ int showFps=false;
 int palett_type = 0;
 int auto_fire=0;
 int ram_type=0;     // default is 128k
+int jitter_type = 0;        // Normal... 1=SHARP
 
 #define  cxBG (myGame_offset_x<<8)
 #define  cyBG (myGame_offset_y<<8)
@@ -60,13 +63,10 @@ int ram_type=0;     // default is 128k
 #define  ydyBG (((256 / myGame_scale_y) << 8) | (256 % myGame_scale_y))
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
-unsigned int atari_pal16[256] = {0};
 unsigned char *filebuffer;
 
 signed char sound_buffer[SNDLENGTH];
 signed char *psound_buffer;
-
-int jitter_type = 0;        // Normal... 1=SHARP
 
 #define MAX_DEBUG 8
 int debug[MAX_DEBUG]={0};
@@ -123,6 +123,8 @@ void dsWriteFavs(void)
         fflush(fp);
         fclose(fp);
     }
+    
+    WriteGameSettings();
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
     dsPrintValue(22,0,0, (char*)"    ");
 }
@@ -324,7 +326,6 @@ void dsSetAtariPalette(void)
         b = palette_B[(index * 3) + 2];
       }
       BG_PALETTE[index] = RGB8(r, g, b);
-      atari_pal16[index] = index;
     }
 }
 
@@ -413,7 +414,7 @@ void dsInitScreenMain(void)
     // Init vbl and hbl func
     SetYtrigger(190); //trigger 2 lines before vsync
     irqSet(IRQ_VBLANK, vblankIntr);
-    irqEnable(IRQ_VBLANK | IRQ_VCOUNT);
+    irqEnable(IRQ_VBLANK);
     vramSetBankA(VRAM_A_MAIN_BG);             // This is the main Emulation screen - Background 1 (we ALPHA blend this with BG2)
     vramSetBankB(VRAM_B_MAIN_BG);             // This is the main Emulation screen - Background 2 (we ALPHA blend this with BG1)
     vramSetBankC(VRAM_C_SUB_BG);              // This is the Sub-Screen (touch screen) display (2 layers)
@@ -423,6 +424,8 @@ void dsInitScreenMain(void)
     vramSetBankG(VRAM_G_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06894000
     vramSetBankH(VRAM_H_LCD );                // Not using this for video but  32K of faster RAM always useful!  Mapped at 0x06898000
     vramSetBankI(VRAM_I_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x068A0000
+    
+    ReadGameSettings();
 }
 
 void dsInitTimer(void) 
@@ -544,17 +547,14 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
     TIMER2_CR=0; irqDisable(IRQ_TIMER2); 
     if (filebuffer != 0) free(filebuffer);
 
-    // If we are cold starting, make sure we have a clean slate...
+    // -------------------------------------------------------------------
+    // If we are cold starting, go see if we have settings we can read
+    // in from a config file or else set some reasonable defaults ...
+    // -------------------------------------------------------------------
     if (bRestart)
     {
-      full_speed = 0;  
-      myGame_offset_x = 32;
-      myGame_offset_y = 20;
-      myGame_scale_x = 256;
-      myGame_scale_y = 256;
-      bUseA_KeyAsUP=false;
-      global_artif_mode=0;
-      Atari800_Initialise();   
+        ApplyGameSpecificSettings();
+        Atari800_Initialise();   
     }
     
       // load game if ok
@@ -689,6 +689,7 @@ const struct options_t Option_Table[] =
 
 void dsChooseOptions(int bOkayToChangePalette)
 {
+    static int last_pal=-1;
     static int last_art=-1;
     int optionHighlighted;
     int idx;
@@ -763,6 +764,13 @@ void dsChooseOptions(int bOkayToChangePalette)
                 last_art = global_artif_mode;
                 ANTIC_UpdateArtifacting();                
             }
+            // In case the Pallette global changed....
+            if (last_pal != palett_type)
+            {
+                last_pal = palett_type;
+                if (bOkayToChangePalette) dsSetAtariPalette();
+            }
+
             dsPrintValue(14,0,0,Option_Table[optionHighlighted].help1);
             dsPrintValue(14,1,0,Option_Table[optionHighlighted].help2);
             dsPrintValue(14,2,0,Option_Table[optionHighlighted].help3);
@@ -777,8 +785,6 @@ void dsChooseOptions(int bOkayToChangePalette)
     basic_type = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);
 
     install_os();
-    
-    if (bOkayToChangePalette) dsSetAtariPalette();
     
     dsInstallSoundEmuFIFO();
     
@@ -1138,7 +1144,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
         a8FindFiles();
         romSel=dsWaitForRom();
         if (romSel) { uState=A8_PLAYINIT; 
-          dsLoadGame(a8romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
+          dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
         else { uState=actState; }
       }
     }
@@ -1514,7 +1520,7 @@ ITCM_CODE void dsMainLoop(void)
                 { 
                     if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                     keys_touch = 1;
-                    dsLoadGame(last_filename, 1, true, bLoadReadOnly);   // Force Restart 
+                    dsLoadGame(last_filename, DISK_1, true, bLoadReadOnly);   // Force Restart 
                     irqEnable(IRQ_TIMER2); 
                     fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                 }
@@ -1551,7 +1557,7 @@ ITCM_CODE void dsMainLoop(void)
                   // Find files in current directory and show it 
                   keys_touch=1;
                   romSel=dsWaitForRom();
-                  if (romSel) { etatEmu=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, 1, bLoadAndBoot, bLoadReadOnly); }
+                  if (romSel) { etatEmu=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
                   else { irqEnable(IRQ_TIMER2); }
                   fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                 }
@@ -1599,7 +1605,7 @@ ITCM_CODE void dsMainLoop(void)
         if (bFirstLoad)
         {
             bFirstLoad = false;
-            dsLoadGame(last_filename, 1, true, bLoadReadOnly);   // Force Restart 
+            dsLoadGame(last_filename, DISK_1, true, bLoadReadOnly);   // Force Restart 
             irqEnable(IRQ_TIMER2); 
             fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
         }
@@ -1668,4 +1674,185 @@ void a8FindFiles(void)
   }
   if (count8bit)
     qsort (a8romlist, count8bit, sizeof (FICA_A8), a8Filescmp);
+}
+
+#define MAX_GAME_SETTINGS       1024
+#define GAME_DATABASE_VERSION   0x01
+#define GAME_NAME_MAX           64
+struct GameSettings_t
+{
+    char GameName[GAME_NAME_MAX];
+    short int slot_used;
+    short int tv_type;
+    short int pallete_type;
+    short int ram_type;
+    short int os_type;
+    short int basic_opt;
+    short int skip_frames;
+    short int aButtonMap;
+    short int xButtonMap;
+    short int auto_fire;
+    short int artifacting;
+    short int blending;
+    short int xOffset;
+    short int yOffset;
+    short int xScale;
+    short int yScale;
+
+    short int spare1;
+    short int spare2;
+    short int spare3;
+    short int spare4;
+    short int spare5;
+    short int spare6;
+    short int spare7;
+    short int spare8;
+    short int spare9;
+};
+
+struct GameDatabase_t
+{
+    UBYTE                       db_version;
+    struct GameSettings_t       GameSettings[MAX_GAME_SETTINGS];
+    unsigned int                checksum;
+};
+
+struct GameDatabase_t GameDB;
+
+void InitGameSettings(void)
+{
+    // --------------------------------------------------
+    // This will set every byte to 0x00 but then we
+    // map a few specific things below...
+    // --------------------------------------------------
+    memset(&GameDB, 0x00, sizeof(GameDB));
+    for (int i=0; i<MAX_GAME_SETTINGS; i++)
+    {
+        GameDB.GameSettings[i].slot_used = 0;
+        GameDB.GameSettings[i].spare1 = 0;
+        GameDB.GameSettings[i].spare2 = 0;
+        GameDB.GameSettings[i].spare3 = 0;
+        GameDB.GameSettings[i].spare4 = 0;
+        GameDB.GameSettings[i].spare5 = 0;
+        GameDB.GameSettings[i].spare6 = 0;
+        GameDB.GameSettings[i].spare7 = 1;     // Map a few spares with a default of '1' which may come in handy in the future....
+        GameDB.GameSettings[i].spare8 = 1;
+        GameDB.GameSettings[i].spare9 = 1;
+    }
+}
+
+void WriteGameSettings(void)
+{
+    FILE *fp;
+    int idx = 0;
+    
+    GameDB.db_version = GAME_DATABASE_VERSION;
+    // Search through the Game Database to see if we have a match to our game filename....
+    for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
+    {
+        if (GameDB.GameSettings[idx].slot_used == 0) break;
+        if (strcasecmp (GameDB.GameSettings[idx].GameName, last_filename) == 0) break;
+    }
+     
+    if (idx < MAX_GAME_SETTINGS)
+    {
+        GameDB.GameSettings[idx].slot_used = 1;
+        strncpy(GameDB.GameSettings[idx].GameName, last_filename, GAME_NAME_MAX-1);
+        GameDB.GameSettings[idx].GameName[GAME_NAME_MAX-1] = 0;
+        GameDB.GameSettings[idx].tv_type = tv_type2;
+        GameDB.GameSettings[idx].pallete_type = palett_type;
+        GameDB.GameSettings[idx].os_type = os_type;
+        GameDB.GameSettings[idx].basic_opt = basic_opt;
+        GameDB.GameSettings[idx].auto_fire = auto_fire;
+        GameDB.GameSettings[idx].skip_frames = skip_frames;
+        GameDB.GameSettings[idx].ram_type = ram_type;
+        GameDB.GameSettings[idx].artifacting = global_artif_mode;
+        GameDB.GameSettings[idx].xOffset = myGame_offset_x;
+        GameDB.GameSettings[idx].yOffset = myGame_offset_y;
+        GameDB.GameSettings[idx].xScale = myGame_scale_x;
+        GameDB.GameSettings[idx].yScale = myGame_scale_y;
+        GameDB.GameSettings[idx].aButtonMap = bUseA_KeyAsUP;
+        GameDB.GameSettings[idx].xButtonMap = bUseX_KeyAsCR;
+        GameDB.GameSettings[idx].blending   = jitter_type;
+           
+        DIR* dir = opendir("/data");
+        if (dir)
+        {
+            /* Directory exists. */
+            closedir(dir);
+        }
+        else
+        {
+            mkdir("/data", 0777);
+        }
+        fp = fopen("/data/XEGS-DS.DAT", "wb+");
+        if (fp != NULL)
+        {
+            fwrite(&GameDB, sizeof(GameDB), 1, fp);
+            fclose(fp);
+        }
+    }
+}
+
+void ReadGameSettings(void)
+{
+    FILE *fp;
+        
+    fp = fopen("/data/XEGS-DS.DAT", "rb");
+    if (fp != NULL)
+    {
+        fread(&GameDB, sizeof(GameDB), 1, fp);
+        fclose(fp);
+        if (GameDB.db_version != GAME_DATABASE_VERSION)
+        {
+            InitGameSettings();       
+        }
+    }
+    else
+    {
+        InitGameSettings();   
+    }
+}
+
+void ApplyGameSpecificSettings(void)
+{
+    int idx = 0;
+    
+    // Search through the Game Database to see if we have a match to our game filename....
+    for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
+    {
+        if (strcasecmp (GameDB.GameSettings[idx].GameName, last_filename) == 0) break;
+    }
+
+    full_speed = 0;  
+    if (idx < MAX_GAME_SETTINGS)
+    {
+      myGame_offset_x   = GameDB.GameSettings[idx].xOffset;
+      myGame_offset_y   = GameDB.GameSettings[idx].yOffset;
+      myGame_scale_x    = GameDB.GameSettings[idx].xScale;
+      myGame_scale_y    = GameDB.GameSettings[idx].yScale;
+      tv_mode           = (GameDB.GameSettings[idx].tv_type == 0 ? TV_NTSC:TV_PAL);
+      global_artif_mode = GameDB.GameSettings[idx].artifacting;
+      palett_type       = GameDB.GameSettings[idx].pallete_type;
+      os_type           = GameDB.GameSettings[idx].os_type;
+      basic_opt         = GameDB.GameSettings[idx].basic_opt;
+      bHaveBASIC        = (basic_opt ? 1:0);
+      basic_type        = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);        
+      auto_fire         = GameDB.GameSettings[idx].auto_fire;
+      skip_frames       = GameDB.GameSettings[idx].skip_frames;
+      ram_type          = GameDB.GameSettings[idx].ram_type;
+      bUseA_KeyAsUP     = GameDB.GameSettings[idx].aButtonMap;
+      bUseX_KeyAsCR     = GameDB.GameSettings[idx].xButtonMap;
+      jitter_type       = GameDB.GameSettings[idx].blending;
+      install_os();        
+    }
+    else
+    {
+      myGame_offset_x = 32;
+      myGame_offset_y = 20;
+      myGame_scale_x = 256;
+      myGame_scale_y = 256;
+      bUseA_KeyAsUP=false;
+      global_artif_mode=0;
+    }
 }

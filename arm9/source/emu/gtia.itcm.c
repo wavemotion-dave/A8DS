@@ -228,7 +228,7 @@ void new_pm_scanline(void)
 		pm_dirty = TRUE;									\
 		do {												\
 			if (grafp & 1)									\
-				P##n##PL_T |= *ptr |= 1 << n;					\
+				P##n##PL_T |= *ptr |= 1 << n;				\
 			ptr++;											\
 			grafp >>= 1;									\
 		} while (grafp);									\
