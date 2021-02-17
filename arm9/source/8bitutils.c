@@ -1676,8 +1676,8 @@ void a8FindFiles(void)
     qsort (a8romlist, count8bit, sizeof (FICA_A8), a8Filescmp);
 }
 
-#define MAX_GAME_SETTINGS       1024
-#define GAME_DATABASE_VERSION   0x02
+#define MAX_GAME_SETTINGS       1250
+#define GAME_DATABASE_VERSION   0x03
 #define GAME_NAME_MAX           64
 struct GameSettings_t
 {
@@ -1853,5 +1853,9 @@ void ApplyGameSpecificSettings(void)
       myGame_scale_y = 256;
       bUseA_KeyAsUP=false;
       global_artif_mode=0;
+      skip_frames=0;
+      auto_fire=0;
+      bUseA_KeyAsUP=0;
+      bUseX_KeyAsCR=0;
     }
 }
