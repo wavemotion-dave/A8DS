@@ -112,9 +112,9 @@ static void DumpDebugData(void)
 
 
 char last_filename[300] = {0};
-void dsWriteFavs(void)
+void dsWriteFavs(int xpos)
 {
-    dsPrintValue(3,0,0, (char*)"SETTINGS SAVED");
+    dsPrintValue(xpos,0,0, (char*)"CONFIG SAVE");
 #if 0    
     FILE *fp;
     fp = fopen("/roms/A800-Favs.txt", "a+");
@@ -127,7 +127,7 @@ void dsWriteFavs(void)
 #endif    
     WriteGameSettings();
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    dsPrintValue(3,0,0, (char*)"              ");
+    dsPrintValue(xpos,0,0, (char*)"           ");
 }
 
 
@@ -758,7 +758,7 @@ void dsChooseOptions(int bOkayToChangePalette)
             {
                 if (bOkayToChangePalette)   // This lets us know that a game is selected... 
                 {
-                    dsWriteFavs();
+                    dsWriteFavs(0);
                 }
             }
             if (keysCurrent() & KEY_B)  // Exit options
@@ -1596,7 +1596,7 @@ ITCM_CODE void dsMainLoop(void)
         {
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_L))
             {
-                dsWriteFavs();
+                dsWriteFavs(4);
             }
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myGame_offset_y++;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myGame_offset_y--;
@@ -1859,11 +1859,11 @@ void ApplyGameSpecificSettings(void)
       myGame_offset_y = 20;
       myGame_scale_x = 256;
       myGame_scale_y = 256;
-      bUseA_KeyAsUP=false;
       global_artif_mode=0;
       skip_frames=0;
       auto_fire=0;
       bUseA_KeyAsUP=0;
       bUseX_KeyAsCR=0;
+      // Never default BASIC, OS, TV-TYPE or MEMORY!
     }
 }
