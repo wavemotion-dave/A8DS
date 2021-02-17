@@ -38,7 +38,7 @@ int atari_frames = 0;
 extern int global_artif_mode;
 
 short int myGame_offset_x = 32;
-short int myGame_offset_y = 20;
+short int myGame_offset_y = 24;
 short int myGame_scale_x = 256;
 short int myGame_scale_y = 256;
 
@@ -1364,7 +1364,7 @@ ITCM_CODE void dsMainLoop(void)
   TIMER1_CR=TIMER_ENABLE | TIMER_DIV_1024;  
     
   myGame_offset_x = 32;
-  myGame_offset_y = 20;
+  myGame_offset_y = 24;
   myGame_scale_x = 256;
   myGame_scale_y = 256;
   
@@ -1856,7 +1856,7 @@ void ApplyGameSpecificSettings(void)
     else
     {
       myGame_offset_x = 32;
-      myGame_offset_y = 20;
+      myGame_offset_y = 24;
       myGame_scale_x = 256;
       myGame_scale_y = 256;
       global_artif_mode=0;
