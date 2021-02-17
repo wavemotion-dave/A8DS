@@ -114,8 +114,9 @@ static void DumpDebugData(void)
 char last_filename[300] = {0};
 void dsWriteFavs(void)
 {
+    dsPrintValue(3,0,0, (char*)"SETTINGS SAVED");
+#if 0    
     FILE *fp;
-    dsPrintValue(22,0,0, (char*)"SNAP");
     fp = fopen("/roms/A800-Favs.txt", "a+");
     if (fp != NULL)
     {
@@ -123,10 +124,10 @@ void dsWriteFavs(void)
         fflush(fp);
         fclose(fp);
     }
-    
+#endif    
     WriteGameSettings();
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    dsPrintValue(22,0,0, (char*)"    ");
+    dsPrintValue(3,0,0, (char*)"              ");
 }
 
 
@@ -722,8 +723,8 @@ void dsChooseOptions(int bOkayToChangePalette)
         if (Option_Table[idx].label == NULL) break;   
     }
     
-    dsPrintValue(3,22, 0, "UP/DOWN TO SELECT OPTION");
-    dsPrintValue(3,23, 0, "A=TOGGLE OPTION, B=EXIT");
+    dsPrintValue(2,22, 0, "  UP/DOWN TO SELECT OPTION  ");
+    dsPrintValue(2,23, 0, "A=TOGGLE, B=EXIT, START=SAVE");
     optionHighlighted = 0;
     while (!bDone) 
     {
@@ -752,6 +753,13 @@ void dsChooseOptions(int bOkayToChangePalette)
                 *(Option_Table[optionHighlighted].option_val) = (*(Option_Table[optionHighlighted].option_val) + 1) % Option_Table[optionHighlighted].option_max;
                 sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
+            }
+            if (keysCurrent() & KEY_START)  // Save Options
+            {
+                if (bOkayToChangePalette)   // This lets us know that a game is selected... 
+                {
+                    dsWriteFavs();
+                }
             }
             if (keysCurrent() & KEY_B)  // Exit options
             {
