@@ -677,7 +677,7 @@ const struct options_t Option_Table[] =
     {"PALETTE",     {"BRIGHT",      "MUTED"},                           &palett_type,       2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
     {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,     2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
     {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,     2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
-    {"AUTOFIRE",    {"OFF",         "ON"},                              &auto_fire,         2,          "TOGGLE AUTOFIRE   ",   "                  ",  "                  ",  "                  "},
+    {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &auto_fire,         4,          "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC    ",   "FAST = 15x/SEC    "},
     {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,           2,          "SHOW FPS ON MAIN  ",   "DISPLAY           ",  "                  ",  "                  "},
     {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,        2,          "RUN EMULATOR AS   ",   "FAST AS POSSIBLE  ",  "                  ",  "                  "},
     {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
@@ -1677,28 +1677,27 @@ void a8FindFiles(void)
 }
 
 #define MAX_GAME_SETTINGS       1024
-#define GAME_DATABASE_VERSION   0x01
+#define GAME_DATABASE_VERSION   0x02
 #define GAME_NAME_MAX           64
 struct GameSettings_t
 {
     char GameName[GAME_NAME_MAX];
-    short int slot_used;
-    short int tv_type;
-    short int pallete_type;
-    short int ram_type;
-    short int os_type;
-    short int basic_opt;
-    short int skip_frames;
-    short int aButtonMap;
-    short int xButtonMap;
-    short int auto_fire;
-    short int artifacting;
-    short int blending;
+    UBYTE slot_used;
+    UBYTE tv_type;
+    UBYTE pallete_type;
+    UBYTE ram_type;
+    UBYTE os_type;
+    UBYTE basic_opt;
+    UBYTE skip_frames;
+    UBYTE aButtonMap;
+    UBYTE xButtonMap;
+    UBYTE auto_fire;
+    UBYTE artifacting;
+    UBYTE blending;
     short int xOffset;
     short int yOffset;
     short int xScale;
     short int yScale;
-
     short int spare1;
     short int spare2;
     short int spare3;

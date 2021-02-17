@@ -139,9 +139,17 @@ void INPUT_Frame(void)
 		TRIG_input[i] = (i==0 ? trig0:trig1);
         
         extern int auto_fire;
-        if (auto_fire)
+        switch(auto_fire)
         {
-            if (!TRIG_input[i])  TRIG_input[i] = (gTotalAtariFrames & 2) ? 1 : 0;
+            case 1:
+                if (!TRIG_input[i])  TRIG_input[i] = (gTotalAtariFrames & 16) ? 1 : 0;
+                break;
+            case 2:
+                if (!TRIG_input[i])  TRIG_input[i] = (gTotalAtariFrames & 8) ? 1 : 0;
+                break;
+            case 3:
+                if (!TRIG_input[i])  TRIG_input[i] = (gTotalAtariFrames & 4) ? 1 : 0;
+                break;
         }
 	}
 
