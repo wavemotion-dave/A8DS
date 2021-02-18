@@ -68,6 +68,13 @@ not run right with Frame Skip ON. But this does render most games playable on ol
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V1.7 : 18-Feb-2021 by wavemotion-dave
+  * Added saving of configuration for 1800+ games. Press L+R to snap out config
+    for any game (or use the START key handling in the Options Menu).
+  * Autofire now has 4 options (OFF, Slow, Medium and Fast).
+  * Improved pallete handling.
+  * Other cleanups as time permitted.
+
 V1.6 : 13-Feb-2021 by wavemotion-dave
   * Added 320KB RAMBO memory expanstion emulation for the really big games!
   * Added Artifacting modes that are used by some high-res games.

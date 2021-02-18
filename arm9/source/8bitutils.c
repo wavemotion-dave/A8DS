@@ -15,6 +15,7 @@
 #include "cartridge.h"
 #include "input.h"
 #include "sound.h"
+#include "hash.h"
 #include "emu/pia.h"
 
 #include "clickNoQuit_wav.h"
@@ -63,7 +64,6 @@ int jitter_type = 0;        // Normal... 1=SHARP
 #define  ydyBG (((256 / myGame_scale_y) << 8) | (256 % myGame_scale_y))
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
-unsigned char *filebuffer;
 
 signed char sound_buffer[SNDLENGTH];
 signed char *psound_buffer;
@@ -540,14 +540,29 @@ void install_os(void)
 }
 
 
+#define HASH_FILE_LEN  (128*1024)
+unsigned char tempFileBuf[HASH_FILE_LEN];
+unsigned char last_hash[33];
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly) 
 {
-    strcpy(last_filename, filename);
+    if (strcmp(filename, last_filename) != 0)
+    {
+        strcpy(last_filename, filename);
+    }
+    
+    // Get the hash of the file... up to 128k (good enough)
+    memset(last_hash, 'Z', 33);
+    FILE *fp = fopen(filename, "rb");
+    if (fp)
+    {   
+        unsigned int file_len = fread(tempFileBuf, 1, HASH_FILE_LEN, fp);
+        hash_Compute((const byte*)tempFileBuf, file_len, (byte *)last_hash);
+        fclose(fp);           
+    }
   
     // Free buffer if needed
     TIMER2_CR=0; irqDisable(IRQ_TIMER2); 
-    if (filebuffer != 0) free(filebuffer);
-
+    
     // -------------------------------------------------------------------
     // If we are cold starting, go see if we have settings we can read
     // in from a config file or else set some reasonable defaults ...
@@ -1684,12 +1699,11 @@ void a8FindFiles(void)
     qsort (a8romlist, count8bit, sizeof (FICA_A8), a8Filescmp);
 }
 
-#define MAX_GAME_SETTINGS       1250
-#define GAME_DATABASE_VERSION   0x03
-#define GAME_NAME_MAX           64
+#define MAX_GAME_SETTINGS       1870
+#define GAME_DATABASE_VERSION   0x05
 struct GameSettings_t
 {
-    char GameName[GAME_NAME_MAX];
+    char game_hash[32];
     UBYTE slot_used;
     UBYTE tv_type;
     UBYTE pallete_type;
@@ -1758,14 +1772,13 @@ void WriteGameSettings(void)
     for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
     {
         if (GameDB.GameSettings[idx].slot_used == 0) break;
-        if (strcasecmp (GameDB.GameSettings[idx].GameName, last_filename) == 0) break;
+        if (memcmp (GameDB.GameSettings[idx].game_hash, last_hash, 32) == 0) break;
     }
      
     if (idx < MAX_GAME_SETTINGS)
     {
         GameDB.GameSettings[idx].slot_used = 1;
-        strncpy(GameDB.GameSettings[idx].GameName, last_filename, GAME_NAME_MAX-1);
-        GameDB.GameSettings[idx].GameName[GAME_NAME_MAX-1] = 0;
+        memcpy(GameDB.GameSettings[idx].game_hash, last_hash, 32);
         GameDB.GameSettings[idx].tv_type = tv_type2;
         GameDB.GameSettings[idx].pallete_type = palett_type;
         GameDB.GameSettings[idx].os_type = os_type;
@@ -1781,6 +1794,13 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].aButtonMap = bUseA_KeyAsUP;
         GameDB.GameSettings[idx].xButtonMap = bUseX_KeyAsCR;
         GameDB.GameSettings[idx].blending   = jitter_type;
+        
+        GameDB.checksum = 0;
+        char *ptr = (char *)GameDB.GameSettings;
+        for (int i=0; i<sizeof(GameDB.GameSettings); i++)
+        {
+               GameDB.checksum += *ptr;
+        }
            
         DIR* dir = opendir("/data");
         if (dir)
@@ -1810,7 +1830,14 @@ void ReadGameSettings(void)
     {
         fread(&GameDB, sizeof(GameDB), 1, fp);
         fclose(fp);
-        if (GameDB.db_version != GAME_DATABASE_VERSION)
+        
+        unsigned int checksum = 0;
+        char *ptr = (char *)GameDB.GameSettings;
+        for (int i=0; i<sizeof(GameDB.GameSettings); i++)
+        {
+               checksum += *ptr;
+        }        
+        if ((GameDB.db_version != GAME_DATABASE_VERSION) || (GameDB.checksum != checksum))
         {
             InitGameSettings();       
         }
@@ -1828,7 +1855,7 @@ void ApplyGameSpecificSettings(void)
     // Search through the Game Database to see if we have a match to our game filename....
     for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
     {
-        if (strcasecmp (GameDB.GameSettings[idx].GameName, last_filename) == 0) break;
+        if (memcmp(GameDB.GameSettings[idx].game_hash, last_hash, 32) == 0) break;
     }
 
     full_speed = 0;  
