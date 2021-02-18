@@ -17,20 +17,16 @@ The goal here is to make this as simple as possible - point to the executable
 8-bit Atari image you want to run and off it goes!
 
 To use this emulator, you must use compatibles roms with .xex or .atr format. 
-The .xex is preferred as that is a stand-alone binary executable for the 
-Atari 8-bit line and will almost always load correctly. The .atr is a disk 
-drive encapsulated format and is a little tricker and compatibility will not
-be as high. You can often find binary files in both formats - so stry to find
-the .xex if you can.
 
 Optional is to have the atarixl.rom in the same folder as the XEGS-DS.NDS emulator. 
 This is the 16k bios file and must be exactly so named. If you don't have the BIOS, 
 a generic one is provided from the good folks who made Altirra (thanks to Avery Lee)
-have released open-source. 
+have released open-source.  Also optional is ataribas.rom for the 8K basic program 
+(Rev C is recommended). If not supplied, the built-in Altirra BASIC 1.55 is supplied.
 
 I've not done exhaustive testing, but in many cases I find the Altirra BIOS does 
-a better job than the original Atari BIOS. I generally stick with the open source
-Altirra BIOS. 
+a great job compared to the original Atari BIOS. I generally stick with the open 
+source Altirra BIOS but you can switch it on a per-game basis in the Options menu.
 
 Do not ask me about rom files, I don't have them. A search with Google will certainly 
 help you. 
@@ -43,7 +39,7 @@ just load it again or hit the RESET button which will re-initialize the XEGS mac
 If a game crashes, you will get a message at the bottom of the screen after loading - 
 a crash usually means that the game requires the BASIC cart to be inserted and you can
 toggle that when loading a game (or using the GEAR icon). Not every game runs with this 
-emulator - but most do.  I'll try to improve compatibilty as time permits.
+emulator - but 99% will.  I'll try to improve compatibilty as time permits.
 
 The emulator supports multi-disk games. When you need to load a subsequent disk for
 a game, just use the Y button to disable Boot-Load which will simply just insert the new
@@ -73,6 +69,7 @@ V1.7 : 18-Feb-2021 by wavemotion-dave
     for any game (or use the START key handling in the Options Menu).
   * Autofire now has 4 options (OFF, Slow, Medium and Fast).
   * Improved pallete handling.
+  * Improved sound quality slightly.
   * Other cleanups as time permitted.
 
 V1.6 : 13-Feb-2021 by wavemotion-dave
