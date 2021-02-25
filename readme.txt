@@ -72,6 +72,7 @@ V1.8 : 25-Feb-2021 by wavemotion-dave
   * Reverted to "Old NTSC Artifacting" after discovering at least one game
     does not play nicely with the new artificating. Still investigating but
     this cures the problem for now (the game was Stellar Shuttle).
+  * Added the R-TIME8 module for time/date on some versions of DOS.
   * Other minor cleanups as time permitted.
 
 V1.7 : 18-Feb-2021 by wavemotion-dave
