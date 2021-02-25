@@ -78,7 +78,7 @@ static uint32 Samp_n_max,		/* Sample max.  For accuracy, it is *256 */
 extern int sound_quality;
 /* Volume only emulations declarations */
 static uint32 snd_freq17 = FREQ_17_EXACT;
-int32 snd_playback_freq = 32000;
+int32 snd_playback_freq = 44100;
 uint8 snd_num_pokeys = 1;
 static int snd_flags = 0;
 

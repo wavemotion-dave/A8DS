@@ -34,6 +34,7 @@
 #include "binload.h"
 #include "cartridge.h"
 #include "memory.h"
+#include "rtime.h"
 #include "altirra_basic.h"
 
 int CART_Checksum(const UBYTE *image, int nbytes)
@@ -79,16 +80,23 @@ void CART_Start(void)
 {
 }
 
+/* a read from D500-D5FF area */
 UBYTE CART_GetByte(UWORD addr)
 {
-   (void)addr;   
+	if (rtime_enabled && (addr == 0xd5b8 || addr == 0xd5b9))
+    {
+		return RTIME_GetByte();
+    }
     return 0;
 }
 
+/* a write to D500-D5FF area */
 void CART_PutByte(UWORD addr, UBYTE byte)
 {
-   (void)addr;
-   (void)byte;
+	if (rtime_enabled && (addr == 0xd5b8 || addr == 0xd5b9)) 
+    {
+		RTIME_PutByte(byte);
+	}
 }
 
 

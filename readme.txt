@@ -64,6 +64,16 @@ not run right with Frame Skip ON. But this does render most games playable on ol
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V1.8 : 25-Feb-2021 by wavemotion-dave
+  * Added option for slower I/O (disk reads) as a few games will detect that
+    the game is not running at the right speed and not play (copy protection 
+    of a sort ... 1980s style). So you can now slow down the I/O to get those
+    games running.
+  * Reverted to "Old NTSC Artifacting" after discovering at least one game
+    does not play nicely with the new artificating. Still investigating but
+    this cures the problem for now (the game was Stellar Shuttle).
+  * Other minor cleanups as time permitted.
+
 V1.7 : 18-Feb-2021 by wavemotion-dave
   * Added saving of configuration for 1800+ games. Press L+R to snap out config
     for any game (or use the START key handling in the Options Menu).

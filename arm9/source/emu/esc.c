@@ -16,7 +16,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ *
  * You should have received a copy of the GNU General Public License
  * along with Atari800; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -34,7 +34,7 @@
 #include "sio.h"
 #include <stdlib.h>
 
-int ESC_enable_sio_patch = TRUE;
+int ESC_enable_sio_patch = TRUE;        // TRUE for fast Serial I/O. FALSE for slower access.
 
 /* Now we check address of every escape code, to make sure that the patch
    has been set by the emulator and is not a CIM in Atari program.

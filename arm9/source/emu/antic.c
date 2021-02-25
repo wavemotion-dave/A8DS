@@ -2163,7 +2163,7 @@ static draw_antic_function draw_antic_ptr = draw_antic_8;
 /* pointer to current GTIA mode blank drawing routine */
 static void (*draw_antic_0_ptr)(void) = draw_antic_0;
 
-int ANTIC_artif_new = true;
+int ANTIC_artif_new = false;
 /* Artifacting ------------------------------------------------------------ */
 
 void ANTIC_UpdateArtifacting(void)

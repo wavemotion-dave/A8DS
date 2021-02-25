@@ -91,9 +91,6 @@ extern int tv_mode;
 /* TRUE to disable Atari BASIC when booting Atari (hold Option in XL/XE). */
 extern int disable_basic;
 
-/* TRUE to enable patched (fast) Serial I/O. */
-extern int enable_sio_patch;
-
 /* Dimensions of atari_screen.
    atari_screen is ATARI_WIDTH * ATARI_HEIGHT bytes.
    Each byte is an Atari color code - use Palette_Get[RGB] functions

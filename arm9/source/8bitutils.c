@@ -16,6 +16,8 @@
 #include "input.h"
 #include "sound.h"
 #include "hash.h"
+#include "esc.h"
+#include "rtime.h"
 #include "emu/pia.h"
 
 #include "clickNoQuit_wav.h"
@@ -55,7 +57,7 @@ int bUseX_KeyAsCR = false;
 int showFps=false;
 int palett_type = 0;
 int auto_fire=0;
-int ram_type=0;     // default is 128k
+int ram_type=0;             // default is 128k
 int jitter_type = 0;        // Normal... 1=SHARP
 
 #define  cxBG (myGame_offset_x<<8)
@@ -63,7 +65,6 @@ int jitter_type = 0;        // Normal... 1=SHARP
 #define  xdxBG (((320 / myGame_scale_x) << 8) | (320 % myGame_scale_x))
 #define  ydyBG (((256 / myGame_scale_y) << 8) | (256 % myGame_scale_y))
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
-
 
 signed char sound_buffer[SNDLENGTH];
 signed char *psound_buffer;
@@ -114,8 +115,8 @@ static void DumpDebugData(void)
 char last_filename[300] = {0};
 void dsWriteFavs(int xpos)
 {
-    dsPrintValue(xpos,0,0, (char*)"CONFIG SAVE");
-#if 0    
+#if 0
+    dsPrintValue(xpos,0,0, (char*)"FAVS SAVE");
     FILE *fp;
     fp = fopen("/roms/A800-Favs.txt", "a+");
     if (fp != NULL)
@@ -124,8 +125,10 @@ void dsWriteFavs(int xpos)
         fflush(fp);
         fclose(fp);
     }
-#endif    
+#else 
+    dsPrintValue(xpos,0,0, (char*)"CONFIG SAVE");
     WriteGameSettings();
+#endif    
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
     dsPrintValue(xpos,0,0, (char*)"           ");
 }
@@ -331,7 +334,8 @@ void dsSetAtariPalette(void)
 }
 
 // Color fading effect
-void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr, unsigned char valEnd, unsigned char uWait) {
+void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr, unsigned char valEnd, unsigned char uWait) 
+{
   unsigned short ucFade;
   unsigned char ucBcl;
 
@@ -438,7 +442,6 @@ void dsInitTimer(void)
 void dsShowScreenEmu(void) 
 {
   // Change vram
-  //videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE);
   videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
   bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
   bg3 = bgInit(3, BgType_Bmp8, BgSize_B8_512x512, 0,0);
@@ -699,6 +702,7 @@ const struct options_t Option_Table[] =
     {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
                                     "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode, 5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
     {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,       2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
+    {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,      "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
     {NULL,          {"",            ""},                                NULL,               2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
 
