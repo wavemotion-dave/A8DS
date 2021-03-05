@@ -1343,10 +1343,6 @@ int dsHandleKeyboard(int Tx, int Ty)
         *(bgGetMapPtr(bg1b)+683) = sav2;
     }
     
-    if (keyPress != AKEY_NONE)
-    {
-        soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
-    }
     return keyPress; 
 }
     
@@ -1368,6 +1364,7 @@ void dsInstallSoundEmuFIFO(void)
 
 ITCM_CODE void dsMainLoop(void) 
 {
+  static int last_key_code = -1;
   static bool bFirstLoad = true;
   char fpsbuf[32];
   unsigned int keys_pressed,keys_touch=0, romSel=0;
@@ -1475,125 +1472,140 @@ ITCM_CODE void dsMainLoop(void)
         // if touch screen pressed
         if (keys_pressed & KEY_TOUCH) 
         {
-          if (!keys_touch) 
-          {
             touchPosition touch;
             touchRead(&touch);
             iTx = touch.px;
             iTy = touch.py;
-            debug[0] = iTx;
-            debug[1] = iTy;
             
-            if (bShowHelp || bShowKeyboard)
+            // ---------------------------------------------------------------------------------------
+            // START, SELECT and OPTION respond immediately - that is, we keep the buttons pressed 
+            // as long as the user is continuing to hold down the button on the touch screen...
+            // ---------------------------------------------------------------------------------------
+            if (!(bShowHelp || bShowKeyboard))
             {
-                  if (bShowKeyboard)
-                  {
-                      if ((iTy > 165) && (iTx < 50)) // Touch in the lower corner of the screen closes the keyboard...
-                      {
-                          bShowKeyboard = false;
-                          keys_touch = 1;
-                          dsRestoreBottomScreen();
-                      }
-                      else
-                      {
-                         key_code = dsHandleKeyboard(iTx, iTy);
-                      }
-                      keys_touch=1;
-                  }
-                  else
-                  {
-                      bShowHelp = false;
-                      keys_touch = 1;
-                      dsRestoreBottomScreen();
-                  }
-            }
-            else
-            {
-                if ((iTx>240) && (iTx<256) && (iTy>0) && (iTy<22))  { // Full Speed Toggle ... upper corner...
-                   if (keys_touch == 0)
-                   {
-                       full_speed = 1-full_speed; 
-                       dsPrintValue(30,0,0,"  ");
-                       keys_touch = 1;
-                   }
-                }
-                else if ((iTx>=0) && (iTx<16) && (iTy>0) && (iTy<22))  { // Show FPS
-                   if (keys_touch == 0)
-                   {
-                       showFps= 1-showFps;
-                       dsPrintValue(0,0,0, "   "); 
-                       keys_touch = 1;
-                   }
-                }
-                else if ((iTx>130) && (iTx<157) && (iTy>122) && (iTy<150))  // START
+                if ((iTx>130) && (iTx<157) && (iTy>122) && (iTy<150))  // START
                 { 
                     if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    keys_touch=1;
                     key_consol &= ~CONSOL_START;
-                    keys_touch = 1;
                 }
                 else if ((iTx>160) && (iTx<185) && (iTy>122) && (iTy<150))  // SELECT
                 { 
                     if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    keys_touch=1;
                     key_consol &= ~CONSOL_SELECT;
-                    keys_touch = 1;
                 }
                 else if ((iTx>190) && (iTx<210) && (iTy>122) && (iTy<150))  // OPTION
                 { 
                     if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    keys_touch=1;
                     key_consol &= ~CONSOL_OPTION;
-                    keys_touch = 1;
                 }
-                else if ((iTx>215) && (iTx<240) && (iTy>122) && (iTy<150))  // RESET (just reloads the game... not sure what else to do here)
-                { 
-                    if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
-                    keys_touch = 1;
-                    dsLoadGame(last_filename, DISK_1, true, bLoadReadOnly);   // Force Restart 
-                    irqEnable(IRQ_TIMER2); 
-                    fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+            }
+            
+            if (!keys_touch) 
+            {
+                if (bShowHelp || bShowKeyboard)
+                {
+                      if (bShowKeyboard)
+                      {
+                          if ((iTy > 165) && (iTx < 50)) // Touch in the lower corner of the screen closes the keyboard...
+                          {
+                              bShowKeyboard = false;
+                              keys_touch = 1;
+                              dsRestoreBottomScreen();
+                          }
+                          else
+                          {
+                             key_code = dsHandleKeyboard(iTx, iTy);
+                             if (key_code != AKEY_NONE)
+                             {
+                                  if (last_key_code != key_code)
+                                  {
+                                    soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
+                                    last_key_code = key_code;
+                                  }
+                             }
+                             else keys_touch=1;
+                          }
+                      }
+                      else
+                      {
+                          bShowHelp = false;
+                          keys_touch = 1;
+                          dsRestoreBottomScreen();
+                      }
                 }
-                else if ((iTx>130) && (iTx<157) && (iTy>160) && (iTy<180))  // HELP
-                { 
-                    if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
-                    dsShowHelp();
-                    bShowHelp = true;
-                    keys_touch = 1;
-                }
-                else if ((iTx>10) && (iTx<70) && (iTy>150) && (iTy<190))  // Keyboard
-                { 
-                    if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
-                    dsShowKeyboard();
-                    bShowKeyboard = true;
-                    keys_touch = 1;
-                }
-                else if ((iTx>35) && (iTx<56) && (iTy>89) && (iTy<106))  // POWER
-                { 
-                  irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
-                  soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
-                  if (dsWaitOnQuit()) etatEmu=A8_QUITSTDS;
-                  else { irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); }
-                }
-                else if ((iTx>220) && (iTx<250) && (iTy>160) && (iTy<185)) {     // Gear Icon = Settings
-                  irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
-                  keys_touch=1;
-                  dsChooseOptions(TRUE);
-                  irqEnable(IRQ_TIMER2);
-                  fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
-                }
-                else if ((iTx>70) && (iTx<180) && (iTy>12) && (iTy<80)) {     // cartridge slot (wide range)
-                  irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
-                  // Find files in current directory and show it 
-                  keys_touch=1;
-                  romSel=dsWaitForRom();
-                  if (romSel) { etatEmu=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
-                  else { irqEnable(IRQ_TIMER2); }
-                  fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
-                }
-             }
-          }
+                else
+                {
+                    if ((iTx>240) && (iTx<256) && (iTy>0) && (iTy<22))  { // Full Speed Toggle ... upper corner...
+                       if (keys_touch == 0)
+                       {
+                           full_speed = 1-full_speed; 
+                           dsPrintValue(30,0,0,"  ");
+                           keys_touch = 1;
+                       }
+                    }
+                    else if ((iTx>=0) && (iTx<16) && (iTy>0) && (iTy<22))  { // Show FPS
+                       if (keys_touch == 0)
+                       {
+                           showFps= 1-showFps;
+                           dsPrintValue(0,0,0, "   "); 
+                           keys_touch = 1;
+                       }
+                    }
+                    else if ((iTx>215) && (iTx<240) && (iTy>122) && (iTy<150))  // RESET (just reloads the game... not sure what else to do here)
+                    { 
+                        if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                        keys_touch = 1;
+                        dsLoadGame(last_filename, DISK_1, true, bLoadReadOnly);   // Force Restart 
+                        irqEnable(IRQ_TIMER2); 
+                        fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+                    }
+                    else if ((iTx>130) && (iTx<157) && (iTy>160) && (iTy<180))  // HELP
+                    { 
+                        if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                        dsShowHelp();
+                        bShowHelp = true;
+                        keys_touch = 1;
+                    }
+                    else if ((iTx>10) && (iTx<70) && (iTy>150) && (iTy<190))  // Keyboard
+                    { 
+                        if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                        dsShowKeyboard();
+                        bShowKeyboard = true;
+                        keys_touch = 1;
+                    }
+                    else if ((iTx>35) && (iTx<56) && (iTy>89) && (iTy<106))  // POWER
+                    { 
+                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
+                      soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                      if (dsWaitOnQuit()) etatEmu=A8_QUITSTDS;
+                      else { irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); }
+                    }
+                    else if ((iTx>220) && (iTx<250) && (iTy>160) && (iTy<185)) {     // Gear Icon = Settings
+                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
+                      keys_touch=1;
+                      dsChooseOptions(TRUE);
+                      irqEnable(IRQ_TIMER2);
+                      fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+                    }
+                    else if ((iTx>70) && (iTx<180) && (iTy>12) && (iTy<80)) {     // cartridge slot (wide range)
+                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
+                      // Find files in current directory and show it 
+                      keys_touch=1;
+                      romSel=dsWaitForRom();
+                      if (romSel) { etatEmu=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
+                      else { irqEnable(IRQ_TIMER2); }
+                      fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+                    }
+                 }
+            }
         }
         else 
         {
-          keys_touch=0;
+            last_key_code = -1;
+            keys_touch=0;
         }
       
         // Only handle UP/DOWN/LEFT/RIGHT if shoulder buttons are not pressed (those are handled below)
