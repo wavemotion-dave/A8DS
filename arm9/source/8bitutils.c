@@ -53,7 +53,9 @@ int os_type = OS_ALTIRRA;
 int basic_type = BASIC_ALTIRRA;
 int bHaveBASIC = false;
 int bUseA_KeyAsUP = false;
+int bUseB_KeyAsDN = false;
 int bUseX_KeyAsCR = false;
+int key_click_disable = false;
 int showFps=false;
 int palett_type = 0;
 int auto_fire=0;
@@ -695,6 +697,7 @@ const struct options_t Option_Table[] =
     {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,         3,          "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
     {"PALETTE",     {"BRIGHT",      "MUTED"},                           &palett_type,       2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
     {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,     2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
+    {"B BUTTON",    {"FIRE",        "DOWN"},                            &bUseB_KeyAsDN,     2,          "TOGGLE THE B KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY DOWN"},
     {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,     2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
     {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &auto_fire,         4,          "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC    ",   "FAST = 15x/SEC    "},
     {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,           2,          "SHOW FPS ON MAIN  ",   "DISPLAY           ",  "                  ",  "                  "},
@@ -703,6 +706,7 @@ const struct options_t Option_Table[] =
                                     "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode, 5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
     {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,       2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,      "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
+    {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,  2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "                  "},
     {NULL,          {"",            ""},                                NULL,               2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
 
@@ -1449,10 +1453,20 @@ ITCM_CODE void dsMainLoop(void)
             
         key_shift = 0;
         key_code = AKEY_NONE;
-        if (bUseA_KeyAsUP)
+        if (bUseA_KeyAsUP && bUseB_KeyAsDN)
+        {
+            if (keys_pressed & KEY_A) keys_pressed |= KEY_UP;
+            if (keys_pressed & KEY_B) keys_pressed |= KEY_DOWN;
+        }
+        else if (bUseA_KeyAsUP)
         {
             if (keys_pressed & KEY_A) keys_pressed |= KEY_UP;
             trig0 = (keys_pressed & KEY_B) ? 0 : 1;
+        }
+        else if (bUseB_KeyAsDN)
+        {
+            if (keys_pressed & KEY_B) keys_pressed |= KEY_DOWN;
+            trig0 = (keys_pressed & KEY_A) ? 0 : 1;
         }
         else
         {
@@ -1485,19 +1499,28 @@ ITCM_CODE void dsMainLoop(void)
             {
                 if ((iTx>130) && (iTx<157) && (iTy>122) && (iTy<150))  // START
                 { 
-                    if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    if (!keys_touch) 
+                    {
+                        soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    }
                     keys_touch=1;
                     key_consol &= ~CONSOL_START;
                 }
                 else if ((iTx>160) && (iTx<185) && (iTy>122) && (iTy<150))  // SELECT
                 { 
-                    if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    if (!keys_touch)
+                    {
+                        soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    }
                     keys_touch=1;
                     key_consol &= ~CONSOL_SELECT;
                 }
                 else if ((iTx>190) && (iTx<210) && (iTy>122) && (iTy<150))  // OPTION
                 { 
-                    if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    if (!keys_touch)
+                    {
+                        soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                    }
                     keys_touch=1;
                     key_consol &= ~CONSOL_OPTION;
                 }
@@ -1522,7 +1545,7 @@ ITCM_CODE void dsMainLoop(void)
                              {
                                   if (last_key_code != key_code)
                                   {
-                                    soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
+                                    if (!key_click_disable) soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
                                     last_key_code = key_code;
                                   }
                              }
@@ -1556,7 +1579,10 @@ ITCM_CODE void dsMainLoop(void)
                     }
                     else if ((iTx>215) && (iTx<240) && (iTy>122) && (iTy<150))  // RESET (just reloads the game... not sure what else to do here)
                     { 
-                        if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                        if (!keys_touch)
+                        {
+                            soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                        }
                         keys_touch = 1;
                         dsLoadGame(last_filename, DISK_1, true, bLoadReadOnly);   // Force Restart 
                         irqEnable(IRQ_TIMER2); 
@@ -1564,14 +1590,20 @@ ITCM_CODE void dsMainLoop(void)
                     }
                     else if ((iTx>130) && (iTx<157) && (iTy>160) && (iTy<180))  // HELP
                     { 
-                        if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                        if (!keys_touch) 
+                        {
+                            soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                        }
                         dsShowHelp();
                         bShowHelp = true;
                         keys_touch = 1;
                     }
                     else if ((iTx>10) && (iTx<70) && (iTy>150) && (iTy<190))  // Keyboard
                     { 
-                        if (!keys_touch) soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                        if (!keys_touch) 
+                        {
+                            soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                        }
                         dsShowKeyboard();
                         bShowKeyboard = true;
                         keys_touch = 1;
@@ -1736,7 +1768,8 @@ struct GameSettings_t
     short int yOffset;
     short int xScale;
     short int yScale;
-    short int spare1;
+    UBYTE bButtonMap;
+    UBYTE key_click_disable;
     short int spare2;
     short int spare3;
     short int spare4;
@@ -1766,7 +1799,6 @@ void InitGameSettings(void)
     for (int i=0; i<MAX_GAME_SETTINGS; i++)
     {
         GameDB.GameSettings[i].slot_used = 0;
-        GameDB.GameSettings[i].spare1 = 0;
         GameDB.GameSettings[i].spare2 = 0;
         GameDB.GameSettings[i].spare3 = 0;
         GameDB.GameSettings[i].spare4 = 0;
@@ -1808,8 +1840,10 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].xScale = myGame_scale_x;
         GameDB.GameSettings[idx].yScale = myGame_scale_y;
         GameDB.GameSettings[idx].aButtonMap = bUseA_KeyAsUP;
+        GameDB.GameSettings[idx].bButtonMap = bUseB_KeyAsDN;
         GameDB.GameSettings[idx].xButtonMap = bUseX_KeyAsCR;
         GameDB.GameSettings[idx].blending   = jitter_type;
+        GameDB.GameSettings[idx].key_click_disable = key_click_disable;
         
         GameDB.checksum = 0;
         char *ptr = (char *)GameDB.GameSettings;
@@ -1892,8 +1926,10 @@ void ApplyGameSpecificSettings(void)
       skip_frames       = GameDB.GameSettings[idx].skip_frames;
       ram_type          = GameDB.GameSettings[idx].ram_type;
       bUseA_KeyAsUP     = GameDB.GameSettings[idx].aButtonMap;
+      bUseB_KeyAsDN     = GameDB.GameSettings[idx].bButtonMap;
       bUseX_KeyAsCR     = GameDB.GameSettings[idx].xButtonMap;
       jitter_type       = GameDB.GameSettings[idx].blending;
+      key_click_disable = GameDB.GameSettings[idx].key_click_disable;  
       install_os();        
     }
     else
@@ -1906,7 +1942,9 @@ void ApplyGameSpecificSettings(void)
       skip_frames=0;
       auto_fire=0;
       bUseA_KeyAsUP=0;
+      bUseB_KeyAsDN=0;
       bUseX_KeyAsCR=0;
+      key_click_disable = 0;
       // Never default BASIC, OS, TV-TYPE or MEMORY!
     }
 }
