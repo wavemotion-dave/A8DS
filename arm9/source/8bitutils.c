@@ -54,6 +54,7 @@ int bUseA_KeyAsUP = false;
 int bUseB_KeyAsDN = false;
 int bUseX_KeyAsCR = false;
 int key_click_disable = false;
+int bShowEmuText=true;
 int showFps=false;
 int palett_type = 0;
 int auto_fire=0;
@@ -115,7 +116,7 @@ static void DumpDebugData(void)
 char last_filename[300] = {0};
 void dsWriteFavs(int xpos)
 {
-#if 1
+#if 0
     dsPrintValue(xpos,0,0, (char*)"FAVS SAVE");
     FILE *fp;
     fp = fopen("/roms/A800-Favs.txt", "a+");
@@ -552,26 +553,29 @@ void dsShowRomInfo(void)
     char line1[25];
     char line2[200];
     
-    dsPrintValue(10,2,0, "XEX:  ");
-    strncpy(line1, disk_filename[DISK_XEX], 22);
-    line1[22] = 0;    
-    sprintf(line2,"%-22s", line1);
-    dsPrintValue(10,3,0, line2);
-    
-    dsPrintValue(10,6,0, "D1:  ");
-    strncpy(line1, disk_filename[DISK_1], 22);
-    line1[22] = 0;
-    sprintf(line2,"%-22s", line1);
-    dsPrintValue(10,7,0, line2);
+    if (bShowEmuText)
+    {
+        dsPrintValue(10,2,0, "XEX:  ");
+        strncpy(line1, disk_filename[DISK_XEX], 22);
+        line1[22] = 0;    
+        sprintf(line2,"%-22s", line1);
+        dsPrintValue(10,3,0, line2);
 
-    dsPrintValue(10,11,0, "D2: ");
-    strncpy(line1, disk_filename[DISK_2], 22);
-    line1[22] = 0;
-    sprintf(line2,"%-22s", line1);
-    dsPrintValue(10,12,0, line2);
-    
-    sprintf(line2, "%-5s  %-4s  %-4s", (bHaveBASIC ? "BASIC":" "), (ram_type == RAM_128K ? "128K":"320K"), (tv_mode == TV_NTSC ? "NTSC":"PAL "));
-    dsPrintValue(12,0,0, line2);
+        dsPrintValue(10,6,0, "D1:  ");
+        strncpy(line1, disk_filename[DISK_1], 22);
+        line1[22] = 0;
+        sprintf(line2,"%-22s", line1);
+        dsPrintValue(10,7,0, line2);
+
+        dsPrintValue(10,11,0, "D2: ");
+        strncpy(line1, disk_filename[DISK_2], 22);
+        line1[22] = 0;
+        sprintf(line2,"%-22s", line1);
+        dsPrintValue(10,12,0, line2);
+
+        sprintf(line2, "%-5s  %-4s  %-4s", (bHaveBASIC ? "BASIC":" "), (ram_type == RAM_128K ? "128K":"320K"), (tv_mode == TV_NTSC ? "NTSC":"PAL "));
+        dsPrintValue(12,0,0, line2);
+    }
 }
 
 #define HASH_FILE_LEN  (128*1024)
@@ -741,7 +745,9 @@ const struct options_t Option_Table[] =
                                     "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode, 5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
     {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,       2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,      "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
-    {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,  2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "                  "},
+    {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,  2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS", "                  "},
+    {"EMULATOR TXT",{"FF",          "ON"},                              &bShowEmuText,       2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ", "INFO ON MAIN SCRN "},
+    
     {NULL,          {"",            ""},                                NULL,               2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
 
