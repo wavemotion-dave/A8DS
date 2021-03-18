@@ -60,6 +60,8 @@ int tv_mode          = TV_NTSC;
 int disable_basic    = TRUE;
 int skip_frames      = FALSE;
 
+char disk_filename[DISK_MAX][256];
+
 void Warmstart(void) 
 {
 	if (machine_type == MACHINE_OSA || machine_type == MACHINE_OSB) 
@@ -131,16 +133,21 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
     CART_Insert(bEnableBasic);
   
 	int type = Atari800_DetectFileType(filename);
-
+    
 	switch (type) 
     {
     case AFILE_ATR:
+      strcpy(disk_filename[DISK_XEX], "EMPTY");
+      strcpy(disk_filename[diskno], filename);
       if (!SIO_Mount(diskno, filename, readonly))
         return AFILE_ERROR;
       if (reboot)
         Coldstart();
       break;
     case AFILE_XEX:
+      strcpy(disk_filename[DISK_1], "EMPTY");
+      strcpy(disk_filename[DISK_2], "EMPTY");
+      strcpy(disk_filename[DISK_XEX], filename);
       if (!BINLOAD_Loader(filename))
         return AFILE_ERROR;
       break;
@@ -156,6 +163,10 @@ int Atari800_Initialise(void)
     RTIME_Initialise();
     SIO_Initialise (&argc, argv);
     CASSETTE_Initialise(&argc, argv);
+    
+    strcpy(disk_filename[DISK_XEX], "EMPTY");
+    strcpy(disk_filename[DISK_1], "EMPTY");
+    strcpy(disk_filename[DISK_2], "EMPTY");    
 
     INPUT_Initialise();
 

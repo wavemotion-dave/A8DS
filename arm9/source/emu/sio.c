@@ -49,7 +49,7 @@
 #undef DEBUG_PRO
 #undef DEBUG_VAPI
 
-void dsShowDiskActivity(void);
+void dsShowDiskActivity(int);
 
 /* If ATR image is in double density (256 bytes per sector),
    then the boot sectors (sectors 1-3) can be:
@@ -650,7 +650,7 @@ int SIO_ReadSector(int unit, int sector, UBYTE *buffer)
 	if (BINLOAD_start_binloading)
 		return BINLOAD_LoaderStart(buffer);
 
-    dsShowDiskActivity();
+    dsShowDiskActivity(unit);
     
 	io_success[unit] = -1;
 	if (SIO_drive_status[unit] == SIO_OFF)
@@ -837,7 +837,7 @@ int SIO_WriteSector(int unit, int sector, const UBYTE *buffer)
 	if (SIO_drive_status[unit] != SIO_READ_WRITE || sector <= 0 || sector > sectorcount[unit])
 		return 'E';
     
-    dsShowDiskActivity();
+    dsShowDiskActivity(unit);
 	SIO_last_op = SIO_LAST_WRITE;
 	SIO_last_op_time = 1;
 	SIO_last_drive = unit + 1;

@@ -303,9 +303,9 @@ UBYTE PENV_input __attribute__((section(".dtcm")))= 0xff;
 
 static UWORD screenaddr __attribute__((section(".dtcm")));		/* Screen Pointer */
 static UBYTE IR __attribute__((section(".dtcm")));				/* Instruction Register */
-static UBYTE anticmode __attribute__((section(".dtcm")));			/* Antic mode */
-static UBYTE dctr __attribute__((section(".dtcm")));				/* Delta Counter */
-static UBYTE lastline __attribute__((section(".dtcm")));			/* dctr limit */
+static UBYTE anticmode __attribute__((section(".dtcm")));		/* Antic mode */
+static UBYTE dctr __attribute__((section(".dtcm")));			/* Delta Counter */
+static UBYTE lastline __attribute__((section(".dtcm")));		/* dctr limit */
 static UBYTE need_dl __attribute__((section(".dtcm")));			/* boolean: fetch DL next line */
 static UBYTE vscrol_off __attribute__((section(".dtcm")));		/* boolean: displaying line ending VSC */
 
@@ -460,14 +460,6 @@ UWORD cl_lookup[128] __attribute__((section(".dtcm")));
 		WRITE_VIDEO(ptr++, ((UWORD *) art_curtable)[(screendata_tally & 0x003fc0) >> 5]); \
 		WRITE_VIDEO(ptr++, ((UWORD *) art_curtable)[((screendata_tally & 0x003fc0) >> 5) + 1]); \
 	}
-
-#define DRAW_ARTIF_NEW {\
-		WRITE_VIDEO(ptr++, art_lookup_new[(screendata_tally & 0x03f000) >> 12]); \
-		WRITE_VIDEO(ptr++, art_lookup_new[(screendata_tally & 0x00fc00) >> 10]); \
-		WRITE_VIDEO(ptr++, art_lookup_new[(screendata_tally & 0x003f00) >> 8]); \
-		WRITE_VIDEO(ptr++, art_lookup_new[(screendata_tally & 0x000fc0) >> 6]); \
-	}
-
 
 
 /* Hi-res modes optimizations
@@ -684,11 +676,6 @@ static void pmg_dma(void) {
 /* Artifacting ------------------------------------------------------------ */
 
 int global_artif_mode=0;
-
-static UWORD art_lookup_new[64];
-static UWORD art_colour1_new;
-static UWORD art_colour2_new;
-
 
 static ULONG art_lookup_normal[256];
 static ULONG art_lookup_reverse[256];
@@ -1075,33 +1062,6 @@ static void draw_an_gtia11(const ULONG *t_pm_scanline_ptr)
 	FOUR_LOOP_END(data)\
 }
 
-#define INIT_ARTIF_NEW art_lookup_new[0] = art_lookup_new[1] = art_lookup_new[2] = art_lookup_new[3] = \
-	art_lookup_new[16] = art_lookup_new[17] = art_lookup_new[18] = art_lookup_new[19] = \
-	art_lookup_new[32] = art_lookup_new[33] = art_lookup_new[34] = art_lookup_new[35] = \
-	art_lookup_new[48] = art_lookup_new[49] = art_lookup_new[50] = art_lookup_new[51] = cl_lookup[C_PF2];\
-	art_lookup_new[7] = art_lookup_new[23] = art_lookup_new[39] = art_lookup_new[55] = (cl_lookup[C_PF2] & HIRES_MASK_01) | hires_lum(0x40);\
-	art_lookup_new[56] = art_lookup_new[57] = art_lookup_new[58] = art_lookup_new[59] = (cl_lookup[C_PF2] & HIRES_MASK_10) | hires_lum(0x80);\
-	art_lookup_new[12] = art_lookup_new[13] = art_lookup_new[14] = art_lookup_new[15] = \
-	art_lookup_new[28] = art_lookup_new[29] = art_lookup_new[30] = art_lookup_new[31] = \
-	art_lookup_new[44] = art_lookup_new[45] = art_lookup_new[46] = art_lookup_new[47] = \
-	art_lookup_new[60] = art_lookup_new[61] = art_lookup_new[62] = art_lookup_new[63] = (cl_lookup[C_PF2] & 0xf0f0) | hires_lum(0xc0);\
-	if ((cl_lookup[C_PF2] & 0x0F00) != (cl_lookup[C_PF1] & 0x0F00)) { \
-		art_lookup_new[4] = art_lookup_new[5] = art_lookup_new[36] = art_lookup_new[37] = \
-		art_lookup_new[52] = art_lookup_new[53 ]= ((art_colour1_new & BYTE1_MASK & ~(HIRES_LUM_01))) | hires_lum(0x40) | (cl_lookup[C_PF2] & BYTE0_MASK);\
-		art_lookup_new[20] = art_lookup_new[21] = (art_colour1_new & 0xf0f0) | hires_lum(0xc0);\
-		art_lookup_new[8] = art_lookup_new[9] = art_lookup_new[11] = art_lookup_new[40] = \
-		art_lookup_new[43] = ((art_colour2_new & BYTE0_MASK & ~(HIRES_LUM_10))) | hires_lum(0x80) | (cl_lookup[C_PF2] & BYTE1_MASK);\
-		art_lookup_new[10] = art_lookup_new[41] = art_lookup_new[42] = (art_colour2_new & 0xf0f0) | hires_lum(0xc0);\
-		}\
-	else {\
-		art_lookup_new[4] = art_lookup_new[5] = art_lookup_new[36] = art_lookup_new[37] = \
-		art_lookup_new[52] = art_lookup_new[53 ]= art_lookup_new[20] = art_lookup_new[21] = \
-		art_lookup_new[8] = art_lookup_new[9] = art_lookup_new[11] = art_lookup_new[40] = \
-		art_lookup_new[43] = art_lookup_new[10] = art_lookup_new[41] = art_lookup_new[42] = cl_lookup[C_PF2];\
-		}\
-	art_lookup_new[6] = art_lookup_new[22] = art_lookup_new[38] = art_lookup_new[54] = (cl_lookup[C_PF2] & HIRES_MASK_01) | hires_lum(0x40);\
-	art_lookup_new[24] = art_lookup_new[25] = art_lookup_new[26] = art_lookup_new[27] = (cl_lookup[C_PF2] & HIRES_MASK_10) | hires_lum(0x80);
-
 #define DO_PMG_HIRES_NEW(data, tally) {\
 	const UBYTE *c_pm_scanline_ptr = (const UBYTE *) t_pm_scanline_ptr;\
 	int pm_pixel;\
@@ -1188,39 +1148,6 @@ static void draw_antic_2_artif(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr
 	do_border();
 }
 
-static void draw_antic_2_artif_new(int nchars, const UBYTE *antic_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
-{
-	ULONG screendata_tally;
-	ULONG pmtally;
-	UBYTE screendata = *antic_memptr++;
-	UBYTE chdata;
-	INIT_ANTIC_2
-	INIT_ARTIF_NEW
-	GET_CHDATA_ANTIC_2
-	screendata_tally = chdata;
-	setup_art_colours();
-
-	CHAR_LOOP_BEGIN
-		UBYTE screendata = *antic_memptr++;
-		ULONG chdata;
-
-		GET_CHDATA_ANTIC_2
-		screendata_tally <<= 8;
-		screendata_tally |= chdata;
-		if (IS_ZERO_ULONG(t_pm_scanline_ptr))
-			DRAW_ARTIF_NEW
-		else {
-			chdata = screendata_tally >> 8;
-			pmtally = ((screendata_tally & 0x03f000) << 6) |
-					  ((screendata_tally & 0x00fc00) << 2) |
-					  ((screendata_tally & 0x003f00) >> 2) |
-					  ((screendata_tally & 0x000fc0) >> 6);
-			DO_PMG_HIRES_NEW(chdata,pmtally)
-		}
-		t_pm_scanline_ptr++;
-	CHAR_LOOP_END
-	do_border();
-}
 
 static void prepare_an_antic_2(int nchars, const UBYTE *ANTIC_memptr, const ULONG *t_pm_scanline_ptr)
 {
@@ -1920,32 +1847,6 @@ static void draw_antic_f_artif(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr
 	do_border();
 }
 
-static void draw_antic_f_artif_new(int nchars, const UBYTE *antic_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
-{
-	ULONG pmtally;
-	ULONG screendata_tally = *antic_memptr++;
-	INIT_ARTIF_NEW
-
-	setup_art_colours();
-	CHAR_LOOP_BEGIN
-		int screendata = *antic_memptr++;
-		screendata_tally <<= 8;
-		screendata_tally |= screendata;
-		if (IS_ZERO_ULONG(t_pm_scanline_ptr))
-			DRAW_ARTIF_NEW
-		else {
-			screendata = antic_memptr[-2];
-			pmtally = ((screendata_tally & 0x03f000) << 6) |
-					  ((screendata_tally & 0x00fc00) << 2) |
-					  ((screendata_tally & 0x003f00) >> 2) |
-					  ((screendata_tally & 0x000fc0) >> 6);
-			DO_PMG_HIRES_NEW(screendata,pmtally)
-		}
-		t_pm_scanline_ptr++;
-	CHAR_LOOP_END
-	do_border();
-}
-
 
 static void prepare_an_antic_f(int nchars, const UBYTE *ANTIC_memptr, const ULONG *t_pm_scanline_ptr)
 {
@@ -2163,7 +2064,6 @@ static draw_antic_function draw_antic_ptr = draw_antic_8;
 /* pointer to current GTIA mode blank drawing routine */
 static void (*draw_antic_0_ptr)(void) = draw_antic_0;
 
-int ANTIC_artif_new = false;
 /* Artifacting ------------------------------------------------------------ */
 
 void ANTIC_UpdateArtifacting(void)
@@ -2196,23 +2096,8 @@ void ANTIC_UpdateArtifacting(void)
 		return;
 	}
 
-	if (ANTIC_artif_new) {
-		static UWORD new_art_colour_table[4][2] = {
-			{0x4040, 0x8080},
-			{0x8080, 0x4040},
-			{0x8080, 0xd0d0},
-			{0xd0d0, 0x8080}
-		};
-		draw_antic_table[0][2] = draw_antic_table[0][3] = draw_antic_2_artif_new;
-		draw_antic_table[0][0xf] = draw_antic_f_artif_new;
-		art_colour1_new = new_art_colour_table[global_artif_mode - 1][0];
-		art_colour2_new = new_art_colour_table[global_artif_mode - 1][1];
-	}
-	else
-    {
-	  draw_antic_table[0][2] = draw_antic_table[0][3] = draw_antic_2_artif;
-	  draw_antic_table[0][0xf] = draw_antic_f_artif;
-    }
+  draw_antic_table[0][2] = draw_antic_table[0][3] = draw_antic_2_artif;
+  draw_antic_table[0][0xf] = draw_antic_f_artif;
 
 	art_colours = (global_artif_mode <= 4 ? art_colour_table[global_artif_mode - 1] : art_colour_table[2]);
 

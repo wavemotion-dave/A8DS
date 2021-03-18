@@ -17,6 +17,14 @@ extern int debug[];
 
 extern int os_type;
 
+#define DISK_XEX    0
+#define DISK_1      1
+#define DISK_2      2
+
+#define DISK_MAX    3
+
+extern char disk_filename[DISK_MAX][256];
+
 
 /* Fundamental declarations ---------------------------------------------- */
 

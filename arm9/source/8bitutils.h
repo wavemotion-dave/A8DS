@@ -41,7 +41,7 @@ extern unsigned int dsWaitForRom(void);
 extern unsigned int dsWaitOnMenu(unsigned int actState);
 extern void dsPrintValue(int x, int y, unsigned int isSelect, char *pchStr);
 extern void dsInstallSoundEmuFIFO(void);
-extern ITCM_CODE void dsMainLoop(void);
+extern void dsMainLoop(void);
 extern int a8Filescmp (const void *c1, const void *c2);
 extern void a8FindFiles(void);
 

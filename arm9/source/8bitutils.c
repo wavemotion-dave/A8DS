@@ -30,8 +30,6 @@
 #include "altirraos_xl.h"
 #include "altirra_basic.h"
 
-#define DISK_1      1
-
 FICA_A8 a8romlist[1024];  
 unsigned int count8bit=0, countfiles=0, ucFicAct=0;
 int gTotalAtariFrames = 0;
@@ -117,7 +115,7 @@ static void DumpDebugData(void)
 char last_filename[300] = {0};
 void dsWriteFavs(int xpos)
 {
-#if 0
+#if 1
     dsPrintValue(xpos,0,0, (char*)"FAVS SAVE");
     FILE *fp;
     fp = fopen("/roms/A800-Favs.txt", "a+");
@@ -141,19 +139,23 @@ void dsClearDiskActivity(void)
     char buf[5];
     
     buf[0] = ' ';
-    buf[1] = 0;
-    dsPrintValue(15,0,0, buf);
+    buf[1] = ' ';
+    buf[2] = ' ';
+    buf[3] = 0;
+    dsPrintValue(5,0,0, buf);
 }
 
-void dsShowDiskActivity(void)
+void dsShowDiskActivity(int drive)
 {
     static char activity[7] = {'*','+','*','*','+','+','+'};
     char buf[5];
     static u8 actidx=0;
     
-    buf[1] = 0;
-    buf[0] = activity[++actidx & 0x7];
-    dsPrintValue(15,0,0, buf);
+    buf[0] = 'D';
+    buf[1] = '1'+drive;
+    buf[2] = activity[++actidx & 0x7];
+    buf[3] = 0;
+    dsPrintValue(5,0,0, buf);
 }
 
 void VsoundHandler(void) 
@@ -544,6 +546,33 @@ void install_os(void)
     }
 }
 
+void dsShowRomInfo(void)
+{
+    extern char disk_filename[DISK_MAX][256];
+    char line1[25];
+    char line2[200];
+    
+    dsPrintValue(10,2,0, "XEX:  ");
+    strncpy(line1, disk_filename[DISK_XEX], 22);
+    line1[22] = 0;    
+    sprintf(line2,"%-22s", line1);
+    dsPrintValue(10,3,0, line2);
+    
+    dsPrintValue(10,6,0, "D1:  ");
+    strncpy(line1, disk_filename[DISK_1], 22);
+    line1[22] = 0;
+    sprintf(line2,"%-22s", line1);
+    dsPrintValue(10,7,0, line2);
+
+    dsPrintValue(10,11,0, "D2: ");
+    strncpy(line1, disk_filename[DISK_2], 22);
+    line1[22] = 0;
+    sprintf(line2,"%-22s", line1);
+    dsPrintValue(10,12,0, line2);
+    
+    sprintf(line2, "%-5s  %-4s  %-4s", (bHaveBASIC ? "BASIC":" "), (ram_type == RAM_128K ? "128K":"320K"), (tv_mode == TV_NTSC ? "NTSC":"PAL "));
+    dsPrintValue(12,0,0, line2);
+}
 
 #define HASH_FILE_LEN  (128*1024)
 unsigned char tempFileBuf[HASH_FILE_LEN];
@@ -552,7 +581,10 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
 {
     if (strcmp(filename, last_filename) != 0)
     {
-        strcpy(last_filename, filename);
+        if (disk_num != DISK_2) // Never save D2 as the boot disk...
+        {
+            strcpy(last_filename, filename);
+        }
     }
     
     // Get the hash of the file... up to 128k (good enough)
@@ -602,6 +634,8 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
       TIMER0_CR=0;
       TIMER0_DATA=0;
       TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;        
+
+      dsShowRomInfo();
     }
 }
 
@@ -670,6 +704,7 @@ bool dsWaitOnQuit(void) {
   dmaCopy((void *) bgBottomPal,(u16*) BG_PALETTE_SUB,256*2);
   dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);  
+  dsShowRomInfo();
 
   return bRet;
 }
@@ -826,21 +861,25 @@ void dsChooseOptions(int bOkayToChangePalette)
     dmaVal = *(bgGetMapPtr(bg1b) +31*32);
     dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
     
+    dsShowRomInfo();
     // Give a third of a second time delay...
     for (int i=0; i<20; i++)
     {
         swiWaitForVBlank();
     }
+    
 
     return;    
 }
 
+char file_load_id[10];
 bool bLoadReadOnly = true;
 bool bLoadAndBoot = true;
 void dsDisplayLoadOptions(void)
 {
   char tmpBuf[32];
-    
+  
+  dsPrintValue(0,0,0,file_load_id);
   sprintf(tmpBuf, "%-4s %s", (tv_mode == TV_NTSC ? "NTSC":"PAL"), (bHaveBASIC ? "W BASIC":"       "));
   dsPrintValue(19,0,0,tmpBuf);
   sprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
@@ -1105,6 +1144,8 @@ unsigned int dsWaitForRom(void)
   dmaCopy((void *) bgBottomPal,(u16*) BG_PALETTE_SUB,256*2);
   dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+    
+  dsShowRomInfo();
   
   return bRet;
 }
@@ -1143,6 +1184,7 @@ void dsRestoreBottomScreen(void)
   unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
   swiWaitForVBlank();
+  dsShowRomInfo();
 }
 
 unsigned int dsWaitOnMenu(unsigned int actState) 
@@ -1150,33 +1192,47 @@ unsigned int dsWaitOnMenu(unsigned int actState)
   unsigned int uState=A8_PLAYINIT;
   unsigned int keys_pressed;
   bool bDone=false, romSel;
+  bool bShowHelp=false;
   int iTx,iTy;
   
   while (!bDone) {
     // wait for stylus
     keys_pressed = keysCurrent();
-    if (keys_pressed & KEY_TOUCH) {
+    if (keys_pressed & KEY_TOUCH) 
+    {
       touchPosition touch;
       touchRead(&touch);
       iTx = touch.px;
       iTy = touch.py;
-      if ((iTx>206) && (iTx<250) && (iTy>110) && (iTy<129))  { // 207,111  -> 249,128   quit
-        soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
-        bDone=dsWaitOnQuit();
-        if (bDone) uState=A8_QUITSTDS;
+        
+      if (bShowHelp)
+      {
+        bShowHelp=false;
+        dsRestoreBottomScreen();
       }
-        else if ((iTx>220) && (iTx<250) && (iTy>160) && (iTy<185)) {     // Gear Icon = Settings
-          dsChooseOptions(FALSE);
-        }
-       
-       else if ((iTx>70) && (iTx<180) && (iTy>12) && (iTy<80)) {     // cartridge slot (wide range)
-        bDone=true; 
-        // Find files in current directory and show it 
-        a8FindFiles();
-        romSel=dsWaitForRom();
-        if (romSel) { uState=A8_PLAYINIT; 
-          dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
-        else { uState=actState; }
+      else
+      {
+            if ((iTx>220) && (iTx<250) && (iTy>160) && (iTy<185))  // Gear Icon = Settings
+            {     
+                dsChooseOptions(FALSE);
+            }
+            else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75)) // cartridge slot (wide range)
+            {     
+                bDone=true; 
+                // Find files in current directory and show it 
+                a8FindFiles();
+                strcpy(file_load_id, "XEX/D1");
+                romSel=dsWaitForRom();
+                if (romSel) { uState=A8_PLAYINIT; 
+                  dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
+                else { uState=actState; }
+            }
+            else if ((iTx>35) && (iTx<55) && (iTy>150) && (iTy<180))  // Help
+            { 
+                dsShowHelp();
+                bShowHelp = true;
+                swiWaitForVBlank();swiWaitForVBlank();swiWaitForVBlank();swiWaitForVBlank();swiWaitForVBlank();                
+            }
       }
     }
     swiWaitForVBlank();
@@ -1366,7 +1422,7 @@ void dsInstallSoundEmuFIFO(void)
     fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
 }
 
-ITCM_CODE void dsMainLoop(void) 
+void dsMainLoop(void) 
 {
   static int last_key_code = -1;
   static bool bFirstLoad = true;
@@ -1439,6 +1495,7 @@ ITCM_CODE void dsMainLoop(void)
             TIMER1_DATA = 0;
             TIMER1_CR=TIMER_ENABLE | TIMER_DIV_1024;
         
+            if (gTotalAtariFrames == (tv_mode == TV_NTSC ? 61:51)) gTotalAtariFrames = (tv_mode == TV_NTSC ? 60:50);
             if (showFps) { siprintf(fpsbuf,"%03d",gTotalAtariFrames); dsPrintValue(0,0,0, fpsbuf); } // Show FPS
             if (full_speed) dsPrintValue(30,0,0,"FS");
             gTotalAtariFrames = 0;
@@ -1490,6 +1547,8 @@ ITCM_CODE void dsMainLoop(void)
             touchRead(&touch);
             iTx = touch.px;
             iTy = touch.py;
+            debug[0]=iTx;
+            debug[1]=iTy;
             
             // ---------------------------------------------------------------------------------------
             // START, SELECT and OPTION respond immediately - that is, we keep the buttons pressed 
@@ -1497,7 +1556,7 @@ ITCM_CODE void dsMainLoop(void)
             // ---------------------------------------------------------------------------------------
             if (!(bShowHelp || bShowKeyboard))
             {
-                if ((iTx>130) && (iTx<157) && (iTy>122) && (iTy<150))  // START
+                if ((iTx>15) && (iTx<66) && (iTy>120) && (iTy<143))  // START
                 { 
                     if (!keys_touch) 
                     {
@@ -1506,7 +1565,7 @@ ITCM_CODE void dsMainLoop(void)
                     keys_touch=1;
                     key_consol &= ~CONSOL_START;
                 }
-                else if ((iTx>160) && (iTx<185) && (iTy>122) && (iTy<150))  // SELECT
+                else if ((iTx>73) && (iTx<127) && (iTy>120) && (iTy<143))  // SELECT
                 { 
                     if (!keys_touch)
                     {
@@ -1515,7 +1574,7 @@ ITCM_CODE void dsMainLoop(void)
                     keys_touch=1;
                     key_consol &= ~CONSOL_SELECT;
                 }
-                else if ((iTx>190) && (iTx<210) && (iTy>122) && (iTy<150))  // OPTION
+                else if ((iTx>133) && (iTx<186) && (iTy>120) && (iTy<143))  // OPTION
                 { 
                     if (!keys_touch)
                     {
@@ -1561,15 +1620,18 @@ ITCM_CODE void dsMainLoop(void)
                 }
                 else
                 {
-                    if ((iTx>240) && (iTx<256) && (iTy>0) && (iTy<22))  { // Full Speed Toggle ... upper corner...
+                    if ((iTx>240) && (iTx<256) && (iTy>0) && (iTy<18))   // Full Speed Toggle ... upper corner...
+                    {
                        if (keys_touch == 0)
                        {
                            full_speed = 1-full_speed; 
+                           if (full_speed) showFps=1;
                            dsPrintValue(30,0,0,"  ");
                            keys_touch = 1;
                        }
                     }
-                    else if ((iTx>=0) && (iTx<16) && (iTy>0) && (iTy<22))  { // Show FPS
+                    else if ((iTx>=0) && (iTx<16) && (iTy>0) && (iTy<18))   // Show FPS
+                    {
                        if (keys_touch == 0)
                        {
                            showFps= 1-showFps;
@@ -1577,7 +1639,7 @@ ITCM_CODE void dsMainLoop(void)
                            keys_touch = 1;
                        }
                     }
-                    else if ((iTx>215) && (iTx<240) && (iTy>122) && (iTy<150))  // RESET (just reloads the game... not sure what else to do here)
+                    else if ((iTx>192) && (iTx<250) && (iTy>120) && (iTy<143))  // RESET (just reloads the game... not sure what else to do here)
                     { 
                         if (!keys_touch)
                         {
@@ -1588,7 +1650,7 @@ ITCM_CODE void dsMainLoop(void)
                         irqEnable(IRQ_TIMER2); 
                         fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                     }
-                    else if ((iTx>130) && (iTx<157) && (iTy>160) && (iTy<180))  // HELP
+                    else if ((iTx>35) && (iTx<55) && (iTy>150) && (iTy<180))  // Help
                     { 
                         if (!keys_touch) 
                         {
@@ -1598,7 +1660,7 @@ ITCM_CODE void dsMainLoop(void)
                         bShowHelp = true;
                         keys_touch = 1;
                     }
-                    else if ((iTx>10) && (iTx<70) && (iTy>150) && (iTy<190))  // Keyboard
+                    else if ((iTx>88) && (iTx<175) && (iTy>150) && (iTy<180))  // Keyboard
                     { 
                         if (!keys_touch) 
                         {
@@ -1608,26 +1670,39 @@ ITCM_CODE void dsMainLoop(void)
                         bShowKeyboard = true;
                         keys_touch = 1;
                     }
-                    else if ((iTx>35) && (iTx<56) && (iTy>89) && (iTy<106))  // POWER
+                    else if ((iTx>999) && (iTx<56) && (iTy>89) && (iTy<106))  // POWER TODO:zzz
                     { 
                       irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                       if (dsWaitOnQuit()) etatEmu=A8_QUITSTDS;
                       else { irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); }
                     }
-                    else if ((iTx>220) && (iTx<250) && (iTy>160) && (iTy<185)) {     // Gear Icon = Settings
+                    else if ((iTx>204) && (iTx<235) && (iTy>150) && (iTy<180)) {     // Gear Icon = Settings
                       irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       keys_touch=1;
                       dsChooseOptions(TRUE);
                       irqEnable(IRQ_TIMER2);
                       fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                     }
-                    else if ((iTx>70) && (iTx<180) && (iTy>12) && (iTy<80)) {     // cartridge slot (wide range)
+                    else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75)) {     // XEX and D1 Disk Drive
                       irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       // Find files in current directory and show it 
                       keys_touch=1;
+                      strcpy(file_load_id, "XEX/D1");
+                      a8FindFiles();
                       romSel=dsWaitForRom();
                       if (romSel) { etatEmu=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
+                      else { irqEnable(IRQ_TIMER2); }
+                      fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+                    }
+                    else if ((iTx>5) && (iTx<80) && (iTy>77) && (iTy<114)) {     // D2 Disk Drive
+                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
+                      // Find files in current directory and show it 
+                      keys_touch=1;
+                      strcpy(file_load_id, "D2");
+                      a8FindFiles();
+                      romSel=dsWaitForRom();
+                      if (romSel) { etatEmu=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_2, false, bLoadReadOnly); }
                       else { irqEnable(IRQ_TIMER2); }
                       fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                     }
@@ -1729,10 +1804,13 @@ void a8FindFiles(void)
       }
       else 
       {
-          if ( (strcasecmp(strrchr(filenametmp, '.'), ".xex") == 0) )  {
-            a8romlist[count8bit].directory = false;
-            strcpy(a8romlist[count8bit].filename,filenametmp);
-            count8bit++;countfiles++;
+          if (strcmp(file_load_id,"D2")!=0)      // For D2: we don't load .xex
+          {
+              if ( (strcasecmp(strrchr(filenametmp, '.'), ".xex") == 0) )  {
+                a8romlist[count8bit].directory = false;
+                strcpy(a8romlist[count8bit].filename,filenametmp);
+                count8bit++;countfiles++;
+              }
           }
           if ( (strcasecmp(strrchr(filenametmp, '.'), ".atr") == 0) )  {
             a8romlist[count8bit].directory = false;
