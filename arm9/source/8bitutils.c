@@ -855,6 +855,7 @@ void dsChooseOptions(int bOkayToChangePalette)
     
     bHaveBASIC = (basic_opt ? 1:0);
     basic_type = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);
+    if (ram_type == 1) ram_size = RAM_320_RAMBO; else ram_size = RAM_128K;
 
     install_os();
     
