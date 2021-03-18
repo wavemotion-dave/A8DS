@@ -573,7 +573,7 @@ void dsShowRomInfo(void)
         sprintf(line2,"%-22s", line1);
         dsPrintValue(10,12,0, line2);
 
-        sprintf(line2, "%-5s  %-4s  %-4s", (bHaveBASIC ? "BASIC":" "), (ram_type == RAM_128K ? "128K":"320K"), (tv_mode == TV_NTSC ? "NTSC":"PAL "));
+        sprintf(line2, "%-5s  %-4s  %-4s", (bHaveBASIC ? "BASIC":" "), (ram_size == RAM_128K ? "128K":"320K"), (tv_mode == TV_NTSC ? "NTSC":"PAL "));
         dsPrintValue(12,0,0, line2);
     }
 }
@@ -746,7 +746,7 @@ const struct options_t Option_Table[] =
     {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,       2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,      "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
     {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,  2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS", "                  "},
-    {"EMULATOR TXT",{"FF",          "ON"},                              &bShowEmuText,       2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ", "INFO ON MAIN SCRN "},
+    {"EMULATOR TXT",{"OFF",        "ON"},                              &bShowEmuText,       2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ", "INFO ON MAIN SCRN "},
     
     {NULL,          {"",            ""},                                NULL,               2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
@@ -1428,7 +1428,7 @@ void dsInstallSoundEmuFIFO(void)
     fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
 }
 
-void dsMainLoop(void) 
+ITCM_CODE void dsMainLoop(void) 
 {
   static int last_key_code = -1;
   static bool bFirstLoad = true;
