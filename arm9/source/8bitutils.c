@@ -117,7 +117,7 @@ char last_filename[300] = {0};
 void dsWriteFavs(int xpos)
 {
 #if 0
-    dsPrintValue(xpos,0,0, (char*)"FAVS SAVE");
+    dsPrintValue(xpos,0,0, (char*)"FAV SAVE");
     FILE *fp;
     fp = fopen("/roms/A800-Favs.txt", "a+");
     if (fp != NULL)
@@ -127,13 +127,12 @@ void dsWriteFavs(int xpos)
         fclose(fp);
     }
 #else 
-    dsPrintValue(xpos,0,0, (char*)"CONFIG SAVE");
+    dsPrintValue(xpos,0,0, (char*)"CFG SAVE");
     WriteGameSettings();
 #endif    
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    dsPrintValue(xpos,0,0, (char*)"           ");
+    dsPrintValue(xpos,0,0, (char*)"        ");
 }
-
 
 void dsClearDiskActivity(void)
 {
@@ -561,17 +560,41 @@ void dsShowRomInfo(void)
         sprintf(line2,"%-22s", line1);
         dsPrintValue(10,3,0, line2);
 
-        dsPrintValue(10,6,0, "D1:  ");
+        sprintf(line1, "D1: %s", (disk_readonly[DISK_1] ? "[R]":"[W]"));
+        dsPrintValue(10,6,0, line1);
         strncpy(line1, disk_filename[DISK_1], 22);
         line1[22] = 0;
         sprintf(line2,"%-22s", line1);
         dsPrintValue(10,7,0, line2);
+        if (strlen(disk_filename[DISK_1]) > 26)
+        {
+            strncpy(line1, &disk_filename[DISK_1][22], 22);
+            line1[22] = 0;
+            sprintf(line2,"%-22s", line1);
+        }
+        else
+        {
+            sprintf(line2,"%-22s", " ");
+        }
+        dsPrintValue(10,8,0, line2);
 
-        dsPrintValue(10,11,0, "D2: ");
+        sprintf(line1, "D2: %s", (disk_readonly[DISK_2] ? "[R]":"[W]"));
+        dsPrintValue(10,11,0, line1);
         strncpy(line1, disk_filename[DISK_2], 22);
         line1[22] = 0;
         sprintf(line2,"%-22s", line1);
         dsPrintValue(10,12,0, line2);
+        if (strlen(disk_filename[DISK_2]) > 26)
+        {
+            strncpy(line1, &disk_filename[DISK_2][22], 22);
+            line1[22] = 0;
+            sprintf(line2,"%-22s", line1);
+        }
+        else
+        {
+            sprintf(line2,"%-22s", " ");
+        }
+        dsPrintValue(10,13,0, line2);
 
         sprintf(line2, "%-5s  %-4s  %-4s", (bHaveBASIC ? "BASIC":" "), (ram_size == RAM_128K ? "128K":"320K"), (tv_mode == TV_NTSC ? "NTSC":"PAL "));
         dsPrintValue(12,0,0, line2);
@@ -580,7 +603,7 @@ void dsShowRomInfo(void)
 
 #define HASH_FILE_LEN  (128*1024)
 unsigned char tempFileBuf[HASH_FILE_LEN];
-unsigned char last_hash[33];
+unsigned char last_hash[33] = {'1','2','3','4','5','Z',0};
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly) 
 {
     if (strcmp(filename, last_filename) != 0)
@@ -591,14 +614,17 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
         }
     }
     
-    // Get the hash of the file... up to 128k (good enough)
-    memset(last_hash, 'Z', 33);
-    FILE *fp = fopen(filename, "rb");
-    if (fp)
-    {   
-        unsigned int file_len = fread(tempFileBuf, 1, HASH_FILE_LEN, fp);
-        hash_Compute((const byte*)tempFileBuf, file_len, (byte *)last_hash);
-        fclose(fp);           
+    if (disk_num != DISK_2) // Never save D2 as the boot disk...
+    {
+        // Get the hash of the file... up to 128k (good enough)
+        memset(last_hash, 'Z', 33);
+        FILE *fp = fopen(filename, "rb");
+        if (fp)
+        {   
+            unsigned int file_len = fread(tempFileBuf, 1, HASH_FILE_LEN, fp);
+            hash_Compute((const byte*)tempFileBuf, file_len, (byte *)last_hash);
+            fclose(fp);           
+        }
     }
   
     // Free buffer if needed
@@ -787,7 +813,6 @@ void dsChooseOptions(int bOkayToChangePalette)
         if (Option_Table[idx].label == NULL) break;   
     }
     
-    dsPrintValue(2,22, 0, "  UP/DOWN TO SELECT OPTION  ");
     dsPrintValue(2,23, 0, "A=TOGGLE, B=EXIT, START=SAVE");
     optionHighlighted = 0;
     while (!bDone) 
@@ -891,8 +916,11 @@ void dsDisplayLoadOptions(void)
   dsPrintValue(19,0,0,tmpBuf);
   sprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
   dsPrintValue(14,1,0,tmpBuf);
-  sprintf(tmpBuf, "[%c]  BOOT LOAD", (bLoadAndBoot ? 'Y':' '));
-  dsPrintValue(14,2,0,tmpBuf);    
+  if (strcmp(file_load_id,"D2")!=0)      // For D2: we don't allow boot load
+  {
+      sprintf(tmpBuf, "[%c]  BOOT LOAD", (bLoadAndBoot ? 'Y':' '));
+      dsPrintValue(14,2,0,tmpBuf);    
+  }
 }
 
 void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel) 
@@ -952,14 +980,23 @@ unsigned int dsWaitForRom(void)
   
   nbRomPerPage = (count8bit>=17 ? 17 : count8bit);
   uNbRSPage = (count8bit>=5 ? 5 : count8bit);
-  if (ucFicAct>count8bit-nbRomPerPage) {
+  if (ucFicAct>count8bit)
+  {
+      firstRomDisplay=0;
+      ucFicAct=0;
+      romSelected=0;
+  }
+  if (ucFicAct>count8bit-nbRomPerPage) 
+  {
     firstRomDisplay=count8bit-nbRomPerPage;
     romSelected=ucFicAct-count8bit+nbRomPerPage;
   }
-  else {
+  else 
+  {
     firstRomDisplay=ucFicAct;
     romSelected=0;
   }
+
   dsDisplayFiles(firstRomDisplay,romSelected);
   while (!bDone) {
     if (keysCurrent() & KEY_UP) {
@@ -1115,11 +1152,14 @@ unsigned int dsWaitForRom(void)
     static int last_y_key = 0;
     if (keysCurrent() & KEY_Y)
     {
-        if (last_y_key != KEY_Y)
+        if (strcmp(file_load_id,"D2")!=0)      // For D2: we don't allow boot load
         {
-            bLoadAndBoot = (bLoadAndBoot ? false:true);
-            dsDisplayLoadOptions();
-            last_y_key = KEY_Y;
+            if (last_y_key != KEY_Y)
+            {
+                bLoadAndBoot = (bLoadAndBoot ? false:true);
+                dsDisplayLoadOptions();
+                last_y_key = KEY_Y;
+            }
         }
     } else last_y_key = 0;      
       
@@ -1222,6 +1262,12 @@ unsigned int dsWaitOnMenu(unsigned int actState)
             if ((iTx>220) && (iTx<250) && (iTy>160) && (iTy<185))  // Gear Icon = Settings
             {     
                 dsChooseOptions(FALSE);
+            }
+            else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT
+            { 
+                soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                bDone=dsWaitOnQuit();
+                if (bDone) uState=A8_QUITSTDS;
             }
             else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75)) // cartridge slot (wide range)
             {     
@@ -1627,17 +1673,7 @@ ITCM_CODE void dsMainLoop(void)
                 }
                 else
                 {
-                    if ((iTx>240) && (iTx<256) && (iTy>0) && (iTy<18))   // Full Speed Toggle ... upper corner...
-                    {
-                       if (keys_touch == 0)
-                       {
-                           full_speed = 1-full_speed; 
-                           if (full_speed) showFps=1;
-                           dsPrintValue(30,0,0,"  ");
-                           keys_touch = 1;
-                       }
-                    }
-                    else if ((iTx>=0) && (iTx<16) && (iTy>0) && (iTy<18))   // Show FPS
+                    if ((iTx>=0) && (iTx<16) && (iTy>0) && (iTy<18))   // Show FPS
                     {
                        if (keys_touch == 0)
                        {
@@ -1677,7 +1713,7 @@ ITCM_CODE void dsMainLoop(void)
                         bShowKeyboard = true;
                         keys_touch = 1;
                     }
-                    else if ((iTx>999) && (iTx<56) && (iTy>89) && (iTy<106))  // POWER TODO:zzz
+                    else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT
                     { 
                       irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
@@ -1741,7 +1777,7 @@ ITCM_CODE void dsMainLoop(void)
         {
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_L))
             {
-                dsWriteFavs(4);
+                dsWriteFavs(3);
             }
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myGame_offset_y++;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myGame_offset_y--;
@@ -1787,12 +1823,19 @@ int a8Filescmp (const void *c1, const void *c2) {
 
 void a8FindFiles(void) 
 {
+  static bool bFirstTime = true;
   DIR *pdir;
   struct dirent *pent;
   char filenametmp[300];
   
   count8bit = countfiles= 0;
   
+  // First time load... get into the root directory for easy navigation...
+  if (bFirstTime)
+  {
+    bFirstTime = false;
+    //TODO: Not sure on this yet...    chdir("/");
+  }
   pdir = opendir(".");
 
   if (pdir) {
@@ -1829,7 +1872,15 @@ void a8FindFiles(void)
     closedir(pdir);
   }
   if (count8bit)
+  {
     qsort (a8romlist, count8bit, sizeof (FICA_A8), a8Filescmp);
+  }
+  else  // Failsafe... always provide a back directory...
+  {
+    a8romlist[count8bit].directory = true;
+    strcpy(a8romlist[count8bit].filename,"..");
+    count8bit = 1;
+  }
 }
 
 #define MAX_GAME_SETTINGS       1870

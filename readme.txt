@@ -77,6 +77,10 @@ With those 4 tips, you should be able to get 99% of all games running. There are
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.0 : 19-Mar-2021 by wavemotion-dave
+  * Major overhaul of UI.
+  * Added second disk drive.
+
 V1.9 : 06-Mar-2021 by wavemotion-dave
   * New options for B button = DOWN and Key Click Off.
   * Improved handling for key clicks so that press and hold will auto-repeat.

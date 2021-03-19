@@ -24,6 +24,7 @@ extern int os_type;
 #define DISK_MAX    3
 
 extern char disk_filename[DISK_MAX][256];
+extern int disk_readonly[DISK_MAX];
 
 
 /* Fundamental declarations ---------------------------------------------- */

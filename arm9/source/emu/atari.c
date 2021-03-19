@@ -61,6 +61,7 @@ int disable_basic    = TRUE;
 int skip_frames      = FALSE;
 
 char disk_filename[DISK_MAX][256];
+int  disk_readonly[DISK_MAX] = {true,true,true};
 
 void Warmstart(void) 
 {
@@ -139,6 +140,7 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
     case AFILE_ATR:
       strcpy(disk_filename[DISK_XEX], "EMPTY");
       strcpy(disk_filename[diskno], filename);
+      disk_readonly[diskno] = readonly;
       if (!SIO_Mount(diskno, filename, readonly))
         return AFILE_ERROR;
       if (reboot)
@@ -167,6 +169,11 @@ int Atari800_Initialise(void)
     strcpy(disk_filename[DISK_XEX], "EMPTY");
     strcpy(disk_filename[DISK_1], "EMPTY");
     strcpy(disk_filename[DISK_2], "EMPTY");    
+    
+    disk_readonly[DISK_XEX] = true;
+    disk_readonly[DISK_1] = true;
+    disk_readonly[DISK_2] = true;
+    
 
     INPUT_Initialise();
 
