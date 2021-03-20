@@ -2092,7 +2092,7 @@ void ApplyGameSpecificSettings(void)
       myGame_scale_x = 256;
       myGame_scale_y = 256;
       global_artif_mode=0;
-      skip_frames=0;
+      skip_frames = (isDSiMode() ? 0:1);   // For older DS models, we skip frames to get full speed...        
       auto_fire=0;
       bUseA_KeyAsUP=0;
       bUseB_KeyAsDN=0;
