@@ -43,6 +43,9 @@ short int myGame_offset_y = 24;
 short int myGame_scale_x = 256;
 short int myGame_scale_y = 256;
 
+int bAtariOS=false;
+int bAtariBASIC=false;
+
 extern u8 trig0, trig1;
 extern u8 stick0, stick1;
 extern int skip_frames;
@@ -511,11 +514,13 @@ void load_os(void)
     {
         // If we can't find the atari OS, we force the Altirra in...
         memcpy(ROM_atarios_xl, ROM_altirraos_xl, 0x4000);
+        bAtariOS = false;
     }
     else
     {        
         fread(ROM_atarios_xl, 0x4000, 1, romfile);
-        fclose(romfile);  
+        fclose(romfile); 
+        bAtariOS = true;
     }
 
     FILE *basfile = fopen("ataribas.rom", "rb");
@@ -523,11 +528,13 @@ void load_os(void)
     {
         // If we can't find the atari Basic, we force the Altirra in...
         memcpy(ROM_basic, ROM_altirra_basic, 0x2000);
+        bAtariBASIC = false;
     }
     else
     {        
         fread(ROM_basic, 0x2000, 1, basfile);
         fclose(basfile);  
+        bAtariBASIC = true;
     }
 
     return;
@@ -837,11 +844,21 @@ void dsChooseOptions(int bOkayToChangePalette)
                 sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
             }
+            
             if (keysCurrent() & KEY_A)  // Toggle option
             {
                 *(Option_Table[optionHighlighted].option_val) = (*(Option_Table[optionHighlighted].option_val) + 1) % Option_Table[optionHighlighted].option_max;
                 sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
+                if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIXL.ROM")==0)
+                {
+                    if (!bAtariOS) dsPrintValue(0,0,0,"ROM MISSING");
+                }
+                else if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIBAS.ROM")==0)
+                {
+                    if (!bAtariBASIC) dsPrintValue(0,0,0,"ROM MISSING");
+                }
+                else dsPrintValue(0,0,0,"           ");
             }
             if (keysCurrent() & KEY_START)  // Save Options
             {
