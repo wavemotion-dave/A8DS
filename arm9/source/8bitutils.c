@@ -953,7 +953,7 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
   dsDisplayLoadOptions();
   countfiles ? sprintf(szName,"%04d/%04d GAMES",(int)(1+ucSel+NoDebGame),countfiles) : sprintf(szName,"%04d/%04d FOLDERS",(int)(1+ucSel+NoDebGame),count8bit);
   dsPrintValue(14,3,0,szName);
-    
+
   dsPrintValue(31,5,0,(char *) (NoDebGame>0 ? "<" : " "));
   dsPrintValue(31,22,0,(char *) (NoDebGame+14<count8bit ? ">" : " "));
   sprintf(szName,"%s","A=PICK B=BACK SEL=PAL STA=BASIC");
@@ -983,6 +983,7 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
   }
 }
 
+char tmpBuf[80];
 unsigned int dsWaitForRom(void) 
 {
   bool bDone=false, bRet=false;
@@ -1091,6 +1092,8 @@ unsigned int dsWaitForRom(void)
         if (firstRomDisplay>nbRomPerPage) { firstRomDisplay -= nbRomPerPage; }
         else { firstRomDisplay = 0; }
         if (ucFicAct == 0) romSelected = 0;
+        if (romSelected > ucFicAct) romSelected = ucFicAct;
+          
         ucSHaut=0x01;
         dsDisplayFiles(firstRomDisplay,romSelected);
       }
