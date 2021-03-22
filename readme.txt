@@ -77,6 +77,11 @@ With those 4 tips, you should be able to get 99% of all games running. There are
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.1 : 21-Mar-2021 by wavemotion-dave
+  * Cleanup of the big 2.0 release... 
+  * Allow .XEX and D1 to both be loaded for XEX games that allow save/restore.
+  * Fixed long-standing file select offset bug.
+
 V2.0 : 19-Mar-2021 by wavemotion-dave
   * Major overhaul of UI.
   * Added second disk drive.
