@@ -613,16 +613,21 @@ unsigned char tempFileBuf[HASH_FILE_LEN];
 unsigned char last_hash[33] = {'1','2','3','4','5','Z',0};
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly) 
 {
-    if (strcmp(filename, last_filename) != 0)
+    // Free buffer if needed
+    TIMER2_CR=0; irqDisable(IRQ_TIMER2); 
+    
+    if (disk_num == DISK_XEX)   // Force restart on XEX load...
     {
-        if (disk_num != DISK_2) // Never save D2 as the boot disk...
-        {
-            strcpy(last_filename, filename);
-        }
+        bRestart = true;
     }
     
-    if (disk_num != DISK_2) // Never save D2 as the boot disk...
+    if (bRestart) // Only save last filename and hash if we are restarting...
     {
+        if (strcmp(filename, last_filename) != 0)
+        {
+             strcpy(last_filename, filename);
+        }
+    
         // Get the hash of the file... up to 128k (good enough)
         memset(last_hash, 'Z', 33);
         FILE *fp = fopen(filename, "rb");
@@ -632,17 +637,11 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
             hash_Compute((const byte*)tempFileBuf, file_len, (byte *)last_hash);
             fclose(fp);           
         }
-    }
-  
-    // Free buffer if needed
-    TIMER2_CR=0; irqDisable(IRQ_TIMER2); 
     
-    // -------------------------------------------------------------------
-    // If we are cold starting, go see if we have settings we can read
-    // in from a config file or else set some reasonable defaults ...
-    // -------------------------------------------------------------------
-    if (bRestart)
-    {
+        // -------------------------------------------------------------------
+        // If we are cold starting, go see if we have settings we can read
+        // in from a config file or else set some reasonable defaults ...
+        // -------------------------------------------------------------------
         ApplyGameSpecificSettings();
         Atari800_Initialise();   
     }

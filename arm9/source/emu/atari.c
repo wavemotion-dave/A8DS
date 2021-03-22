@@ -138,7 +138,10 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
 	switch (type) 
     {
     case AFILE_ATR:
-      strcpy(disk_filename[DISK_XEX], "EMPTY");
+      if (reboot)   // If we are booting a disk, empty out the XEX filename
+      {
+        strcpy(disk_filename[DISK_XEX], "EMPTY");
+      }
       strcpy(disk_filename[diskno], filename);
       disk_readonly[diskno] = readonly;
       if (!SIO_Mount(diskno, filename, readonly))
