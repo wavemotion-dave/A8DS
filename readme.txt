@@ -77,6 +77,9 @@ With those 4 tips, you should be able to get 99% of all games running. There are
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.2 : 25-Mar-2021 by wavemotion-dave
+  * Added simplified keyboard option for easy use on Text Adventures, etc.
+
 V2.1 : 21-Mar-2021 by wavemotion-dave
   * Cleanup of the big 2.0 release... 
   * Allow .XEX and D1 to both be loaded for XEX games that allow save/restore.
