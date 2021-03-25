@@ -27,6 +27,7 @@
 #include "bgFileSel.h"
 #include "bgInfo.h"
 #include "bgKeyboard.h"
+#include "bgKeyBrief.h"
 #include "altirraos_xl.h"
 #include "altirra_basic.h"
 
@@ -63,6 +64,7 @@ int palett_type = 0;
 int auto_fire=0;
 int ram_type=0;             // default is 128k
 int jitter_type = 0;        // Normal... 1=SHARP
+int keyboard_type=0;
 
 #define  cxBG (myGame_offset_x<<8)
 #define  cyBG (myGame_offset_y<<8)
@@ -777,8 +779,9 @@ const struct options_t Option_Table[] =
                                     "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode, 5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
     {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,       2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,      "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
-    {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,  2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS", "                  "},
-    {"EMULATOR TXT",{"OFF",        "ON"},                              &bShowEmuText,       2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ", "INFO ON MAIN SCRN "},
+    {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,  2,         "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS", "                  "},
+    {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,       2,         "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ", "INFO ON MAIN SCRN "},
+    {"KEYBOARD",    {"NORMAL",      "SIMPLIFIED"},                      &keyboard_type,       2,        "NORMAL KEYBOARD   ",   "HAS MOST KEYS AND ",  "SIMPLIFIED IS MORE", "STREAMLINED USE   "},
     
     {NULL,          {"",            ""},                                NULL,               2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
@@ -1222,14 +1225,28 @@ static u16 sav1 = 0;
 static u16 sav2 = 0;
 void dsShowKeyboard(void)
 {
-  decompress(bgKeyboardTiles, bgGetGfxPtr(bg0b), LZ77Vram);
-  decompress(bgKeyboardMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
-  dmaCopy((void *) bgKeyboardPal,(u16*) BG_PALETTE_SUB,256*2);
-  unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
-  dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
-  swiWaitForVBlank();
-  sav1 = *(bgGetMapPtr(bg1b) + 680);
-  sav2 = *(bgGetMapPtr(bg1b) + 683);
+    if (keyboard_type == 0)
+    {
+          decompress(bgKeyboardTiles, bgGetGfxPtr(bg0b), LZ77Vram);
+          decompress(bgKeyboardMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+          dmaCopy((void *) bgKeyboardPal,(u16*) BG_PALETTE_SUB,256*2);
+          unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
+          dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+          swiWaitForVBlank();
+          sav1 = *(bgGetMapPtr(bg1b) + 680);
+          sav2 = *(bgGetMapPtr(bg1b) + 683);
+    }
+    else
+    {
+          decompress(bgKeyBriefTiles, bgGetGfxPtr(bg0b), LZ77Vram);
+          decompress(bgKeyBriefMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+          dmaCopy((void *) bgKeyBriefPal,(u16*) BG_PALETTE_SUB,256*2);
+          unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
+          dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+          swiWaitForVBlank();
+          sav1 = *(bgGetMapPtr(bg1b) + 680);
+          sav2 = *(bgGetMapPtr(bg1b) + 683);
+    }
 }
 
 void dsShowHelp(void)
@@ -1341,6 +1358,70 @@ void dsPrintValue(int x, int y, unsigned int isSelect, char *pchStr)
   }
 }
 
+int dsHandleKeyBrief(int Tx, int Ty)
+{
+    int keyPress = AKEY_NONE;
+    
+    if (Ty > 0 && Ty < 35)
+    {
+        if (Tx <  37)       keyPress = AKEY_1;
+        else if (Tx <  73)  keyPress = AKEY_2;
+        else if (Tx <  110) keyPress = AKEY_3;
+        else if (Tx <  147) keyPress = AKEY_4;
+        else if (Tx <  184) keyPress = AKEY_5;
+        else if (Tx <  220) keyPress = AKEY_0;
+        else if (Tx <  256) keyPress = AKEY_BACKSPACE;
+    }
+    else if (Ty < 67)
+    {
+        if (Tx <  37)       keyPress = AKEY_a;
+        else if (Tx <  73)  keyPress = AKEY_b;
+        else if (Tx <  110) keyPress = AKEY_c;
+        else if (Tx <  147) keyPress = AKEY_d;
+        else if (Tx <  184) keyPress = AKEY_e;
+        else if (Tx <  220) keyPress = AKEY_f;
+        else if (Tx <  256) keyPress = AKEY_g;
+    }
+    else if (Ty < 98)
+    {
+        if (Tx <  37)       keyPress = AKEY_h;
+        else if (Tx <  73)  keyPress = AKEY_i;
+        else if (Tx <  110) keyPress = AKEY_j;
+        else if (Tx <  147) keyPress = AKEY_k;
+        else if (Tx <  184) keyPress = AKEY_l;
+        else if (Tx <  220) keyPress = AKEY_m;
+        else if (Tx <  256) keyPress = AKEY_n;
+    }
+    else if (Ty < 130)
+    {
+        if (Tx <  37)       keyPress = AKEY_o;
+        else if (Tx <  73)  keyPress = AKEY_p;
+        else if (Tx <  110) keyPress = AKEY_q;
+        else if (Tx <  147) keyPress = AKEY_r;
+        else if (Tx <  184) keyPress = AKEY_s;
+        else if (Tx <  220) keyPress = AKEY_t;
+        else if (Tx <  256) keyPress = AKEY_u;
+    }
+    else if (Ty < 162)
+    {
+        if (Tx <  37)       keyPress = AKEY_v;
+        else if (Tx <  73)  keyPress = AKEY_w;
+        else if (Tx <  110) keyPress = AKEY_x;
+        else if (Tx <  147) keyPress = AKEY_y;
+        else if (Tx <  184) keyPress = AKEY_z;
+        else if (Tx <  220) keyPress = AKEY_FULLSTOP;
+        else if (Tx <  256) keyPress = AKEY_COLON;
+    }
+    else
+    {
+        if (Tx <  52) keyPress = AKEY_EXIT;
+        else if (Tx < 200) keyPress = AKEY_SPACE;
+        else if (Tx < 256) keyPress = AKEY_RETURN;
+    }
+    
+    return keyPress; 
+}
+
 int dsHandleKeyboard(int Tx, int Ty)
 {
     int keyPress = AKEY_NONE;
@@ -1427,7 +1508,7 @@ int dsHandleKeyboard(int Tx, int Ty)
     }
     else
     {
-        if (Tx <  30) keyPress = AKEY_NONE;
+        if (Tx <  30) keyPress = AKEY_EXIT;
         else if (Tx <  56) keyPress = AKEY_NONE;
         else if (Tx <  80) keyPress = AKEY_SHFT;
         else if (Tx < 104) keyPress = AKEY_CTRL;
@@ -1663,25 +1744,33 @@ ITCM_CODE void dsMainLoop(void)
                 {
                       if (bShowKeyboard)
                       {
-                          if ((iTy > 165) && (iTx < 50)) // Touch in the lower corner of the screen closes the keyboard...
-                          {
+                          if (keyboard_type == 0)
+                            key_code = dsHandleKeyboard(iTx, iTy);
+                          else
+                            key_code = dsHandleKeyBrief(iTx, iTy);
+                         if (key_code == AKEY_EXIT)
+                         {
                               bShowKeyboard = false;
                               keys_touch = 1;
                               dsRestoreBottomScreen();
-                          }
-                          else
-                          {
-                             key_code = dsHandleKeyboard(iTx, iTy);
-                             if (key_code != AKEY_NONE)
-                             {
-                                  if (last_key_code != key_code)
+                              key_code = AKEY_NONE;
+                         }
+                         else if (key_code != AKEY_NONE)
+                         {
+                              if ((last_key_code == key_code) || (last_key_code == AKEY_NONE))
+                              {
+                                  if (last_key_code == AKEY_NONE)
                                   {
-                                    if (!key_click_disable) soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
-                                    last_key_code = key_code;
-                                  }
-                             }
-                             else keys_touch=1;
-                          }
+                                      if (!key_click_disable) soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
+                                      last_key_code = key_code;
+                                  }                                  
+                              }
+                              else key_code = AKEY_NONE;
+                         }
+                         else // Must be AKEY_NONE
+                         {
+                             last_key_code = AKEY_NONE;
+                         }
                       }
                       else
                       {
@@ -1925,7 +2014,7 @@ struct GameSettings_t
     short int yScale;
     UBYTE bButtonMap;
     UBYTE key_click_disable;
-    short int spare2;
+    short int keyboard_type;
     short int spare3;
     short int spare4;
     short int spare5;
@@ -1954,7 +2043,6 @@ void InitGameSettings(void)
     for (int i=0; i<MAX_GAME_SETTINGS; i++)
     {
         GameDB.GameSettings[i].slot_used = 0;
-        GameDB.GameSettings[i].spare2 = 0;
         GameDB.GameSettings[i].spare3 = 0;
         GameDB.GameSettings[i].spare4 = 0;
         GameDB.GameSettings[i].spare5 = 0;
@@ -1999,6 +2087,7 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].xButtonMap = bUseX_KeyAsCR;
         GameDB.GameSettings[idx].blending   = jitter_type;
         GameDB.GameSettings[idx].key_click_disable = key_click_disable;
+        GameDB.GameSettings[idx].keyboard_type = keyboard_type;  
         
         GameDB.checksum = 0;
         char *ptr = (char *)GameDB.GameSettings;
@@ -2085,6 +2174,7 @@ void ApplyGameSpecificSettings(void)
       bUseX_KeyAsCR     = GameDB.GameSettings[idx].xButtonMap;
       jitter_type       = GameDB.GameSettings[idx].blending;
       key_click_disable = GameDB.GameSettings[idx].key_click_disable;  
+      keyboard_type     = GameDB.GameSettings[idx].keyboard_type;  
       install_os();        
     }
     else
