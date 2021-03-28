@@ -55,14 +55,30 @@ extern int ram_type;
 
 void ROM_PutByte(UWORD addr, UBYTE value) {}
 
+// -----------------------------------------------------------
+// Force 48k and remove any XE memory buffers...
+// This is stock Atari 800 for base compatibility of games...
+// -----------------------------------------------------------
+static void SetAtari800Memory(void)
+{
+    ram_size = RAM_48K; // Force 48k... 
+    atarixe_memory = NULL;
+    atarixe_memory_size = 0;
+}
+// ----------------------------------------------
+// XL/XE has two supported memories... 128K and 320K
+// ----------------------------------------------
+static void SetAtariXLXEMemory(void)
+{
+    if (ram_type == 1) ram_size = RAM_320_RAMBO; else ram_size = RAM_128K;
+}
+
 // ---------------------------------------------------------------------------------------
-// Note: We support exactly 2 memory configurations... Standard 130XE compatible 128K 
+// Note: We support exactly 2 memory configurations for XE... Standard 130XE compatible 128K 
 // and the RAMBO 320K and nothing else. Streamlined and compatible with most everything.
 // ---------------------------------------------------------------------------------------
 static void AllocXEMemory(void)
 {
-    if (ram_type == 1) ram_size = RAM_320_RAMBO; else ram_size = RAM_128K;
-    
 	if (ram_size > 64) 
     {
 		/* don't count 64 KB of base memory */
@@ -85,22 +101,18 @@ static void AllocXEMemory(void)
 
 void MEMORY_InitialiseMachine(void) 
 {
-	int const os_size = 0x4000;
-	int const os_rom_start = 0x10000 - os_size;
-    int const base_ram = ram_size > 64 ? 64 * 1024 : ram_size * 1024;
-    int const hole_end = (os_rom_start < 0xd000 ? os_rom_start : 0xd000);
-    int const hole_start = base_ram > hole_end ? hole_end : base_ram;
-	antic_xe_ptr = NULL;
-
 	switch (machine_type) 
     {
 	case MACHINE_OSA:
 	case MACHINE_OSB:
+        SetAtari800Memory();
+            
 		memcpy(memory + 0xd800, atari_os, 0x2800);
 		ESC_PatchOS();
 		dFillMem(0x0000, 0x00, ram_size * 1024 - 1);
 		SetRAM(0x0000, ram_size * 1024 - 1);
-		if (ram_size < 52) {
+		if (ram_size < 52) 
+        {
 			dFillMem(ram_size * 1024, 0xff, 0xd000 - ram_size * 1024);
 			SetROM(ram_size * 1024, 0xcfff);
 		}
@@ -122,7 +134,16 @@ void MEMORY_InitialiseMachine(void)
 		writemap[0xd7] = PBIM2_PutByte;
 		SetROM(0xd800, 0xffff);
 		break;
+            
 	case MACHINE_XLXE:
+        SetAtariXLXEMemory();    
+            
+        int os_size = 0x4000;
+        int os_rom_start = 0x10000 - os_size;
+        int base_ram = ram_size > 64 ? 64 * 1024 : ram_size * 1024;
+        int hole_end = (os_rom_start < 0xd000 ? os_rom_start : 0xd000);
+        int hole_start = base_ram > hole_end ? hole_end : base_ram;
+        antic_xe_ptr = NULL;
             
 		memcpy(memory + 0xc000, atari_os, 0x4000);
 		ESC_PatchOS();

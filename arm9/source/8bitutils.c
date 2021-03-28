@@ -45,6 +45,7 @@ short int myGame_scale_x = 256;
 short int myGame_scale_y = 256;
 
 int bAtariOS=false;
+int bAtariOSB=false;
 int bAtariBASIC=false;
 
 extern u8 trig0, trig1;
@@ -121,7 +122,7 @@ static void DumpDebugData(void)
 char last_filename[300] = {0};
 void dsWriteFavs(int xpos)
 {
-#if 0
+#if 1
     dsPrintValue(xpos,0,0, (char*)"FAV SAVE");
     FILE *fp;
     fp = fopen("/roms/A800-Favs.txt", "a+");
@@ -508,7 +509,9 @@ void dsFreeEmu(void) {
 }
 
 UBYTE ROM_atarios_xl[0x4000];
+UBYTE ROM_atarios_b[0x2800];
 UBYTE ROM_basic[0x2000];
+
 void load_os(void) 
 {
     FILE *romfile = fopen("atarixl.rom", "rb");
@@ -524,7 +527,23 @@ void load_os(void)
         fclose(romfile); 
         bAtariOS = true;
     }
+    
+    
+    romfile = fopen("atariosb.rom", "rb");
+    if (romfile == NULL)
+    {
+        // If we can't find the atari OSB, we just load zeros... don't use
+        memset(ROM_atarios_b, 0x00, 0x2800);
+        bAtariOSB = false;
+    }
+    else
+    {        
+        fread(ROM_atarios_b, 0x2800, 1, romfile);
+        fclose(romfile); 
+        bAtariOSB = true;
+    }
 
+    
     FILE *basfile = fopen("ataribas.rom", "rb");
     if (basfile == NULL)
     {
@@ -548,10 +567,17 @@ void install_os(void)
     if (os_type == OS_ALTIRRA)
     {
         memcpy(atari_os, ROM_altirraos_xl, 0x4000);
+        machine_type = MACHINE_XLXE;
+    }
+    else if (os_type == OS_ATARI_OSB)
+    {
+        memcpy(atari_os, ROM_atarios_b, 0x2800);
+        machine_type = MACHINE_OSB;
     }
     else
     {
         memcpy(atari_os, ROM_atarios_xl, 0x4000);
+        machine_type = MACHINE_XLXE;
     }
 }
 
@@ -559,6 +585,7 @@ void dsShowRomInfo(void)
 {
     extern char disk_filename[DISK_MAX][256];
     char line1[25];
+    char ramSizeBuf[8];
     char line2[200];
     
     if (bShowEmuText)
@@ -605,7 +632,8 @@ void dsShowRomInfo(void)
         }
         dsPrintValue(10,13,0, line2);
 
-        sprintf(line2, "%-5s  %-4s  %-4s", (bHaveBASIC ? "BASIC":" "), (ram_size == RAM_128K ? "128K":"320K"), (tv_mode == TV_NTSC ? "NTSC":"PAL "));
+        sprintf(ramSizeBuf, "%dK", ram_size);
+        sprintf(line2, "%-5s  %-4s  %-4s", (bHaveBASIC ? "BASIC": (os_type==OS_ATARI_OSB ? "OSB":" ")), ramSizeBuf, (tv_mode == TV_NTSC ? "NTSC":"PAL "));
         dsPrintValue(12,0,0, line2);
     }
 }
@@ -763,27 +791,27 @@ static int basic_opt=0;
 static int tv_type2=0;
 const struct options_t Option_Table[] =
 {
-    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,          2,          "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
-    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,       3,          "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
-    {"RAM TYPE",    {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,          2,          "128K IS STANDARD  ",   "RUNS MOST GAMES   ",  "320K ONLY FOR     ",  "A FEW BIG GAMES   "},
-    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM"},                     &os_type,           2,          "BUILT-IN ALTIRRA  ",   "IS VERY COMPATIBLE",  "BUT A FEW GAMES   ",  "REQUIRE REAL ATARI"},
-    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,         3,          "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
-    {"PALETTE",     {"BRIGHT",      "MUTED"},                           &palett_type,       2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
-    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,     2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
-    {"B BUTTON",    {"FIRE",        "DOWN"},                            &bUseB_KeyAsDN,     2,          "TOGGLE THE B KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY DOWN"},
-    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,     2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
-    {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &auto_fire,         4,          "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC    ",   "FAST = 15x/SEC    "},
-    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,           2,          "SHOW FPS ON MAIN  ",   "DISPLAY           ",  "                  ",  "                  "},
-    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,        2,          "RUN EMULATOR AS   ",   "FAST AS POSSIBLE  ",  "                  ",  "                  "},
-    {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
-                                    "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode, 5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
-    {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,       2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
-    {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,      "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
-    {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,  2,         "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS", "                  "},
-    {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,       2,         "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ", "INFO ON MAIN SCRN "},
-    {"KEYBOARD",    {"NORMAL",      "SIMPLIFIED"},                      &keyboard_type,       2,        "NORMAL KEYBOARD   ",   "HAS MOST KEYS AND ",  "SIMPLIFIED IS MORE", "STREAMLINED USE   "},
+    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,              2,          "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
+    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,           3,          "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
+    {"XE RAM SIZE", {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,              2,          "128K IS STANDARD  ",   "RUNS MOST GAMES   ",  "320K ONLY FOR     ",  "A FEW BIG GAMES   "},
+    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM",  "ATARIOSB.ROM"},    &os_type,               3,          "BUILT-IN ALTIRRA  ",   "DEFAULT. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
+    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,             3,          "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
+    {"PALETTE",     {"BRIGHT",      "MUTED"},                           &palett_type,           2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
+    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,         2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
+    {"B BUTTON",    {"FIRE",        "DOWN"},                            &bUseB_KeyAsDN,         2,          "TOGGLE THE B KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY DOWN"},
+    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,         2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
+    {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &auto_fire,             4,          "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC     ",  "FAST = 15x/SEC    "},
+    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,               2,          "SHOW FPS ON MAIN  ",   "DISPLAY           ",  "                  ",  "                  "},
+    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,            2,          "RUN EMULATOR AS   ",   "FAST AS POSSIBLE  ",  "                  ",  "                  "},
+    {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN", 
+                                    "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode,     5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
+    {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,           2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
+    {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,          "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
+    {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
+    {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
+    {"KEYBOARD",    {"NORMAL",      "SIMPLIFIED"},                      &keyboard_type,         2,          "NORMAL KEYBOARD   ",   "HAS MOST KEYS AND ",  "SIMPLIFIED IS MORE",  "STREAMLINED USE   "},
     
-    {NULL,          {"",            ""},                                NULL,               2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
+    {NULL,          {"",            ""},                                NULL,                   2,          "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
 
 
@@ -856,6 +884,10 @@ void dsChooseOptions(int bOkayToChangePalette)
                 {
                     if (!bAtariOS) dsPrintValue(0,0,0,"ROM MISSING");
                 }
+                else if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIOSB.ROM")==0)
+                {
+                    if (!bAtariOSB) dsPrintValue(0,0,0,"ROM MISSING");
+                }
                 else if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIBAS.ROM")==0)
                 {
                     if (!bAtariBASIC) dsPrintValue(0,0,0,"ROM MISSING");
@@ -900,6 +932,7 @@ void dsChooseOptions(int bOkayToChangePalette)
     bHaveBASIC = (basic_opt ? 1:0);
     basic_type = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);
     if (ram_type == 1) ram_size = RAM_320_RAMBO; else ram_size = RAM_128K;
+    if (os_type == OS_ATARI_OSB) ram_size = RAM_48K;
 
     install_os();
     
@@ -919,7 +952,6 @@ void dsChooseOptions(int bOkayToChangePalette)
         swiWaitForVBlank();
     }
     
-
     return;    
 }
 

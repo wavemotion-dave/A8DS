@@ -11,6 +11,7 @@ extern int debug[];
 
 #define OS_ALTIRRA      0
 #define OS_ATARI        1
+#define OS_ATARI_OSB    2
 
 #define BASIC_ALTIRRA   0
 #define BASIC_ATARIREVC 1
@@ -85,6 +86,7 @@ extern int machine_type;
 /* RAM size in kilobytes.
    Valid values for MACHINE_OSA and MACHINE_OSB are: 16, 48, 52.
    Valid values for MACHINE_XLXE are: 128, RAM_320_RAMBO */
+#define RAM_48K              48
 #define RAM_128K            128
 #define RAM_320_RAMBO       320
 extern int ram_size;

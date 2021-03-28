@@ -177,6 +177,10 @@ int Atari800_Initialise(void)
     disk_readonly[DISK_1] = true;
     disk_readonly[DISK_2] = true;
     
+    if (os_type == OS_ATARI_OSB)
+        machine_type     = MACHINE_OSB;
+    else
+        machine_type     = MACHINE_XLXE;
 
     INPUT_Initialise();
 

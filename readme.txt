@@ -18,21 +18,34 @@ The goal here is to make this as simple as possible - point to the executable
 
 To use this emulator, you must use compatibles roms with .xex or .atr format. 
 
-Optional is to have the atarixl.rom in the same folder as the XEGS-DS.NDS emulator. 
-This is the 16k bios file and must be exactly so named. If you don't have the BIOS, 
-a generic one is provided from the good folks who made Altirra (thanks to Avery Lee)
-have released open-source.  Also optional is ataribas.rom for the 8K basic program 
+Optional BIOS Roms
+----------------------------------------------------------------------------------
+There is a built-in Altirra BIOS (thanks ti Avery Lee) which is fairly compatibile
+with many games. However, a few games will require the original ATARI BIOS - and,
+unfortunately, there were many variations of those BIOS over the years.
+
+XEGS-DS supports 3 optional Atari BIOS and BASIC files as follows:
+
+*  atarixl.rom   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines
+*  atariosb.rom  - this is the 12k Atari 800 OS-B revision BIOS for older games
+*  ataribas.rom  - this is the 8k Atari BASIC cartridge (recommend Rev C)
+
+You can install zero, one or more of these files and if you want to use these real ROMs
+they must reside in the same folder as the XEGS-DS.NDS emulator and must be exactly
+so named as shown above. Again, if you don't have a real BIOS, a generic but excellent
+one is provided from the good folks who made Altirra (Avery Lee) which is released
+as open-source software.  Also optional is ataribas.rom for the 8K basic program 
 (Rev C is recommended). If not supplied, the built-in Altirra BASIC 1.55 is supplied.
 
-I've not done exhaustive testing, but in many cases I find the Altirra BIOS does 
-a great job compared to the original Atari BIOS. I generally stick with the open 
-source Altirra BIOS but you can switch it on a per-game basis in the Options menu.
+I've not done exhaustive testing, but in many cases I find the Altirra BIOS does a
+great job compared to the original Atari BIOS. I generally stick with the open source
+Altirra BIOS if it works but you can switch it on a per-game basis in the Options menu.
 
 Do not ask me about rom files, I don't have them. A search with Google will certainly 
 help you. 
 
 Features :
-----------
+----------------------------------------------------------------------------------
 Most things you should expect from an emulator. Games generally run full-speed
 with just a handful of exceptions. If you load a game and it doesn't load properly,
 just load it again or hit the RESET button which will re-initialize the XEGS machine.
@@ -54,7 +67,7 @@ If you want to play around with BASIC, enable the BASIC cart and
 pick a DOS II disk of some kind to get drive support and you can have fun writing programs.
 
 Missing :
----------
+----------------------------------------------------------------------------------
 Not much.  In order to get proper speed on the older DS-LITE and DS-PHAT hardware, there
 is a Frame Skip option that defaults to ON for the older hardware (and OFF for the DSi 
 or above). This is not perfect - some games will not be happy to have frames skipped as
@@ -62,15 +75,16 @@ collisions are skipped in those frames. Notably: Caverns of Mars and Buried Buck
 not run right with Frame Skip ON. But this does render most games playable on older hardware.
 
 Troubleshooting :
-------------------
+----------------------------------------------------------------------------------
 Most games run as-is. Pick game, load game, play game, enjoy game.
 
 If a game crashes (crash message shows at bottom of screen or game does not otherwise run properly), check these in the order they are shown:
 
 1. Try turning BASIC ON - some games (even a handful of well-known commercial games) require the BASIC cartridge be enabled. If the game runs but is too fast with BASIC on, use the Atari Rev C Basic (slower but should run at proper speed).
 2. If BASIC ON didn't do the trick, turn it back off and switch from the ALTIRRA OS to the real ATARI XL OS (you will need atarixl.rom in the same directory as the emulator). Some games don't play nice unless you have the original Atari BIOS.
-3. Next try switching from NTSC to PAL or vice-versa and restart the game.\
-4. Lastly, try switching the DISKS SPEEDUP option to OFF to slow down I/O. Some games check this as a form of basic copy-protection to ensure you're running from a legit disk.
+3. Next try switching from NTSC to PAL or vice-versa and restart the game.
+4. A few older games require the older Atari OS-B. If you have atariosb.rom where your emulator is located, you can try selecting this as the OS of choice.
+5. Lastly, try switching the DISKS SPEEDUP option to OFF to slow down I/O. Some games check this as a form of basic copy-protection to ensure you're running from a legit disk.
 
 With those 4 tips, you should be able to get 99% of all games running. There are still a few odd "never heard of" games of little or no consequence (i.e. not major titles) that will not run with the emulator - such is life!
 
