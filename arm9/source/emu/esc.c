@@ -123,16 +123,20 @@ void ESC_PatchOS(void)
 		UBYTE check_s_0;
 		UBYTE check_s_1;
 		/* patch Open() of C: so we know when a leader is processed */
-		switch (Atari800_machine_type) {
+		switch (Atari800_machine_type) 
+        {
 		case Atari800_MACHINE_OSA:
 		case Atari800_MACHINE_OSB:
-			addr_l = 0xef74;
+            if (os_type == OS_ALTIRRA_800)
+			    addr_l = 0xef91; /* Altirra Cassettle Handler*/
+            else
+                addr_l = 0xef74; /* Atari */                
 			addr_s = 0xefbc;
 			check_s_0 = 0xa0;
 			check_s_1 = 0x80;
 			break;
 		case Atari800_MACHINE_XLXE:
-            if (os_type == OS_ALTIRRA)
+            if (os_type == OS_ALTIRRA_XL)
             {
                 addr_l = 0xee4a;
             }
@@ -166,9 +170,10 @@ void ESC_PatchOS(void)
 		ESC_Remove(ESC_COPENSAVE);
 		ESC_Remove(ESC_SIOV);
 	};
-	if (patched && Atari800_machine_type == Atari800_MACHINE_XLXE) {
+	if (patched && Atari800_machine_type == Atari800_MACHINE_XLXE) 
+    {
 		/* Disable Checksum Test */
-		if (os_type != OS_ALTIRRA)
+		if (os_type != OS_ALTIRRA_XL)
 		{
 		  MEMORY_dPutByte(0xc31d, 0xea);
 		  MEMORY_dPutByte(0xc31e, 0xea);

@@ -2206,13 +2206,16 @@ int Devices_PatchOS(void)
 	switch (Atari800_machine_type) {
 	case Atari800_MACHINE_OSA:
 	case Atari800_MACHINE_OSB:
-		addr = 0xf0e3;
+        if (os_type == OS_ALTIRRA_800)  
+            addr = 0xefd4;  // Altirra 
+        else                
+		    addr = 0xf0e3;  // Must be OS_ATARI_OSB
 		break;
 	case Atari800_MACHINE_XLXE:
-        if (os_type == OS_ALTIRRA)
-            addr = 0xee90;
-        else
-		    addr = 0xc42e;
+        if (os_type == OS_ALTIRRA_XL)
+            addr = 0xee90;  // Altirra
+        else    
+		    addr = 0xc42e;  // Must be OS_ATARI_XL
 		break;
 	default:
 		return FALSE;

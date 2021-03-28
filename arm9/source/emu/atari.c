@@ -55,7 +55,7 @@
 // This is a bit of a "custom" machine but is capable of running 98% of all games.
 // ----------------------------------------------------------------------------------
 int machine_type     = MACHINE_XLXE;
-int ram_size         = RAM_128K;        // We only allow RAM_128K or RAM_320_RAMBO
+int ram_size         = RAM_128K;        // We only allow RAM_128K or RAM_320_RAMBO and for backwards compatibility RAM_48K
 int tv_mode          = TV_NTSC;
 int disable_basic    = TRUE;
 int skip_frames      = FALSE;
@@ -177,7 +177,7 @@ int Atari800_Initialise(void)
     disk_readonly[DISK_1] = true;
     disk_readonly[DISK_2] = true;
     
-    if (os_type == OS_ATARI_OSB)
+    if (ram_size == RAM_48K)
         machine_type     = MACHINE_OSB;
     else
         machine_type     = MACHINE_XLXE;

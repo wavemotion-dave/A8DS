@@ -52,7 +52,7 @@ extern u8 trig0, trig1;
 extern u8 stick0, stick1;
 extern int skip_frames;
 int full_speed = 0;
-int os_type = OS_ALTIRRA;
+int os_type = OS_ALTIRRA_XL;
 int basic_type = BASIC_ALTIRRA;
 int bHaveBASIC = false;
 int bUseA_KeyAsUP = false;
@@ -120,10 +120,10 @@ static void DumpDebugData(void)
 
 
 char last_filename[300] = {0};
-void dsWriteFavs(int xpos)
+void dsWriteFavs(void)
 {
 #if 0
-    dsPrintValue(xpos,0,0, (char*)"FAV SAVE");
+    dsPrintValue(4,0,0, (char*)"FAV");
     FILE *fp;
     fp = fopen("/roms/A800-Favs.txt", "a+");
     if (fp != NULL)
@@ -133,11 +133,11 @@ void dsWriteFavs(int xpos)
         fclose(fp);
     }
 #else 
-    dsPrintValue(xpos,0,0, (char*)"CFG SAVE");
+    dsPrintValue(4,0,0, (char*)"CFG");
     WriteGameSettings();
 #endif    
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    dsPrintValue(xpos,0,0, (char*)"        ");
+    dsPrintValue(4,0,0, (char*)"   ");
 }
 
 void dsClearDiskActivity(void)
@@ -148,7 +148,7 @@ void dsClearDiskActivity(void)
     buf[1] = ' ';
     buf[2] = ' ';
     buf[3] = 0;
-    dsPrintValue(5,0,0, buf);
+    dsPrintValue(3,0,0, buf);
 }
 
 void dsShowDiskActivity(int drive)
@@ -161,7 +161,7 @@ void dsShowDiskActivity(int drive)
     buf[1] = '1'+drive;
     buf[2] = activity[++actidx & 0x7];
     buf[3] = 0;
-    dsPrintValue(5,0,0, buf);
+    dsPrintValue(3,0,0, buf);
 }
 
 void VsoundHandler(void) 
@@ -517,7 +517,7 @@ void load_os(void)
     FILE *romfile = fopen("atarixl.rom", "rb");
     if (romfile == NULL)
     {
-        // If we can't find the atari OS, we force the Altirra in...
+        // If we can't find the atari OS, we force the Altirra XL bios in...
         memcpy(ROM_atarios_xl, ROM_altirraos_xl, 0x4000);
         bAtariOS = false;
     }
@@ -532,8 +532,8 @@ void load_os(void)
     romfile = fopen("atariosb.rom", "rb");
     if (romfile == NULL)
     {
-        // If we can't find the atari OSB, we just load zeros... don't use
-        memset(ROM_atarios_b, 0x00, 0x2800);
+        // If we can't find the atari OSB, we force the Altirra 800 bios in
+        memcpy(ROM_atarios_b, ROM_altirraos_800, 0x2800);
         bAtariOSB = false;
     }
     else
@@ -564,17 +564,22 @@ void load_os(void)
 void install_os(void)
 {
     // Otherwise we either use the Atari OS or the Altirra based on user choice...
-    if (os_type == OS_ALTIRRA)
+    if (os_type == OS_ALTIRRA_XL)
     {
         memcpy(atari_os, ROM_altirraos_xl, 0x4000);
         machine_type = MACHINE_XLXE;
+    }
+    else if (os_type == OS_ALTIRRA_800)
+    {
+        memcpy(atari_os, ROM_altirraos_800, 0x2800);
+        machine_type = MACHINE_OSB;
     }
     else if (os_type == OS_ATARI_OSB)
     {
         memcpy(atari_os, ROM_atarios_b, 0x2800);
         machine_type = MACHINE_OSB;
     }
-    else
+    else // Must be OS_ATARI_XL
     {
         memcpy(atari_os, ROM_atarios_xl, 0x4000);
         machine_type = MACHINE_XLXE;
@@ -586,6 +591,7 @@ void dsShowRomInfo(void)
     extern char disk_filename[DISK_MAX][256];
     char line1[25];
     char ramSizeBuf[8];
+    char machineBuf[20];
     char line2[200];
     
     if (bShowEmuText)
@@ -633,8 +639,12 @@ void dsShowRomInfo(void)
         dsPrintValue(10,13,0, line2);
 
         sprintf(ramSizeBuf, "%dK", ram_size);
-        sprintf(line2, "%-5s  %-4s  %-4s", (bHaveBASIC ? "BASIC": (os_type==OS_ATARI_OSB ? "OSB":" ")), ramSizeBuf, (tv_mode == TV_NTSC ? "NTSC":"PAL "));
-        dsPrintValue(12,0,0, line2);
+        if ((os_type == OS_ATARI_OSB) || (os_type==OS_ALTIRRA_800))
+            sprintf(machineBuf, "%-5s A800", (bHaveBASIC ? "BASIC": " "));
+        else
+            sprintf(machineBuf, "%-5s XL/XE", (bHaveBASIC ? "BASIC": " "));
+        sprintf(line2, "%-12s %-4s %-4s", machineBuf, ramSizeBuf, (tv_mode == TV_NTSC ? "NTSC":"PAL "));
+        dsPrintValue(7,0,0, line2);
     }
 }
 
@@ -792,17 +802,17 @@ static int tv_type2=0;
 const struct options_t Option_Table[] =
 {
     {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,              2,          "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
-    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,           3,          "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
-    {"XE RAM SIZE", {"128K (130XE)", "320K (RAMBO)"},                   &ram_type,              2,          "128K IS STANDARD  ",   "RUNS MOST GAMES   ",  "320K ONLY FOR     ",  "A FEW BIG GAMES   "},
-    {"OS TYPE",     {"ALTIRRA",     "ATARIXL.ROM",  "ATARIOSB.ROM"},    &os_type,               3,          "BUILT-IN ALTIRRA  ",   "DEFAULT. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
+    {"MACHINE TYPE",{"XL/XE 128K",  "XE 320K RAMBO", "ATARI 800 48K"},  &ram_type,              3,          "XL/XE 128K FOR    ",   "MOST GAMES. 320K  ",  "FOR A FEW AND A800",  "FOR COMPATIBILITY "},
+    {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",     
+                     "ALTIRRA 800",  "ATARIOSB.ROM"},                   &os_type,               4,          "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
     {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,             3,          "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
+    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,           3,          "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
     {"PALETTE",     {"BRIGHT",      "MUTED"},                           &palett_type,           2,          "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
     {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,         2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
     {"B BUTTON",    {"FIRE",        "DOWN"},                            &bUseB_KeyAsDN,         2,          "TOGGLE THE B KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY DOWN"},
     {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,         2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
     {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &auto_fire,             4,          "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC     ",  "FAST = 15x/SEC    "},
-    {"SHOW FPS",    {"OFF",         "ON"},                              &showFps,               2,          "SHOW FPS ON MAIN  ",   "DISPLAY           ",  "                  ",  "                  "},
-    {"TURBO MODE",  {"OFF",         "ON"},                              &full_speed,            2,          "RUN EMULATOR AS   ",   "FAST AS POSSIBLE  ",  "                  ",  "                  "},
+    {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &showFps,               3,          "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
     {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN", 
                                     "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode,     5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
     {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,           2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
@@ -898,7 +908,7 @@ void dsChooseOptions(int bOkayToChangePalette)
             {
                 if (bOkayToChangePalette)   // This lets us know that a game is selected... 
                 {
-                    dsWriteFavs(0);
+                    dsWriteFavs();
                 }
             }
             if (keysCurrent() & KEY_B)  // Exit options
@@ -928,13 +938,34 @@ void dsChooseOptions(int bOkayToChangePalette)
     }
   
     tv_mode = (tv_type2 == 0 ? TV_NTSC:TV_PAL);
+    if (showFps == 2) full_speed=1; else full_speed=0;
     
     bHaveBASIC = (basic_opt ? 1:0);
     basic_type = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);
-    if (ram_type == 1) ram_size = RAM_320_RAMBO; else ram_size = RAM_128K;
-    if (os_type == OS_ATARI_OSB) ram_size = RAM_48K;
+    
+    if (ram_type == 0) ram_size = RAM_128K; 
+    else if (ram_type == 1) ram_size = RAM_320_RAMBO;
+    else ram_size = RAM_48K;
 
-    install_os();
+    // ---------------------------------------------------------------------------------------------
+    // Sanity check... make sure if the user chose some odd combo of RAM and OS we fix it up...
+    // ---------------------------------------------------------------------------------------------
+    if (ram_size == RAM_48K) // If 48K... make sure we have OS set to one of the XLs
+    {
+        if ((os_type == OS_ALTIRRA_XL) || (os_type == OS_ATARI_XL))
+        {
+            os_type = OS_ALTIRRA_800;
+        }
+    }    
+    else    // Must be 128K or 320K so make sure we aren't using older Atari 800 BIOS
+    {
+        if ((os_type == OS_ALTIRRA_800) || (os_type == OS_ATARI_OSB))
+        {
+            os_type = OS_ALTIRRA_XL;
+        }
+    }    
+        
+    install_os();    
     
     dsInstallSoundEmuFIFO();
     
@@ -1327,7 +1358,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
       }
       else
       {
-            if ((iTx>220) && (iTx<250) && (iTy>160) && (iTy<185))  // Gear Icon = Settings
+            if ((iTx>204) && (iTx<240) && (iTy>150) && (iTy<185))  // Gear Icon = Settings
             {     
                 dsChooseOptions(FALSE);
             }
@@ -1348,7 +1379,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
                   dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
                 else { uState=actState; }
             }
-            else if ((iTx>35) && (iTx<55) && (iTy>150) && (iTy<180))  // Help
+            else if ((iTx>35) && (iTx<55) && (iTy>150) && (iTy<180))  // Help                
             { 
                 dsShowHelp();
                 bShowHelp = true;
@@ -1817,7 +1848,7 @@ ITCM_CODE void dsMainLoop(void)
                     {
                        if (keys_touch == 0)
                        {
-                           showFps= 1-showFps;
+                           showFps = (showFps ? 0:1);
                            dsPrintValue(0,0,0, "   "); 
                            keys_touch = 1;
                        }
@@ -1917,7 +1948,7 @@ ITCM_CODE void dsMainLoop(void)
         {
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_L))
             {
-                dsWriteFavs(3);
+                dsWriteFavs();
             }
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myGame_offset_y++;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myGame_offset_y--;

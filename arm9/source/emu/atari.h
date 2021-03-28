@@ -9,9 +9,10 @@
 
 extern int debug[];
 
-#define OS_ALTIRRA      0
-#define OS_ATARI        1
-#define OS_ATARI_OSB    2
+#define OS_ALTIRRA_XL   0
+#define OS_ATARI_XL     1
+#define OS_ALTIRRA_800  2
+#define OS_ATARI_OSB    3
 
 #define BASIC_ALTIRRA   0
 #define BASIC_ATARIREVC 1

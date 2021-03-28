@@ -4,5 +4,6 @@
 #include "atari.h"
 
 extern UBYTE const ROM_altirraos_xl[0x4000];
+extern UBYTE const ROM_altirraos_800[0x2800];
 
 #endif /* ROMS_ALTIRRAOS_XL_H_ */
