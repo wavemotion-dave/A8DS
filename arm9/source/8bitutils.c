@@ -122,7 +122,7 @@ static void DumpDebugData(void)
 char last_filename[300] = {0};
 void dsWriteFavs(int xpos)
 {
-#if 1
+#if 0
     dsPrintValue(xpos,0,0, (char*)"FAV SAVE");
     FILE *fp;
     fp = fopen("/roms/A800-Favs.txt", "a+");
