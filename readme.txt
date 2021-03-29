@@ -8,7 +8,8 @@ to emulation, the XEGS-DS comes equipped with 128KB of RAM which will run the
 larger programs. This is, essentially, the same as a 130XE machine.  XEGS-DS
 goes beyond the normal XL/XE 128K machine and provides two alternative 
 configurations: the XE 320K (RAMBO) for a few large games and demos and an
-older Atari 800 48K machine for backwards compatibility with some older games.
+older Atari 800 48K machine for backwards compatibility with some older games
+that don't play nice with a more "modern" XL/XE setup.
 
 The emulator comes "equipped" with the ability to run executable images or disk 
 images which are the two most popular types. It does not support cart types
@@ -36,10 +37,11 @@ XEGS-DS supports 3 optional Atari BIOS and BASIC files as follows:
 
 You can install zero, one or more of these files and if you want to use these real ROMs
 they must reside in the same folder as the XEGS-DS.NDS emulator and must be exactly
-so named as shown above. Again, if you don't have a real BIOS, a generic but excellent
-one is provided from the good folks who made Altirra (Avery Lee) which is released
-as open-source software.  Also optional is ataribas.rom for the 8K basic program 
-(Rev C is recommended). If not supplied, the built-in Altirra BASIC 1.55 is supplied.
+so named as shown above. These files are loaded into memory when the emulator starts 
+and remain available for the entire gaming session. Again, if you don't have a real BIOS, 
+a generic but excellent one is provided from the good folks who made Altirra (Avery Lee) 
+which is released as open-source software.  Also optional is ataribas.rom for the 8K basic 
+program (Rev C is recommended). If not supplied, the built-in Altirra BASIC 1.55 is supplied.
 
 I've not done exhaustive testing, but in many cases I find the Altirra BIOS does a
 great job compared to the original Atari BIOS. I generally stick with the open source
