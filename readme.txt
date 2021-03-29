@@ -200,7 +200,7 @@ Controls :
  * START  : START console button
  * SELECT : SELECT console button
  
-Tap in the Cart Slot to pick a new game.
+Tap the XEX icon or the Disk Drive to load a new game.
  
 --------------------------------------------------------------------------------
 Credits:
@@ -209,5 +209,6 @@ Thanks Wintermute for devkitpro and libnds (http://www.devkitpro.org).
 Atari800 team for source code (http://atari800.sourceforge.net/)
 Altirra and Avery Lee for a kick-ass substitute BIOS and generally being awesome.
 Alekmaul for porting the A5200DS of which this is heavily based.
+The good folks over on GBATemp for their support.
 --------------------------------------------------------------------------------
 
