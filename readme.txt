@@ -20,9 +20,10 @@ To use this emulator, you must use compatibles roms with .xex or .atr format.
 
 Optional BIOS Roms
 ----------------------------------------------------------------------------------
-There is a built-in Altirra BIOS (thanks ti Avery Lee) which is fairly compatibile
+There is a built-in Altirra BIOS (thanks to Avery Lee) which is fairly compatibile
 with many games. However, a few games will require the original ATARI BIOS - and,
-unfortunately, there were many variations of those BIOS over the years.
+unfortunately, there were many variations of those BIOS over the years to support
+various Atari computer models releaesed over a decade.
 
 XEGS-DS supports 3 optional Atari BIOS and BASIC files as follows:
 
@@ -56,15 +57,19 @@ emulator - but 99% will.  I'll try to improve compatibilty as time permits.
 
 The emulator supports multi-disk games. When you need to load a subsequent disk for
 a game, just use the Y button to disable Boot-Load which will simply just insert the new
-disk and you can continue to run. 
+disk and you can continue to run. Not all games will utilize a 2nd disk drive but D2: is 
+available for those games that do. It's handy to have a few blank 90K single-sided disks 
+available on your setup which you can find easily online - these can be used as save disks.
 
 The emulator has the built-in Altirra BASIC 1.55 which is a drop-in replacement for the
 Atari Basic Rev C (only more full-featured). Normally you can leave this disabled but
 a few games require the BASIC cart be present and you can toggle this with the START button
 when you load a game.  If you try to load a game and it crashes, most likely you need
 to have BASIC enabled. Most games don't want it enabled so that's the default. 
-If you want to play around with BASIC, enable the BASIC cart and
-pick a DOS II disk of some kind to get drive support and you can have fun writing programs.
+If you want to play around with BASIC, enable the BASIC cart and pick a DOS 
+disk of some kind to get drive support and you can have fun writing programs. Be aware
+that the Altirra BASIC is faster than normal ATARI BASIC and so games might run at the
+wrong speed unless you're using the actual ATARI REV C rom.
 
 Missing :
 ----------------------------------------------------------------------------------
@@ -83,7 +88,7 @@ If a game crashes (crash message shows at bottom of screen or game does not othe
 1. Try turning BASIC ON - some games (even a handful of well-known commercial games) require the BASIC cartridge be enabled. If the game runs but is too fast with BASIC on, use the Atari Rev C Basic (slower but should run at proper speed).
 2. If BASIC ON didn't do the trick, turn it back off and switch from the ALTIRRA OS to the real ATARI XL OS (you will need atarixl.rom in the same directory as the emulator). Some games don't play nice unless you have the original Atari BIOS.
 3. Next try switching from NTSC to PAL or vice-versa and restart the game.
-4. A few older games require the older Atari OS-B. If you have atariosb.rom where your emulator is located, you can try selecting this as the OS of choice.
+4. A few older games require the older Atari 800 48k machine and Atari OS-B. If you have atariosb.rom where your emulator is located, you can try selecting this as the OS of choice.
 5. Lastly, try switching the DISKS SPEEDUP option to OFF to slow down I/O. Some games check this as a form of basic copy-protection to ensure you're running from a legit disk.
 
 With those 4 tips, you should be able to get 99% of all games running. There are still a few odd "never heard of" games of little or no consequence (i.e. not major titles) that will not run with the emulator - such is life!
