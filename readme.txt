@@ -88,13 +88,18 @@ Most games run as-is. Pick game, load game, play game, enjoy game.
 
 If a game crashes (crash message shows at bottom of screen or game does not otherwise run properly), check these in the order they are shown:
 
-1. Try turning BASIC ON - some games (even a handful of well-known commercial games) require the BASIC cartridge be enabled. If the game runs but is too fast with BASIC on, use the Atari Rev C Basic (slower but should run at proper speed).
-2. If BASIC ON didn't do the trick, turn it back off and switch from the ALTIRRA OS to the real ATARI XL OS (you will need atarixl.rom in the same directory as the emulator). Some games don't play nice unless you have the original Atari BIOS.
+1. Try turning BASIC ON - some games (even a handful of well-known commercial games) require the BASIC cartridge be enabled. 
+   If the game runs but is too fast with BASIC on, use the Atari Rev C Basic (slower but should run at proper speed).
+2. If BASIC ON didn't do the trick, turn it back off and switch from the ALTIRRA OS to the real ATARI XL OS (you will need 
+   atarixl.rom in the same directory as the emulator). Some games don't play nice unless you have the original Atari BIOS.
 3. Next try switching from NTSC to PAL or vice-versa and restart the game.
-4. A few older games require the older Atari 800 48k machine and Atari OS-B. If you have atariosb.rom where your emulator is located, you can try selecting this as the OS of choice.
-5. Lastly, try switching the DISKS SPEEDUP option to OFF to slow down I/O. Some games check this as a form of basic copy-protection to ensure you're running from a legit disk.
+4. A few older games require the older Atari 800 48k machine and Atari OS-B. If you have atariosb.rom where your emulator is located, 
+   you can try selecting this as the OS of choice.
+5. Lastly, try switching the DISKS SPEEDUP option to OFF to slow down I/O. Some games check this as a form of basic copy-protection 
+   to ensure you're running from a legit disk.
 
-With those 4 tips, you should be able to get 99% of all games running. There are still a few odd "never heard of" games of little or no consequence (i.e. not major titles) that will not run with the emulator - such is life!
+With those tips, you should be able to get 99% of all games running. There are still a few odd "never heard of" games of little 
+or no consequence (i.e. not major titles) that will not run with the emulator - such is life!
 
 --------------------------------------------------------------------------------
 History :
