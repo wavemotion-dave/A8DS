@@ -5,7 +5,10 @@ around the XEGS gaming system which is the 8-bit console version of Atari's
 venerable computer line. The stock XEGS had 64KB of RAM and was generally
 not upgradable unless you really knew the insides of the machine... but thanks
 to emulation, the XEGS-DS comes equipped with 128KB of RAM which will run the 
-larger programs. This is, essentially, the same as a 130XE machine.
+larger programs. This is, essentially, the same as a 130XE machine.  XEGS-DS
+goes beyond the normal XL/XE 128K machine and provides two alternative 
+configurations: the XE 320K (RAMBO) for a few large games and demos and an
+older Atari 800 48K machine for backwards compatibility with some older games.
 
 The emulator comes "equipped" with the ability to run executable images or disk 
 images which are the two most popular types. It does not support cart types
