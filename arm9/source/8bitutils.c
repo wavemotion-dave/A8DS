@@ -1748,7 +1748,13 @@ ITCM_CODE void dsMainLoop(void)
         stick0 = STICK_CENTRE;
         stick1 = STICK_CENTRE;
                   
-        if (keys_pressed & KEY_Y) key_consol &= ~CONSOL_OPTION;
+        if (keys_pressed & KEY_Y) 
+        {
+            if (keys_pressed & KEY_L) key_code = AKEY_1;
+            else if (keys_pressed & KEY_R) key_code = AKEY_2;
+            else key_consol &= ~CONSOL_OPTION;
+        }
+            
         if (keys_pressed & KEY_X) 
         {
             if (keys_pressed & KEY_L) key_code = AKEY_ESCAPE;
@@ -2238,6 +2244,11 @@ void ApplyGameSpecificSettings(void)
       jitter_type       = GameDB.GameSettings[idx].blending;
       key_click_disable = GameDB.GameSettings[idx].key_click_disable;  
       keyboard_type     = GameDB.GameSettings[idx].keyboard_type;  
+        
+      if (ram_type == 0) ram_size = RAM_128K; 
+      else if (ram_type == 1) ram_size = RAM_320_RAMBO;
+      else ram_size = RAM_48K;
+        
       install_os();        
     }
     else

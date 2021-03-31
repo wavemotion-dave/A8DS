@@ -106,6 +106,11 @@ or no consequence (i.e. not major titles) that will not run with the emulator - 
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.3 : 31-Mar-2021 by wavemotion-dave
+  * Added Atari 800 (48K) mode with OS-B for compatiblity with older games.
+  * L+X and R+X shortcuts for keys '1' and '2' which are useful to start some games.
+  * Cleanup of options and main screen for better display of current emulator settings.
+
 V2.2 : 25-Mar-2021 by wavemotion-dave
   * Added simplified keyboard option for easy use on Text Adventures, etc.
 
