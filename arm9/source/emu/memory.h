@@ -6,10 +6,8 @@
 
 #include "atari.h"
 
-#define dGetByte(x)				        (memory[x])
-#define dPutByte(x, y)			        (memory[x] = y)
-#define dGetWord(x)				        (memory[x] + (memory[(x) + 1] << 8))
-#define dPutWord(x, y)			        (memory[x] = (UBYTE) (y), memory[(x) + 1] = (UBYTE) ((y) >> 8))
+#define dGetWord(x)				        (dGetByte(x) + (dGetByte((x) + 1) << 8))
+#define dPutWord(x, y)			        (dPutByte(x,(UBYTE)y), dPutByte(x+1, (UBYTE) ((y) >> 8)))
 #define dGetWordAligned(x)		        dGetWord(x)
 #define dPutWordAligned(x, y)	        dPutWord(x, y)
 #define dCopyFromMem(from, to, size)	memcpy(to, memory + (from), size)
@@ -28,6 +26,23 @@
 #define MEMORY_dFillMem(addr1, value, length)	memset(memory + (addr1), value, length)
 
 extern UBYTE memory[65536 + 2];
+extern UBYTE *memory_bank;
+
+inline UBYTE dGetByte(UWORD addr)
+{
+    if ((addr & 0xC000) == 0x4000)
+        return memory_bank[addr];    
+    else
+        return memory[addr];    
+}
+
+inline void dPutByte(UWORD addr, UBYTE data)
+{
+    if ((addr & 0xC000) == 0x4000)
+        memory_bank[addr] = data;
+    else
+        memory[addr] = data;
+}
 
 #define RAM       0
 #define ROM       1
@@ -38,8 +53,8 @@ typedef void (*wrfunc)(UWORD addr, UBYTE value);
 extern rdfunc readmap[256];
 extern wrfunc writemap[256];
 void ROM_PutByte(UWORD addr, UBYTE byte); 
-#define GetByte(addr)		(readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : memory[addr])
-#define PutByte(addr,byte)	(writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (memory[addr] = byte))
+#define GetByte(addr)		(readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
+#define PutByte(addr,byte)	(writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
 #define SetRAM(addr1, addr2) do { \
 		int i; \
 		for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
@@ -55,8 +70,8 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
 		} \
 	} while (0)
 
-#define MEMORY_GetByte(addr)		(readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : memory[addr])
-#define MEMORY_PutByte(addr,byte)	(writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (memory[addr] = byte))
+#define MEMORY_GetByte(addr)		(readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
+#define MEMORY_PutByte(addr,byte)	(writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
 #define MEMORY_SetRAM(addr1, addr2) do { \
 		int i; \
 		for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \

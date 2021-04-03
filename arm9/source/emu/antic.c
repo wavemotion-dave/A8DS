@@ -2173,7 +2173,7 @@ inline UBYTE ANTIC_GetDLByte(UWORD *paddr)
 {
     int addr = *paddr;
 	UBYTE result;
-	result = memory[addr];  // Too expensive to call dGetByte() and shouldn't be needed...
+	result = dGetByte(addr);
 	addr++;
 	if ((addr & 0x3FF) == 0)
 		addr -= 0x400;

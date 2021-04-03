@@ -52,6 +52,13 @@ static ULONG atarixe_memory_size = 0;
 
 extern const UBYTE *antic_xe_ptr;	/* Separate ANTIC access to extended memory */
 extern int ram_type;
+UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;
+
+static int cart809F_enabled = FALSE;
+int cartA0BF_enabled = FALSE;
+static UBYTE under_cart809F[8192];
+static UBYTE under_cartA0BF[8192];
+UBYTE xe_mem_buffer[RAM_1088K * 1024];
 
 void ROM_PutByte(UWORD addr, UBYTE value) {}
 
@@ -65,17 +72,19 @@ static void SetAtari800Memory(void)
     atarixe_memory = NULL;
     atarixe_memory_size = 0;
 }
-// ----------------------------------------------
-// XL/XE has two supported memories... 128K and 320K
-// ----------------------------------------------
+// ------------------------------------------------------------
+// XL/XE has three supported memories... 128K, 320K and 1088K
+// ------------------------------------------------------------
 static void SetAtariXLXEMemory(void)
 {
-    if (ram_type == 1) ram_size = RAM_320_RAMBO; else ram_size = RAM_128K;
+    if (ram_type == 1) ram_size = RAM_320_RAMBO; 
+    else if (ram_type == 2) ram_size = RAM_1088K; 
+    else ram_size = RAM_128K;
 }
 
 // ---------------------------------------------------------------------------------------
-// Note: We support exactly 2 memory configurations for XE... Standard 130XE compatible 128K 
-// and the RAMBO 320K and nothing else. Streamlined and compatible with most everything.
+// Note: We support 3 memory configurations for XE... Standard 130XE compatible 128K 
+// and the RAMBO 320K or 1088K.  There is also a backwards compatible 48K option.
 // ---------------------------------------------------------------------------------------
 static void AllocXEMemory(void)
 {
@@ -86,7 +95,7 @@ static void AllocXEMemory(void)
 		ULONG size = (1 + (ram_size - 64) / 16) * 16384;
 		if (size != atarixe_memory_size) 
         {
-            atarixe_memory = (UBYTE *)0x06860000;	//A convienent 272k of memory... it's a bit faster when bank switching
+            atarixe_memory = (UBYTE *) xe_mem_buffer; //0x06860000;	//A convienent 272k of memory... it's a bit faster when bank switching
 			atarixe_memory_size = size;
 			memset(atarixe_memory, 0, size);
 		}
@@ -192,11 +201,12 @@ void MEMORY_InitialiseMachine(void)
  */
 static int basic_disabled(UBYTE portb)
 {
-	return ((portb & 0x02) != 0);
+	return (portb & 0x02) != 0
+	 || ((portb & 0x10) == 0 && (ram_size == 576 || ram_size == 1088));
 }
 
 
-ITCM_CODE inline void CopyFromMem(UWORD from, UBYTE *to, int size)
+inline void CopyFromMem(UWORD from, UBYTE *to, int size)
 {
 	while (--size >= 0) {
 		*to++ = GetByte(from);
@@ -204,7 +214,7 @@ ITCM_CODE inline void CopyFromMem(UWORD from, UBYTE *to, int size)
 	}
 }
 
-ITCM_CODE inline void CopyToMem(const UBYTE *from, UWORD to, int size)
+inline void CopyToMem(const UBYTE *from, UWORD to, int size)
 {
 	while (--size >= 0) {
 		PutByte(to, *from);
@@ -213,52 +223,6 @@ ITCM_CODE inline void CopyToMem(const UBYTE *from, UWORD to, int size)
 	}
 }
 
-// ---------------------------------------------------------------------------------
-// This is a bit faster than memcpy() as we know we are 32-bit aligned and
-// can blast 32-bit values back and forth between main RAM and the XE banked RAM
-// ---------------------------------------------------------------------------------
-ITCM_CODE void SwitchBanks(int bank)
-{
-    unsigned int *main_memory = (unsigned int *) (memory + 0x4000);
-    unsigned int *old_bank    = (unsigned int *) (atarixe_memory + (xe_bank << 14));
-    unsigned int *new_bank    = (unsigned int *) (atarixe_memory + (bank << 14));
-    for (int i=0; i<128; i++)
-    {
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-        *old_bank++ = *main_memory;    *main_memory++ = *new_bank++;   
-    }
-}
 
 /* Note: this function is only for XL/XE! */
 void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
@@ -273,8 +237,10 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         {
 			if (ram_size == RAM_128K)
 				bank = ((byte & 0x0c) >> 2) + 1;
-            else // Assume RAMBO 320K
+            else if (ram_size == RAM_320_RAMBO)
 				bank = (((byte & 0x0c) + ((byte & 0x60) >> 1)) >> 2) + 1;
+			else // Assume RAM_1088K
+				bank = (((byte & 0x0e) + ((byte & 0xe0) >> 1)) >> 1) + 1;
         }
         /* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
 		if (selftest_enabled && (bank != xe_bank)) 
@@ -292,7 +258,15 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         // --------------------------------------------------------------------------------
         if (bank != xe_bank) 
         {
-            SwitchBanks(bank);
+            if (bank == 0)
+            {
+                memory_bank = memory;
+            }
+            else
+            {
+                memory_bank = (atarixe_memory + (bank << 14));
+                memory_bank -= 0x4000;
+            }
             xe_bank = bank;
         }
         
@@ -395,7 +369,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 	}
 	else {
 		/* We can enable Self Test only if the OS ROM is enabled */
-		if (!selftest_enabled && (byte & 0x01))
+		if (!selftest_enabled && (byte & 0x01) && !((byte & 0x10) == 0 && ram_size == 1088)) 
         {
 			/* Enable Self Test ROM */
 			if (ram_size > 20) {
@@ -407,11 +381,6 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 		}
 	}
 }
-
-static int cart809F_enabled = FALSE;
-int cartA0BF_enabled = FALSE;
-static UBYTE under_cart809F[8192];
-static UBYTE under_cartA0BF[8192];
 
 void Cart809F_Disable(void)
 {
@@ -464,7 +433,8 @@ void CartA0BF_Enable(void)
 {
 	if (!cartA0BF_enabled) {
 		/* No BASIC if not XL/XE or bit 1 of PORTB set */
-		if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02)))
+		/* or accessing extended 576K or 1088K memory */
+		if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02) || ((PORTB & 0x10) == 0 && (ram_size == 576 || ram_size == 1088)))) 
         {
 			/* Back-up 0xa000-0xbfff RAM */
 			memcpy(under_cartA0BF, memory + 0xa000, 0x2000);

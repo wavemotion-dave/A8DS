@@ -21,7 +21,7 @@
  * along with Atari800; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
+#include <nds.h>
 #include "config.h"
 #include <string.h>
 #include "antic.h"
@@ -288,7 +288,7 @@ void new_pm_scanline(void)
 
 /* GTIA registers ---------------------------------------------------------- */
 
-void GTIA_Frame(void) {
+ITCM_CODE void GTIA_Frame(void) {
 	int consol = key_consol | 0x08;
 
 	consol_table[0] = consol;
@@ -302,7 +302,7 @@ void GTIA_Frame(void) {
 	}
 }
 
-UBYTE GTIA_GetByte(UWORD addr)
+ITCM_CODE UBYTE GTIA_GetByte(UWORD addr)
 {
 	switch (addr & 0x1f) {
 	case _M0PF:

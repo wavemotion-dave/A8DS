@@ -90,6 +90,7 @@ extern int machine_type;
 #define RAM_48K              48
 #define RAM_128K            128
 #define RAM_320_RAMBO       320
+#define RAM_1088K           1088
 extern int ram_size;
 
 /* Always call Atari800_InitialiseMachine() after changing machine_type

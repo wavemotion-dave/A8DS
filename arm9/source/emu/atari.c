@@ -124,6 +124,8 @@ int Atari800_DetectFileType(const char *filename)
     // Nothing fancy here... if the filename says it's ATR or XEX who are we to argue...
     if (strstr(filename, ".atr") != 0) return  AFILE_ATR;
     if (strstr(filename, ".ATR") != 0) return  AFILE_ATR;
+    if (strstr(filename, ".atx") != 0) return  AFILE_ATX;
+    if (strstr(filename, ".ATX") != 0) return  AFILE_ATX;
     if (strstr(filename, ".xex") != 0) return  AFILE_XEX;
     if (strstr(filename, ".XEX") != 0) return  AFILE_XEX;
 	return AFILE_ERROR;
@@ -138,6 +140,7 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
 	switch (type) 
     {
     case AFILE_ATR:
+    case AFILE_ATX:
       if (reboot)   // If we are booting a disk, empty out the XEX filename
       {
         strcpy(disk_filename[DISK_XEX], "EMPTY");

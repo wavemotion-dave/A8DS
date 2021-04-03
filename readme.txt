@@ -7,9 +7,9 @@ not upgradable unless you really knew the insides of the machine... but thanks
 to emulation, the XEGS-DS comes equipped with 128KB of RAM which will run the 
 larger programs. This is, essentially, the same as a 130XE machine.  XEGS-DS
 goes beyond the normal XL/XE 128K machine and provides two alternative 
-configurations: the XE 320K (RAMBO) for a few large games and demos and an
-older Atari 800 48K machine for backwards compatibility with some older games
-that don't play nice with a more "modern" XL/XE setup.
+configurations: the XE 320K (RAMBO) and 1088K for a few large games and demos 
+and an older Atari 800 48K machine for backwards compatibility with some older 
+games that don't play nice with a more "modern" XL/XE setup.
 
 The emulator comes "equipped" with the ability to run executable images or disk 
 images which are the two most popular types. It does not support cart types
@@ -106,6 +106,11 @@ or no consequence (i.e. not major titles) that will not run with the emulator - 
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.4 : 02-Apr-2021 by wavemotion-dave
+  * New bank switching handling that is much faster (in some cases 10x faster)
+    to support all of the larger 128K, 320K and even the 1088K games (AtariBlast!)
+  * ATX format now supported for copy protected disk images.
+
 V2.3 : 31-Mar-2021 by wavemotion-dave
   * Added Atari 800 (48K) mode with OS-B for compatiblity with older games.
   * L+X and R+X shortcuts for keys '1' and '2' which are useful to start some games.

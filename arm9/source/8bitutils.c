@@ -76,7 +76,7 @@ int keyboard_type=0;
 signed char sound_buffer[SNDLENGTH];
 signed char *psound_buffer;
 
-#define MAX_DEBUG 8
+#define MAX_DEBUG 5
 int debug[MAX_DEBUG]={0};
 //#define DEBUG_DUMP
 
@@ -802,7 +802,7 @@ static int tv_type2=0;
 const struct options_t Option_Table[] =
 {
     {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,              2,          "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
-    {"MACHINE TYPE",{"XL/XE 128K",  "XE 320K RAMBO", "ATARI 800 48K"},  &ram_type,              3,          "XL/XE 128K FOR    ",   "MOST GAMES. 320K  ",  "FOR A FEW AND A800",  "FOR COMPATIBILITY "},
+    {"MACHINE TYPE",{"128K XL/XE",  "320K XL/XE", "1088K XL/XE", "48K ATARI800"},  &ram_type,   4,           "128K STANDARD FOR ",   "MOST GAMES. 320K /",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
     {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",     
                      "ALTIRRA 800",  "ATARIOSB.ROM"},                   &os_type,               4,          "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
     {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,             3,          "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
@@ -945,6 +945,7 @@ void dsChooseOptions(int bOkayToChangePalette)
     
     if (ram_type == 0) ram_size = RAM_128K; 
     else if (ram_type == 1) ram_size = RAM_320_RAMBO;
+    else if (ram_type == 2) ram_size = RAM_1088K;
     else ram_size = RAM_48K;
 
     // ---------------------------------------------------------------------------------------------
@@ -1638,7 +1639,7 @@ void dsInstallSoundEmuFIFO(void)
     fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
 }
 
-ITCM_CODE void dsMainLoop(void) 
+void dsMainLoop(void) 
 {
   static int last_key_code = -1;
   static bool bFirstLoad = true;
@@ -2044,6 +2045,11 @@ void a8FindFiles(void)
             strcpy(a8romlist[count8bit].filename,filenametmp);
             count8bit++;countfiles++;
           }
+          if ( (strcasecmp(strrchr(filenametmp, '.'), ".atx") == 0) )  {
+            a8romlist[count8bit].directory = false;
+            strcpy(a8romlist[count8bit].filename,filenametmp);
+            count8bit++;countfiles++;
+          }
       }
     }
     closedir(pdir);
@@ -2247,6 +2253,7 @@ void ApplyGameSpecificSettings(void)
         
       if (ram_type == 0) ram_size = RAM_128K; 
       else if (ram_type == 1) ram_size = RAM_320_RAMBO;
+      else if (ram_type == 2) ram_size = RAM_1088K;
       else ram_size = RAM_48K;
         
       install_os();        
