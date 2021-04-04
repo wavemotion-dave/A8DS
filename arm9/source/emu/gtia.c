@@ -1,8 +1,23 @@
 /*
+ * GTIA.C contains the emulation of the Core GTIA graphics chip on the Atari 800. 
+ * The baseline for this file is the Atari800 4.20 source and has
+ * been heavily modified for optimization on the Nintendo DS/DSi.
+ * The original Atari800 copyright message is retained below.
+ *
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
+ * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ *
+ * Copying and distribution of this file, with or without modification,
+ * are permitted in any medium without royalty provided the copyright
+ * notice and this notice are preserved.  This file is offered as-is,
+ * without any warranty.
+ */
+
+/*
  * gtia.c - GTIA chip emulation
  *
  * Copyright (C) 1995-1998 David Firth
- * Copyright (C) 1998-2005 Atari800 development team (see DOC/CREDITS)
+ * Copyright (C) 1998-2008 Atari800 development team (see DOC/CREDITS)
  *
  * This file is part of the Atari800 emulator project which emulates
  * the Atari 400, 800, 800XL, 130XE, and 5200 8-bit computers.
