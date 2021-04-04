@@ -505,7 +505,8 @@ void dsShowScreenMain(void)
   swiWaitForVBlank();
 }
 
-void dsFreeEmu(void) {
+void dsFreeEmu(void) 
+{
   // Stop timer of sound
   TIMER2_CR=0; irqDisable(IRQ_TIMER2); 
 }
@@ -588,7 +589,7 @@ void install_os(void)
     }
 }
 
-void dsShowRomInfo(void)
+void dsShowHeader(void)
 {
     extern char disk_filename[DISK_MAX][256];
     char line1[25];
@@ -713,7 +714,7 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
       TIMER0_DATA=0;
       TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;        
 
-      dsShowRomInfo();
+      dsShowHeader();
     }
 }
 
@@ -782,7 +783,7 @@ bool dsWaitOnQuit(void) {
   dmaCopy((void *) bgBottomPal,(u16*) BG_PALETTE_SUB,256*2);
   dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);  
-  dsShowRomInfo();
+  dsShowHeader();
 
   return bRet;
 }
@@ -983,7 +984,7 @@ void dsChooseOptions(int bOkayToChangePalette)
     dmaVal = *(bgGetMapPtr(bg1b) +31*32);
     dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
     
-    dsShowRomInfo();
+    dsShowHeader();
     // Give a third of a second time delay...
     for (int i=0; i<20; i++)
     {
@@ -1284,7 +1285,7 @@ unsigned int dsWaitForRom(void)
   dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
     
-  dsShowRomInfo();
+  dsShowHeader();
   
   return bRet;
 }
@@ -1337,7 +1338,7 @@ void dsRestoreBottomScreen(void)
   unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
   swiWaitForVBlank();
-  dsShowRomInfo();
+  dsShowHeader();
 }
 
 unsigned int dsWaitOnMenu(unsigned int actState) 

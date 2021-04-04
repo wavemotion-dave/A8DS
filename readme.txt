@@ -1,7 +1,7 @@
 XEGS-DS
 --------------------------------------------------------------------------------
 XEGS-DS is an Atari 8-bit computer emulator.  Specifically, it's designed 
-around the XEGS gaming system which is the 8-bit console version of Atari's
+around the XE gaming system which is the 8-bit console version of Atari's
 venerable computer line. The stock XEGS had 64KB of RAM and was generally
 not upgradable unless you really knew the insides of the machine... but thanks
 to emulation, the XEGS-DS comes equipped with 128KB of RAM which will run the 
@@ -9,7 +9,10 @@ larger programs. This is, essentially, the same as a 130XE machine.  XEGS-DS
 goes beyond the normal XL/XE 128K machine and provides two alternative 
 configurations: the XE 320K (RAMBO) and 1088K for a few large games and demos 
 and an older Atari 800 48K machine for backwards compatibility with some older 
-games that don't play nice with a more "modern" XL/XE setup.
+games that don't play nice with a more "modern" XL/XE setup. As such, it's 
+really grown to be more capable than a stock XEGS machine but the purpose
+of this emulator is to allow someone to pay the entire 8-bit line up of games
+on their Nitendo DS/DSi handhelds.
 
 The emulator comes "equipped" with the ability to run executable images or disk 
 images which are the two most popular types. It does not support cart types
@@ -20,7 +23,6 @@ ROM images, there is no complicated setup to pick the right banking setup.
 The goal here is to make this as simple as possible - point to the executable
 8-bit Atari image you want to run and off it goes!
 
-To use this emulator, you must use compatibles roms with .xex or .atr format. 
 
 Optional BIOS Roms
 ----------------------------------------------------------------------------------
@@ -81,7 +83,7 @@ Missing :
 Not much.  In order to get proper speed on the older DS-LITE and DS-PHAT hardware, there
 is a Frame Skip option that defaults to ON for the older hardware (and OFF for the DSi 
 or above). This is not perfect - some games will not be happy to have frames skipped as
-collisions are skipped in those frames. Notably: Caverns of Mars and Buried Bucks will 
+collisions are skipped in those frames. Notably: Caverns of Mars, Jumpman and Buried Bucks will 
 not run right with Frame Skip ON. But this does render most games playable on older hardware.
 
 Troubleshooting :
@@ -218,7 +220,7 @@ Credits:
 Thanks Wintermute for devkitpro and libnds (http://www.devkitpro.org).
 Atari800 team for source code (http://atari800.sourceforge.net/)
 Altirra and Avery Lee for a kick-ass substitute BIOS and generally being awesome.
-Alekmaul for porting the A5200DS of which this is heavily based.
+Alekmaul for porting the original A5200DS of which this is heavily based.
 The good folks over on GBATemp for their support.
 --------------------------------------------------------------------------------
 
@@ -226,7 +228,7 @@ The good folks over on GBATemp for their support.
 Copyright:
 --------------------------------------------------------------------------------
 XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
-Copyright (c) 2020-2021 Dave Bernazzani (wavemotion-dave)
+Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
 
 Copying and distribution of this emulator, it's source code and associated 
 readme files, with or without modification, are permitted in any medium without 
