@@ -120,22 +120,11 @@ static void DumpDebugData(void)
 
 
 char last_filename[300] = {0};
-void dsWriteFavs(void)
+void dsWriteConfig(void)
 {
-#if 0
-    dsPrintValue(4,0,0, (char*)"FAV");
-    FILE *fp;
-    fp = fopen("/roms/A800-Favs.txt", "a+");
-    if (fp != NULL)
-    {
-        fprintf(fp, "%s\n", last_filename);
-        fflush(fp);
-        fclose(fp);
-    }
-#else 
     dsPrintValue(4,0,0, (char*)"CFG");
     WriteGameSettings();
-#endif    
+
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
     dsPrintValue(4,0,0, (char*)"   ");
 }
@@ -908,7 +897,7 @@ void dsChooseOptions(int bOkayToChangePalette)
             {
                 if (bOkayToChangePalette)   // This lets us know that a game is selected... 
                 {
-                    dsWriteFavs();
+                    dsWriteConfig();
                 }
             }
             if (keysCurrent() & KEY_B)  // Exit options
@@ -1486,6 +1475,7 @@ int dsHandleKeyBrief(int Tx, int Ty)
     return keyPress; 
 }
 
+static u8 keyboard_debounce=0;
 int dsHandleKeyboard(int Tx, int Ty)
 {
     int keyPress = AKEY_NONE;
@@ -1586,31 +1576,27 @@ int dsHandleKeyboard(int Tx, int Ty)
     
     if (keyPress == AKEY_SHFT)
     {
-        if (shift == 0)
+        if ( !keyboard_debounce )   // To prevent from toggling so quickly...
         {
-            *(bgGetMapPtr(bg1b)+680) = 60;
-            shift = 1;
-        }
-        else
-        {
-            *(bgGetMapPtr(bg1b)+680) = sav1;
-            shift = 0;
+            keyboard_debounce=10;
+            if (shift == 0)
+            {
+                *(bgGetMapPtr(bg1b)+680) = 60;
+                shift = 1;
+            }
+            else
+            {
+                *(bgGetMapPtr(bg1b)+680) = sav1;
+                shift = 0;
+            }
         }
         keyPress = AKEY_NONE;
     }
 
     if (keyPress == AKEY_CTRL)
     {
-        if (ctrl == 0)
-        {
-            *(bgGetMapPtr(bg1b)+683) = 60;
-            ctrl = 1;
-        }
-        else
-        {
-            *(bgGetMapPtr(bg1b)+683) = sav2;
-            ctrl = 0;
-        }
+        *(bgGetMapPtr(bg1b)+683) = 60;
+        ctrl = 1;
         keyPress = AKEY_NONE;
     }
     else if (ctrl)  
@@ -1641,6 +1627,7 @@ void dsInstallSoundEmuFIFO(void)
 
 void dsMainLoop(void) 
 {
+  static unsigned int config_snap_counter=0;
   static int last_key_code = -1;
   static bool bFirstLoad = true;
   char fpsbuf[32];
@@ -1664,8 +1651,7 @@ void dsMainLoop(void)
   while(etatEmu != A8_QUITSTDS) 
   {
     switch (etatEmu) 
-    {
-    
+    {    
       case A8_MENUINIT:
         dsShowScreenMain();
         etatEmu = A8_MENUSHOW;
@@ -1762,6 +1748,8 @@ void dsMainLoop(void)
             else if (keys_pressed & KEY_R) key_code = AKEY_RETURN;
             else key_code = (bUseX_KeyAsCR ? AKEY_RETURN:AKEY_SPACE);
         }
+            
+        if (keyboard_debounce > 0) keyboard_debounce--;
             
         // if touch screen pressed
         if (keys_pressed & KEY_TOUCH) 
@@ -1898,14 +1886,16 @@ void dsMainLoop(void)
                       if (dsWaitOnQuit()) etatEmu=A8_QUITSTDS;
                       else { irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); }
                     }
-                    else if ((iTx>204) && (iTx<235) && (iTy>150) && (iTy<180)) {     // Gear Icon = Settings
+                    else if ((iTx>204) && (iTx<235) && (iTy>150) && (iTy<180))  // Gear Icon = Settings
+                    {     
                       irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       keys_touch=1;
                       dsChooseOptions(TRUE);
                       irqEnable(IRQ_TIMER2);
                       fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                     }
-                    else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75)) {     // XEX and D1 Disk Drive
+                    else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75))      // XEX and D1 Disk Drive
+                    {
                       irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       // Find files in current directory and show it 
                       keys_touch=1;
@@ -1916,7 +1906,8 @@ void dsMainLoop(void)
                       else { irqEnable(IRQ_TIMER2); }
                       fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                     }
-                    else if ((iTx>5) && (iTx<80) && (iTy>77) && (iTy<114)) {     // D2 Disk Drive
+                    else if ((iTx>5) && (iTx<80) && (iTy>77) && (iTy<114))      // D2 Disk Drive
+                    {
                       irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       // Find files in current directory and show it 
                       keys_touch=1;
@@ -1955,8 +1946,12 @@ void dsMainLoop(void)
         {
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_L))
             {
-                dsWriteFavs();
-            }
+                if (++config_snap_counter == 20)
+                {
+                    dsWriteConfig();
+                }
+            } else config_snap_counter=0;
+            
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myGame_offset_y++;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myGame_offset_y--;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_LEFT))  myGame_offset_x++;
