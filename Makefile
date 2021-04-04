@@ -1,3 +1,8 @@
+#These are the command line SET options I'm using:
+#DEVKITARM=/opt/devkitpro/devkitARM
+#DEVKITPPC=/opt/devkitpro/devkitPPC
+#DEVKITPRO=/opt/devkitpro
+
 VERSION=2.4a
 
 #---------------------------------------------------------------------------------

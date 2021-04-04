@@ -63,24 +63,21 @@ int bAtariOS=false;
 int bAtariOSB=false;
 int bAtariBASIC=false;
 
-extern u8 trig0, trig1;
-extern u8 stick0, stick1;
-extern int skip_frames;
-int full_speed = 0;
-int os_type = OS_ALTIRRA_XL;
-int basic_type = BASIC_ALTIRRA;
-int bHaveBASIC = false;
-int bUseA_KeyAsUP = false;
-int bUseB_KeyAsDN = false;
-int bUseX_KeyAsCR = false;
-int key_click_disable = false;
-int bShowEmuText=true;
-int showFps=false;
-int palett_type = 0;
-int auto_fire=0;
-int ram_type=0;             // default is 128k
-int blending_type = 0;        // Normal... 1=SHARP
-int keyboard_type=0;
+int os_type             = OS_ALTIRRA_XL;    // Default is built-in OS from Alitirra    
+int basic_type          = BASIC_ALTIRRA;    // Default BASIC is built-in from Alitirra
+int bHaveBASIC          = false;            // default is to disable BASIC
+int bUseA_KeyAsUP       = false;            // default is to use A as fire
+int bUseB_KeyAsDN       = false;            // default is to use B as fire
+int bUseX_KeyAsCR       = false;            // default is to use X as "space" bar (fairly common for games to use this as a 2nd button)
+int key_click_disable   = false;            // default is to enable key clicks on keyboard presses
+int bShowEmuText        = true;             // default is to show all EMU text
+int showFps             = false;            // default is not to show FPS counter
+int full_speed          = false;            // default is to run at normal speed 
+int palett_type         = 0;                // default is "bright" palett
+int auto_fire           = 0;                // default autofire disabled
+int ram_type            = 0;                // default is 128k
+int blending_type       = 0;                // Normal (blur)... 1=SHARP
+int keyboard_type       = 0;                // Normal (full)... 1=Simplified
 
 #define  cxBG (myGame_offset_x<<8)
 #define  cyBG (myGame_offset_y<<8)
@@ -88,14 +85,15 @@ int keyboard_type=0;
 #define  ydyBG (((256 / myGame_scale_y) << 8) | (256 % myGame_scale_y))
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
-signed char sound_buffer[SNDLENGTH];
-signed char *psound_buffer;
+bool bAtariCrash = false;                   // We use this to track any crashes that might occur and give the user a message on screen
+
+signed char sound_buffer[SNDLENGTH];        // This cannot be placed in faster DTIM memory as it's shared with the ARM7 core that needs access...
+signed char *psound_buffer;                 // Pointer to the sound buffer position to write next...
 
 #define MAX_DEBUG 5
 int debug[MAX_DEBUG]={0};
 //#define DEBUG_DUMP
 
-bool bAtariCrash = false;
 
 static void DumpDebugData(void)
 {
