@@ -26,7 +26,7 @@
 #include <string.h>
 #include <nds.h>
 
-#include "8bitutils.h"
+#include "xegs.h"
 #include "antic.h"
 #include "atari.h"
 #include "cpu.h"

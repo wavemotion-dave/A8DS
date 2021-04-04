@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "main.h"
-#include "8bitutils.h"
+#include "xegs.h"
 
 #include "atari.h"
 #include "antic.h"
@@ -28,7 +28,7 @@
 #include "bgInfo.h"
 #include "bgKeyboard.h"
 #include "bgKeyBrief.h"
-#include "altirraos_xl.h"
+#include "altirra_os.h"
 #include "altirra_basic.h"
 
 FICA_A8 a8romlist[1024];  

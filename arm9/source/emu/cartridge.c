@@ -28,7 +28,7 @@
 #include <string.h>
 
 #include "main.h"
-#include "8bitutils.h"
+#include "xegs.h"
 #include "hash.h"
 #include "atari.h"
 #include "binload.h"
