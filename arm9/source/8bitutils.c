@@ -2084,12 +2084,13 @@ struct GameSettings_t
     short int yScale;
     UBYTE bButtonMap;
     UBYTE key_click_disable;
-    short int keyboard_type;
+    UBYTE keyboard_type;
+    UBYTE spare2;
     short int spare3;
     short int spare4;
     short int spare5;
     short int spare6;
-    short int spare7;
+    short int disk_speedup;
     short int spare8;
     short int spare9;
 };
@@ -2117,7 +2118,7 @@ void InitGameSettings(void)
         GameDB.GameSettings[i].spare4 = 0;
         GameDB.GameSettings[i].spare5 = 0;
         GameDB.GameSettings[i].spare6 = 0;
-        GameDB.GameSettings[i].spare7 = 1;     // Map a few spares with a default of '1' which may come in handy in the future....
+        // Map a few spares with a default of '1' which may come in handy in the future....
         GameDB.GameSettings[i].spare8 = 1;
         GameDB.GameSettings[i].spare9 = 1;
     }
@@ -2158,6 +2159,7 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].blending   = jitter_type;
         GameDB.GameSettings[idx].key_click_disable = key_click_disable;
         GameDB.GameSettings[idx].keyboard_type = keyboard_type;  
+        GameDB.GameSettings[idx].disk_speedup = ESC_enable_sio_patch;
         
         GameDB.checksum = 0;
         char *ptr = (char *)GameDB.GameSettings;
@@ -2245,6 +2247,7 @@ void ApplyGameSpecificSettings(void)
       jitter_type       = GameDB.GameSettings[idx].blending;
       key_click_disable = GameDB.GameSettings[idx].key_click_disable;  
       keyboard_type     = GameDB.GameSettings[idx].keyboard_type;  
+      ESC_enable_sio_patch = GameDB.GameSettings[idx].disk_speedup;
         
       if (ram_type == 0) ram_size = RAM_128K; 
       else if (ram_type == 1) ram_size = RAM_320_RAMBO;
