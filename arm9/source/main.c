@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     // Intro and main screen
     intro_logo();  
     dsInitScreenMain();
-    etatEmu = A8_MENUINIT;
+    emu_state = A8_MENUINIT;
 
     load_os();          // Read in the "atarixl.rom" file or use the built-in Altirra OS
     install_os();       // And install the right OS into our system...
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
         dsShowScreenMain();
         dsLoadGame(argv[1], 1, true, true);
         Atari800_Initialise();
-        etatEmu = A8_PLAYINIT;
+        emu_state = A8_PLAYINIT;
     }
     // Main loop of emulation
     dsMainLoop();

@@ -18,7 +18,7 @@
 #define A8_PLAYGAME 0x04 
 #define A8_QUITSTDS 0x05
 
-extern unsigned int etatEmu;
+extern unsigned short emu_state; 
 
 typedef enum {
   EMUARM7_INIT_SND = 0x123C,

@@ -187,7 +187,7 @@ struct AFILE_ATR_Header {
 #define MAGIC1  0x96
 #define MAGIC2  0x02
 
-extern int gTotalAtariFrames;
+extern unsigned short gTotalAtariFrames;
 
 /* Initializes Atari800 emulation core. */
 int Atari800_Initialise(void);
