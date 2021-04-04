@@ -1,3 +1,16 @@
+/*
+ * XEGS.C contains the main loop and related file selection utilities. 
+ * This is where the main state machine is located and executes at the
+ * TV frequency (60Hz or 50Hz depending on NTSC or PAL).
+ *
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
+ * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ *
+ * Copying and distribution of this file, with or without modification,
+ * are permitted in any medium without royalty provided the copyright
+ * notice and this notice are preserved.  This file is offered as-is,
+ * without any warranty.
+ */
 #include <nds.h>
 #include <nds/fifomessages.h>
 
@@ -31,7 +44,9 @@
 #include "altirra_os.h"
 #include "altirra_basic.h"
 
-FICA_A8 a8romlist[1024];  
+#define MAX_FILES 1024
+
+FICA_A8 a8romlist[MAX_FILES];  
 unsigned int count8bit=0, countfiles=0, ucFicAct=0;
 int gTotalAtariFrames = 0;
 int bg0, bg1, bg2, bg3, bg0b, bg1b;
@@ -2019,7 +2034,7 @@ void a8FindFiles(void)
 
     while (((pent=readdir(pdir))!=NULL)) 
     {
-      if (count8bit > 1023) break;
+      if (count8bit > (MAX_FILES-1)) break;
       strcpy(filenametmp,pent->d_name);
       if (pent->d_type == DT_DIR)
       {

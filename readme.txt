@@ -222,3 +222,14 @@ Alekmaul for porting the A5200DS of which this is heavily based.
 The good folks over on GBATemp for their support.
 --------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
+Copyright:
+--------------------------------------------------------------------------------
+XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
+Copyright (c) 2020-2021 Dave Bernazzani (wavemotion-dave)
+
+Copying and distribution of this emulator, it's source code and associated 
+readme files, with or without modification, are permitted in any medium without 
+royalty provided the this copyright notice is used and wavemotion-dave, alekmaul 
+and Avery Lee (Altirra OS) are credited and thanked.
+The XEGS-DS emulator is offered as-is, without any warranty.
