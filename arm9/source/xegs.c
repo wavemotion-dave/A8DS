@@ -24,7 +24,6 @@
 
 #include "atari.h"
 #include "antic.h"
-#include "global.h"
 #include "cartridge.h"
 #include "input.h"
 #include "sound.h"

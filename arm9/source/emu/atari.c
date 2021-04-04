@@ -48,7 +48,6 @@
 #include "statesav.h"
 #include "pokeysnd.h"
 #include "sound.h"
-#include "global.h"
 
 // ----------------------------------------------------------------------------------
 // Some basic machine settings... we default to an XEGS with 128K of RAM installed.
