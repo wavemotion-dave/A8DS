@@ -64,7 +64,7 @@ int showFps=false;
 int palett_type = 0;
 int auto_fire=0;
 int ram_type=0;             // default is 128k
-int jitter_type = 0;        // Normal... 1=SHARP
+int blending_type = 0;        // Normal... 1=SHARP
 int keyboard_type=0;
 
 #define  cxBG (myGame_offset_x<<8)
@@ -384,7 +384,7 @@ void vblankIntr()
     REG_BG3PA = xdxBG; 
     REG_BG3PD = ydyBG; 
 
-    if (jitter_type == 0)
+    if (blending_type == 0)
     {        
         REG_BG2X = cxBG+jitter[sIndex++]; 
         REG_BG2Y = cyBG+jitter[sIndex++]; 
@@ -800,11 +800,12 @@ const struct options_t Option_Table[] =
     {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,         2,          "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
     {"B BUTTON",    {"FIRE",        "DOWN"},                            &bUseB_KeyAsDN,         2,          "TOGGLE THE B KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY DOWN"},
     {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,         2,          "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
+    
     {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &auto_fire,             4,          "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC     ",  "FAST = 15x/SEC    "},
     {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &showFps,               3,          "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
     {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN", 
                                     "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode,     5,          "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
-    {"BLENDING",    {"NORMAL",      "SHARP"},                           &jitter_type,           2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
+    {"BLENDING",    {"NORMAL",      "SHARP"},                           &blending_type,         2,          "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,          "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
     {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
     {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,          "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
@@ -932,6 +933,9 @@ void dsChooseOptions(int bOkayToChangePalette)
     bHaveBASIC = (basic_opt ? 1:0);
     basic_type = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);
     
+    // ----------------------------------------------------------------------
+    // Map the  ram_type to actual ram_size for use by the emulator...
+    // ----------------------------------------------------------------------    
     if (ram_type == 0) ram_size = RAM_128K; 
     else if (ram_type == 1) ram_size = RAM_320_RAMBO;
     else if (ram_type == 2) ram_size = RAM_1088K;
@@ -2086,10 +2090,11 @@ struct GameSettings_t
     UBYTE key_click_disable;
     UBYTE keyboard_type;
     UBYTE spare2;
-    short int spare3;
-    short int spare4;
+    UBYTE spare3;
+    UBYTE spare4;
     short int spare5;
     short int spare6;
+    short int spare7;
     short int disk_speedup;
     short int spare8;
     short int spare9;
@@ -2139,27 +2144,27 @@ void WriteGameSettings(void)
      
     if (idx < MAX_GAME_SETTINGS)
     {
-        GameDB.GameSettings[idx].slot_used = 1;
         memcpy(GameDB.GameSettings[idx].game_hash, last_hash, 32);
-        GameDB.GameSettings[idx].tv_type = tv_type2;
-        GameDB.GameSettings[idx].pallete_type = palett_type;
-        GameDB.GameSettings[idx].os_type = os_type;
-        GameDB.GameSettings[idx].basic_opt = basic_opt;
-        GameDB.GameSettings[idx].auto_fire = auto_fire;
-        GameDB.GameSettings[idx].skip_frames = skip_frames;
-        GameDB.GameSettings[idx].ram_type = ram_type;
-        GameDB.GameSettings[idx].artifacting = global_artif_mode;
-        GameDB.GameSettings[idx].xOffset = myGame_offset_x;
-        GameDB.GameSettings[idx].yOffset = myGame_offset_y;
-        GameDB.GameSettings[idx].xScale = myGame_scale_x;
-        GameDB.GameSettings[idx].yScale = myGame_scale_y;
-        GameDB.GameSettings[idx].aButtonMap = bUseA_KeyAsUP;
-        GameDB.GameSettings[idx].bButtonMap = bUseB_KeyAsDN;
-        GameDB.GameSettings[idx].xButtonMap = bUseX_KeyAsCR;
-        GameDB.GameSettings[idx].blending   = jitter_type;
-        GameDB.GameSettings[idx].key_click_disable = key_click_disable;
-        GameDB.GameSettings[idx].keyboard_type = keyboard_type;  
-        GameDB.GameSettings[idx].disk_speedup = ESC_enable_sio_patch;
+        GameDB.GameSettings[idx].slot_used          = 1;
+        GameDB.GameSettings[idx].tv_type            = tv_type2;
+        GameDB.GameSettings[idx].pallete_type       = palett_type;
+        GameDB.GameSettings[idx].os_type            = os_type;
+        GameDB.GameSettings[idx].basic_opt          = basic_opt;
+        GameDB.GameSettings[idx].auto_fire          = auto_fire;
+        GameDB.GameSettings[idx].skip_frames        = skip_frames;
+        GameDB.GameSettings[idx].ram_type           = ram_type;
+        GameDB.GameSettings[idx].artifacting        = global_artif_mode;
+        GameDB.GameSettings[idx].xOffset            = myGame_offset_x;
+        GameDB.GameSettings[idx].yOffset            = myGame_offset_y;
+        GameDB.GameSettings[idx].xScale             = myGame_scale_x;
+        GameDB.GameSettings[idx].yScale             = myGame_scale_y;
+        GameDB.GameSettings[idx].aButtonMap         = bUseA_KeyAsUP;
+        GameDB.GameSettings[idx].bButtonMap         = bUseB_KeyAsDN;
+        GameDB.GameSettings[idx].xButtonMap         = bUseX_KeyAsCR;
+        GameDB.GameSettings[idx].blending           = blending_type;
+        GameDB.GameSettings[idx].key_click_disable  = key_click_disable;
+        GameDB.GameSettings[idx].keyboard_type      = keyboard_type;  
+        GameDB.GameSettings[idx].disk_speedup       = ESC_enable_sio_patch;
         
         GameDB.checksum = 0;
         char *ptr = (char *)GameDB.GameSettings;
@@ -2227,28 +2232,31 @@ void ApplyGameSpecificSettings(void)
     full_speed = 0;  
     if (idx < MAX_GAME_SETTINGS)
     {
-      myGame_offset_x   = GameDB.GameSettings[idx].xOffset;
-      myGame_offset_y   = GameDB.GameSettings[idx].yOffset;
-      myGame_scale_x    = GameDB.GameSettings[idx].xScale;
-      myGame_scale_y    = GameDB.GameSettings[idx].yScale;
-      tv_mode           = (GameDB.GameSettings[idx].tv_type == 0 ? TV_NTSC:TV_PAL);
-      global_artif_mode = GameDB.GameSettings[idx].artifacting;
-      palett_type       = GameDB.GameSettings[idx].pallete_type;
-      os_type           = GameDB.GameSettings[idx].os_type;
-      basic_opt         = GameDB.GameSettings[idx].basic_opt;
-      bHaveBASIC        = (basic_opt ? 1:0);
-      basic_type        = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);        
-      auto_fire         = GameDB.GameSettings[idx].auto_fire;
-      skip_frames       = GameDB.GameSettings[idx].skip_frames;
-      ram_type          = GameDB.GameSettings[idx].ram_type;
-      bUseA_KeyAsUP     = GameDB.GameSettings[idx].aButtonMap;
-      bUseB_KeyAsDN     = GameDB.GameSettings[idx].bButtonMap;
-      bUseX_KeyAsCR     = GameDB.GameSettings[idx].xButtonMap;
-      jitter_type       = GameDB.GameSettings[idx].blending;
-      key_click_disable = GameDB.GameSettings[idx].key_click_disable;  
-      keyboard_type     = GameDB.GameSettings[idx].keyboard_type;  
-      ESC_enable_sio_patch = GameDB.GameSettings[idx].disk_speedup;
-        
+      myGame_offset_x       = GameDB.GameSettings[idx].xOffset;
+      myGame_offset_y       = GameDB.GameSettings[idx].yOffset;
+      myGame_scale_x        = GameDB.GameSettings[idx].xScale;
+      myGame_scale_y        = GameDB.GameSettings[idx].yScale;
+      tv_mode               = (GameDB.GameSettings[idx].tv_type == 0 ? TV_NTSC:TV_PAL);
+      global_artif_mode     = GameDB.GameSettings[idx].artifacting;
+      palett_type           = GameDB.GameSettings[idx].pallete_type;
+      os_type               = GameDB.GameSettings[idx].os_type;
+      basic_opt             = GameDB.GameSettings[idx].basic_opt;
+      bHaveBASIC            = (basic_opt ? 1:0);
+      basic_type            = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);        
+      auto_fire             = GameDB.GameSettings[idx].auto_fire;
+      skip_frames           = GameDB.GameSettings[idx].skip_frames;
+      ram_type              = GameDB.GameSettings[idx].ram_type;
+      bUseA_KeyAsUP         = GameDB.GameSettings[idx].aButtonMap;
+      bUseB_KeyAsDN         = GameDB.GameSettings[idx].bButtonMap;
+      bUseX_KeyAsCR         = GameDB.GameSettings[idx].xButtonMap;
+      blending_type         = GameDB.GameSettings[idx].blending;
+      key_click_disable     = GameDB.GameSettings[idx].key_click_disable;  
+      keyboard_type         = GameDB.GameSettings[idx].keyboard_type;  
+      ESC_enable_sio_patch  = GameDB.GameSettings[idx].disk_speedup;
+      
+      // ----------------------------------------------------------------------
+      // Map the saved ram_type to actual ram_size for use by the emulator...
+      // ----------------------------------------------------------------------
       if (ram_type == 0) ram_size = RAM_128K; 
       else if (ram_type == 1) ram_size = RAM_320_RAMBO;
       else if (ram_type == 2) ram_size = RAM_1088K;
@@ -2269,6 +2277,6 @@ void ApplyGameSpecificSettings(void)
       bUseB_KeyAsDN=0;
       bUseX_KeyAsCR=0;
       key_click_disable = 0;
-      // Never default BASIC, OS, TV-TYPE or MEMORY!
+      // Never default BASIC, OS, KEYBORD TYPE, TV-TYPE or MEMORY!
     }
 }
