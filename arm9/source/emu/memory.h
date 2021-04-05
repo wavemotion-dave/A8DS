@@ -87,7 +87,6 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
 		} \
 	} while (0)
 
-extern int cartA0BF_enabled;
 
 void MEMORY_InitialiseMachine(void);
 void MemStateSave(UBYTE SaveVerbose);

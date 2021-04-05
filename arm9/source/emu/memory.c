@@ -56,23 +56,33 @@
 #include "util.h"
 #include "statesav.h"
 
-UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));
-static UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));
-static UBYTE under_atari_basic[8192] __attribute__ ((aligned (4)));
+UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                      // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
+static UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));         // This is the 16K of OS memory that co-insides with some of the RAM in the upper bank
+static UBYTE under_atari_basic[8192] __attribute__ ((aligned (4)));         // This is the 8K of BASIC memory that co-incides with some of the RAM in the upper bank
 
-rdfunc readmap[256] __attribute__((section(".dtcm")));
-wrfunc writemap[256] __attribute__((section(".dtcm")));
-static UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;
-static ULONG atarixe_memory_size = 0;
+rdfunc readmap[256] __attribute__((section(".dtcm")));                      // The readmap tells the memory fetcher if we should do direct memory read or call a device function instead
+wrfunc writemap[256] __attribute__((section(".dtcm")));                     // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
+static UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;      // Pointer to XE memory (expanded RAM)
+static ULONG atarixe_memory_size = 0;                                       // How much expanded RAM does the system have?
 
-extern const UBYTE *antic_xe_ptr;	/* Separate ANTIC access to extended memory */
-extern int ram_type;
-UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;
+extern const UBYTE *antic_xe_ptr;	                                        // Separate ANTIC access to extended memory ... only for 128K system
+extern int ram_type;                                                        // The RAM type currently selected for use
+UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;              // The bank of memory currently pointed to (or it may point to the 16K bank in main memory)
 
-static int cart809F_enabled = FALSE;
-int cartA0BF_enabled = FALSE;
-static UBYTE under_cart809F[8192];
-static UBYTE under_cartA0BF[8192];
+static int cart809F_enabled = FALSE;                                        // By default, no CART memory mapped to 0x8000 - 0x9FFF
+static int cartA0BF_enabled = FALSE;                                        // By default, no CART memory mapped to 0xA000 - 0xBFFF
+static UBYTE under_cart809F[8192];                                          // To save RAM under CART space
+static UBYTE under_cartA0BF[8192];                                          // To save RAM under CART space
+
+// ------------------------------------------------------------------
+// This is the huge 1MB+ buffer to support the maximum expanded RAM 
+// for the emulator. We support the 1088K version of the Atari XL/XE
+// which only a few games can even access...  The DS has 4MB of 
+// general RAM available and that must hold all our data plus the 
+// XEGS-DS.NDS executable itself. So this takes up a full 25% of our
+// available RAM. Stil... there isn't much else to do with the NDS
+// RAM so we may as well get the most out of it!  
+// ------------------------------------------------------------------
 UBYTE xe_mem_buffer[RAM_1088K * 1024];
 
 void ROM_PutByte(UWORD addr, UBYTE value) {}
@@ -123,6 +133,11 @@ static void AllocXEMemory(void)
 	}
 }
 
+// ---------------------------------------------------------------------------------
+// We call this on every cold start - it sets up the OS and the memory map for 
+// the given machine type. It also removes any "carts" that might be mapped into
+// the 0x8000 to 0xBFFF area (we can re-map BASIC into this region if needed).
+// ---------------------------------------------------------------------------------
 void MEMORY_InitialiseMachine(void) 
 {
 	switch (machine_type) 
@@ -210,10 +225,11 @@ void MEMORY_InitialiseMachine(void)
 	Coldstart();
 }
 
-/*
- * Returns non-zero, if Atari BASIC is disabled by given PORTB output.
- * BASIC is disabled by setting bit 1 in PortB
- */
+// -----------------------------------------------------------------------
+// Returns non-zero, if Atari BASIC is disabled by given PORTB output.
+// BASIC is disabled by setting bit 1 in PortB and is also disabled
+// if our RAM size is larger than 576K
+// -----------------------------------------------------------------------
 static int basic_disabled(UBYTE portb)
 {
 	return (portb & 0x02) != 0
@@ -221,25 +237,20 @@ static int basic_disabled(UBYTE portb)
 }
 
 
-inline void CopyFromMem(UWORD from, UBYTE *to, int size)
-{
-	while (--size >= 0) {
-		*to++ = GetByte(from);
-		from++;
-	}
-}
-
-inline void CopyToMem(const UBYTE *from, UWORD to, int size)
-{
-	while (--size >= 0) {
-		PutByte(to, *from);
-		from++;
-		to++;
-	}
-}
-
-
-/* Note: this function is only for XL/XE! */
+// --------------------------------------------------------------------------
+// Note: this function is only for XL/XE and handles writing of Port B for
+// bank switching. Only RAM sizes above 64k are useful for this routine...
+//
+// Although this was originally taken from the Atari800 emulator source code
+// it has been heavily modified so that we don't try to swap/move 16K of RAM
+// in and out of the 0x4000 to 0x7FFF region but instead we keep a pointer
+// to the expanded RAM area and by using this pointer in the dsGetByte() and
+// dsPutByte() routines (see Memory.H) we can make accessing expanded RAM
+// an order of magnitude faster than it has been in the past. This is really
+// needed speed on the older DS hardware that struggles to move 16K of RAM
+// around up to 500x per second. With this new scheme, awesome games like
+// PANG, Commando320, BombJack and AtariBlast! are playable!
+// --------------------------------------------------------------------------
 void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 {
 	/* Switch XE memory bank in 0x4000-0x7fff */
@@ -397,6 +408,9 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 	}
 }
 
+// -----------------------------------------------
+// Disable the Cart memory from 0x8000 to 0x9FFF 
+// -----------------------------------------------
 void Cart809F_Disable(void)
 {
 	if (cart809F_enabled) {
@@ -410,6 +424,9 @@ void Cart809F_Disable(void)
 	}
 }
 
+// -----------------------------------------------
+// Enable the Cart memory from 0x8000 to 0x9FFF 
+// -----------------------------------------------
 void Cart809F_Enable(void)
 {
 	if (!cart809F_enabled) {
@@ -421,6 +438,9 @@ void Cart809F_Enable(void)
 	}
 }
 
+// -----------------------------------------------
+// Disable the Cart memory from 0xA000 to 0xBFFF 
+// -----------------------------------------------
 void CartA0BF_Disable(void)
 {
 	if (cartA0BF_enabled) {
@@ -444,6 +464,9 @@ void CartA0BF_Disable(void)
 	}
 }
 
+// -----------------------------------------------
+// Enable the Cart memory from 0xA000 to 0xBFFF 
+// -----------------------------------------------
 void CartA0BF_Enable(void)
 {
 	if (!cartA0BF_enabled) {
@@ -461,23 +484,23 @@ void CartA0BF_Enable(void)
 	}
 }
 
-void get_charset(UBYTE *cs)
+
+ITCM_CODE inline void CopyFromMem(UWORD from, UBYTE *to, int size)
 {
-	const UBYTE *p;
-	switch (machine_type) {
-	case MACHINE_OSA:
-	case MACHINE_OSB:
-		p = memory + 0xe000;
-		break;
-	case MACHINE_XLXE:
-		p = atari_os + 0x2000;
-		break;
-	default:
-		/* shouldn't happen */
-		return;
+	while (--size >= 0) {
+		*to++ = GetByte(from);
+		from++;
 	}
-	/* copy font, but change screencode order to ATASCII order */
-	memcpy(cs, p + 0x200, 0x100); /* control chars */
-	memcpy(cs + 0x100, p, 0x200); /* !"#$..., uppercase letters */
-	memcpy(cs + 0x300, p + 0x300, 0x100); /* lowercase letters */
 }
+
+ITCM_CODE inline void CopyToMem(const UBYTE *from, UWORD to, int size)
+{
+	while (--size >= 0) {
+		PutByte(to, *from);
+		from++;
+		to++;
+	}
+}
+
+
+// End of file
