@@ -1,3 +1,14 @@
+/*
+ * MEMORY.H Various macros to access main and extended memory...
+ *
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
+ * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ *
+ * Copying and distribution of this file, with or without modification,
+ * are permitted in any medium without royalty provided the copyright
+ * notice and this notice are preserved.  This file is offered as-is,
+ * without any warranty.
+ */
 #ifndef _MEMORY_H_
 #define _MEMORY_H_
 
@@ -14,20 +25,18 @@
 #define dCopyToMem(from, to, size)		memcpy(memory + (to), from, size)
 #define dFillMem(addr1, value, length)	memset(memory + (addr1), value, length)
 
-// For the newer SIO stuff....
-#define MEMORY_dGetByte(x)				dGetByte(x)
-#define MEMORY_dPutByte(x, y)			dPutByte(x,y)
-#define MEMORY_dGetWord(x)				dGetWord(x)
-#define MEMORY_dPutWord(x, y)		    dPutWord(x,y)
-#define MEMORY_dGetWordAligned(x)	    dGetWord(x)
-#define MEMORY_dPutWordAligned(x, y)    dPutWord(x, y)
-#define MEMORY_dCopyFromMem(from, to, size)	memcpy(to, memory + (from), size)
-#define MEMORY_dCopyToMem(from, to, size) memcpy(memory + (to), from, size)
-#define MEMORY_dFillMem(addr1, value, length)	memset(memory + (addr1), value, length)
+#define RAM       0
+#define ROM       1
+#define HARDWARE  2
 
 extern UBYTE memory[65536 + 2];
 extern UBYTE *memory_bank;
 
+// ---------------------------------------------------------------------------------------
+// Handles bank switching - if we are reading bank 2 (0x4000 to 0x7FFF) we will use the 
+// memory_bank pointer which might point to main memory or it might point to an extended
+// RAM bank - this is handled by the PORT-B access in Memory.c
+// ---------------------------------------------------------------------------------------
 inline UBYTE dGetByte(UWORD addr)
 {
     if ((addr & 0xC000) == 0x4000)
@@ -44,15 +53,12 @@ inline void dPutByte(UWORD addr, UBYTE data)
         memory[addr] = data;
 }
 
-#define RAM       0
-#define ROM       1
-#define HARDWARE  2
-
 typedef UBYTE (*rdfunc)(UWORD addr);
 typedef void (*wrfunc)(UWORD addr, UBYTE value);
 extern rdfunc readmap[256];
 extern wrfunc writemap[256];
 void ROM_PutByte(UWORD addr, UBYTE byte); 
+
 #define GetByte(addr)		(readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
 #define PutByte(addr,byte)	(writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
 #define SetRAM(addr1, addr2) do { \
@@ -87,10 +93,9 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
 		} \
 	} while (0)
 
+#define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
 
 void MEMORY_InitialiseMachine(void);
-void MemStateSave(UBYTE SaveVerbose);
-void MemStateRead(UBYTE SaveVerbose);
 void CopyFromMem(UWORD from, UBYTE *to, int size);
 void CopyToMem(const UBYTE *from, UWORD to, int size);
 void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval);
@@ -98,10 +103,6 @@ void Cart809F_Disable(void);
 void Cart809F_Enable(void);
 void CartA0BF_Disable(void);
 void CartA0BF_Enable(void);
-#define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
 void get_charset(UBYTE *cs);
-
-#define MEMORY_CopyToMem CopyToMem
-#define MEMORY_CopyFromMem CopyFromMem
 
 #endif /* _MEMORY_H_ */

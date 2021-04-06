@@ -1,7 +1,7 @@
 /*
  * INTRO.C contains the splash screen which shows briefly as the emulator loads.
  *
- * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
  * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
  *
  * Copying and distribution of this file, with or without modification,

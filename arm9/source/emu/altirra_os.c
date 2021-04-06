@@ -1,5 +1,5 @@
 /*
- * altirraos_xl.c - XL/XE/XEGS OS ROM replacement
+ * altirra_os.c - XL/XE/XEGS OS ROM replacement
  *
  * Compiled from Altirra-3.20-test4 source file
  * src/Kernel/source.main.xasm

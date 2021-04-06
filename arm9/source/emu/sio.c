@@ -4,7 +4,7 @@
  * been heavily modified for optimization on the Nintendo DS/DSi.
  * The original Atari800 copyright message is retained below.
  *
- * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
  * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
  *
  * Copying and distribution of this file, with or without modification,
@@ -1130,15 +1130,15 @@ static int last_ypos = 0;
 /* SIO patch emulation routine */
 void SIO_Handler(void)
 {
-	int sector = MEMORY_dGetWordAligned(0x30a);
-	UBYTE unit = MEMORY_dGetByte(0x300) + MEMORY_dGetByte(0x301) + 0xff;
+	int sector = dGetWord(0x30a);
+	UBYTE unit = dGetByte(0x300) + dGetByte(0x301) + 0xff;
 	UBYTE result = 0x00;
-	UWORD data = MEMORY_dGetWordAligned(0x304);
-	int length = MEMORY_dGetWordAligned(0x308);
+	UWORD data = dGetWord(0x304);
+	int length = dGetWord(0x308);
 	int realsize = 0;
-	int cmd = MEMORY_dGetByte(0x302);
+	int cmd = dGetByte(0x302);
 
-	if ((unsigned int)MEMORY_dGetByte(0x300) + (unsigned int)MEMORY_dGetByte(0x301) > 0xff) {
+	if ((unsigned int)dGetByte(0x300) + (unsigned int)dGetByte(0x301) > 0xff) {
 		/* carry */
 		unit++;
 	}
@@ -1152,34 +1152,34 @@ void SIO_Handler(void)
 	   Note: While on a real XL OS the copying is done only for SIO devices
 	   (not for PBI ones), here we copy the values for all types of devices -
 	   it's probably harmless. */
-	MEMORY_dPutByte(0x023a, unit); /* sta CDEVIC */
-	MEMORY_dPutByte(0x023b, cmd); /* sta CCOMND */
-	MEMORY_dPutWordAligned(0x023c, sector); /* sta CAUX1; sta CAUX2 */
+	dPutByte(0x023a, unit); /* sta CDEVIC */
+	dPutByte(0x023b, cmd); /* sta CCOMND */
+	dPutWord(0x023c, sector); /* sta CAUX1; sta CAUX2 */
 
 	/* Disk 1 is ASCII '1' = 0x31 etc */
 	/* Disk 1 -> unit = 0 */
 	unit -= 0x31;
 
-	if (MEMORY_dGetByte(0x300) != 0x60 && unit < SIO_MAX_DRIVES && (SIO_drive_status[unit] != SIO_OFF || BINLOAD_start_binloading)) {	/* UBYTE range ! */
+	if (dGetByte(0x300) != 0x60 && unit < SIO_MAX_DRIVES && (SIO_drive_status[unit] != SIO_OFF || BINLOAD_start_binloading)) {	/* UBYTE range ! */
 #ifdef DEBUG
 		Log_print("SIO disk command is %02x %02x %02x %02x %02x   %02x %02x %02x %02x %02x %02x",
-			cmd, MEMORY_dGetByte(0x303), MEMORY_dGetByte(0x304), MEMORY_dGetByte(0x305), MEMORY_dGetByte(0x306),
-			MEMORY_dGetByte(0x308), MEMORY_dGetByte(0x309), MEMORY_dGetByte(0x30a), MEMORY_dGetByte(0x30b),
-			MEMORY_dGetByte(0x30c), MEMORY_dGetByte(0x30d));
+			cmd, dGetByte(0x303), dGetByte(0x304), dGetByte(0x305), dGetByte(0x306),
+			dGetByte(0x308), dGetByte(0x309), dGetByte(0x30a), dGetByte(0x30b),
+			dGetByte(0x30c), dGetByte(0x30d));
 #endif
 		switch (cmd) {
 		case 0x4e:				/* Read Status Block */
 			if (12 == length) {
 				result = SIO_ReadStatusBlock(unit, DataBuffer);
 				if (result == 'C')
-					MEMORY_CopyToMem(DataBuffer, data, 12);
+					CopyToMem(DataBuffer, data, 12);
 			}
 			else
 				result = 'E';
 			break;
 		case 0x4f:				/* Write Status Block */
 			if (12 == length) {
-				MEMORY_CopyFromMem(data, DataBuffer, 12);
+				CopyFromMem(data, DataBuffer, 12);
 				result = SIO_WriteStatusBlock(unit, DataBuffer);
 			}
 			else
@@ -1191,7 +1191,7 @@ void SIO_Handler(void)
 		case 0xD7:
 			SIO_SizeOfSector(unit, sector, &realsize, NULL);
 			if (realsize == length) {
-				MEMORY_CopyFromMem(data, DataBuffer, realsize);
+				CopyFromMem(data, DataBuffer, realsize);
 				result = SIO_WriteSector(unit, sector, DataBuffer);
 			}
 			else
@@ -1219,7 +1219,7 @@ void SIO_Handler(void)
 			if (realsize == length) {
 				result = SIO_ReadSector(unit, sector, DataBuffer);
 				if (result == 'C')
-					MEMORY_CopyToMem(DataBuffer, data, realsize);
+					CopyToMem(DataBuffer, data, realsize);
 			}
 			else
 				result = 'E';
@@ -1228,7 +1228,7 @@ void SIO_Handler(void)
 			if (4 == length) {
 				result = SIO_DriveStatus(unit, DataBuffer);
 				if (result == 'C') {
-					MEMORY_CopyToMem(DataBuffer, data, 4);
+					CopyToMem(DataBuffer, data, 4);
 				}
 			}
 			else
@@ -1241,7 +1241,7 @@ void SIO_Handler(void)
 			if (realsize == length) {
 				result = SIO_FormatDisk(unit, DataBuffer, realsize, SIO_format_sectorcount[unit]);
 				if (result == 'C')
-					MEMORY_CopyToMem(DataBuffer, data, realsize);
+					CopyToMem(DataBuffer, data, realsize);
 			}
 			else {
 				/* there are programs which send the format-command but don't wait for the result (eg xf-tools) */
@@ -1255,7 +1255,7 @@ void SIO_Handler(void)
 			if (realsize == length) {
 				result = SIO_FormatDisk(unit, DataBuffer, 128, 1040);
 				if (result == 'C')
-					MEMORY_CopyToMem(DataBuffer, data, realsize);
+					CopyToMem(DataBuffer, data, realsize);
 			}
 			else {
 				SIO_FormatDisk(unit, DataBuffer, 128, 1040);
@@ -1267,9 +1267,9 @@ void SIO_Handler(void)
 		}
 	}
 	/* cassette i/o */
-	else if (MEMORY_dGetByte(0x300) == 0x60) {
+	else if (dGetByte(0x300) == 0x60) {
 		int storagelength = 0;
-		UBYTE gaps = MEMORY_dGetByte(0x30b);
+		UBYTE gaps = dGetByte(0x30b);
 		switch (cmd){
 		case 0x52:	/* read */
 			/* set expected Gap */
@@ -1288,14 +1288,14 @@ void SIO_Handler(void)
 				result = 'E';
 			/* if all went ok, copy to Atari */
 			if (result == 'C')
-				MEMORY_CopyToMem(CASSETTE_buffer, data, length);
+				CopyToMem(CASSETTE_buffer, data, length);
 			break;
 		case 0x57:	/* write */
 			SIO_last_op = SIO_LAST_WRITE;
 			SIO_last_drive = 0x61;
 			SIO_last_op_time = 0x10;
 			/* put record into buffer */
-			MEMORY_CopyFromMem(data, CASSETTE_buffer, length);
+			CopyFromMem(data, CASSETTE_buffer, length);
 			/* eval checksum over buffer data */
 			CASSETTE_buffer[length] = SIO_ChkSum(CASSETTE_buffer, length);
 			/* add pregap length */
@@ -1336,8 +1336,8 @@ void SIO_Handler(void)
 		break;
 	}
 	CPU_regA = 0;	/* MMM */
-	MEMORY_dPutByte(0x0303, CPU_regY);
-	MEMORY_dPutByte(0x42,0);
+	dPutByte(0x0303, CPU_regY);
+	dPutByte(0x42,0);
 	CPU_SetC;
 }
 

@@ -1,4 +1,21 @@
 /*
+ * ATARI.C contains the basic machine settings for the emulator. 
+ * This defines how much RAM and whether the machine is compatible
+ * with the older stock Atari 800 or the newer XL/XE series (possibly
+ * with extended RAM banks).  This routine also sorts out the various
+ * supported ROM file types - right now, ATR, ATX and XEX are the only
+ * files supported (which will run 99% of everything 8-bit).
+ *
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
+ * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ *
+ * Copying and distribution of this file, with or without modification,
+ * are permitted in any medium without royalty provided the copyright
+ * notice and this notice are preserved.  This file is offered as-is,
+ * without any warranty.
+ */
+
+/*
  * atari.c - main high-level routines
  *
  * Copyright (c) 1995-1998 David Firth

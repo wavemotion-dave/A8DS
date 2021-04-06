@@ -58,17 +58,17 @@ void ESC_Add(UWORD address, UBYTE esc_code, ESC_FunctionType function)
 {
 	esc_address[esc_code] = address;
 	esc_function[esc_code] = function;
-	MEMORY_dPutByte(address, 0xf2);			/* ESC */
-	MEMORY_dPutByte(address + 1, esc_code);	/* ESC CODE */
+	dPutByte(address, 0xf2);			/* ESC */
+	dPutByte(address + 1, esc_code);	/* ESC CODE */
 }
 
 void ESC_AddEscRts(UWORD address, UBYTE esc_code, ESC_FunctionType function)
 {
 	esc_address[esc_code] = address;
 	esc_function[esc_code] = function;
-	MEMORY_dPutByte(address, 0xf2);			/* ESC */
-	MEMORY_dPutByte(address + 1, esc_code);	/* ESC CODE */
-	MEMORY_dPutByte(address + 2, 0x60);		/* RTS */
+	dPutByte(address, 0xf2);			/* ESC */
+	dPutByte(address + 1, esc_code);	/* ESC CODE */
+	dPutByte(address + 2, 0x60);		/* RTS */
 }
 
 /* 0xd2 is ESCRTS, which works same as pair of ESC and RTS (I think so...).
@@ -81,8 +81,8 @@ void ESC_AddEscRts2(UWORD address, UBYTE esc_code, ESC_FunctionType function)
 {
 	esc_address[esc_code] = address;
 	esc_function[esc_code] = function;
-	MEMORY_dPutByte(address, 0xd2);			/* ESCRTS */
-	MEMORY_dPutByte(address + 1, esc_code);	/* ESC CODE */
+	dPutByte(address, 0xd2);			/* ESCRTS */
+	dPutByte(address + 1, esc_code);	/* ESC CODE */
 }
 
 void ESC_Remove(UBYTE esc_code)
@@ -100,7 +100,7 @@ void ESC_Run(UBYTE esc_code)
 	CPU_regPC -= 2;
 	UI_crash_address = CPU_regPC;
 	UI_crash_afterCIM = CPU_regPC + 2;
-	UI_crash_code = MEMORY_dGetByte(UI_crash_address);
+	UI_crash_code = dGetByte(UI_crash_address);
 	UI_Run();
 #else /* CRASH_MENU */
 	CPU_cim_encountered = 1;
@@ -152,13 +152,13 @@ void ESC_PatchOS(void)
 			return;
 		}
 		/* don't hurt non-standard OSes that may not support cassette at all  */
-		if (MEMORY_dGetByte(addr_l)     == 0xa9 && MEMORY_dGetByte(addr_l + 1) == 0x03
-		 && MEMORY_dGetByte(addr_l + 2) == 0x8d && MEMORY_dGetByte(addr_l + 3) == 0x2a
-		 && MEMORY_dGetByte(addr_l + 4) == 0x02
-		 && MEMORY_dGetByte(addr_s)     == check_s_0
-		 && MEMORY_dGetByte(addr_s + 1) == check_s_1
-		 && MEMORY_dGetByte(addr_s + 2) == 0x20 && MEMORY_dGetByte(addr_s + 3) == 0x5c
-		 && MEMORY_dGetByte(addr_s + 4) == 0xe4) {
+		if (dGetByte(addr_l)     == 0xa9 && dGetByte(addr_l + 1) == 0x03
+		 && dGetByte(addr_l + 2) == 0x8d && dGetByte(addr_l + 3) == 0x2a
+		 && dGetByte(addr_l + 4) == 0x02
+		 && dGetByte(addr_s)     == check_s_0
+		 && dGetByte(addr_s + 1) == check_s_1
+		 && dGetByte(addr_s + 2) == 0x20 && dGetByte(addr_s + 3) == 0x5c
+		 && dGetByte(addr_s + 4) == 0xe4) {
 			ESC_Add(addr_l, ESC_COPENLOAD, CASSETTE_LeaderLoad);
 			ESC_Add(addr_s, ESC_COPENSAVE, CASSETTE_LeaderSave);
 		}
@@ -175,11 +175,11 @@ void ESC_PatchOS(void)
 		/* Disable Checksum Test */
 		if (os_type != OS_ALTIRRA_XL)
 		{
-		  MEMORY_dPutByte(0xc31d, 0xea);
-		  MEMORY_dPutByte(0xc31e, 0xea);
+		  dPutByte(0xc31d, 0xea);
+		  dPutByte(0xc31e, 0xea);
 		}
-		//MEMORY_dPutByte(0xc319, 0x8e);
-		//MEMORY_dPutByte(0xc31a, 0xff);
+		//dPutByte(0xc319, 0x8e);
+		//dPutByte(0xc31a, 0xff);
 	}
 }
 
@@ -189,7 +189,7 @@ void ESC_UpdatePatches(void)
 	case Atari800_MACHINE_OSA:
 	case Atari800_MACHINE_OSB:
 		/* Restore unpatched OS */
-		MEMORY_dCopyToMem(atari_os, 0xd800, 0x2800);
+		dCopyToMem(atari_os, 0xd800, 0x2800);
 		/* Set patches */
 		ESC_PatchOS();
 		Devices_UpdatePatches();
@@ -199,8 +199,8 @@ void ESC_UpdatePatches(void)
 		if ((PIA_PORTB & 1) == 0)
 			break;
 		/* Restore unpatched OS */
-		MEMORY_dCopyToMem(atari_os, 0xc000, 0x1000);
-		MEMORY_dCopyToMem(atari_os + 0x1800, 0xd800, 0x2800);
+		dCopyToMem(atari_os, 0xc000, 0x1000);
+		dCopyToMem(atari_os + 0x1800, 0xd800, 0x2800);
 		/* Set patches */
 		ESC_PatchOS();
 		Devices_UpdatePatches();

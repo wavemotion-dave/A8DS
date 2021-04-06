@@ -3,7 +3,7 @@
  * This is where the main state machine is located and executes at the
  * TV frequency (60Hz or 50Hz depending on NTSC or PAL).
  *
- * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
  * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
  *
  * Copying and distribution of this file, with or without modification,
@@ -140,11 +140,11 @@ static void DumpDebugData(void)
 // ---------------------------------------------------------------------------
 void dsWriteConfig(void)
 {
-    dsPrintValue(4,0,0, (char*)"CFG");
+    dsPrintValue(3,0,0, (char*)"CFG");
     WriteGameSettings();
 
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    dsPrintValue(4,0,0, (char*)"   ");
+    dsPrintValue(3,0,0, (char*)"   ");
 }
 
 
@@ -1886,9 +1886,18 @@ void dsMainLoop(void)
                 ;
         }
 
-        // Execute one frame
+        // ------------------------------------------------------------------------
+        // Execute one Atari frame... this is where all of the emulation stuff
+        // comes into play. Many thousands of CPU calls and GTIA/Antic accesses
+        // are all kicked off via this call to handle just a single Atari 800 
+        // frame. All of the NTSC and PAL scanlines are done here - and this is
+        // where the Nitnendo DS is spending most of its CPU time. 
+        // ------------------------------------------------------------------------
         Atari800_Frame();
 
+        // ----------------------------------------------------
+        // If we have processed 60/50 frames we start anew...
+        // ----------------------------------------------------
         if (++atari_frames >= (tv_mode == TV_NTSC ? 60:50))
         {
             TIMER0_CR=0;
@@ -1915,7 +1924,9 @@ void dsMainLoop(void)
             if(bAtariCrash) dsPrintValue(1,23,0, "GAME CRASH - PICK ANOTHER GAME");
         }
 
-        // Read keys
+        // --------------------------------------------
+        // Read DS/DSi keys and process them below...
+        // --------------------------------------------
         keys_pressed=keysCurrent();
         key_consol = CONSOL_NONE;
 
@@ -1959,7 +1970,9 @@ void dsMainLoop(void)
 
         if (keyboard_debounce > 0) keyboard_debounce--;
 
-        // if touch screen pressed
+        // ------------------------------------------------------
+        // Check if the touch screen pressed and handle it...
+        // ------------------------------------------------------
         if (keys_pressed & KEY_TOUCH)
         {
             touchPosition touch;

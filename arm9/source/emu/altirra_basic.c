@@ -1,5 +1,5 @@
 /*
- * atbasic.c - BASIC ROM replacement
+ * altirra_basic.c - BASIC ROM replacement
  *
  * Compiled from Altirra-3.20-test4 source files
  * src/ATBasic

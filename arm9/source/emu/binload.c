@@ -4,7 +4,7 @@
  * been heavily modified for optimization on the Nintendo DS/DSi.
  * The original Atari800 copyright message is retained below.
  *
- * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
  * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
  *
  * Copying and distribution of this file, with or without modification,
@@ -80,7 +80,7 @@ static int read_word(void)
 			Log_print("binload: not valid BIN file");
 			return -1;
 		}
-		CPU_regPC = MEMORY_dGetWordAligned(0x2e0);
+		CPU_regPC = dGetWord(0x2e0);
 		return -1;
 	}
 	return buf[0] + (buf[1] << 8);
@@ -92,14 +92,14 @@ static void loader_cont(void)
 	if (BINLOAD_bin_file == NULL)
 		return;
 	if (BINLOAD_start_binloading) {
-		MEMORY_dPutByte(0x244, 0);
-		MEMORY_dPutByte(0x09, 1);
+		dPutByte(0x244, 0);
+		dPutByte(0x09, 1);
 	}
 	else
 		CPU_regS += 2;	/* pop ESC code */
 
 	if (init2e3)
-		MEMORY_dPutByte(0x2e3, 0xd7);
+		dPutByte(0x2e3, 0xd7);
 	init2e3=FALSE;
 	do {
 		if((!BINLOAD_wait_active || !BINLOAD_slow_xex_loading) && segfinished){
@@ -117,7 +117,7 @@ static void loader_cont(void)
 			to = (UWORD) temp;
 
 			if (BINLOAD_start_binloading) {
-				MEMORY_dPutWordAligned(0x2e0, from);
+				dPutWord(0x2e0, from);
 				BINLOAD_start_binloading = FALSE;
 			}
 			to++;
@@ -142,13 +142,13 @@ static void loader_cont(void)
 			if (byte == EOF) {
 				fclose(BINLOAD_bin_file);
 				BINLOAD_bin_file = NULL;
-				CPU_regPC = MEMORY_dGetWordAligned(0x2e0);
-				if (MEMORY_dGetByte(0x2e3) != 0xd7) {
+				CPU_regPC = dGetWord(0x2e0);
+				if (dGetByte(0x2e3) != 0xd7) {
 					/* run INIT routine which RTSes directly to RUN routine */
 					CPU_regPC--;
-					MEMORY_dPutByte(0x0100 + CPU_regS--, CPU_regPC >> 8);		/* high */
-					MEMORY_dPutByte(0x0100 + CPU_regS--, CPU_regPC & 0xff);	/* low */
-					CPU_regPC = MEMORY_dGetWordAligned(0x2e2);
+					dPutByte(0x0100 + CPU_regS--, CPU_regPC >> 8);		/* high */
+					dPutByte(0x0100 + CPU_regS--, CPU_regPC & 0xff);	/* low */
+					CPU_regPC = dGetWord(0x2e2);
 				}
 				return;
 			}
@@ -156,18 +156,18 @@ static void loader_cont(void)
 			from++;
 		} while (from != to);
 		segfinished = TRUE;
-	} while (MEMORY_dGetByte(0x2e3) == 0xd7);
+	} while (dGetByte(0x2e3) == 0xd7);
 
 	CPU_regS--;
 	ESC_Add((UWORD) (0x100 + CPU_regS), ESC_BINLOADER_CONT, loader_cont);
 	CPU_regS--;
-	MEMORY_dPutByte(0x0100 + CPU_regS--, 0x01);	/* high */
-	MEMORY_dPutByte(0x0100 + CPU_regS, CPU_regS + 1);	/* low */
+	dPutByte(0x0100 + CPU_regS--, 0x01);	/* high */
+	dPutByte(0x0100 + CPU_regS, CPU_regS + 1);	/* low */
 	CPU_regS--;
-	CPU_regPC = MEMORY_dGetWordAligned(0x2e2);
+	CPU_regPC = dGetWord(0x2e2);
 	CPU_SetC;
 
-	MEMORY_dPutByte(0x0300, 0x31);	/* for "Studio Dream" */
+	dPutByte(0x0300, 0x31);	/* for "Studio Dream" */
 	init2e3 = TRUE;
 }
 
