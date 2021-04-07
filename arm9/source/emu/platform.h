@@ -1,7 +1,6 @@
 #ifndef _PLATFORM_H_
 #define _PLATFORM_H_
 
-#include "config.h"
 #include <stdio.h>
 
 /* This include file defines prototypes for platform-specific functions. */

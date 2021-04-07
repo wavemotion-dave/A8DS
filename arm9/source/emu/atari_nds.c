@@ -1,21 +1,26 @@
-/* $Id: atari_vga.c,v 1.1 2001/10/26 05:36:48 fox Exp $ */
-/* -------------------------------------------------------------------------- */
-
 /*
- * DJGPP - VGA Backend for David Firth's Atari 800 emulator
+ * ATARI_NDS.C contains some Nintendo DS specific handling to bridge the
+ * more generic Atari800 sources to the actual NDS hardware.  This used to 
+ * be more useful when we didn't do a lot of NDS specific stuff directly in
+ * the code which helped with gaining more raw speed for emulation. At some
+ * point, this little bit of code can be subsumed into the main code and this
+ * file can go away...
  *
- * by Ivo van Poorten (C)1996  See file COPYRIGHT for policy.
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
+ * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
  *
+ * Copying and distribution of this file, with or without modification,
+ * are permitted in any medium without royalty provided the copyright
+ * notice and this notice are preserved.  This file is offered as-is,
+ * without any warranty.
  */
-
-/* -------------------------------------------------------------------------- */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include "main.h"
-#include "config.h"
+#include "atari.h"
 #include "cpu.h"
 #include "input.h"
 #include "sound.h"

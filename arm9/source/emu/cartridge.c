@@ -1,4 +1,20 @@
 /*
+ * CARTRIDGE.C contains a subset of Atari800 cart support. The XEGS-DS emulator
+ * is targeting XEX and ATR files... Carts are a different beast and the only
+ * "cart" we are supporting is an external Atari BASIC cart. It's very possible
+ * to go back to the core Atari800 sources and pull back in all the other cart
+ * type supports - but that's an exercise left to the next generation!
+ *
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
+ * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ *
+ * Copying and distribution of this file, with or without modification,
+ * are permitted in any medium without royalty provided the copyright
+ * notice and this notice are preserved.  This file is offered as-is,
+ * without any warranty.
+ */
+ 
+ /*
  * cartridge.c - cartridge emulation
  *
  * Copyright (C) 2001-2003 Piotr Fusik
@@ -22,7 +38,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,13 +52,14 @@
 #include "rtime.h"
 #include "altirra_basic.h"
 
-int CART_Checksum(const UBYTE *image, int nbytes)
-{
-    return 0;
-}
-
 extern UBYTE ROM_basic[];
 extern int basic_type;
+
+// ------------------------------------------------------------------
+// The only "cart" we support is a BASIC cart. This can either be
+// Altirra built-in BASIC or an actual ATARI Rev C Basic (read 
+// from SD card).
+// ------------------------------------------------------------------
 int CART_Insert(int enabled) 
 {
     if (enabled)
@@ -69,6 +85,9 @@ int CART_Insert(int enabled)
     return 1;
 }
 
+// ------------------------------------------------------------------
+// Remove the "BASIC" cart and restore the RAM under this...
+// ------------------------------------------------------------------
 void CART_Remove(void) 
 {
     Cart809F_Disable();
@@ -78,34 +97,33 @@ void CART_Remove(void)
 
 void CART_Start(void) 
 {
+    // Nothing to do... CART insert is all we need...
 }
 
-/* a read from D500-D5FF area */
+// -----------------------------------------------------------------
+// A read from D500-D5FF area triggers this call... mostly we only
+// need this to handle the R-Time 8 "cart" that is supported for
+// date/time mostly for Sparta-DOS.
+// -----------------------------------------------------------------
 UBYTE CART_GetByte(UWORD addr)
 {
-	if (rtime_enabled && (addr == 0xd5b8 || addr == 0xd5b9))
+	if (addr == 0xd5b8 || addr == 0xd5b9)
     {
 		return RTIME_GetByte();
     }
     return 0;
 }
 
-/* a write to D500-D5FF area */
+// -----------------------------------------------------------------
+// A write to D500-D5FF area triggrs this call... mostly we only
+// need this to handle the R-Time 8 "cart" that is supported for
+// date/time mostly for Sparta-DOS.
+// -----------------------------------------------------------------
 void CART_PutByte(UWORD addr, UBYTE byte)
 {
-	if (rtime_enabled && (addr == 0xd5b8 || addr == 0xd5b9)) 
+	if (addr == 0xd5b8 || addr == 0xd5b9) 
     {
 		RTIME_PutByte(byte);
 	}
 }
-
-
-void CARTStateRead(void)
-{
-}
-
-void CARTStateSave(void)
-{
-}
-
 

@@ -1,4 +1,17 @@
 /*
+ * ESC.C contains the handling for all Atari 800 Escape Codes used to patch the OS
+ * This is mostly for disk speedup - which can be toggled on/off in Options (gear icon).
+ *
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
+ * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ *
+ * Copying and distribution of this file, with or without modification,
+ * are permitted in any medium without royalty provided the copyright
+ * notice and this notice are preserved.  This file is offered as-is,
+ * without any warranty.
+ */
+
+/*
  * esc.c - Patch the OS with escape sequences
  *
  * Copyright (c) 1995-1998 David Firth
@@ -16,13 +29,12 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ *
  * You should have received a copy of the GNU General Public License
  * along with Atari800; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "config.h"
 #include "atari.h"
 #include "cassette.h"
 #include "cpu.h"
@@ -95,21 +107,8 @@ void ESC_Run(UBYTE esc_code)
 		esc_function[esc_code]();
 		return;
 	}
-#ifdef CRASH_MENU
-	CPU_regPC -= 2;
-	UI_crash_address = CPU_regPC;
-	UI_crash_afterCIM = CPU_regPC + 2;
-	UI_crash_code = dGetByte(UI_crash_address);
-	UI_Run();
-#else /* CRASH_MENU */
 	CPU_cim_encountered = 1;
-#ifndef __PLUS
-	if (!Atari800_Exit(TRUE))
-		exit(0);
-#else /* __PLUS */
 	Atari800_Exit(TRUE);
-#endif /* __PLUS */
-#endif /* CRASH_MENU */
 }
 
 void ESC_PatchOS(void)

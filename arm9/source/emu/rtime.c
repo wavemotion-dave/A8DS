@@ -1,5 +1,5 @@
 /*
- * SIO.C contains the emulation of the R-TIME 8 cartridge (for time/date support)
+ * RTIME.C contains the emulation of the R-TIME 8 cartridge (for time/date support)
  * The baseline for this file is the Atari800 4.20 source and has
  * been heavily modified for optimization on the Nintendo DS/DSi.
  * The original Atari800 copyright message is retained below.
@@ -41,18 +41,15 @@
 #define HAVE_TIME 
 #define HAVE_GETTIME
 
-#include "config.h"
 #include <stdlib.h>	/* for NULL */
 #include <string.h>	/* for strcmp() */
 #include <time.h>
 #include "atari.h"
 
-int rtime_enabled = 1;
-
 static int rtime_state = 0;
 				/* 0 = waiting for register # */
-				/* 1 = got register #, waiting for hi nybble */
-				/* 2 = got hi nybble, waiting for lo nybble */
+				/* 1 = got register #, waiting for hi nibble */
+				/* 2 = got hi nibble, waiting for lo nibble */
 static int rtime_tmp = 0;
 static int rtime_tmp2 = 0;
 
@@ -60,6 +57,7 @@ static UBYTE regset[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 void RTIME_Initialise(void)
 {
+    // RTIME is always initialized... nothing to do....
 }
 
 
@@ -68,6 +66,12 @@ static int hex2bcd(int h)
 	return ((h / 10) << 4) | (h % 10);
 }
 
+// -------------------------------------------------------------------
+// Need to get time on the Nintendo DS so we can plug it back in to 
+// the Atari R-Time 8 access... this is only useful for things like
+// Sparta DOS but it's simple enough and small enough code that we
+// just support it.  If push came to shove, we could ditch this all.
+// -------------------------------------------------------------------
 static int gettime(int p)
 {
 	time_t tt;

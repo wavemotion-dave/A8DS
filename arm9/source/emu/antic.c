@@ -37,8 +37,6 @@
  * along with Atari800; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include "config.h"
 #include <string.h>
 #include <nds.h>
 
@@ -1226,11 +1224,7 @@ static void draw_antic_2_gtia9(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr
 
 static void draw_antic_2_gtia10(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
-#ifdef WORDS_UNALIGNED_OK
-	ULONG lookup_gtia10[16];
-#else
-UWORD lookup_gtia10[16];
-#endif
+    UWORD lookup_gtia10[16];
 	INIT_ANTIC_2
 	if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
 		prepare_an_antic_2(nchars, ANTIC_memptr, t_pm_scanline_ptr);
@@ -1238,17 +1232,6 @@ UWORD lookup_gtia10[16];
 		return;
 	}
 
-#ifdef WORDS_UNALIGNED_OK
-	lookup_gtia10[0] = cl_lookup[C_PM0] | (cl_lookup[C_PM0] << 16);
-	lookup_gtia10[1] = cl_lookup[C_PM1] | (cl_lookup[C_PM1] << 16);
-	lookup_gtia10[2] = cl_lookup[C_PM2] | (cl_lookup[C_PM2] << 16);
-	lookup_gtia10[3] = cl_lookup[C_PM3] | (cl_lookup[C_PM3] << 16);
-	lookup_gtia10[12] = lookup_gtia10[4] = cl_lookup[C_PF0] | (cl_lookup[C_PF0] << 16);
-	lookup_gtia10[13] = lookup_gtia10[5] = cl_lookup[C_PF1] | (cl_lookup[C_PF1] << 16);
-	lookup_gtia10[14] = lookup_gtia10[6] = cl_lookup[C_PF2] | (cl_lookup[C_PF2] << 16);
-	lookup_gtia10[15] = lookup_gtia10[7] = cl_lookup[C_PF3] | (cl_lookup[C_PF3] << 16);
-	lookup_gtia10[8] = lookup_gtia10[9] = lookup_gtia10[10] = lookup_gtia10[11] = lookup_gtia9[0];
-#else
  	lookup_gtia10[0] = cl_lookup[C_PM0];
  	lookup_gtia10[1] = cl_lookup[C_PM1];
  	lookup_gtia10[2] = cl_lookup[C_PM2];
@@ -1258,7 +1241,7 @@ UWORD lookup_gtia10[16];
  	lookup_gtia10[14] = lookup_gtia10[6] = cl_lookup[C_PF2];
  	lookup_gtia10[15] = lookup_gtia10[7] = cl_lookup[C_PF3];
  	lookup_gtia10[8] = lookup_gtia10[9] = lookup_gtia10[10] = lookup_gtia10[11] = cl_lookup[C_BAK];
-#endif
+
 	ptr++;
 	t_pm_scanline_ptr = (const ULONG *) (((const UBYTE *) t_pm_scanline_ptr) + 1);
 	CHAR_LOOP_BEGIN
@@ -1911,30 +1894,14 @@ static void draw_antic_f_gtia9(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr
 
 static void draw_antic_f_gtia10(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
-//ALEK 
-#ifdef WORDS_UNALIGNED_OK
-	ULONG lookup_gtia10[16];
-#else
-UWORD lookup_gtia10[16];
-#endif
+    UWORD lookup_gtia10[16];
+
 	if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
 		prepare_an_antic_f(nchars, ANTIC_memptr, t_pm_scanline_ptr);
 		draw_an_gtia10(t_pm_scanline_ptr);
 		return;
 	}
-//ALEK 
-#ifdef WORDS_UNALIGNED_OK
-	lookup_gtia10[0] = cl_lookup[C_PM0] | (cl_lookup[C_PM0] << 16);
-	lookup_gtia10[1] = cl_lookup[C_PM1] | (cl_lookup[C_PM1] << 16);
-	lookup_gtia10[2] = cl_lookup[C_PM2] | (cl_lookup[C_PM2] << 16);
-	lookup_gtia10[3] = cl_lookup[C_PM3] | (cl_lookup[C_PM3] << 16);
-	lookup_gtia10[12] = lookup_gtia10[4] = cl_lookup[C_PF0] | (cl_lookup[C_PF0] << 16);
-	lookup_gtia10[13] = lookup_gtia10[5] = cl_lookup[C_PF1] | (cl_lookup[C_PF1] << 16);
-	lookup_gtia10[14] = lookup_gtia10[6] = cl_lookup[C_PF2] | (cl_lookup[C_PF2] << 16);
-	lookup_gtia10[15] = lookup_gtia10[7] = cl_lookup[C_PF3] | (cl_lookup[C_PF3] << 16);
-	lookup_gtia10[8] = lookup_gtia10[9] = lookup_gtia10[10] = lookup_gtia10[11] = lookup_gtia9[0];
-//ALEK 
-#else
+    
 	lookup_gtia10[0] = cl_lookup[C_PM0];
 	lookup_gtia10[1] = cl_lookup[C_PM1];
 	lookup_gtia10[2] = cl_lookup[C_PM2];
@@ -1944,7 +1911,7 @@ UWORD lookup_gtia10[16];
 	lookup_gtia10[14] = lookup_gtia10[6] = cl_lookup[C_PF2];
 	lookup_gtia10[15] = lookup_gtia10[7] = cl_lookup[C_PF3];
 	lookup_gtia10[8] = lookup_gtia10[9] = lookup_gtia10[10] = lookup_gtia10[11] = cl_lookup[C_BAK];
-#endif
+
 	ptr++;
 	t_pm_scanline_ptr = (const ULONG *) (((const UBYTE *) t_pm_scanline_ptr) + 1);
 	CHAR_LOOP_BEGIN

@@ -1,12 +1,9 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
-#include "config.h"
+#include "atari.h"
 #include <stdio.h>
 #include <string.h>
-#ifdef WIN32
-#include <windows.h>
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

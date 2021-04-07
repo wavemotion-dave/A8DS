@@ -41,7 +41,6 @@
    [OSMAN] - Atari Home Computer System Technical Reference Notes - Operating System
              User's Manual - CA016555 Rev. A - 1982 Atari, Inc.
  */
-#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

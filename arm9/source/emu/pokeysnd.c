@@ -23,7 +23,6 @@
 */
 #include <nds.h>
 
-#include "config.h"
 #include "atari.h"
 #include "pokeysnd.h"
 

@@ -1,7 +1,6 @@
 #ifndef _ATARI_H_
 #define _ATARI_H_
 
-#include "config.h"
 #include <stdio.h> /* FILENAME_MAX */
 #ifdef WIN32
 #include <windows.h>
@@ -35,6 +34,8 @@ extern int disk_readonly[DISK_MAX];
 #define NODIRTYCOMPARE
 
 #define PAGED_ATTRIB 1
+#define SOUND               1
+#define INTERPOLATE_SOUND   1
 
 #define ATARI_TITLE  "XEGS-DS"
 

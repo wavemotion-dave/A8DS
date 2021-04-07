@@ -43,11 +43,6 @@
 
 	Define CPU65C02 if you don't want 6502 JMP() bug emulation.
 	Define CYCLES_PER_OPCODE to update xpos in each opcode's emulation.
-	Define MONITOR_BREAK if you want code breakpoints and execution history.
-	Define MONITOR_BREAKPOINTS if you want user-defined breakpoints.
-	Define MONITOR_PROFILE if you want 6502 opcode profiling.
-	Define MONITOR_TRACE if you want the code to be disassembled while it is executed.
-	Define NO_GOTO if you compile with GCC, but want switch() rather than goto *.
 	Define NO_V_FLAG_VARIABLE to don't use local (static) variable V for the V flag.
 	Define PC_PTR to emulate 6502 Program Counter using UBYTE *.
 	Define PREFETCH_CODE to always fetch 2 bytes after the opcode.
@@ -70,7 +65,6 @@
 	The 6502 emulation also ignores memory attributes for accesses to page 0 and page 1.
  */
 
-#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>	/* exit() */
 #include "cpu.h"
@@ -1836,15 +1830,8 @@ void GO(int limit)
 		UPDATE_GLOBAL_REGS;
 		CPU_GetStatus();
 
-#ifdef CRASH_MENU
-		crash_address = GET_PC();
-		crash_afterCIM = GET_PC() + 1;
-		crash_code = insn;
-		ui();
-#else
 		cim_encountered = TRUE;
 		ENTER_MONITOR;
-#endif /* CRASH_MENU */
 
 		CPU_PutStatus();
 		UPDATE_LOCAL_REGS;
@@ -1941,11 +1928,7 @@ void GO(int limit)
 		}
 		DONE
 
-#ifdef NO_GOTO
-	}
-#else
 	next:
-#endif
 
 		/* This "continue" does nothing here.
 		   But it is necessary because, if we're not using NO_GOTO nor MONITOR_BREAK,

@@ -1,7 +1,6 @@
 #ifndef _CARTRIDGE_H_
 #define _CARTRIDGE_H_
 
-#include "config.h"
 #include "atari.h"
 
 #define CART_NONE		0
@@ -79,7 +78,6 @@ extern struct cart_t myCart;
 extern int cart_kb[CART_LAST_SUPPORTED + 1];
 
 int CART_IsFor5200(int type);
-int CART_Checksum(const UBYTE *image, int nbytes);
 int CART_Insert(int enabled);
 void CART_Remove(void);
 void CART_Start(void);

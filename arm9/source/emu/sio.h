@@ -1,8 +1,6 @@
 #ifndef SIO_H_
 #define SIO_H_
 
-#include "config.h"
-
 #include <stdio.h> /* FILENAME_MAX */
 
 #include "atari.h"

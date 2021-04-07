@@ -12,7 +12,6 @@
 #ifndef _MEMORY_H_
 #define _MEMORY_H_
 
-#include "config.h"
 #include <string.h>	/* memcpy, memset */
 
 #include "atari.h"

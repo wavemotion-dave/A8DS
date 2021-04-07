@@ -40,7 +40,7 @@
 #ifndef _POKEYSOUND_H
 #define _POKEYSOUND_H
 
-#include "config.h"
+#include "atari.h"
 #include "pokey.h"
 
 #ifndef _TYPEDEF_H

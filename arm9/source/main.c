@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <fat.h>
 #include <nds.h>
-
 #include <unistd.h>
 
 #include "main.h"
@@ -24,17 +23,31 @@ extern void load_os(void);
 extern void install_os(void);
 extern int skip_frames;
 
-// Program entry point
+// -----------------------------------------------------------------------
+// Program entry point - for things like Twilight Menu++ (TWL++), we can 
+// take a ROM (XEX or ATR) on the command line and we will auto-load that 
+// and start the game running.
+// -----------------------------------------------------------------------
 int main(int argc, char **argv) 
 {
-    // Init sound
+    // ----------------------------------
+    // Init basic sound and LCD use...
+    // ----------------------------------
     consoleDemoInit();
     soundEnable();
     lcdMainOnTop();
     
-    skip_frames = (isDSiMode() ? FALSE:TRUE);   // For older DS models, we force skip frames to get full speed...
+    // --------------------------------------------------------------------
+    // For older DS models, we force skip frames to get full speed...
+    // This does come with some problems - skipping frames can cause
+    // problems with a few games that don't get the collision detection
+    // right with skipped frames - Caverns of Mars, Buried Bucks and 
+    // Jumpman are examples of games that won't run right. The user can
+    // adjust the frame skip in the Options (Gear icon) area.
+    // --------------------------------------------------------------------
+    skip_frames = (isDSiMode() ? FALSE:TRUE);
 
-    // Init Fat
+    // Init FAT for file system use...
     if (!fatInitDefault()) 
     {
         iprintf("Unable to initialize libfat!\n");
@@ -53,7 +66,9 @@ int main(int argc, char **argv)
     load_os();          // Read in the "atarixl.rom" file or use the built-in Altirra OS
     install_os();       // And install the right OS into our system...
 
+    // ----------------------------------------------------------------------
     // Load the game file if supplied on the command line (mostly for TWL++)
+    // ----------------------------------------------------------------------
     if(argc > 1) 
     {
         dsShowScreenMain();
@@ -61,6 +76,7 @@ int main(int argc, char **argv)
         Atari800_Initialise();
         emu_state = A8_PLAYINIT;
     }
+    
     // Main loop of emulation
     dsMainLoop();
   
