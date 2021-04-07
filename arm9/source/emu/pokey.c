@@ -45,7 +45,6 @@
 #include "gtia.h"
 #include "sio.h"
 #include "input.h"
-#include "statesav.h"
 #include "pokeysnd.h"
 #include "antic.h"
 #include "cassette.h"

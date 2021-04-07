@@ -44,11 +44,7 @@
 #include "memory.h"
 #include "pia.h"
 #include "sio.h"
-
-#ifndef BASIC
 #include "input.h"
-#include "statesav.h"
-#endif
 
 UBYTE PACTL __attribute__((section(".dtcm")));
 UBYTE PBCTL __attribute__((section(".dtcm")));

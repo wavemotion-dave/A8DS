@@ -36,7 +36,6 @@
 #include "platform.h"
 #include "pokeysnd.h"
 #include "util.h"
-#include "screen.h" /* for atari_screen */
 
 #define Atari_POT(x) 228
 extern UBYTE PCPOT_input[8];

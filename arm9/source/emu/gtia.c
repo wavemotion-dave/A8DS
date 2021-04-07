@@ -43,7 +43,6 @@
 #include "cassette.h"
 #include "gtia.h"
 #include "input.h"
-#include "statesav.h"
 #include "pokeysnd.h"
 
 /* GTIA Registers ---------------------------------------------------------- */

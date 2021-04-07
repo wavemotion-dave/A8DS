@@ -29,7 +29,6 @@
 #include "atari.h"
 #include "cpu.h"
 #include "cassette.h"
-#include "log.h"
 #include "memory.h"
 #include "sio.h"
 #include "util.h"
@@ -114,14 +113,11 @@ int CASSETTE_Initialise(int *argc, char *argv[])
 		}
 		else {
 			if (strcmp(argv[i], "-help") == 0) {
-				Log_print("\t-tape <file>     Insert cassette image");
-				Log_print("\t-boottape <file> Insert cassette image and boot it");
 			}
 			argv[j++] = argv[i];
 		}
 
 		if (a_m) {
-			Log_print("Missing argument for '%s'", argv[i]);
 			return FALSE;
 		}
 	}
@@ -174,7 +170,6 @@ int CASSETTE_CheckFile(const char *filename, FILE **fp, char *description, int *
 			else
 				skip -= CASSETTE_DESCRIPTION_MAX - 1;
 			if (fread(description, 1, length - skip, f) < (length - skip)) {
-				Log_print("Error reading cassette file.\n");
 			}
 		}
 		fseek(f, skip, SEEK_CUR);
@@ -330,7 +325,6 @@ static int ReadRecord_SIO(void)
 			};
 			fseek(cassette_file, cassette_block_offset[cassette_current_block], SEEK_SET);
 			if (fread(&header.length_lo, 1, 4, cassette_file) < 4) {
-				Log_print("Error reading cassette file.\n");
 			}
 			length = header.length_lo + (header.length_hi << 8);
 			/* add gaplength */
@@ -340,7 +334,6 @@ static int ReadRecord_SIO(void)
 			filegaptimes += length * 10 * 1000 / cassette_baudblock[cassette_current_block];
 
 			if (fread(&CASSETTE_buffer[0], 1, length, cassette_file) < length) {
-				Log_print("Error reading cassette file.\n");
 			}
 			cassette_current_block++;
 		}
@@ -490,7 +483,6 @@ static int ReadRecord_POKEY(void)
 			fseek(cassette_file, cassette_block_offset[
 				cassette_current_block], SEEK_SET);
 			if (fread(&header.length_lo, 1, 4, cassette_file) < 4) {
-				Log_print("Error reading cassette file.\n");
 			}
 			length = header.length_lo + (header.length_hi << 8);
 			/* eval total length as pregap + 1 byte */
@@ -501,7 +493,6 @@ static int ReadRecord_POKEY(void)
 				cassette_current_block]);
 			/* read block into buffer */
 			if (fread(&CASSETTE_buffer[0], 1, length, cassette_file) < length) {
-				Log_print("Error reading cassette file.\n");
 			}
 			cassette_max_blockbytes = length;
 			cassette_current_blockbyte = 0;

@@ -28,7 +28,6 @@
 #include "cpu.h"
 #include "devices.h"
 #include "esc.h"
-#include "log.h"
 #include "memory.h"
 #include "pia.h"
 #include "sio.h"
@@ -104,7 +103,6 @@ void ESC_Run(UBYTE esc_code)
 	UI_Run();
 #else /* CRASH_MENU */
 	CPU_cim_encountered = 1;
-	Log_print("Invalid ESC code %02x at address %04x", esc_code, CPU_regPC - 2);
 #ifndef __PLUS
 	if (!Atari800_Exit(TRUE))
 		exit(0);

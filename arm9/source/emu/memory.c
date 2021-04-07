@@ -54,7 +54,6 @@
 #include "pia.h"
 #include "pokeysnd.h"
 #include "util.h"
-#include "statesav.h"
 
 UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                      // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
 static UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));         // This is the 16K of OS memory that co-insides with some of the RAM in the upper bank

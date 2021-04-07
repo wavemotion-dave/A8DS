@@ -78,7 +78,6 @@
 #include "atari.h"
 #include "memory.h"
 #include "esc.h"
-#include "statesav.h"
 
 /* Windows headers define it */
 #undef ABSOLUTE

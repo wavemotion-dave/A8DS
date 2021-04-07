@@ -61,8 +61,6 @@
 #include "rtime.h"
 #include "sio.h"
 #include "util.h"
-#include "screen.h"
-#include "statesav.h"
 #include "pokeysnd.h"
 #include "sound.h"
 

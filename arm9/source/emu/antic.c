@@ -47,13 +47,10 @@
 #include "atari.h"
 #include "cpu.h"
 #include "gtia.h"
-#include "screen.h"
 #include "memory.h"
 #include "pokeysnd.h"
 #include "util.h"
 #include "input.h"
-#include "screen.h"
-#include "statesav.h"
 
 #define LCHOP 3			/* do not build lefmost 0..3 characters in wide mode */
 #define RCHOP 3			/* do not build rightmost 0..3 characters in wide mode */
