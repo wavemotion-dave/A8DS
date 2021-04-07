@@ -208,6 +208,7 @@ Controls :
  * X      : Space Bar (R+X for RETURN and L+X for ESCAPE) - useful to start a few games
  * R+Dpad : Shift Screen UP or DOWN (necessary to center screen)
  * L+Dpad : Scale Screen UP or DOWN (generally try not to shrink the screen too much as pixel rows disappear)
+ * L+R+A  : Swap Screens (swap the upper and lower screens... touch screen is still always the bottom)
  * Y      : OPTION console button
  * START  : START console button
  * SELECT : SELECT console button
