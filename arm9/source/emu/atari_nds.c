@@ -19,12 +19,20 @@
 #include "cpu.h"
 #include "input.h"
 #include "sound.h"
+#include "pokeysnd.h"
 
 
 u8 trig0 = 1;
 u8 trig1 = 1;
 u8 stick0 = STICK_CENTRE;
 u8 stick1 = STICK_CENTRE;
+
+void Sound_Initialise(void) 
+{
+  Pokey_sound_init(FREQ_17_APPROX, SOUND_FREQ, 1, 0);
+}
+
+void Sound_Exit(void) {}
 
 /* -------------------------------------------------------------------------- */
 /* CONFIG & INITIALISATION                                                    */

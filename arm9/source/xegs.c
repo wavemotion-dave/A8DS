@@ -511,29 +511,29 @@ void dsInitTimer(void)
 // --------------------------------------------------
 void dsShowScreenEmu(void)
 {
-  // Change vram
-  videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
-  bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
-  bg3 = bgInit(3, BgType_Bmp8, BgSize_B8_512x512, 0,0);
+    // Change vram
+    videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
+    bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
+    bg3 = bgInit(3, BgType_Bmp8, BgSize_B8_512x512, 0,0);
 
-  REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
-  REG_BLDALPHA = (10 << 8) | 10; // 62% / 62%
+    REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
+    REG_BLDALPHA = (10 << 8) | 10; // 62% / 62%
 
-  REG_BG2PB = 0;
-  REG_BG2PC = 0;
+    REG_BG2PB = 0;
+    REG_BG2PC = 0;
 
-  REG_BG2X = cxBG;
-  REG_BG2Y = cyBG;
-  REG_BG2PA = xdxBG;
-  REG_BG2PD = ydyBG;
+    REG_BG2X = cxBG;
+    REG_BG2Y = cyBG;
+    REG_BG2PA = xdxBG;
+    REG_BG2PD = ydyBG;
 
-  REG_BG3PB = 0;
-  REG_BG3PC = 0;
+    REG_BG3PB = 0;
+    REG_BG3PC = 0;
 
-  REG_BG3X = cxBG;
-  REG_BG3Y = cyBG;
-  REG_BG3PA = xdxBG;
-  REG_BG3PD = ydyBG;
+    REG_BG3X = cxBG;
+    REG_BG3Y = cyBG;
+    REG_BG3PA = xdxBG;
+    REG_BG3PD = ydyBG;
 }
 
 // --------------------------------------------------------------------
@@ -544,28 +544,28 @@ void dsShowScreenEmu(void)
 // --------------------------------------------------------------------
 void dsShowScreenMain(void)
 {
-  // Init BG mode for 16 bits colors
-  videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE );
-  videoSetModeSub(MODE_0_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE);
+    // Init BG mode for 16 bits colors
+    videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE );
+    videoSetModeSub(MODE_0_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE);
 
-  bg0 = bgInit(0, BgType_Text8bpp, BgSize_T_256x256, 31,0);
-  bg0b = bgInitSub(0, BgType_Text8bpp, BgSize_T_256x256, 31,0);
-  bg1b = bgInitSub(1, BgType_Text8bpp, BgSize_T_256x256, 30,0);
-  bgSetPriority(bg0b,1);bgSetPriority(bg1b,0);
+    bg0 = bgInit(0, BgType_Text8bpp, BgSize_T_256x256, 31,0);
+    bg0b = bgInitSub(0, BgType_Text8bpp, BgSize_T_256x256, 31,0);
+    bg1b = bgInitSub(1, BgType_Text8bpp, BgSize_T_256x256, 30,0);
+    bgSetPriority(bg0b,1);bgSetPriority(bg1b,0);
 
-  decompress(bgTopTiles, bgGetGfxPtr(bg0), LZ77Vram);
-  decompress(bgTopMap, (void*) bgGetMapPtr(bg0), LZ77Vram);
-  dmaCopy((void *) bgTopPal,(u16*) BG_PALETTE,256*2);
+    decompress(bgTopTiles, bgGetGfxPtr(bg0), LZ77Vram);
+    decompress(bgTopMap, (void*) bgGetMapPtr(bg0), LZ77Vram);
+    dmaCopy((void *) bgTopPal,(u16*) BG_PALETTE,256*2);
 
-  decompress(bgBottomTiles, bgGetGfxPtr(bg0b), LZ77Vram);
-  decompress(bgBottomMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
-  dmaCopy((void *) bgBottomPal,(u16*) BG_PALETTE_SUB,256*2);
-  unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
-  dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+    decompress(bgBottomTiles, bgGetGfxPtr(bg0b), LZ77Vram);
+    decompress(bgBottomMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+    dmaCopy((void *) bgBottomPal,(u16*) BG_PALETTE_SUB,256*2);
+    unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
+    dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
 
-  REG_BLDCNT=0; REG_BLDCNT_SUB=0; REG_BLDY=0; REG_BLDY_SUB=0;
+    REG_BLDCNT=0; REG_BLDCNT_SUB=0; REG_BLDY=0; REG_BLDY_SUB=0;
 
-  swiWaitForVBlank();
+    swiWaitForVBlank();
 }
 
 // -------------------------------------------------------------------
@@ -574,8 +574,8 @@ void dsShowScreenMain(void)
 // -------------------------------------------------------------------
 void dsFreeEmu(void)
 {
-  // Stop timer of sound
-  TIMER2_CR=0; irqDisable(IRQ_TIMER2);
+    // Stop timer of sound
+    TIMER2_CR=0; irqDisable(IRQ_TIMER2);
 }
 
 

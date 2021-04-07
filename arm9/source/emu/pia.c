@@ -1,5 +1,5 @@
 /*
- * PIA.C contains the emulation of the PIA (Paralell) chip interface.
+ * PIA.C contains the emulation of the PIA  chip interface.
  * The baseline for this file is the Atari800 4.20 source and has
  * been heavily modified for optimization on the Nintendo DS/DSi.
  * The original Atari800 copyright message is retained below.
