@@ -2169,7 +2169,10 @@ void dsMainLoop(void)
             {
                 if (++config_snap_counter == 20)
                 {
-                    dsWriteConfig();
+                    if (keys_pressed & KEY_A)
+                        lcdSwap();
+                    else
+                        dsWriteConfig();
                 }
             } else config_snap_counter=0;
 
