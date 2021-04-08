@@ -23,21 +23,12 @@
 #include "atari.h"
 #include "cpu.h"
 #include "input.h"
-#include "sound.h"
 #include "pokeysnd.h"
-
 
 u8 trig0 = 1;
 u8 trig1 = 1;
 u8 stick0 = STICK_CENTRE;
 u8 stick1 = STICK_CENTRE;
-
-void Sound_Initialise(void) 
-{
-  Pokey_sound_init(FREQ_17_APPROX, SOUND_FREQ, 1, 0);
-}
-
-void Sound_Exit(void) {}
 
 /* -------------------------------------------------------------------------- */
 /* CONFIG & INITIALISATION                                                    */
@@ -45,7 +36,7 @@ void Sound_Exit(void) {}
 void Atari_Initialise(void) 
 {
     // initialise sound routines 
-    Sound_Initialise();
+    Pokey_sound_init(FREQ_17_APPROX, SOUND_FREQ, 1, 0);
     trig0 = 1;
     stick0 = 15;
     key_consol = CONSOL_NONE;
@@ -56,7 +47,6 @@ void Atari_Initialise(void)
 /* -------------------------------------------------------------------------- */
 int Atari_Exit(int run_monitor) 
 {
-    Sound_Exit();
     return 0;
 }
 

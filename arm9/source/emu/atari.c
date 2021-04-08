@@ -61,7 +61,6 @@
 #include "sio.h"
 #include "util.h"
 #include "pokeysnd.h"
-#include "sound.h"
 
 // ----------------------------------------------------------------------------------
 // Some basic machine settings... we default to an XEGS with 128K of RAM installed.

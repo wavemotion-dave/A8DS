@@ -26,7 +26,6 @@
 #include "antic.h"
 #include "cartridge.h"
 #include "input.h"
-#include "sound.h"
 #include "hash.h"
 #include "esc.h"
 #include "rtime.h"
