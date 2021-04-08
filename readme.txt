@@ -108,6 +108,11 @@ or no consequence (i.e. not major titles) that will not run with the emulator - 
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.5 : 08-Apr-2021 by wavemotion-dave
+  * Major cleanup of unused code to get down to a small but efficient code base.
+  * Added LCD swap using L+R+A (hold for half second to toggle screens)
+  * Cleanup of text-on-screen handling and other minor bug fixes.
+
 V2.4 : 02-Apr-2021 by wavemotion-dave
   * New bank switching handling that is much faster (in some cases 10x faster)
     to support all of the larger 128K, 320K and even the 1088K games (AtariBlast!)
