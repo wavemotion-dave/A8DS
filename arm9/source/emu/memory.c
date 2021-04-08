@@ -49,7 +49,6 @@
 #include "cartridge.h"
 #include "gtia.h"
 #include "memory.h"
-#include "pbi.h"
 #include "pia.h"
 #include "pokeysnd.h"
 #include "util.h"
@@ -130,6 +129,16 @@ static void AllocXEMemory(void)
 		atarixe_memory_size = 0;
 	}
 }
+
+// We don't support any of the Paralell Bus interface stuff... not needed for any gaming!
+// ---------------------------------------------------------------------------------------
+void PBI_Initialise(void) {}
+UBYTE PBI_GetByte(UWORD addr) {return 0;}
+void PBI_PutByte(UWORD addr, UBYTE byte) {}
+UBYTE PBIM1_GetByte(UWORD addr) {return 0;}
+void PBIM1_PutByte(UWORD addr, UBYTE byte) {}
+UBYTE PBIM2_GetByte(UWORD addr) {return 0;}
+void PBIM2_PutByte(UWORD addr, UBYTE byte) {}
 
 // ---------------------------------------------------------------------------------
 // We call this on every cold start - it sets up the OS and the memory map for 
