@@ -130,8 +130,6 @@ const UBYTE *antic_xe_ptr __attribute__((section(".dtcm")))= NULL;
 
 /* ANTIC Timing --------------------------------------------------------------
 
-NOTE: this information was written before NEW_CYCLE_EXACT was introduced!
-
 I've introduced global variable xpos, which contains current number of cycle
 in a line. This simplifies ANTIC/CPU timing much. The GO() function which
 emulates CPU is now void and is called with xpos limit, below which CPU can go.

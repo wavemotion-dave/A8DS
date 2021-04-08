@@ -46,7 +46,6 @@
 #include "atari.h"
 #include "binload.h"
 #include "cassette.h"
-#include "compfile.h"
 #include "cpu.h"
 #include "esc.h"
 #include "memory.h"
@@ -238,56 +237,6 @@ int SIO_Mount(int diskno, const char *filename, int b_open_readonly)
 	if (fread(&header, 1, sizeof(struct AFILE_ATR_Header), f) != sizeof(struct AFILE_ATR_Header)) {
 		fclose(f);
 		return FALSE;
-	}
-
-	/* detect compressed image and uncompress */
-	switch (header.magic1) {
-	case 0xf9:
-	case 0xfa:
-		/* DCM */
-		{
-			FILE *f2 = Util_tmpopen(sio_tmpbuf[diskno - 1]);
-			if (f2 == NULL)
-				return FALSE;
-			Util_rewind(f);
-			if (!CompFile_DCMtoATR(f, f2)) {
-				Util_fclose(f2, sio_tmpbuf[diskno - 1]);
-				fclose(f);
-				return FALSE;
-			}
-			fclose(f);
-			f = f2;
-		}
-		Util_rewind(f);
-		if (fread(&header, 1, sizeof(struct AFILE_ATR_Header), f) != sizeof(struct AFILE_ATR_Header)) {
-			Util_fclose(f, sio_tmpbuf[diskno - 1]);
-			return FALSE;
-		}
-		status = SIO_READ_ONLY;
-		/* XXX: status = b_open_readonly ? SIO_READ_ONLY : SIO_READ_WRITE; */
-		break;
-	case 0x1f:
-		if (header.magic2 == 0x8b) {
-			/* ATZ/ATR.GZ, XFZ/XFD.GZ */
-			fclose(f);
-			f = Util_tmpopen(sio_tmpbuf[diskno - 1]);
-			if (f == NULL)
-				return FALSE;
-			if (!CompFile_ExtractGZ(filename, f)) {
-				Util_fclose(f, sio_tmpbuf[diskno - 1]);
-				return FALSE;
-			}
-			Util_rewind(f);
-			if (fread(&header, 1, sizeof(struct AFILE_ATR_Header), f) != sizeof(struct AFILE_ATR_Header)) {
-				Util_fclose(f, sio_tmpbuf[diskno - 1]);
-				return FALSE;
-			}
-			status = SIO_READ_ONLY;
-			/* XXX: status = b_open_readonly ? SIO_READ_ONLY : SIO_READ_WRITE; */
-		}
-		break;
-	default:
-		break;
 	}
 
 	boot_sectors_type[diskno - 1] = BOOT_SECTORS_LOGICAL;

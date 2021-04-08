@@ -1,6 +1,16 @@
-// ----------------------------------------------------------------------------
-// Hash.cpp
-// ----------------------------------------------------------------------------
+/*
+ * HASH.C contains some the MD5SUM hash computation routines. Mostly used to 
+ * generate a unique signature that we can save off into the XEGS-DS.DAT 
+ * configuration file and use to match when loading up a new game.
+ *
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
+ * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ *
+ * Copying and distribution of this file, with or without modification,
+ * are permitted in any medium without royalty provided the copyright
+ * notice and this notice are preserved.  This file is offered as-is,
+ * without any warranty.
+ */
 #include <stdio.h>
 #include "hash.h"
 
