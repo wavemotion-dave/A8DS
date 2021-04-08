@@ -1,3 +1,16 @@
+/*
+ * CPU.ITCM.C contains the emulation of the Core 6502 CPU on the Atari 800. 
+ * The baseline for this file is the Atari800 4.20 source and has
+ * been heavily modified for optimization on the Nintendo DS/DSi.
+ *
+ * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
+ * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ *
+ * Copying and distribution of this file, with or without modification,
+ * are permitted in any medium without royalty provided the copyright
+ * notice and this notice are preserved.  This file is offered as-is,
+ * without any warranty.
+ */
 #ifndef _CPU_H_
 #define _CPU_H_
 
@@ -18,13 +31,6 @@ void CPU_Reset(void);
 void NMI(void);
 void GO(int limit);
 #define GenerateIRQ() (IRQ = 1)
-
-#ifdef FALCON_CPUASM
-extern void CPU_INIT(void);
-extern void CPUGET(void);		/* put from CCR, N & Z FLAG into regP */
-extern void CPUPUT(void);		/* put from regP into CCR, N & Z FLAG */
-#endif
-
 
 extern UWORD regPC;
 extern UBYTE regA;
@@ -73,9 +79,5 @@ extern void (*rts_handler)(void);
 extern UBYTE cim_encountered;
 
 #define CPU_cim_encountered cim_encountered
-
-#define REMEMBER_JMP_STEPS 16
-extern UWORD remember_JMP[REMEMBER_JMP_STEPS];
-extern unsigned int remember_jmp_curpos;
 
 #endif /* _CPU_H_ */

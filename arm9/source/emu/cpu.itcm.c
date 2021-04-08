@@ -391,12 +391,6 @@ void GO(int limit)
 		goto *opcode[insn];
         
 	OPCODE(00)				/* BRK */
-#ifdef MONITOR_BREAK
-		if (break_brk) {
-			DO_BREAK;
-		}
-		else
-#endif
 		{
 			PC++;
 			PHPC;
@@ -586,11 +580,6 @@ void GO(int limit)
 	OPCODE(20)				/* JSR abcd */
 		{
 			UWORD retaddr = GET_PC() + 1;
-#ifdef MONITOR_BREAK
-			remember_JMP[remember_jmp_curpos] = GET_PC() - 1;
-			remember_jmp_curpos = (remember_jmp_curpos + 1) % REMEMBER_JMP_STEPS;
-			ret_nesting++;
-#endif
 			PHW(retaddr);
 		}
 		SET_PC(OP_WORD);
@@ -769,10 +758,6 @@ void GO(int limit)
 		data = PL;
 		SET_PC((PL << 8) + data);
 		CPUCHECKIRQ;
-#ifdef MONITOR_BREAK
-		if (break_ret && --ret_nesting <= 0)
-			break_step = TRUE;
-#endif
 		DONE
 
 	OPCODE(41)				/* EOR (ab,x) */
@@ -836,10 +821,6 @@ void GO(int limit)
 		DONE
 
 	OPCODE(4c)				/* JMP abcd */
-#ifdef MONITOR_BREAK
-		remember_JMP[remember_jmp_curpos] = GET_PC() - 1;
-		remember_jmp_curpos = (remember_jmp_curpos + 1) % REMEMBER_JMP_STEPS;
-#endif
 		SET_PC(OP_WORD);
 		DONE
 
@@ -933,10 +914,6 @@ void GO(int limit)
 	OPCODE(60)				/* RTS */
 		data = PL;
 		SET_PC((PL << 8) + data + 1);
-#ifdef MONITOR_BREAK
-		if (break_ret && --ret_nesting <= 0)
-			break_step = TRUE;
-#endif
         if (rts_handler != NULL)
         {
             rts_handler();
@@ -1042,10 +1019,6 @@ void GO(int limit)
 		DONE
 
 	OPCODE(6c)				/* JMP (abcd) */
-#ifdef MONITOR_BREAK
-		remember_JMP[remember_jmp_curpos] = GET_PC() - 1;
-		remember_jmp_curpos = (remember_jmp_curpos + 1) % REMEMBER_JMP_STEPS;
-#endif
 		ABSOLUTE;
 #ifdef CPU65C02
 		/* XXX: if ((UBYTE) addr == 0xff) xpos++; */
@@ -1788,10 +1761,6 @@ void GO(int limit)
 		UPDATE_LOCAL_REGS;
 		data = PL;
 		SET_PC((PL << 8) + data + 1);
-#ifdef MONITOR_BREAK
-		if (break_ret && --ret_nesting <= 0)
-			break_step = TRUE;
-#endif
 		DONE
 
 	OPCODE(f2)				/* ESC #ab (CIM) - on Atari is here instruction CIM [unofficial] !RS! */
