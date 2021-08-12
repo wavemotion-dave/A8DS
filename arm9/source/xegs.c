@@ -73,7 +73,7 @@ int full_speed          = false;            // default is to run at normal speed
 int palett_type         = 0;                // default is "bright" palett
 int auto_fire           = 0;                // default autofire disabled
 int ram_type            = 0;                // default is 128k
-int blending_type       = 0;                // 0=Normal, 1=Blur1, 2=Blur2, etc
+int blending_type       = 6;                // 0=Normal, 1=Blur1, 2=Blur2, etc
 int keyboard_type       = 0;                // Normal (full)... 1=Simplified
 
 #define  cxBG (myGame_offset_x<<8)
