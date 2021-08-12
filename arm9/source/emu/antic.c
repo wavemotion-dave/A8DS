@@ -2225,7 +2225,7 @@ ITCM_CODE void ANTIC_Frame(int draw_display)
 	} while (ypos < 8);
 
     // Direct screen write...
-    scrn_ptr = bgGetGfxPtr((gTotalAtariFrames & 1) ? bg2:bg3);
+    scrn_ptr = bgGetGfxPtr(bg2);
 
 	need_dl = TRUE;
 	do {

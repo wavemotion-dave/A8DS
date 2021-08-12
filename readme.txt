@@ -108,6 +108,11 @@ or no consequence (i.e. not major titles) that will not run with the emulator - 
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.6 : 11-Jul-2021 by wavemotion-dave
+  * Reduced down to one screen buffer - this cleans up ghosting visible sometimes on dark backgrounds.
+  * If atarixl.rom exists, it is used by default (previously had still been defaulting to Altirra rom)
+  * Minor cleanups as time permitted.
+
 V2.5 : 08-Apr-2021 by wavemotion-dave
   * Major cleanup of unused code to get down to a small but efficient code base.
   * Added LCD swap using L+R+A (hold for half second to toggle screens)

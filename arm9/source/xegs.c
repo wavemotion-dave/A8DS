@@ -422,41 +422,32 @@ void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr,
 static int sIndex __attribute__((section(".dtcm")))= 0;
 static u8 jitter[] __attribute__((section(".dtcm"))) =
 {
-    0x00, 0x00,
-    0x88, 0x11,
-    0x44, 0x22,
-    0xAA, 0x33,
+    0x00, 0x11,
+    0x55, 0x22,
 };
 static u8 jitter_sharp[] __attribute__((section(".dtcm"))) =
 {
     0x11, 0x11,
-    0x33, 0x33,
     0x22, 0x22,
-    0x44, 0x44,
 };
 void vblankIntr()
 {
     REG_BG2PA = xdxBG;
     REG_BG2PD = ydyBG;
 
-    REG_BG3PA = xdxBG;
-    REG_BG3PD = ydyBG;
-
     if (blending_type == 0)
     {
         REG_BG2X = cxBG+jitter[sIndex++];
         REG_BG2Y = cyBG+jitter[sIndex++];
-        REG_BG3X = cxBG+jitter[sIndex++];
-        REG_BG3Y = cyBG+jitter[sIndex++];
+        sIndex++;sIndex++;
     }
     else
     {
         REG_BG2X = cxBG+jitter_sharp[sIndex++];
         REG_BG2Y = cyBG+jitter_sharp[sIndex++];
-        REG_BG3X = cxBG+jitter_sharp[sIndex++];
-        REG_BG3Y = cyBG+jitter_sharp[sIndex++];
+        sIndex++;sIndex++;
     }
-    sIndex = sIndex & 7;
+    sIndex = sIndex & 0x03;
 }
 
 /*
@@ -511,13 +502,11 @@ void dsInitTimer(void)
 void dsShowScreenEmu(void)
 {
     // Change vram
-    videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
+    videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE);
     bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
-    bg3 = bgInit(3, BgType_Bmp8, BgSize_B8_512x512, 0,0);
 
-    REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
-    REG_BLDALPHA = (10 << 8) | 10; // 62% / 62%
-
+    REG_BLDCNT=0; REG_BLDCNT_SUB=0; REG_BLDY=0; REG_BLDY_SUB=0;
+    
     REG_BG2PB = 0;
     REG_BG2PC = 0;
 
@@ -525,14 +514,6 @@ void dsShowScreenEmu(void)
     REG_BG2Y = cyBG;
     REG_BG2PA = xdxBG;
     REG_BG2PD = ydyBG;
-
-    REG_BG3PB = 0;
-    REG_BG3PC = 0;
-
-    REG_BG3X = cxBG;
-    REG_BG3Y = cyBG;
-    REG_BG3PA = xdxBG;
-    REG_BG3PD = ydyBG;
 }
 
 // --------------------------------------------------------------------
@@ -602,12 +583,14 @@ void load_os(void)
         // If we can't find the atari OS, we force the Altirra XL bios in...
         memcpy(ROM_atarios_xl, ROM_altirraos_xl, 0x4000);
         bAtariOS = false;
+        os_type = OS_ALTIRRA_XL;    // Default is built-in OS from Alitirra if XL rom not found
     }
     else
     {
         fread(ROM_atarios_xl, 0x4000, 1, romfile);
         fclose(romfile);
         bAtariOS = true;
+        os_type = OS_ATARI_XL;    // Default is real Atari OS if available...
     }
 
     // -------------------------------------------
