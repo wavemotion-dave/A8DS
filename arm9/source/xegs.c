@@ -73,7 +73,7 @@ int full_speed          = false;            // default is to run at normal speed
 int palett_type         = 0;                // default is "bright" palett
 int auto_fire           = 0;                // default autofire disabled
 int ram_type            = 0;                // default is 128k
-int blending_type       = 0;                // Normal (blur)... 1=SHARP
+int blending_type       = 0;                // 0=Normal, 1=Blur1, 2=Blur2, etc
 int keyboard_type       = 0;                // Normal (full)... 1=Simplified
 
 #define  cxBG (myGame_offset_x<<8)
@@ -420,33 +420,41 @@ void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr,
 // will have pixels not showing. It's far from perfect - but workable.
 // -----------------------------------------------------------------------
 static int sIndex __attribute__((section(".dtcm")))= 0;
-static u8 jitter[] __attribute__((section(".dtcm"))) =
+static u8 jitter[][4] __attribute__((section(".dtcm"))) =
 {
-    0x00, 0x11,
-    0x55, 0x22,
+    {0x00, 0x00,
+     0x00, 0x00},
+    
+    {0x00, 0x00,
+     0x11, 0x11},
+
+    {0x00, 0x00,
+     0x22, 0x22},
+
+    {0x00, 0x00,
+     0x33, 0x33},
+
+    {0x00, 0x00,
+     0x44, 0x44},
+
+    {0x00, 0x00,
+     0x55, 0x55},
+
+    {0x00, 0x00,
+     0x88, 0x88},
+
+    {0x00, 0x00,
+     0x99, 0x99},
 };
-static u8 jitter_sharp[] __attribute__((section(".dtcm"))) =
-{
-    0x11, 0x11,
-    0x22, 0x22,
-};
+
 void vblankIntr()
 {
     REG_BG2PA = xdxBG;
     REG_BG2PD = ydyBG;
 
-    if (blending_type == 0)
-    {
-        REG_BG2X = cxBG+jitter[sIndex++];
-        REG_BG2Y = cyBG+jitter[sIndex++];
-        sIndex++;sIndex++;
-    }
-    else
-    {
-        REG_BG2X = cxBG+jitter_sharp[sIndex++];
-        REG_BG2Y = cyBG+jitter_sharp[sIndex++];
-        sIndex++;sIndex++;
-    }
+    REG_BG2X = cxBG+jitter[blending_type][sIndex++];
+    REG_BG2Y = cyBG+jitter[blending_type][sIndex++];
+
     sIndex = sIndex & 0x03;
 }
 
@@ -905,7 +913,7 @@ bool dsWaitOnQuit(void)
 struct options_t
 {
     char *label;
-    char *option[5];
+    char *option[8];
     int  *option_val;
     int   option_max;
     char *help1;
@@ -934,7 +942,8 @@ const struct options_t Option_Table[] =
     {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &showFps,               3,   "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
     {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
                                     "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode,     5,   "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
-    {"BLENDING",    {"NORMAL",      "SHARP"},                           &blending_type,         2,   "NORMAL WILL BLUR  ",   "THE SCREEN LIGHTLY",  "TO HELP SCALING   ",  "SHARP DOES NOT    "},
+    {"BLENDING",    {"NORMAL",      "BLUR1", "BLUR2", "BLUR3", 
+                     "BLUR4","BLUR5","BLUR6","BLUR7"},                  &blending_type,         8,   "NORMAL IS SHARP   ",   "AND VARIOUS BLUR  ",  "LEVELS WILL HELP  ",  "SCREEN SCALING.   "},
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
     {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
     {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
