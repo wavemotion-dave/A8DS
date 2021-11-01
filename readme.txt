@@ -11,7 +11,7 @@ configurations: the XE 320K (RAMBO) and 1088K for a few large games and demos
 and an older Atari 800 48K machine for backwards compatibility with some older 
 games that don't play nice with a more "modern" XL/XE setup. As such, it's 
 really grown to be more capable than a stock XEGS machine but the purpose
-of this emulator is to allow someone to pay the entire 8-bit line up of games
+of this emulator is to allow someone to play nearly the entire 8-bit line up of games
 on their Nitendo DS/DSi handhelds.
 
 The emulator comes "equipped" with the ability to run executable images or disk 
