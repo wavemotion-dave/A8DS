@@ -29,7 +29,7 @@
 ---------------------------------------------------------------------------------*/
 #include <nds.h>
 #include <dswifi7.h>
-//#include <maxmod7.h>
+#include <maxmod7.h>
 
 extern void installSoundEmuFIFO(void);
 
@@ -74,7 +74,7 @@ int main() {
 
 	installSystemFIFO();
 
-  installSoundEmuFIFO();
+    installSoundEmuFIFO();
 
 	irqSet(IRQ_VCOUNT, VcountHandler);
 	irqSet(IRQ_VBLANK, VblankHandler);

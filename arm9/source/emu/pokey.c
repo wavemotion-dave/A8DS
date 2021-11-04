@@ -48,7 +48,7 @@
 #include "antic.h"
 #include "cassette.h"
 
-int pokeyBufIdx __attribute__((section(".dtcm")))= 0;
+unsigned short pokeyBufIdx __attribute__((section(".dtcm")))= 0;
 char pokey_buffer[SNDLENGTH] __attribute__((section(".dtcm")));
 
 UBYTE KBCODE __attribute__((section(".dtcm")));

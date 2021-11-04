@@ -53,7 +53,7 @@ u16 atari_frames = 0;                       // Number of frames per second (60 f
 
 short int myGame_offset_x = 32;             // Some sensible X/Y offsets and scale values
 short int myGame_offset_y = 24;             // Some sensible X/Y offsets and scale values
-short int myGame_scale_x = 256;             // Some sensible X/Y offsets and scale values
+short int myGame_scale_x = 256;             // Some sensible X/Y offsetbis and scale values
 short int myGame_scale_y = 256;             // Some sensible X/Y offsets and scale values
 
 int bAtariOS=false;                         // Real Atari XL BIOS is OFF by default
@@ -76,6 +76,17 @@ int ram_type            = 0;                // default is 128k
 int blending_type       = 6;                // 0=Normal, 1=Blur1, 2=Blur2, etc
 int keyboard_type       = 0;                // Normal (full)... 1=Simplified
 
+// ----------------------------------------------------------------------------------
+// These are the sound buffer vars which we use to pass along to the ARM7 core.
+// This buffer cannot be in .dtcm fast memory because the ARM7 core wouldn't see it.
+// ----------------------------------------------------------------------------------
+u8 sound_buffer[SNDLENGTH] __attribute__ ((aligned (4))) = {0};
+u16* aptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
+u16* bptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
+u16 sound_idx           __attribute__((section(".dtcm"))) = 0;
+u8 myPokeyBufIdx       __attribute__((section(".dtcm"))) = 0;
+u16 sampleExtender[256] __attribute__((section(".dtcm"))) = {0};
+
 #define  cxBG (myGame_offset_x<<8)
 #define  cyBG (myGame_offset_y<<8)
 #define  xdxBG (((320 / myGame_scale_x) << 8) | (320 % myGame_scale_x))
@@ -83,9 +94,6 @@ int keyboard_type       = 0;                // Normal (full)... 1=Simplified
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
 bool bAtariCrash = false;                   // We use this to track any crashes that might occur and give the user a message on screen
-
-signed char sound_buffer[SNDLENGTH];        // This cannot be placed in faster DTIM memory as it's shared with the ARM7 core that needs access...
-signed char *psound_buffer;                 // Pointer to the sound buffer position to write next...
 char last_boot_file[300] = {0};             // The last filename (.ATR or .XEX) we booted (and will be re-booted if RESET pressed)
 
 #define MAX_DEBUG 5
@@ -179,26 +187,22 @@ void dsClearDiskActivity(void)
 }
 
 // ---------------------------------------------------------------------------
-// This is called very frequently (about 22,000 times per second) to fill the
+// This is called very frequently (about 16,000 times per second) to fill the
 // pipeline of sound values from the pokey buffer into the Nintendo DS sound
 // buffer which will be processed in the background by the ARM 7 processor.
 // ---------------------------------------------------------------------------
 void VsoundHandler(void)
 {
-  static unsigned int sound_idx = 0;
-  extern unsigned char pokey_buffer[];
-  extern int pokeyBufIdx;
-  static int myPokeyBufIdx=0;
-  static unsigned char lastSample = 0;
+    extern unsigned char pokey_buffer[];
+    extern u16 pokeyBufIdx;
 
-  // If there is a fresh sample...
-  if (myPokeyBufIdx != pokeyBufIdx)
-  {
-      lastSample = pokey_buffer[myPokeyBufIdx];
-      myPokeyBufIdx = (myPokeyBufIdx+1) & (SNDLENGTH-1);
-  }
-  sound_buffer[sound_idx] = lastSample;
-  sound_idx = (sound_idx+1) & (SNDLENGTH-1);
+    // If there is a fresh sample... 
+    if (myPokeyBufIdx != pokeyBufIdx)
+    {
+        u16 sample = sampleExtender[pokey_buffer[myPokeyBufIdx++]];
+        *aptr = sample;
+        *bptr = sample;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -586,6 +590,9 @@ void load_os(void)
     // Read XL/XE ROM from SD card...
     // -------------------------------------------
     FILE *romfile = fopen("atarixl.rom", "rb");
+    if (romfile == NULL) romfile = fopen("/roms/bios/atarixl.rom", "rb");
+    if (romfile == NULL) romfile = fopen("/data/bios/atarixl.rom", "rb");
+
     if (romfile == NULL)
     {
         // If we can't find the atari OS, we force the Altirra XL bios in...
@@ -605,6 +612,8 @@ void load_os(void)
     // Read A800 older ROM from SD card...
     // -------------------------------------------
     romfile = fopen("atariosb.rom", "rb");
+    if (romfile == NULL) romfile = fopen("/roms/bios/atariosb.rom", "rb");
+    if (romfile == NULL) romfile = fopen("/data/bios/atariosb.rom", "rb");
     if (romfile == NULL)
     {
         // If we can't find the atari OSB, we force the Altirra 800 bios in
@@ -622,6 +631,8 @@ void load_os(void)
     // Read Atari BASIC (rev C) from SD card...
     // -------------------------------------------
     FILE *basfile = fopen("ataribas.rom", "rb");
+    if (basfile == NULL) basfile = fopen("/roms/bios/ataribas.rom", "rb");
+    if (basfile == NULL) basfile = fopen("/data/bios/ataribas.rom", "rb");
     if (basfile == NULL)
     {
         // If we can't find the atari Basic, we force the Altirra in...
@@ -797,8 +808,8 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
 
       // In case we switched PAL/NTSC
       dsInstallSoundEmuFIFO();
-      psound_buffer=sound_buffer;
-      TIMER2_DATA = TIMER_FREQ(SOUND_FREQ);
+
+      TIMER2_DATA = TIMER_FREQ(SOUND_FREQ+5);   // Very slightly faster to ensure we always swallow all samples produced by the Pokey
       TIMER2_CR = TIMER_DIV_1 | TIMER_IRQ_REQ | TIMER_ENABLE;
       irqSet(IRQ_TIMER2, VsoundHandler);
 
@@ -991,7 +1002,7 @@ void dsChooseOptions(int bOkayToChangePalette)
         if (Option_Table[idx].label == NULL) break;
     }
 
-    dsPrintValue(2,23, 0, "A=TOGGLE, B=EXIT, START=SAVE");
+    dsPrintValue(2,23, 0, "L/R=TOGGLE, B=EXIT, START=SAVE");
     optionHighlighted = 0;
     while (!bDone)
     {
@@ -1016,7 +1027,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
             }
 
-            if (keysCurrent() & KEY_A)  // Toggle option
+            if (keysCurrent() & KEY_RIGHT)  // Next Option 
             {
                 *(Option_Table[optionHighlighted].option_val) = (*(Option_Table[optionHighlighted].option_val) + 1) % Option_Table[optionHighlighted].option_max;
                 sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
@@ -1035,6 +1046,28 @@ void dsChooseOptions(int bOkayToChangePalette)
                 }
                 else dsPrintValue(0,0,0,"           ");
             }
+            if (keysCurrent() & KEY_LEFT)  // Previous Option 
+            {
+                if (*(Option_Table[optionHighlighted].option_val) > 0) 
+                    *(Option_Table[optionHighlighted].option_val) -= 1;
+                else
+                     *(Option_Table[optionHighlighted].option_val) = Option_Table[optionHighlighted].option_max - 1;
+                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
+                dsPrintValue(1,5+optionHighlighted,1, strBuf);
+                if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIXL.ROM")==0)
+                {
+                    if (!bAtariOS) dsPrintValue(0,0,0,"ROM MISSING");
+                }
+                else if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIOSB.ROM")==0)
+                {
+                    if (!bAtariOSB) dsPrintValue(0,0,0,"ROM MISSING");
+                }
+                else if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIBAS.ROM")==0)
+                {
+                    if (!bAtariBASIC) dsPrintValue(0,0,0,"ROM MISSING");
+                }
+                else dsPrintValue(0,0,0,"           ");
+            }            
             if (keysCurrent() & KEY_START)  // Save Options
             {
                 if (bOkayToChangePalette)   // This lets us know that a game is selected...
@@ -1803,17 +1836,40 @@ int dsHandleKeyboard(int Tx, int Ty)
 // -----------------------------------------------------------------------
 void dsInstallSoundEmuFIFO(void)
 {
+    irqDisable(IRQ_TIMER2);    
+    fifoSendValue32(FIFO_USER_01,(1<<16) | SOUND_KILL);
+    *aptr = 0; *bptr=0;
+    // We are going to use the 16-bit sound engine so we need to scale up our 8-bit values...
+    for (int i=0; i<256; i++)
+    {
+        sampleExtender[i] = (i << 8);
+    }
+    
+    if (isDSiMode())
+    {
+        aptr = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
+        bptr = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
+    }
+    else
+    {
+        aptr = (u16*) ((u32)&sound_buffer[0] + 0x00400000);
+        bptr = (u16*) ((u32)&sound_buffer[2] + 0x00400000);
+    }
+    swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to stop...
+    
     FifoMessage msg;
     msg.SoundPlay.data = &sound_buffer;
-    msg.SoundPlay.freq = SOUND_FREQ;
+    msg.SoundPlay.freq = SOUND_FREQ*2;
     msg.SoundPlay.volume = 127;
     msg.SoundPlay.pan = 64;
     msg.SoundPlay.loop = 1;
-    msg.SoundPlay.format = ((1)<<4) | SoundFormat_8Bit;
+    msg.SoundPlay.format = ((1)<<4) | SoundFormat_16Bit;
     msg.SoundPlay.loopPoint = 0;
-    msg.SoundPlay.dataSize = SNDLENGTH >> 2;
+    msg.SoundPlay.dataSize = 4 >> 2;
     msg.type = EMUARM7_PLAY_SND;
     fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
+    
+    swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to start chugging...
 }
 
 // -------------------------------------------------------------------------------
@@ -1970,9 +2026,7 @@ void dsMainLoop(void)
             touchRead(&touch);
             iTx = touch.px;
             iTy = touch.py;
-            debug[0]=iTx;
-            debug[1]=iTy;
-
+            
             // ---------------------------------------------------------------------------------------
             // START, SELECT and OPTION respond immediately - that is, we keep the buttons pressed
             // as long as the user is continuing to hold down the button on the touch screen...
@@ -2103,8 +2157,7 @@ void dsMainLoop(void)
                       irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       keys_touch=1;
                       dsChooseOptions(TRUE);
-                      irqEnable(IRQ_TIMER2);
-                      fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+                      irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); 
                     }
                     else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75))      // XEX and D1 Disk Drive
                     {
