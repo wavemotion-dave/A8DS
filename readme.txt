@@ -38,7 +38,8 @@ XEGS-DS supports 3 optional Atari BIOS and BASIC files as follows:
 *  ataribas.rom  - this is the 8k Atari BASIC cartridge (recommend Rev C)
 
 You can install zero, one or more of these files and if you want to use these real ROMs
-they must reside in the same folder as the XEGS-DS.NDS emulator and must be exactly
+they must reside in the same folder as the XEGS-DS.NDS emulator (or, optionally, you 
+can place your BIOS files in /roms/bios or /data/bios) and these files must be exactly
 so named as shown above. These files are loaded into memory when the emulator starts 
 and remain available for the entire gaming session. Again, if you don't have a real BIOS, 
 a generic but excellent one is provided from the good folks who made Altirra (Avery Lee) 
@@ -85,6 +86,8 @@ is a Frame Skip option that defaults to ON for the older hardware (and OFF for t
 or above). This is not perfect - some games will not be happy to have frames skipped as
 collisions are skipped in those frames. Notably: Caverns of Mars, Jumpman and Buried Bucks will 
 not run right with Frame Skip ON. But this does render most games playable on older hardware.
+If a game is particularlly struggling to keep up on older hardawre, there is an experimental
+'Agressive' frameskip which should help... but use with caution. 
 
 Troubleshooting :
 ----------------------------------------------------------------------------------
@@ -108,6 +111,12 @@ or no consequence (i.e. not major titles) that will not run with the emulator - 
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.7 : 04-Nov-2021 by wavemotion-dave
+  * New sound output processing to eliminate Zingers!
+  * bios files can now optionally be in /roms/bios or /data/bios
+  * Left/Right now selects the next/previous option (rather than A button to only cycle forward).
+  * Other cleanups as time permitted.
+
 V2.6 : 11-Jul-2021 by wavemotion-dave
   * Reduced down to one screen buffer - this cleans up ghosting visible sometimes on dark backgrounds.
   * If atarixl.rom exists, it is used by default (previously had still been defaulting to Altirra rom)
