@@ -54,10 +54,6 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    // Init Timer
-    dsInitTimer();
-    dsInstallSoundEmuFIFO();
-
     // Intro and main screen
     intro_logo();  
     dsInitScreenMain();
@@ -75,6 +71,11 @@ int main(int argc, char **argv)
         dsLoadGame(argv[1], 1, true, true);
         Atari800_Initialise();
         emu_state = A8_PLAYINIT;
+    }
+    else
+    {
+        chdir("/roms");    // Try to start in roms area... doesn't matter if it fails
+        chdir("a800");     // And try to start in the subdir /a800... doesn't matter if it fails.
     }
     
     // Main loop of emulation

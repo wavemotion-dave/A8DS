@@ -39,7 +39,6 @@ extern unsigned int video_height;                  // Actual video height
 extern void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr, unsigned char valEnd, unsigned char uWait);
 extern void vblankIntr();
 extern void dsInitScreenMain(void);
-extern void dsInitTimer(void);
 extern void dsShowScreenEmu(void);
 extern void dsShowScreenMain(void);
 extern void dsFreeEmu(void);

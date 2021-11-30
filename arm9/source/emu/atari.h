@@ -33,7 +33,7 @@ extern int disk_readonly[DISK_MAX];
 //#define DIRTYRECT
 #define NODIRTYCOMPARE
 
-#define PAGED_ATTRIB 1
+#define PAGED_ATTRIB        1
 #define SOUND               1
 #define INTERPOLATE_SOUND   1
 
@@ -50,7 +50,8 @@ extern int disk_readonly[DISK_MAX];
 #define TV_NTSC 262
 
 // Some global sound defines
-#define SOUND_FREQ  (tv_mode == TV_NTSC ? 15720:15600)      // 60 frames per second. 264 scanlines per frame. 1 samples per scanline. 60*264*1 = 15720... slightly different for pal 50*312*1=15600
+extern unsigned short sampleMult;
+#define SOUND_FREQ  (tv_mode == TV_NTSC ? (sampleMult*15720):(sampleMult*15600))      // 60 frames per second. 262 scanlines per frame. 1 samples per scanline. 60*262*1 = 15720... slightly different for pal 50*312*1=15600
 #define SNDLENGTH  256                                     // Must be power of 2... so we can quicly mask it
 
 /* SBYTE and UBYTE must be exactly 1 byte long. */
@@ -126,27 +127,7 @@ extern int disable_basic;
 #define AKEY_SELECT                -11
 #define AKEY_OPTION                -12
 
-/* Menu codes for Alt+letter shortcuts.
-   Store in alt_function and put AKEY_UI in key_code. */
-#define MENU_DISK             0
-#define MENU_CARTRIDGE        1
-#define MENU_RUN              2
-#define MENU_SYSTEM           3
-#define MENU_SOUND            4
-#define MENU_SOUND_RECORDING  5
-#define MENU_DISPLAY          6
-#define MENU_SETTINGS         7
-#define MENU_SAVESTATE        8
-#define MENU_LOADSTATE        9
-#define MENU_PCX              10
-#define MENU_PCXI             11
-#define MENU_BACK             12
-#define MENU_RESETW           13
-#define MENU_RESETC           14
-#define MENU_MONITOR          15
-#define MENU_ABOUT            16
-#define MENU_EXIT             17
-#define MENU_CASSETTE         18
+
 
 /* File types returned by AFILE_DetectFileType() and AFILE_OpenFile(). */
 #define AFILE_ERROR      0

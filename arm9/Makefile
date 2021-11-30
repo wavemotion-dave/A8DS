@@ -14,10 +14,10 @@ include $(DEVKITARM)/ds_rules
 # DATA is a list of directories containing binary files
 # all directories are relative to this makefile
 #---------------------------------------------------------------------------------
-BUILD		  :=	build
+BUILD		:=	build
 SOURCES		:=	source/emu source  
 INCLUDES	:=	source/emu source
-DATA		  := data
+DATA		:= data
 GRAPHICS	:=	gfx
 
 #---------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ LDFLAGS	=	-specs=ds_arm9.specs $(ARCH) -Wl,-Map,$(notdir $*.map)
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-lfat -lnds9
+LIBS	:=	-lfat -lnds9 -lmm9
  
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

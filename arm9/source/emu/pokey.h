@@ -97,7 +97,7 @@ void POKEY_Scanline(void);
 #define POLY9_SIZE  0x01ff
 #define POLY17_SIZE 0x0001ffff
 
-#define MAXPOKEYS         1		/* max number of emulated chips */
+#define MAXPOKEYS         4		/* max number of emulated chips */
 
 /* channel/chip definitions */
 #define CHAN1       0

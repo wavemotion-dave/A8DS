@@ -111,6 +111,10 @@ or no consequence (i.e. not major titles) that will not run with the emulator - 
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.8 : 30-Nov-2021 by wavemotion-dave
+  * Switched to maxmod audio library for improved sound.
+  * Try to start in /roms or /roms/a800 if possible
+
 V2.7 : 04-Nov-2021 by wavemotion-dave
   * New sound output processing to eliminate Zingers!
   * bios files can now optionally be in /roms/bios or /data/bios
