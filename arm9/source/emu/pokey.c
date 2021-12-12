@@ -36,7 +36,7 @@
  * along with Atari800; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <maxmod9.h>
+
 #include "atari.h"
 #include "cpu.h"
 #include "pia.h"
@@ -48,8 +48,8 @@
 #include "antic.h"
 #include "cassette.h"
 
-uint8 pokeyBufIdx __attribute__((section(".dtcm")))= 0;
-uint8 pokey_buffer[SNDLENGTH] __attribute__((section(".dtcm")));
+unsigned short pokeyBufIdx __attribute__((section(".dtcm")))= 0;
+char pokey_buffer[SNDLENGTH] __attribute__((section(".dtcm")));
 
 UBYTE KBCODE __attribute__((section(".dtcm")));
 UBYTE SERIN __attribute__((section(".dtcm")));
@@ -353,8 +353,9 @@ void POKEY_Frame(void)
  ***************************************************************************/
 void POKEY_Scanline(void) 
 {
-    mmStreamUpdate();
-    
+    Pokey_process(&pokey_buffer[pokeyBufIdx], 1);	// Each scanline, compute 1 output samples. This corresponds to a 15720Khz output sample rate if running at 60FPS (good enough)
+    pokeyBufIdx = (pokeyBufIdx+1) & (SNDLENGTH-1);
+
     if (pot_scanline < 228)
 		pot_scanline++;
   

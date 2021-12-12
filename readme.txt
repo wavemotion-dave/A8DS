@@ -111,6 +111,9 @@ or no consequence (i.e. not major titles) that will not run with the emulator - 
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V2.9 : 12-Dec-2021 by wavemotion-dave
+  * Reverted back to ARM7 SoundLib (a few games missing key sounds)
+  
 V2.8 : 30-Nov-2021 by wavemotion-dave
   * Switched to maxmod audio library for improved sound.
   * Try to start in /roms or /roms/a800 if possible

@@ -13,7 +13,7 @@
  */
 #include <nds.h>
 #include <nds/fifomessages.h>
-#include <maxmod9.h>
+
 #include <stdio.h>
 #include <fat.h>
 #include <dirent.h>
@@ -29,11 +29,7 @@
 #include "hash.h"
 #include "esc.h"
 #include "rtime.h"
-#include "pokeysnd.h"
 #include "emu/pia.h"
-
-#include "soundbank.h"
-#include "soundbank_bin.h"
 
 #include "clickNoQuit_wav.h"
 #include "keyclick_wav.h"
@@ -79,12 +75,18 @@ int auto_fire           = 0;                // default autofire disabled
 int ram_type            = 0;                // default is 128k
 int blending_type       = 6;                // 0=Normal, 1=Blur1, 2=Blur2, etc
 int keyboard_type       = 0;                // Normal (full)... 1=Simplified
-u8  emuSoundPause       = 1;                // To pause sound output
-u8  bRestartSoundEngine = 0;                // Restart the sound output
+
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
 // This buffer cannot be in .dtcm fast memory because the ARM7 core wouldn't see it.
 // ----------------------------------------------------------------------------------
+u8 sound_buffer[SNDLENGTH] __attribute__ ((aligned (4))) = {0};
+u16* aptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
+u16* bptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
+u16 sound_idx           __attribute__((section(".dtcm"))) = 0;
+u8 myPokeyBufIdx       __attribute__((section(".dtcm"))) = 0;
+u16 sampleExtender[256] __attribute__((section(".dtcm"))) = {0};
+
 #define  cxBG (myGame_offset_x<<8)
 #define  cyBG (myGame_offset_y<<8)
 #define  xdxBG (((320 / myGame_scale_x) << 8) | (320 % myGame_scale_x))
@@ -139,17 +141,6 @@ static void DumpDebugData(void)
 #endif
 }
 
-
-// --------------------------------------------------------------------------
-// For pausing the maxmod stream... we force a "mute" sound into the stream
-// --------------------------------------------------------------------------
-void SoundPause(void)
-{
-    emuSoundPause = 1;
-    mmStreamUpdate();
-    WAITVBL;
-}
-
 // ---------------------------------------------------------------------------
 // Write out the XEGS.DAT configuration file to capture the settings for
 // each game.
@@ -195,91 +186,24 @@ void dsClearDiskActivity(void)
     dsPrintValue(3,0,0, buf);
 }
 
-
-// -----------------------------------------------------------------------------------------------
-// MAXMOD streaming setup and handling... We were using the normal ARM7 sound core but it
-// sounded "scratchy" and so with the help of FluBBa, we've swiched over to the maxmod sound
-// core which seems to perform better. we are using manual streaming to force the updates as
-// close to scanline-resolution as possible which helps with volume-only voice sampling.
-// -----------------------------------------------------------------------------------------------
-unsigned short sampleMult = 2;
-mm_ds_system sys;
-mm_stream myStream;
-#define BUFFER_SIZE  (256*sampleMult)
-
-// -------------------------------------------------------------------------------------------
-// maxmod will call this routine when the buffer is half-empty and requests that
-// we fill the sound buffer with more samples. They will request 'len' samples and
-// we will fill exactly that many. If the sound is paused, we fill with 'mute' samples.
-// -------------------------------------------------------------------------------------------
-mm_word OurSoundMixer(mm_word len, mm_addr dest, mm_stream_formats format)
+// ---------------------------------------------------------------------------
+// This is called very frequently (about 16,000 times per second) to fill the
+// pipeline of sound values from the pokey buffer into the Nintendo DS sound
+// buffer which will be processed in the background by the ARM 7 processor.
+// ---------------------------------------------------------------------------
+void VsoundHandler(void)
 {
-    extern u8 lastSample;
-    extern void Pokey_process(void *sndbuffer, uint16 sndn);
-    if (emuSoundPause)  // If paused, just "mix" in mute samples... frequency will not change here
+    extern unsigned char pokey_buffer[];
+    extern u16 pokeyBufIdx;
+
+    // If there is a fresh sample... 
+    if (myPokeyBufIdx != pokeyBufIdx)
     {
-        // Fill buffer with "mute" sound...
-        memset(dest, lastSample, len);
+        u16 sample = sampleExtender[pokey_buffer[myPokeyBufIdx++]];
+        *aptr = sample;
+        *bptr = sample;
     }
-    else
-    {
-        Pokey_process(dest, len);   // Fill the sound buffer with samples!
-    }
-    return  len;
 }
-
-
-// -------------------------------------------------------------------------------------------
-// Setup the maxmod audio stream - this will be a 8-bit Mono PCM output at 31.4KHz which
-// sounds about right for the Atari POKEY chip.  For the DS-LITE we will use half that.
-// -------------------------------------------------------------------------------------------
-void setupStream(void) 
-{
-    static u8 bFirstTime = true;
-    if (bFirstTime)
-    {
-      //----------------------------------------------------------------
-      //  initialize maxmod with our small 2-effect soundbank
-      //----------------------------------------------------------------
-      mmInitDefaultMem((mm_addr)soundbank_bin);
-        
-      mmLoadEffect(SFX_CLICKNOQUIT);
-      mmLoadEffect(SFX_KEYCLICK);
-    }
-    else
-    {        
-        mmStreamClose();        // Close any active stream - we will re-setup
-    }
-    bFirstTime = false;
-    
-
-  //----------------------------------------------------------------
-  //  open stream
-  //----------------------------------------------------------------
-  myStream.sampling_rate  = SOUND_FREQ;             // sampling rate =
-  myStream.buffer_length  = BUFFER_SIZE;            // buffer length =
-  myStream.callback       = OurSoundMixer;          // set callback function
-  myStream.format         = MM_STREAM_8BIT_MONO;    // format = mono 8-bit
-  myStream.timer          = MM_TIMER0;              // use hardware timer 0
-  myStream.manual         = true;                   // use manual filling
-  mmStreamOpen( &myStream );
-
-  //----------------------------------------------------------------
-  //  when using 'automatic' filling, your callback will be triggered
-  //  every time half of the wave buffer is processed.
-  //
-  //  so: 
-  //  25000 (rate)
-  //  ----- = ~21 Hz for a full pass, and ~42hz for half pass
-  //  1200  (length)
-  //----------------------------------------------------------------
-  //  with 'manual' filling, you must call mmStreamUpdate
-  //  periodically (and often enough to avoid buffer underruns)
-  //----------------------------------------------------------------
-}
-
-
-
 
 // ---------------------------------------------------------------------------
 // We have 2 palettes that came from 2 different code bases for Atari800.
@@ -499,7 +423,7 @@ void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr,
 // see a better rendition of letters and numbers which othewise
 // will have pixels not showing. It's far from perfect - but workable.
 // -----------------------------------------------------------------------
-static int jIndex __attribute__((section(".dtcm")))= 0;
+static int sIndex __attribute__((section(".dtcm")))= 0;
 static u8 jitter[][4] __attribute__((section(".dtcm"))) =
 {
     {0x00, 0x00,
@@ -527,24 +451,15 @@ static u8 jitter[][4] __attribute__((section(".dtcm"))) =
      0x99, 0x99},
 };
 
-void SetScreenBlend(void)
+void vblankIntr()
 {
     REG_BG2PA = xdxBG;
     REG_BG2PD = ydyBG;
 
-    REG_BG2X = cxBG+jitter[blending_type][jIndex++];
-    REG_BG2Y = cyBG+jitter[blending_type][jIndex++];
+    REG_BG2X = cxBG+jitter[blending_type][sIndex++];
+    REG_BG2Y = cyBG+jitter[blending_type][sIndex++];
 
-    jIndex = jIndex & 0x03;
-}
-
-void vblankIntr(void)
-{
-    if (emuSoundPause)
-    {
-        mmStreamUpdate();
-    }
-    SetScreenBlend();
+    sIndex = sIndex & 0x03;
 }
 
 /*
@@ -577,12 +492,14 @@ void dsInitScreenMain(void)
     ReadGameSettings();
 }
 
-// --------------------------------------------
-// Enabled only when we are paused for sound.
-// --------------------------------------------
-void dsMuteSoundHandler(void)
+// --------------------------------------------------
+// Enables TIMER0 (our main timer) to start running.
+// This timer runs at 32,728.5 ticks = 1 second.
+// --------------------------------------------------
+void dsInitTimer(void)
 {
-    mmStreamUpdate();
+    TIMER0_DATA=0;
+    TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
 }
 
 // --------------------------------------------------
@@ -650,7 +567,7 @@ void dsShowScreenMain(void)
 void dsFreeEmu(void)
 {
     // Stop timer of sound
-    //TIMER2_CR=0; irqDisable(IRQ_TIMER2);
+    TIMER2_CR=0; irqDisable(IRQ_TIMER2);
 }
 
 
@@ -843,6 +760,9 @@ unsigned char tempFileBuf[HASH_FILE_LEN];
 unsigned char last_hash[33] = {'1','2','3','4','5','Z',0};
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
 {
+    // Free buffer if needed
+    TIMER2_CR=0; irqDisable(IRQ_TIMER2);
+
     if (disk_num == DISK_XEX)   // Force restart on XEX load...
     {
         bRestart = true;
@@ -882,15 +802,21 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
       bAtariCrash = false;
       dsPrintValue(1,23,0, "                              ");
 
+      memset(sound_buffer, 0x00, SNDLENGTH);
+
       dsSetAtariPalette();
 
       // In case we switched PAL/NTSC
       dsInstallSoundEmuFIFO();
 
+      TIMER2_DATA = TIMER_FREQ(SOUND_FREQ+5);   // Very slightly faster to ensure we always swallow all samples produced by the Pokey
+      TIMER2_CR = TIMER_DIV_1 | TIMER_IRQ_REQ | TIMER_ENABLE;
+      irqSet(IRQ_TIMER2, VsoundHandler);
+
       atari_frames = 0;
-      TIMER2_CR=0;
-      TIMER2_DATA=0;
-      TIMER2_CR=TIMER_ENABLE|TIMER_DIV_1024;
+      TIMER0_CR=0;
+      TIMER0_DATA=0;
+      TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
 
       dsShowRomInfo();
     }
@@ -1637,7 +1563,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
             }
             else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT
             {
-                mmEffect(SFX_CLICKNOQUIT);
+                soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                 bDone=dsWaitOnQuit();
                 if (bDone) uState=A8_QUITSTDS;
             }
@@ -1906,17 +1832,44 @@ int dsHandleKeyboard(int Tx, int Ty)
 }
 
 // -----------------------------------------------------------------------
-// Install the sound emulation - Uses maxmod streaming for better sound.
+// Install the sound emulation - sets up a FIFO with the ARM7 processor.
 // -----------------------------------------------------------------------
 void dsInstallSoundEmuFIFO(void)
 {
-    SoundPause();
-    swiWaitForVBlank();                                 // Wait 2 vertical blanks... Enough for the pause to kick in...
-    sampleMult = (isDSiMode() ? 2:1);                   // For the DSi we can afford doubling the samplerate for better sound
-    Pokey_sound_init(FREQ_17_APPROX, SOUND_FREQ, 1, 0); // Make sure the Atari Emulation side knows our current sound frequency
-    setupStream();                                      // Setup MaxMod Audio Stream
-        
-    bRestartSoundEngine = true;                         // After we process the first scanline of the new frame, we will start up the audio
+    irqDisable(IRQ_TIMER2);    
+    fifoSendValue32(FIFO_USER_01,(1<<16) | SOUND_KILL);
+    *aptr = 0; *bptr=0;
+    // We are going to use the 16-bit sound engine so we need to scale up our 8-bit values...
+    for (int i=0; i<256; i++)
+    {
+        sampleExtender[i] = (i << 8);
+    }
+    
+    if (isDSiMode())
+    {
+        aptr = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
+        bptr = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
+    }
+    else
+    {
+        aptr = (u16*) ((u32)&sound_buffer[0] + 0x00400000);
+        bptr = (u16*) ((u32)&sound_buffer[2] + 0x00400000);
+    }
+    swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to stop...
+    
+    FifoMessage msg;
+    msg.SoundPlay.data = &sound_buffer;
+    msg.SoundPlay.freq = SOUND_FREQ*2;
+    msg.SoundPlay.volume = 127;
+    msg.SoundPlay.pan = 64;
+    msg.SoundPlay.loop = 1;
+    msg.SoundPlay.format = ((1)<<4) | SoundFormat_16Bit;
+    msg.SoundPlay.loopPoint = 0;
+    msg.SoundPlay.dataSize = 4 >> 2;
+    msg.type = EMUARM7_PLAY_SND;
+    fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
+    
+    swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to start chugging...
 }
 
 // -------------------------------------------------------------------------------
@@ -1940,10 +1893,8 @@ void dsMainLoop(void)
 
   // Timers are fed with 33.513982 MHz clock.
   // With DIV_1024 the clock is 32,728.5 ticks per sec...
-  TIMER2_CR=0;
-  TIMER2_DATA=0;
-  TIMER2_CR=TIMER_ENABLE|TIMER_DIV_1024;
-  TIMER1_CR=0;
+  TIMER0_DATA=0;
+  TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
   TIMER1_DATA=0;
   TIMER1_CR=TIMER_ENABLE | TIMER_DIV_1024;
 
@@ -1968,6 +1919,7 @@ void dsMainLoop(void)
 
       case A8_PLAYINIT:
         dsShowScreenEmu();
+        irqEnable(IRQ_TIMER2);
         emu_state = A8_PLAYGAME;
         break;
 
@@ -1977,7 +1929,7 @@ void dsMainLoop(void)
         // 655 -> 50 fps and 546 -> 60 fps
         if (!full_speed)
         {
-            while(TIMER2_DATA < ((tv_mode == TV_NTSC ? 546:656)*atari_frames))
+            while(TIMER0_DATA < ((tv_mode == TV_NTSC ? 546:656)*atari_frames))
                 ;
         }
 
@@ -1989,22 +1941,15 @@ void dsMainLoop(void)
         // where the Nitnendo DS is spending most of its CPU time. 
         // ------------------------------------------------------------------------
         Atari800_Frame();
-        
-        // Reset the sound indexes and unpause the sound engine...
-        if (bRestartSoundEngine)
-        {
-            bRestartSoundEngine = 0;
-            emuSoundPause=0;
-        }       
 
         // ----------------------------------------------------
         // If we have processed 60/50 frames we start anew...
         // ----------------------------------------------------
         if (++atari_frames >= (tv_mode == TV_NTSC ? 60:50))
         {
-            TIMER2_CR=0;
-            TIMER2_DATA=0;
-            TIMER2_CR=TIMER_ENABLE|TIMER_DIV_1024;
+            TIMER0_CR=0;
+            TIMER0_DATA=0;
+            TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
             atari_frames=0;
         }
 
@@ -2092,7 +2037,7 @@ void dsMainLoop(void)
                 {
                     if (!keys_touch)
                     {
-                        mmEffect(SFX_CLICKNOQUIT);
+                        soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                     }
                     keys_touch=1;
                     key_consol &= ~CONSOL_START;
@@ -2101,7 +2046,7 @@ void dsMainLoop(void)
                 {
                     if (!keys_touch)
                     {
-                        mmEffect(SFX_CLICKNOQUIT);
+                        soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                     }
                     keys_touch=1;
                     key_consol &= ~CONSOL_SELECT;
@@ -2110,7 +2055,7 @@ void dsMainLoop(void)
                 {
                     if (!keys_touch)
                     {
-                        mmEffect(SFX_CLICKNOQUIT);
+                        soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                     }
                     keys_touch=1;
                     key_consol &= ~CONSOL_OPTION;
@@ -2140,7 +2085,7 @@ void dsMainLoop(void)
                               {
                                   if (last_key_code == AKEY_NONE)
                                   {
-                                      if (!key_click_disable) mmEffect(SFX_KEYCLICK);
+                                      if (!key_click_disable) soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
                                       last_key_code = key_code;
                                   }
                               }
@@ -2171,20 +2116,20 @@ void dsMainLoop(void)
                     }
                     else if ((iTx>192) && (iTx<250) && (iTy>120) && (iTy<143))  // RESET (reloads the game)
                     {
-                        SoundPause();
                         if (!keys_touch)
                         {
-                            mmEffect(SFX_CLICKNOQUIT);
+                            soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                         }
                         keys_touch = 1;
                         dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
-                        bRestartSoundEngine=1;
+                        irqEnable(IRQ_TIMER2);
+                        fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                     }
                     else if ((iTx>35) && (iTx<55) && (iTy>150) && (iTy<180))  // Help
                     {
                         if (!keys_touch)
                         {
-                            mmEffect(SFX_CLICKNOQUIT);
+                            soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                         }
                         dsShowHelp();
                         bShowHelp = true;
@@ -2194,7 +2139,7 @@ void dsMainLoop(void)
                     {
                         if (!keys_touch)
                         {
-                            mmEffect(SFX_CLICKNOQUIT);
+                            soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                         }
                         dsShowKeyboard();
                         bShowKeyboard = true;
@@ -2202,39 +2147,41 @@ void dsMainLoop(void)
                     }
                     else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT
                     {
-                      SoundPause();
-                      mmEffect(SFX_CLICKNOQUIT);
+                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
+                      soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                       if (dsWaitOnQuit()) emu_state=A8_QUITSTDS;
-                      else { bRestartSoundEngine=1; }
+                      else { irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); }
                     }
                     else if ((iTx>204) && (iTx<235) && (iTy>150) && (iTy<180))  // Gear Icon = Settings
                     {
-                      SoundPause();
+                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       keys_touch=1;
                       dsChooseOptions(TRUE);
-                      bRestartSoundEngine=1;
+                      irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); 
                     }
                     else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75))      // XEX and D1 Disk Drive
                     {
-                      SoundPause();
+                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       // Find files in current directory and show it
                       keys_touch=1;
                       strcpy(file_load_id, "XEX/D1");
                       a8FindFiles();
                       romSel=dsWaitForRom();
                       if (romSel) { emu_state=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
-                      bRestartSoundEngine=1;
+                      else { irqEnable(IRQ_TIMER2); }
+                      fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                     }
                     else if ((iTx>5) && (iTx<80) && (iTy>77) && (iTy<114))      // D2 Disk Drive
                     {
-                      SoundPause();
+                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
                       // Find files in current directory and show it
                       keys_touch=1;
                       strcpy(file_load_id, "D2");
                       a8FindFiles();
                       romSel=dsWaitForRom();
                       if (romSel) { emu_state=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_2, false, bLoadReadOnly); }
-                      bRestartSoundEngine=1;
+                      else { irqEnable(IRQ_TIMER2); }
+                      fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
                     }
                  }
             }
@@ -2289,7 +2236,8 @@ void dsMainLoop(void)
         {
             bFirstLoad = false;
             dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
-            bRestartSoundEngine=1;
+            irqEnable(IRQ_TIMER2);
+            fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
         }
 
         break;
@@ -2623,7 +2571,6 @@ void ApplyGameSpecificSettings(void)
       key_click_disable = 0;
       // Never default BASIC, OS, KEYBORD TYPE, TV-TYPE or MEMORY!
     }
-    SetScreenBlend();
 }
 
 // End of file
