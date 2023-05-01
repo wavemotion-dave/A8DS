@@ -241,8 +241,8 @@ Controls :
  
 Tap the XEX icon or the Disk Drive to load a new game.
  
---------------------------------------------------------------------------------
-Credits:
+
+Original alekmaulCredits:
 --------------------------------------------------------------------------------
 Thanks Wintermute for devkitpro and libnds (http://www.devkitpro.org).
 Atari800 team for source code (http://atari800.sourceforge.net/)
@@ -251,7 +251,6 @@ Alekmaul for porting the original A5200DS of which this is heavily based.
 The good folks over on GBATemp for their support.
 --------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
 Copyright:
 --------------------------------------------------------------------------------
 XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
