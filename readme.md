@@ -249,7 +249,7 @@ Atari800 team for source code (http://atari800.sourceforge.net/)
 Altirra and Avery Lee for a kick-ass substitute BIOS and generally being awesome.
 Alekmaul for porting the original A5200DS of which this is heavily based.
 The good folks over on GBATemp for their support.
---------------------------------------------------------------------------------
+
 
 Copyright:
 --------------------------------------------------------------------------------
