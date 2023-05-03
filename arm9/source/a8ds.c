@@ -1,10 +1,10 @@
 /*
- * XEGS.C contains the main loop and related file selection utilities.
+ * A8DS.C contains the main loop and related file selection utilities.
  * This is where the main state machine is located and executes at the
  * TV frequency (60Hz or 50Hz depending on NTSC or PAL).
  *
- * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
- * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ * A8DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
+ * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
  *
  * Copying and distribution of this file, with or without modification,
  * are permitted in any medium without royalty provided the copyright
@@ -20,7 +20,7 @@
 #include <unistd.h>
 
 #include "main.h"
-#include "xegs.h"
+#include "a8ds.h"
 
 #include "atari.h"
 #include "antic.h"

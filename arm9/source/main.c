@@ -17,7 +17,7 @@
 #include "main.h"
 #include "atari.h"
 #include "intro.h"
-#include "xegs.h"
+#include "a8ds.h"
 
 extern void load_os(void);
 extern void install_os(void);

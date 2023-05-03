@@ -40,7 +40,7 @@
 #include <string.h>
 #include <nds.h>
 
-#include "xegs.h"
+#include "a8ds.h"
 #include "antic.h"
 #include "atari.h"
 #include "cpu.h"

@@ -43,7 +43,7 @@
 #include <string.h>
 
 #include "main.h"
-#include "xegs.h"
+#include "a8ds.h"
 #include "hash.h"
 #include "atari.h"
 #include "binload.h"

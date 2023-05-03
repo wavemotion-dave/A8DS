@@ -12,7 +12,7 @@
 #include <nds.h>
 #include <stdio.h>
 
-#include "xegs.h"
+#include "a8ds.h"
 
 #include "mus_intro_wav.h"
 #include "pdev_tbg0.h"
