@@ -64,7 +64,7 @@
 
 	The 6502 emulation also ignores memory attributes for accesses to page 0 and page 1.
  */
-
+#include <nds.h>
 #include <stdio.h>
 #include <stdlib.h>	/* exit() */
 #include "cpu.h"
@@ -269,7 +269,7 @@ static UBYTE cycles[256] __attribute__((section(".dtcm"))) =
 };
 
 /* 6502 emulation routine */
-void GO(int limit)
+ITCM_CODE void GO(int limit)
 {
 #define OPCODE_ALIAS(code)	opcode_##code:
 #define DONE				goto next;

@@ -38,7 +38,6 @@
 #include "bgFileSel.h"
 #include "bgInfo.h"
 #include "bgKeyboard.h"
-#include "bgKeyBrief.h"
 #include "altirra_os.h"
 #include "altirra_basic.h"
 
@@ -59,6 +58,8 @@ short int myGame_scale_y = 256;             // Some sensible X/Y offsets and sca
 int bAtariOS=false;                         // Real Atari XL BIOS is OFF by default
 int bAtariOSB=false;                        // Real Atari OSB BIOS is OFF by default
 int bAtariBASIC=false;                      // Real Atari Basic Rev C is OFF by default
+bool bShowKeyboard = false;
+
 
 int os_type             = OS_ALTIRRA_XL;    // Default is built-in OS from Alitirra
 int basic_type          = BASIC_ALTIRRA;    // Default BASIC is built-in from Alitirra
@@ -699,48 +700,51 @@ void dsShowRomInfo(void)
 
     if (bShowEmuText)
     {
-        dsPrintValue(10,2,0, "XEX:  ");
-        strncpy(line1, disk_filename[DISK_XEX], 22);
-        line1[22] = 0;
-        sprintf(line2,"%-22s", line1);
-        dsPrintValue(10,3,0, line2);
-
-        sprintf(line1, "D1: %s", (disk_readonly[DISK_1] ? "[R]":"[W]"));
-        dsPrintValue(10,6,0, line1);
-        strncpy(line1, disk_filename[DISK_1], 22);
-        line1[22] = 0;
-        sprintf(line2,"%-22s", line1);
-        dsPrintValue(10,7,0, line2);
-        if (strlen(disk_filename[DISK_1]) > 26)
+        if (!bShowKeyboard)
         {
-            strncpy(line1, &disk_filename[DISK_1][22], 22);
+            dsPrintValue(10,2,0, "XEX:  ");
+            strncpy(line1, disk_filename[DISK_XEX], 22);
             line1[22] = 0;
             sprintf(line2,"%-22s", line1);
-        }
-        else
-        {
-            sprintf(line2,"%-22s", " ");
-        }
-        dsPrintValue(10,8,0, line2);
+            dsPrintValue(10,3,0, line2);
 
-        sprintf(line1, "D2: %s", (disk_readonly[DISK_2] ? "[R]":"[W]"));
-        dsPrintValue(10,11,0, line1);
-        strncpy(line1, disk_filename[DISK_2], 22);
-        line1[22] = 0;
-        sprintf(line2,"%-22s", line1);
-        dsPrintValue(10,12,0, line2);
-        if (strlen(disk_filename[DISK_2]) > 26)
-        {
-            strncpy(line1, &disk_filename[DISK_2][22], 22);
+            sprintf(line1, "D1: %s", (disk_readonly[DISK_1] ? "[R]":"[W]"));
+            dsPrintValue(10,6,0, line1);
+            strncpy(line1, disk_filename[DISK_1], 22);
             line1[22] = 0;
             sprintf(line2,"%-22s", line1);
-        }
-        else
-        {
-            sprintf(line2,"%-22s", " ");
-        }
-        dsPrintValue(10,13,0, line2);
+            dsPrintValue(10,7,0, line2);
+            if (strlen(disk_filename[DISK_1]) > 26)
+            {
+                strncpy(line1, &disk_filename[DISK_1][22], 22);
+                line1[22] = 0;
+                sprintf(line2,"%-22s", line1);
+            }
+            else
+            {
+                sprintf(line2,"%-22s", " ");
+            }
+            dsPrintValue(10,8,0, line2);
 
+            sprintf(line1, "D2: %s", (disk_readonly[DISK_2] ? "[R]":"[W]"));
+            dsPrintValue(10,11,0, line1);
+            strncpy(line1, disk_filename[DISK_2], 22);
+            line1[22] = 0;
+            sprintf(line2,"%-22s", line1);
+            dsPrintValue(10,12,0, line2);
+            if (strlen(disk_filename[DISK_2]) > 26)
+            {
+                strncpy(line1, &disk_filename[DISK_2][22], 22);
+                line1[22] = 0;
+                sprintf(line2,"%-22s", line1);
+            }
+            else
+            {
+                sprintf(line2,"%-22s", " ");
+            }
+            dsPrintValue(10,13,0, line2);
+        }
+        
         sprintf(ramSizeBuf, "%dK", ram_size);
         if ((os_type == OS_ATARI_OSB) || (os_type==OS_ALTIRRA_800))
             sprintf(machineBuf, "%-5s A800", (bHaveBASIC ? "BASIC": " "));
@@ -958,7 +962,7 @@ const struct options_t Option_Table[] =
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
     {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
     {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
-    {"KEYBOARD",    {"NORMAL",      "SIMPLIFIED"},                      &keyboard_type,         2,   "NORMAL KEYBOARD   ",   "HAS MOST KEYS AND ",  "SIMPLIFIED IS MORE",  "STREAMLINED USE   "},
+    //{"KEYBOARD",    {"NORMAL",      "SIMPLIFIED"},                      &keyboard_type,         2,   "NORMAL KEYBOARD   ",   "HAS MOST KEYS AND ",  "SIMPLIFIED IS MORE",  "STREAMLINED USE   "},
 
     {NULL,          {"",            ""},                                NULL,                   2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
@@ -1472,28 +1476,16 @@ static u16 sav1 = 0;
 static u16 sav2 = 0;
 void dsShowKeyboard(void)
 {
-    if (keyboard_type == 0) // Normal Keyboard....
-    {
-          decompress(bgKeyboardTiles, bgGetGfxPtr(bg0b), LZ77Vram);
-          decompress(bgKeyboardMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
-          dmaCopy((void *) bgKeyboardPal,(u16*) BG_PALETTE_SUB,256*2);
-          unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
-          dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
-          swiWaitForVBlank();
-          sav1 = *(bgGetMapPtr(bg1b) + 680);
-          sav2 = *(bgGetMapPtr(bg1b) + 683);
-    }
-    else    // Simplified "brief" keyboard...
-    {
-          decompress(bgKeyBriefTiles, bgGetGfxPtr(bg0b), LZ77Vram);
-          decompress(bgKeyBriefMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
-          dmaCopy((void *) bgKeyBriefPal,(u16*) BG_PALETTE_SUB,256*2);
-          unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
-          dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
-          swiWaitForVBlank();
-          sav1 = *(bgGetMapPtr(bg1b) + 680);
-          sav2 = *(bgGetMapPtr(bg1b) + 683);
-    }
+      decompress(bgKeyboardTiles, bgGetGfxPtr(bg0b), LZ77Vram);
+      decompress(bgKeyboardMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+      dmaCopy((void *) bgKeyboardPal,(u16*) BG_PALETTE_SUB,256*2);
+      unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
+      dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+      swiWaitForVBlank();
+      sav1 = *(bgGetMapPtr(bg1b) + 680);
+      sav2 = *(bgGetMapPtr(bg1b) + 683);
+    
+      dsShowRomInfo();
 }
 
 // ----------------------------------------------------------------------------------
@@ -1627,72 +1619,6 @@ void dsPrintValue(int x, int y, unsigned int isSelect, char *pchStr)
   }
 }
 
-// -------------------------------------------
-// Simplified "brief" Keyboard handler...
-// -------------------------------------------
-int dsHandleKeyBrief(int Tx, int Ty)
-{
-    int keyPress = AKEY_NONE;
-
-    if (Ty > 0 && Ty < 35)
-    {
-        if (Tx <  37)       keyPress = AKEY_1;
-        else if (Tx <  73)  keyPress = AKEY_2;
-        else if (Tx <  110) keyPress = AKEY_3;
-        else if (Tx <  147) keyPress = AKEY_4;
-        else if (Tx <  184) keyPress = AKEY_5;
-        else if (Tx <  220) keyPress = AKEY_0;
-        else if (Tx <  256) keyPress = AKEY_BACKSPACE;
-    }
-    else if (Ty < 67)
-    {
-        if (Tx <  37)       keyPress = AKEY_a;
-        else if (Tx <  73)  keyPress = AKEY_b;
-        else if (Tx <  110) keyPress = AKEY_c;
-        else if (Tx <  147) keyPress = AKEY_d;
-        else if (Tx <  184) keyPress = AKEY_e;
-        else if (Tx <  220) keyPress = AKEY_f;
-        else if (Tx <  256) keyPress = AKEY_g;
-    }
-    else if (Ty < 98)
-    {
-        if (Tx <  37)       keyPress = AKEY_h;
-        else if (Tx <  73)  keyPress = AKEY_i;
-        else if (Tx <  110) keyPress = AKEY_j;
-        else if (Tx <  147) keyPress = AKEY_k;
-        else if (Tx <  184) keyPress = AKEY_l;
-        else if (Tx <  220) keyPress = AKEY_m;
-        else if (Tx <  256) keyPress = AKEY_n;
-    }
-    else if (Ty < 130)
-    {
-        if (Tx <  37)       keyPress = AKEY_o;
-        else if (Tx <  73)  keyPress = AKEY_p;
-        else if (Tx <  110) keyPress = AKEY_q;
-        else if (Tx <  147) keyPress = AKEY_r;
-        else if (Tx <  184) keyPress = AKEY_s;
-        else if (Tx <  220) keyPress = AKEY_t;
-        else if (Tx <  256) keyPress = AKEY_u;
-    }
-    else if (Ty < 162)
-    {
-        if (Tx <  37)       keyPress = AKEY_v;
-        else if (Tx <  73)  keyPress = AKEY_w;
-        else if (Tx <  110) keyPress = AKEY_x;
-        else if (Tx <  147) keyPress = AKEY_y;
-        else if (Tx <  184) keyPress = AKEY_z;
-        else if (Tx <  220) keyPress = AKEY_FULLSTOP;
-        else if (Tx <  256) keyPress = AKEY_COLON;
-    }
-    else
-    {
-        if (Tx <  52) keyPress = AKEY_EXIT;
-        else if (Tx < 200) keyPress = AKEY_SPACE;
-        else if (Tx < 256) keyPress = AKEY_RETURN;
-    }
-
-    return keyPress;
-}
 
 // -------------------------------------------
 // Normal Keyboard handler...
@@ -1704,7 +1630,83 @@ int dsHandleKeyboard(int Tx, int Ty)
 
     if (Ty <= 8) return AKEY_NONE;
 
-    if (Ty > 8 && Ty < 30)       // Top Row 0-9
+    if (Ty > 14 && Ty < 49)       // Top Row 0-9
+    {
+        if (Tx < 3) keyPress = AKEY_NONE; 
+        else if (Tx <  23) keyPress = (shift ? AKEY_EXCLAMATION : AKEY_1);
+        else if (Tx <  41) keyPress = (shift ? AKEY_DBLQUOTE    : AKEY_2);
+        else if (Tx <  60) keyPress = (shift ? AKEY_HASH        : AKEY_3);
+        else if (Tx <  77) keyPress = (shift ? AKEY_DOLLAR      : AKEY_4);
+        else if (Tx <  98) keyPress = (shift ? AKEY_PERCENT     : AKEY_5);
+        else if (Tx < 117) keyPress = (shift ? AKEY_AMPERSAND   : AKEY_6);
+        else if (Tx < 136) keyPress = (shift ? AKEY_SLASH       : AKEY_7);
+        else if (Tx < 155) keyPress = (shift ? AKEY_AT          : AKEY_8);
+        else if (Tx < 174) keyPress = (shift ? AKEY_PARENLEFT   : AKEY_9);
+        else if (Tx < 193) keyPress = (shift ? AKEY_PARENRIGHT  : AKEY_0);
+        else if (Tx < 212) keyPress = (shift ? AKEY_CLEAR       : AKEY_LESS);
+        else if (Tx < 231) keyPress = (shift ? AKEY_INSERT_CHAR : AKEY_GREATER);
+        else if (Tx < 250) keyPress = (shift ? AKEY_DELETE_CHAR : AKEY_BACKSPACE);
+    }
+    else if (Ty < 85)  // Row QWERTY
+    {
+        if (Tx < 14) keyPress = AKEY_NONE; 
+        else if (Tx <  33) keyPress = (shift ? AKEY_Q : AKEY_q);
+        else if (Tx <  52) keyPress = (shift ? AKEY_W : AKEY_w);
+        else if (Tx <  71) keyPress = (shift ? AKEY_E : AKEY_e);
+        else if (Tx <  90) keyPress = (shift ? AKEY_R : AKEY_r);
+        else if (Tx < 109) keyPress = (shift ? AKEY_T : AKEY_t);
+        else if (Tx < 128) keyPress = (shift ? AKEY_Y : AKEY_y);
+        else if (Tx < 147) keyPress = (shift ? AKEY_U : AKEY_u);
+        else if (Tx < 166) keyPress = (shift ? AKEY_I : AKEY_i);
+        else if (Tx < 185) keyPress = (shift ? AKEY_O : AKEY_o);
+        else if (Tx < 204) keyPress = (shift ? AKEY_P : AKEY_p);
+        else if (Tx < 223) keyPress = (shift ? AKEY_UNDERSCORE : AKEY_MINUS);
+        else if (Tx < 242) keyPress = (shift ? AKEY_BAR : AKEY_EQUAL);
+    }
+    else if (Ty < 121)  // Home Row ASDF-JKL;
+    {
+        if (Tx < 19)       keyPress = AKEY_TAB; 
+        else if (Tx <  38) keyPress = (shift ? AKEY_A : AKEY_a);
+        else if (Tx <  57) keyPress = (shift ? AKEY_S : AKEY_s);
+        else if (Tx <  76) keyPress = (shift ? AKEY_D : AKEY_d);
+        else if (Tx <  95) keyPress = (shift ? AKEY_F : AKEY_f);
+        else if (Tx < 114) keyPress = (shift ? AKEY_G : AKEY_g);
+        else if (Tx < 133) keyPress = (shift ? AKEY_H : AKEY_h);
+        else if (Tx < 152) keyPress = (shift ? AKEY_J : AKEY_j);
+        else if (Tx < 171) keyPress = (shift ? AKEY_K : AKEY_k);
+        else if (Tx < 190) keyPress = (shift ? AKEY_L : AKEY_l);
+        else if (Tx < 209) keyPress = (shift ? AKEY_COLON : AKEY_SEMICOLON);
+        else if (Tx < 228) keyPress = (shift ? AKEY_BACKSLASH : AKEY_PLUS);
+        else if (Tx < 247) keyPress = (shift ? AKEY_CARET : AKEY_ASTERISK);
+    }
+    else if (Ty < 157)  // ZXCV Row
+    {
+        if (Tx < 30)       keyPress = AKEY_CTRL; 
+        else if (Tx <  49) keyPress = (shift ? AKEY_Z : AKEY_z);
+        else if (Tx <  68) keyPress = (shift ? AKEY_X : AKEY_x);
+        else if (Tx <  87) keyPress = (shift ? AKEY_C : AKEY_c);
+        else if (Tx < 106) keyPress = (shift ? AKEY_V : AKEY_v);
+        else if (Tx < 125) keyPress = (shift ? AKEY_B : AKEY_b);
+        else if (Tx < 144) keyPress = (shift ? AKEY_N : AKEY_n);
+        else if (Tx < 163) keyPress = (shift ? AKEY_M : AKEY_m);
+        else if (Tx < 182) keyPress = (shift ? AKEY_BRACKETLEFT : AKEY_COMMA);
+        else if (Tx < 201) keyPress = (shift ? AKEY_BRACKETRIGHT : AKEY_FULLSTOP);
+        else if (Tx < 220) keyPress = (shift ? AKEY_QUESTION : AKEY_SLASH);
+        else if (Tx < 255) keyPress = AKEY_RETURN;
+    }
+    else if (Ty < 192)  // Spacebar Row
+    {
+        if (Tx <  27) keyPress = AKEY_EXIT;
+        else if (Tx <  46) keyPress = AKEY_ESCAPE;
+        else if (Tx <  66) keyPress = AKEY_SHFT;
+        else if (Tx < 200) keyPress = AKEY_SPACE;
+        else if (Tx < 218) keyPress = AKEY_SHFT;
+        else if (Tx < 237) keyPress = AKEY_CAPSTOGGLE;
+        else if (Tx < 255) keyPress = AKEY_DELETE_CHAR;
+    }
+    
+#if 0    
+    else if (Ty < 1)  // 
     {
         if (Tx <  30) keyPress = AKEY_LEFT;
         else if (Tx <  56) keyPress = AKEY_RIGHT;
@@ -1716,71 +1718,6 @@ int dsHandleKeyboard(int Tx, int Ty)
         else if (Tx < 204) keyPress = AKEY_PARENLEFT;
         else if (Tx < 229) keyPress = AKEY_PARENRIGHT;
         else if (Tx < 255) keyPress = AKEY_BACKSPACE;
-    }
-    else if (Ty < 56)  // Row QWERTY
-    {
-        if (Tx <  30) keyPress = AKEY_PLUS;
-        else if (Tx <  56) keyPress = AKEY_MINUS;
-        else if (Tx <  80) keyPress = AKEY_SLASH;
-        else if (Tx < 104) keyPress = AKEY_ASTERISK;
-        else if (Tx < 130) keyPress = AKEY_EQUAL;
-        else if (Tx < 152) keyPress = AKEY_LESS;
-        else if (Tx < 179) keyPress = AKEY_GREATER;
-        else if (Tx < 204) keyPress = AKEY_BRACKETLEFT;
-        else if (Tx < 229) keyPress = AKEY_BRACKETRIGHT;
-        else if (Tx < 255) keyPress = AKEY_DBLQUOTE;
-    }
-    else if (Ty < 84)  // Numbers Row 1-9,0
-    {
-        if (Tx <  30) keyPress = AKEY_1;
-        else if (Tx <  56) keyPress = AKEY_2;
-        else if (Tx <  80) keyPress = AKEY_3;
-        else if (Tx < 104) keyPress = AKEY_4;
-        else if (Tx < 130) keyPress = AKEY_5;
-        else if (Tx < 152) keyPress = AKEY_6;
-        else if (Tx < 179) keyPress = AKEY_7;
-        else if (Tx < 204) keyPress = AKEY_8;
-        else if (Tx < 229) keyPress = AKEY_9;
-        else if (Tx < 255) keyPress = AKEY_0;
-    }
-    else if (Ty < 107)  // QWERTY Row
-    {
-        if (Tx <  30) keyPress = (shift ? AKEY_Q : AKEY_q);
-        else if (Tx <  56) keyPress = (shift ? AKEY_W : AKEY_w);
-        else if (Tx <  80) keyPress = (shift ? AKEY_E : AKEY_e);
-        else if (Tx < 104) keyPress = (shift ? AKEY_R : AKEY_r);
-        else if (Tx < 130) keyPress = (shift ? AKEY_T : AKEY_t);
-        else if (Tx < 152) keyPress = (shift ? AKEY_Y : AKEY_y);
-        else if (Tx < 179) keyPress = (shift ? AKEY_U : AKEY_u);
-        else if (Tx < 204) keyPress = (shift ? AKEY_I : AKEY_i);
-        else if (Tx < 229) keyPress = (shift ? AKEY_O : AKEY_o);
-        else if (Tx < 255) keyPress = (shift ? AKEY_P : AKEY_p);
-    }
-    else if (Ty < 134)  // Home Row ASDF-JKL;
-    {
-        if (Tx <  30) keyPress = (shift ? AKEY_A : AKEY_a);
-        else if (Tx <  56) keyPress = (shift ? AKEY_S : AKEY_s);
-        else if (Tx <  80) keyPress = (shift ? AKEY_D : AKEY_d);
-        else if (Tx < 104) keyPress = (shift ? AKEY_F : AKEY_f);
-        else if (Tx < 130) keyPress = (shift ? AKEY_G : AKEY_g);
-        else if (Tx < 152) keyPress = (shift ? AKEY_H : AKEY_h);
-        else if (Tx < 179) keyPress = (shift ? AKEY_J : AKEY_j);
-        else if (Tx < 204) keyPress = (shift ? AKEY_K : AKEY_k);
-        else if (Tx < 229) keyPress = (shift ? AKEY_L : AKEY_l);
-        else if (Tx < 255) keyPress = AKEY_SEMICOLON;
-    }
-    else if (Ty < 162)  // Bottom Row ZXCV...
-    {
-        if (Tx <  30) keyPress = (shift ? AKEY_Z : AKEY_z);
-        else if (Tx <  56) keyPress = (shift ? AKEY_X : AKEY_x);
-        else if (Tx <  80) keyPress = (shift ? AKEY_C : AKEY_c);
-        else if (Tx < 104) keyPress = (shift ? AKEY_V : AKEY_v);
-        else if (Tx < 130) keyPress = (shift ? AKEY_B : AKEY_b);
-        else if (Tx < 152) keyPress = (shift ? AKEY_N : AKEY_n);
-        else if (Tx < 179) keyPress = (shift ? AKEY_M : AKEY_m);
-        else if (Tx < 204) keyPress = AKEY_COMMA;
-        else if (Tx < 229) keyPress = AKEY_FULLSTOP;
-        else if (Tx < 255) keyPress = AKEY_COLON;
     }
     else
     {
@@ -1795,7 +1732,7 @@ int dsHandleKeyboard(int Tx, int Ty)
         else if (Tx < 229) keyPress = AKEY_RETURN;
         else if (Tx < 255) keyPress = AKEY_RETURN;
     }
-
+#endif
     if (keyPress == AKEY_SHFT)
     {
         if ( !keyboard_debounce )   // To prevent from toggling so quickly...
@@ -1803,29 +1740,34 @@ int dsHandleKeyboard(int Tx, int Ty)
             keyboard_debounce=10;
             if (shift == 0)
             {
-                *(bgGetMapPtr(bg1b)+680) = 60;
                 shift = 1;
+                dsPrintValue(0,0,0, "SHF");
             }
             else
             {
-                *(bgGetMapPtr(bg1b)+680) = sav1;
                 shift = 0;
+                dsPrintValue(0,0,0, "   ");
             }
         }
         keyPress = AKEY_NONE;
     }
-
-    if (keyPress == AKEY_CTRL)
+    else if (keyPress == AKEY_CTRL)
     {
-        *(bgGetMapPtr(bg1b)+683) = 60;
         ctrl = 1;
         keyPress = AKEY_NONE;
+        dsPrintValue(0,0,0, "CTR");
     }
     else if (ctrl)
     {
         keyPress |= AKEY_CTRL;
         ctrl=0;
-        *(bgGetMapPtr(bg1b)+683) = sav2;
+        dsPrintValue(0,0,0, "   ");
+    }
+    else if (keyPress != AKEY_NONE)
+    {
+        ctrl=0;
+        shift=0;
+        dsPrintValue(0,0,0, "   ");
     }
 
     return keyPress;
@@ -1889,7 +1831,6 @@ void dsMainLoop(void)
   unsigned int keys_pressed,keys_touch=0, romSel=0;
   int iTx,iTy;
   bool bShowHelp = false;
-  bool bShowKeyboard = false;
 
   // Timers are fed with 33.513982 MHz clock.
   // With DIV_1024 the clock is 32,728.5 ticks per sec...
@@ -2068,10 +2009,7 @@ void dsMainLoop(void)
                 {
                       if (bShowKeyboard)
                       {
-                          if (keyboard_type == 0)
-                            key_code = dsHandleKeyboard(iTx, iTy);
-                          else
-                            key_code = dsHandleKeyBrief(iTx, iTy);
+                         key_code = dsHandleKeyboard(iTx, iTy);
                          if (key_code == AKEY_EXIT)
                          {
                               bShowKeyboard = false;
@@ -2141,8 +2079,8 @@ void dsMainLoop(void)
                         {
                             soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                         }
-                        dsShowKeyboard();
                         bShowKeyboard = true;
+                        dsShowKeyboard();
                         keys_touch = 1;
                     }
                     else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT

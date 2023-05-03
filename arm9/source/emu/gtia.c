@@ -302,7 +302,7 @@ void new_pm_scanline(void)
 
 /* GTIA registers ---------------------------------------------------------- */
 
-ITCM_CODE void GTIA_Frame(void) {
+void GTIA_Frame(void) {
 	int consol = key_consol | 0x08;
 
 	consol_table[0] = consol;
@@ -316,7 +316,7 @@ ITCM_CODE void GTIA_Frame(void) {
 	}
 }
 
-ITCM_CODE UBYTE GTIA_GetByte(UWORD addr)
+UBYTE GTIA_GetByte(UWORD addr)
 {
 	switch (addr & 0x1f) {
 	case _M0PF:

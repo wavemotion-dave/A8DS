@@ -233,7 +233,7 @@ int Atari800_Exit(int run_monitor)
 	return restart;
 }
 
-ITCM_CODE UBYTE Atari800_GetByte(UWORD addr) 
+UBYTE Atari800_GetByte(UWORD addr) 
 {
     switch (addr & 0xff00) 
     {
@@ -253,7 +253,7 @@ ITCM_CODE UBYTE Atari800_GetByte(UWORD addr)
     return 0xFF;
 }
 
-ITCM_CODE void Atari800_PutByte(UWORD addr, UBYTE byte) 
+void Atari800_PutByte(UWORD addr, UBYTE byte) 
 {
 	switch (addr & 0xff00) 
     {

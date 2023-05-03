@@ -492,7 +492,7 @@ void CartA0BF_Enable(void)
 }
 
 
-ITCM_CODE inline void CopyFromMem(UWORD from, UBYTE *to, int size)
+inline void CopyFromMem(UWORD from, UBYTE *to, int size)
 {
 	while (--size >= 0) {
 		*to++ = GetByte(from);
@@ -500,7 +500,7 @@ ITCM_CODE inline void CopyFromMem(UWORD from, UBYTE *to, int size)
 	}
 }
 
-ITCM_CODE inline void CopyToMem(const UBYTE *from, UWORD to, int size)
+inline void CopyToMem(const UBYTE *from, UWORD to, int size)
 {
 	while (--size >= 0) {
 		PutByte(to, *from);

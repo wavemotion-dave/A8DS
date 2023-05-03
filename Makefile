@@ -3,7 +3,7 @@
 #DEVKITPPC=/opt/devkitpro/devkitPPC
 #DEVKITPRO=/opt/devkitpro
 
-VERSION=2.9
+VERSION=3.0
 
 #---------------------------------------------------------------------------------
 .SUFFIXES:
@@ -14,10 +14,10 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
-export TARGET		:=	XEGS-DS
+export TARGET		:=	A8DS
 export TOPDIR		:=	$(CURDIR)
 
-ICON 		:= -b $(CURDIR)/logo.bmp "XEGS-DS $(VERSION);wavemotion-dave;http://www.github.com/wavemotion-dave"
+ICON 		:= -b $(CURDIR)/logo.bmp "A8DS $(VERSION);wavemotion-dave;http://www.github.com/wavemotion-dave"
 
 .PHONY: arm7/$(TARGET).elf arm9/$(TARGET).elf
 
