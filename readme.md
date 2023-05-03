@@ -1,12 +1,12 @@
 A8DS
 --------------------------------------------------------------------------------
-A8DS is an Atari 8-bit computer emulator.  Specifically, it's around the 
+A8DS is an Atari 8-bit computer emulator.  Specifically, it targets the 
 800XL / 130XE systems and various hardware extensions to increase the memory. 
-The stock 800XL had 64KB of RAM and was generall. The default configuration
-is an XL/XE machine with 128KB of RAM which will run most of the 8-bit library.
-A8 goes beyond the normal XL/XE 128K machine and provides three alternative 
+The stock 800XL had 64KB of RAM. The default A8DS configuration is an
+XL/XE machine with 128KB of RAM which will run most of the 8-bit library.
+A8DS goes beyond the normal XL/XE 128K machine and provides three alternative 
 configurations: the 320K (RAMBO) and 1088K for a few large games and demos 
-plus an Atari 800 48K machine for backwards compatibility with some older 
+plus an Atari 800 (non-XL) 48K machine for backwards compatibility with some older 
 games that don't play nice with a more "modern" XL/XE setup. As such, it's 
 really grown to be a full-featured 8-bit emulator to run nearly the entire 
 8-bit line up of games on their Nitendo DS/DSi handhelds.
@@ -22,7 +22,7 @@ The goal here is to make this as simple as possible - point to the executable
 
 Optional BIOS Roms
 ----------------------------------------------------------------------------------
-There is a built-in Altirra BIOS (thanks to Avery Lee) which is fairly compatibile
+There is a built-in Altirra BIOS (thanks to Avery Lee) which is reasonably compatibile
 with many games. However, a few games will require the original ATARI BIOS - and,
 unfortunately, there were many variations of those BIOS over the years to support
 various Atari computer models releaesed over a decade.
@@ -34,10 +34,10 @@ A8DS supports 3 optional Atari BIOS and BASIC files as follows:
 *  ataribas.rom  - this is the 8k Atari BASIC cartridge (recommend Rev C)
 
 You can install zero, one or more of these files and if you want to use these real ROMs
-they must reside in the same folder as the A8DS.NDS emulator (or, optionally, you 
-can place your BIOS files in /roms/bios or /data/bios) and these files must be exactly
+they must reside in the same folder as the A8DS.NDS emulator or you can place your
+BIOS files in /roms/bios or /data/bios) and these files must be exactly
 so named as shown above. These files are loaded into memory when the emulator starts 
-and remain available for the entire gaming session. Again, if you don't have a real BIOS, 
+and remain available for the entire emulation session. Again, if you don't have a real BIOS, 
 a generic but excellent one is provided from the good folks who made Altirra (Avery Lee) 
 which is released as open-source software.  Also optional is ataribas.rom for the 8K basic 
 program (Rev C is recommended). If not supplied, the built-in Altirra BASIC 1.55 is supplied.
@@ -46,7 +46,7 @@ I've not done exhaustive testing, but in many cases I find the Altirra BIOS does
 great job compared to the original Atari BIOS. I generally stick with the open source
 Altirra BIOS if it works but you can switch it on a per-game basis in the Options menu.
 
-Do not ask me about rom files, I don't have them. A search with Google will certainly 
+Do not ask me about rom files, you will be propmptly ignored. A search with Google will certainly 
 help you. 
 
 Copyright:
@@ -57,9 +57,20 @@ Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
 Copying and distribution of this emulator, it's source code and associated 
 readme files, with or without modification, are permitted in any medium without 
 royalty provided the this copyright notice is used and wavemotion-dave, alekmaul 
-and Avery Lee (Altirra OS) are credited and thanked profusely.
+(original port) and Avery Lee (Altirra OS) are credited and thanked profusely.
 
 The A8DS emulator is offered as-is, without any warranty.
+
+
+Credits:
+--------------------------------------------------------------------------------
+* Thanks Wintermute for devkitpro and libnds (http://www.devkitpro.org).
+* Atari800 team for source code (http://atari800.sourceforge.net/)
+* Altirra and Avery Lee for a kick-ass substitute BIOS and generally being awesome.
+* Alekmaul for porting the original A5200DS of which this is heavily based.
+* Thanks to Darryl Hirschler for the awesome Atari 8-bit Keyboard Graphic.
+* The good folks over on GBATemp and AtariAge for their support.
+
 
 Features :
 ----------------------------------------------------------------------------------
@@ -118,6 +129,21 @@ If a game crashes (crash message shows at bottom of screen or game does not othe
 
 With those tips, you should be able to get 99% of all games running. There are still a few odd "never heard of" games of little 
 or no consequence (i.e. not major titles) that will not run with the emulator - such is life!
+
+Controls :
+----------------------------------------------------------------------------------
+ * D-pad  : the joystick ...
+ * A      : Fire button
+ * B      : Alternate Fire button
+ * X      : Space Bar (R+X for RETURN and L+X for ESCAPE) - useful to start a few games
+ * R+Dpad : Shift Screen UP or DOWN (necessary to center screen)
+ * L+Dpad : Scale Screen UP or DOWN (generally try not to shrink the screen too much as pixel rows disappear)
+ * L+R+A  : Swap Screens (swap the upper and lower screens... touch screen is still always the bottom)
+ * Y      : OPTION console button
+ * START  : START console button
+ * SELECT : SELECT console button
+ 
+Tap the XEX icon or the Disk Drive to load a new game.
 
 --------------------------------------------------------------------------------
 History :
@@ -240,28 +266,7 @@ V0.9 : 31-Jan-2021 by wavemotion-dave
 
 V0.8 : 30-Jan-2021 by wavemotion-dave
   * Alpha release with support for .XEX and .ATR and generally runs well enough.
-
-Controls :
- * D-pad  : the joystick ...
- * A      : Fire button
- * B      : Alternate Fire button
- * X      : Space Bar (R+X for RETURN and L+X for ESCAPE) - useful to start a few games
- * R+Dpad : Shift Screen UP or DOWN (necessary to center screen)
- * L+Dpad : Scale Screen UP or DOWN (generally try not to shrink the screen too much as pixel rows disappear)
- * L+R+A  : Swap Screens (swap the upper and lower screens... touch screen is still always the bottom)
- * Y      : OPTION console button
- * START  : START console button
- * SELECT : SELECT console button
- 
-Tap the XEX icon or the Disk Drive to load a new game.
  
 
-Original alekmaulCredits:
---------------------------------------------------------------------------------
-Thanks Wintermute for devkitpro and libnds (http://www.devkitpro.org).
-Atari800 team for source code (http://atari800.sourceforge.net/)
-Altirra and Avery Lee for a kick-ass substitute BIOS and generally being awesome.
-Alekmaul for porting the original A5200DS of which this is heavily based.
-The good folks over on GBATemp for their support.
 
 
