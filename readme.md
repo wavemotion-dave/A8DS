@@ -68,7 +68,7 @@ Credits:
 * Atari800 team for source code (http://atari800.sourceforge.net/)
 * Altirra and Avery Lee for a kick-ass substitute BIOS and generally being awesome.
 * Alekmaul for porting the original A5200DS of which this is heavily based.
-* Thanks to Darryl Hirschler for the awesome Atari 8-bit Keyboard Graphic.
+* Darryl Hirschler for the awesome Atari 8-bit Keyboard Graphic.
 * The good folks over on GBATemp and AtariAge for their support.
 
 
