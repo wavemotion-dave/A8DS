@@ -37,7 +37,8 @@
 #include "bgTop.h"
 #include "bgFileSel.h"
 #include "bgInfo.h"
-#include "bgKeyboard.h"
+#include "kbd_XL.h"
+#include "kbd_XE.h"
 #include "kbd_400.h"
 #include "altirra_os.h"
 #include "altirra_basic.h"
@@ -963,7 +964,7 @@ const struct options_t Option_Table[] =
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
     {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
     {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
-    {"KEYBOARD",    {"800XL STYLE", "400 STYLE", "130XE STYLE"},        &keyboard_type,         3,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
+    {"KEYBOARD",    {"800XL STYLE 1","800XL STYLE 2", "400 STYLE"},     &keyboard_type,         3,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
 
     {NULL,          {"",            ""},                                NULL,                   2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
@@ -1475,7 +1476,7 @@ static u16 shift=0;
 static u16 ctrl=0;
 void dsShowKeyboard(void)
 {
-      if (keyboard_type == 1) // 400 style
+      if (keyboard_type == 2) // 400 style
       {
           decompress(kbd_400Tiles, bgGetGfxPtr(bg0b), LZ77Vram);
           decompress(kbd_400Map, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -1483,11 +1484,19 @@ void dsShowKeyboard(void)
           unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
           dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
       }
-      else
+      else if (keyboard_type == 1) // XE style
       {
-          decompress(bgKeyboardTiles, bgGetGfxPtr(bg0b), LZ77Vram);
-          decompress(bgKeyboardMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
-          dmaCopy((void *) bgKeyboardPal,(u16*) BG_PALETTE_SUB,256*2);
+          decompress(kbd_XETiles, bgGetGfxPtr(bg0b), LZ77Vram);
+          decompress(kbd_XEMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+          dmaCopy((void *) kbd_XEPal,(u16*) BG_PALETTE_SUB,256*2);
+          unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
+          dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+      }
+      else // XL Style
+      {
+          decompress(kbd_XLTiles, bgGetGfxPtr(bg0b), LZ77Vram);
+          decompress(kbd_XLMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+          dmaCopy((void *) kbd_XLPal,(u16*) BG_PALETTE_SUB,256*2);
           unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
           dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
       }    
