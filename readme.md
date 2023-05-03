@@ -1,6 +1,6 @@
-XEGS-DS
+A8DS
 --------------------------------------------------------------------------------
-XEGS-DS is an Atari 8-bit computer emulator.  Specifically, it's designed 
+A8DS is an Atari 8-bit computer emulator.  Specifically, it's designed 
 around the XE gaming system which is the 8-bit console version of Atari's
 venerable computer line. The stock XEGS had 64KB of RAM and was generally
 not upgradable unless you really knew the insides of the machine... but thanks
