@@ -38,6 +38,7 @@
 #include "bgFileSel.h"
 #include "bgInfo.h"
 #include "bgKeyboard.h"
+#include "kbd_400.h"
 #include "altirra_os.h"
 #include "altirra_basic.h"
 
@@ -962,7 +963,7 @@ const struct options_t Option_Table[] =
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
     {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
     {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
-    //{"KEYBOARD",    {"NORMAL",      "SIMPLIFIED"},                      &keyboard_type,         2,   "NORMAL KEYBOARD   ",   "HAS MOST KEYS AND ",  "SIMPLIFIED IS MORE",  "STREAMLINED USE   "},
+    {"KEYBOARD",    {"800XL STYLE", "400 STYLE", "130XE STYLE"},        &keyboard_type,         3,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
 
     {NULL,          {"",            ""},                                NULL,                   2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
@@ -1472,19 +1473,25 @@ unsigned int dsWaitForRom(void)
 // ----------------------------------------------------------------------------------
 static u16 shift=0;
 static u16 ctrl=0;
-static u16 sav1 = 0;
-static u16 sav2 = 0;
 void dsShowKeyboard(void)
 {
-      decompress(bgKeyboardTiles, bgGetGfxPtr(bg0b), LZ77Vram);
-      decompress(bgKeyboardMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
-      dmaCopy((void *) bgKeyboardPal,(u16*) BG_PALETTE_SUB,256*2);
-      unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
-      dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+      if (keyboard_type == 1) // 400 style
+      {
+          decompress(kbd_400Tiles, bgGetGfxPtr(bg0b), LZ77Vram);
+          decompress(kbd_400Map, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+          dmaCopy((void *) kbd_400Pal,(u16*) BG_PALETTE_SUB,256*2);
+          unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
+          dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+      }
+      else
+      {
+          decompress(bgKeyboardTiles, bgGetGfxPtr(bg0b), LZ77Vram);
+          decompress(bgKeyboardMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+          dmaCopy((void *) bgKeyboardPal,(u16*) BG_PALETTE_SUB,256*2);
+          unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
+          dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+      }    
       swiWaitForVBlank();
-      sav1 = *(bgGetMapPtr(bg1b) + 680);
-      sav2 = *(bgGetMapPtr(bg1b) + 683);
-    
       dsShowRomInfo();
 }
 
@@ -1702,7 +1709,7 @@ int dsHandleKeyboard(int Tx, int Ty)
         else if (Tx < 200) keyPress = AKEY_SPACE;
         else if (Tx < 218) keyPress = AKEY_SHFT;
         else if (Tx < 237) keyPress = AKEY_CAPSTOGGLE;
-        else if (Tx < 255) keyPress = AKEY_DELETE_CHAR;
+        else if (Tx < 255) keyPress = AKEY_BREAK;
     }
     
 #if 0    
