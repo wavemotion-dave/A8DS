@@ -19,6 +19,8 @@ ROM images, there is no complicated setup to pick the right banking setup.
 The goal here is to make this as simple as possible - point to the executable
 8-bit Atari image you want to run and off it goes!
 
+![A8DS](https://github.com/wavemotion-dave/A8DS/blob/main/arm9/gfx/bgTop.png)
+
 
 Optional BIOS Roms
 ----------------------------------------------------------------------------------
