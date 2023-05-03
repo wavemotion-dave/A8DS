@@ -1,22 +1,18 @@
 A8DS
 --------------------------------------------------------------------------------
-A8DS is an Atari 8-bit computer emulator.  Specifically, it's designed 
-around the XE gaming system which is the 8-bit console version of Atari's
-venerable computer line. The stock XEGS had 64KB of RAM and was generally
-not upgradable unless you really knew the insides of the machine... but thanks
-to emulation, the XEGS-DS comes equipped with 128KB of RAM which will run the 
-larger programs. This is, essentially, the same as a 130XE machine.  XEGS-DS
-goes beyond the normal XL/XE 128K machine and provides two alternative 
-configurations: the XE 320K (RAMBO) and 1088K for a few large games and demos 
-and an older Atari 800 48K machine for backwards compatibility with some older 
+A8DS is an Atari 8-bit computer emulator.  Specifically, it's around the 
+800XL / 130XE systems and various hardware extensions to increase the memory. 
+The stock 800XL had 64KB of RAM and was generall. The default configuration
+is an XL/XE machine with 128KB of RAM which will run most of the 8-bit library.
+A8 goes beyond the normal XL/XE 128K machine and provides three alternative 
+configurations: the 320K (RAMBO) and 1088K for a few large games and demos 
+plus an Atari 800 48K machine for backwards compatibility with some older 
 games that don't play nice with a more "modern" XL/XE setup. As such, it's 
-really grown to be more capable than a stock XEGS machine but the purpose
-of this emulator is to allow someone to play nearly the entire 8-bit line up of games
-on their Nitendo DS/DSi handhelds.
+really grown to be a full-featured 8-bit emulator to run nearly the entire 
+8-bit line up of games on their Nitendo DS/DSi handhelds.
 
 The emulator comes "equipped" with the ability to run executable images or disk 
-images which are the two most popular types. It does not support cart types
-(despite the cart slot as the on-screen mechanism for choosing a game!). 
+images which are the two most popular types. It does not support cart types yet.
 Virtually everything that can be run on an 8-bit system has been converted 
 into an Executable image (.xex) or a Disk image (.atr) and, unlike cart
 ROM images, there is no complicated setup to pick the right banking setup. 
@@ -31,7 +27,7 @@ with many games. However, a few games will require the original ATARI BIOS - and
 unfortunately, there were many variations of those BIOS over the years to support
 various Atari computer models releaesed over a decade.
 
-XEGS-DS supports 3 optional Atari BIOS and BASIC files as follows:
+A8DS supports 3 optional Atari BIOS and BASIC files as follows:
 
 *  atarixl.rom   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines
 *  atariosb.rom  - this is the 12k Atari 800 OS-B revision BIOS for older games
@@ -57,7 +53,7 @@ Features :
 ----------------------------------------------------------------------------------
 Most things you should expect from an emulator. Games generally run full-speed
 with just a handful of exceptions. If you load a game and it doesn't load properly,
-just load it again or hit the RESET button which will re-initialize the XEGS machine.
+just load it again or hit the RESET button which will re-initialize the A8DS machine.
 If a game crashes, you will get a message at the bottom of the screen after loading - 
 a crash usually means that the game requires the BASIC cart to be inserted and you can
 toggle that when loading a game (or using the GEAR icon). Not every game runs with this 
@@ -68,6 +64,9 @@ a game, just use the Y button to disable Boot-Load which will simply just insert
 disk and you can continue to run. Not all games will utilize a 2nd disk drive but D2: is 
 available for those games that do. It's handy to have a few blank 90K single-sided disks 
 available on your setup which you can find easily online - these can be used as save disks.
+
+The .ATR disk support handles up to 360K disks (it may work with larger disks, but has not 
+been extensively tested beyond 360K). 
 
 The emulator has the built-in Altirra BASIC 1.55 which is a drop-in replacement for the
 Atari Basic Rev C (only more full-featured). Normally you can leave this disabled but
@@ -111,6 +110,9 @@ or no consequence (i.e. not major titles) that will not run with the emulator - 
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.0 : xx-May-2023 by wavemotion-dave ... TBD coming soon
+  * Rebranding to A8DS with new 800XL stylized keyboard.
+  
 V2.9 : 12-Dec-2021 by wavemotion-dave
   * Reverted back to ARM7 SoundLib (a few games missing key sounds)
   
