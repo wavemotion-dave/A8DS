@@ -34,7 +34,7 @@ A8DS supports 3 optional Atari BIOS and BASIC files as follows:
 *  ataribas.rom  - this is the 8k Atari BASIC cartridge (recommend Rev C)
 
 You can install zero, one or more of these files and if you want to use these real ROMs
-they must reside in the same folder as the XEGS-DS.NDS emulator (or, optionally, you 
+they must reside in the same folder as the A8DS.NDS emulator (or, optionally, you 
 can place your BIOS files in /roms/bios or /data/bios) and these files must be exactly
 so named as shown above. These files are loaded into memory when the emulator starts 
 and remain available for the entire gaming session. Again, if you don't have a real BIOS, 
@@ -48,6 +48,18 @@ Altirra BIOS if it works but you can switch it on a per-game basis in the Option
 
 Do not ask me about rom files, I don't have them. A search with Google will certainly 
 help you. 
+
+Copyright:
+--------------------------------------------------------------------------------
+A8DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
+Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
+
+Copying and distribution of this emulator, it's source code and associated 
+readme files, with or without modification, are permitted in any medium without 
+royalty provided the this copyright notice is used and wavemotion-dave, alekmaul 
+and Avery Lee (Altirra OS) are credited and thanked profusely.
+
+The A8DS emulator is offered as-is, without any warranty.
 
 Features :
 ----------------------------------------------------------------------------------
@@ -253,13 +265,3 @@ Alekmaul for porting the original A5200DS of which this is heavily based.
 The good folks over on GBATemp for their support.
 
 
-Copyright:
---------------------------------------------------------------------------------
-XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
-Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
-
-Copying and distribution of this emulator, it's source code and associated 
-readme files, with or without modification, are permitted in any medium without 
-royalty provided the this copyright notice is used and wavemotion-dave, alekmaul 
-and Avery Lee (Altirra OS) are credited and thanked.
-The XEGS-DS emulator is offered as-is, without any warranty.
