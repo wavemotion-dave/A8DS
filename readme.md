@@ -105,13 +105,20 @@ wrong speed unless you're using the actual ATARI REV C rom.
 
 Missing :
 ----------------------------------------------------------------------------------
-Not much.  In order to get proper speed on the older DS-LITE and DS-PHAT hardware, there
-is a Frame Skip option that defaults to ON for the older hardware (and OFF for the DSi 
-or above). This is not perfect - some games will not be happy to have frames skipped as
-collisions are skipped in those frames. Notably: Caverns of Mars, Jumpman and Buried Bucks will 
-not run right with Frame Skip ON. But this does render most games playable on older hardware.
-If a game is particularlly struggling to keep up on older hardawre, there is an experimental
-'Agressive' frameskip which should help... but use with caution. 
+Not much.  CART support is not included. The .ATX support is included but not 
+fully tested so compatibility may be lower. In order to get proper speed on the older DS-LITE 
+and DS-PHAT hardware, there is a Frame Skip option that defaults to ON for the older hardware 
+(and OFF for the DSi or above). This is not perfect - some games will not be happy to have 
+frames skipped as collisions are skipped in those frames. Notably: Caverns of Mars, Jumpman 
+and Buried Bucks will  not run right with Frame Skip ON. But this does render most games 
+playable on older hardware. If a game is particularlly struggling to keep up on older 
+hardawre, there is an experimental 'Agressive' frameskip which should help... but use with caution. 
+
+Remember, emulation is rarely perfect. Further, this is a portable implementation of an Atari 8-bit 
+emulator on a limited resource system (67MHz CPU and 4MB of memory) so it won't match the amazing work 
+of something like Altirra. If you're looking for the best in emulation accuracy - Altirra is going to 
+be what you're after. But if you want to enjoy a wide variety of classic 8-bit gaming on your DS/DSi 
+handheld - A8DS will work nicely.
 
 Troubleshooting :
 ----------------------------------------------------------------------------------
