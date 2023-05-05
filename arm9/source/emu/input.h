@@ -1,5 +1,5 @@
-#ifndef _A5200_INPUT_H_
-#define _A5200_INPUT_H_
+#ifndef _A8DS_INPUT_H_
+#define _A8DS_INPUT_H_
 
 /* key_code values */
 #define AKEY_NONE -1
@@ -138,79 +138,63 @@
 #define AKEY_CTRL_Y (AKEY_CTRL | AKEY_Y)
 #define AKEY_CTRL_Z (AKEY_CTRL | AKEY_Z)
 
-#define AKEY_HELP 0x11
-#define AKEY_DOWN 0x8f
-#define AKEY_LEFT 0x86
-#define AKEY_RIGHT 0x87
-#define AKEY_UP 0x8e
-#define AKEY_BACKSPACE 0x34
-#define AKEY_DELETE_CHAR 0xb4
-#define AKEY_DELETE_LINE 0x74
-#define AKEY_INSERT_CHAR 0xb7
-#define AKEY_INSERT_LINE 0x77
-#define AKEY_ESCAPE 0x1c
-#define AKEY_ATARI 0x27
-#define AKEY_CAPSLOCK 0x7c
-#define AKEY_CAPSTOGGLE 0x3c
-#define AKEY_TAB 0x2c
-#define AKEY_SETTAB 0x6c
-#define AKEY_CLRTAB 0xac
-#define AKEY_RETURN 0x0c
-#define AKEY_SPACE 0x21
-#define AKEY_EXCLAMATION 0x5f
-#define AKEY_DBLQUOTE 0x5e
-#define AKEY_HASH 0x5a
-#define AKEY_DOLLAR 0x58
-#define AKEY_PERCENT 0x5d
-#define AKEY_AMPERSAND 0x5b
-#define AKEY_QUOTE 0x73
-#define AKEY_AT 0x75
-#define AKEY_PARENLEFT 0x70
-#define AKEY_PARENRIGHT 0x72
-#define AKEY_LESS 0x36
-#define AKEY_GREATER 0x37
-#define AKEY_EQUAL 0x0f
-#define AKEY_QUESTION 0x66
-#define AKEY_MINUS 0x0e
-#define AKEY_PLUS 0x06
-#define AKEY_ASTERISK 0x07
-#define AKEY_SLASH 0x26
-#define AKEY_COLON 0x42
-#define AKEY_SEMICOLON 0x02
-#define AKEY_COMMA 0x20
-#define AKEY_FULLSTOP 0x22
-#define AKEY_UNDERSCORE 0x4e
-#define AKEY_BRACKETLEFT 0x60
-#define AKEY_BRACKETRIGHT 0x62
-#define AKEY_CIRCUMFLEX 0x47
-#define AKEY_BACKSLASH 0x46
-#define AKEY_BAR 0x4f
-#define AKEY_CLEAR (AKEY_SHFT | AKEY_LESS)
-#define AKEY_CARET (AKEY_SHFT | AKEY_ASTERISK)
-#define AKEY_F1 0x03
-#define AKEY_F2 0x04
-#define AKEY_F3	0x13
-#define AKEY_F4 0x14
+#define AKEY_HELP           0x11
+#define AKEY_DOWN           0x8f
+#define AKEY_LEFT           0x86
+#define AKEY_RIGHT          0x87
+#define AKEY_UP             0x8e
+#define AKEY_BACKSPACE      0x34
+#define AKEY_DELETE_CHAR    0xb4
+#define AKEY_DELETE_LINE    0x74
+#define AKEY_INSERT_CHAR    0xb7
+#define AKEY_INSERT_LINE    0x77
+#define AKEY_ESCAPE         0x1c
+#define AKEY_ATARI          0x27
+#define AKEY_CAPSLOCK       0x7c
+#define AKEY_CAPSTOGGLE     0x3c
+#define AKEY_TAB            0x2c
+#define AKEY_SETTAB         0x6c
+#define AKEY_CLRTAB         0xac
+#define AKEY_RETURN         0x0c
+#define AKEY_SPACE          0x21
+#define AKEY_EXCLAMATION    0x5f
+#define AKEY_DBLQUOTE       0x5e
+#define AKEY_HASH           0x5a
+#define AKEY_DOLLAR         0x58
+#define AKEY_PERCENT        0x5d
+#define AKEY_AMPERSAND      0x5b
+#define AKEY_QUOTE          0x73
+#define AKEY_AT             0x75
+#define AKEY_PARENLEFT      0x70
+#define AKEY_PARENRIGHT     0x72
+#define AKEY_LESS           0x36
+#define AKEY_GREATER        0x37
+#define AKEY_EQUAL          0x0f
+#define AKEY_QUESTION       0x66
+#define AKEY_MINUS          0x0e
+#define AKEY_PLUS           0x06
+#define AKEY_ASTERISK       0x07
+#define AKEY_SLASH          0x26
+#define AKEY_COLON          0x42
+#define AKEY_SEMICOLON      0x02
+#define AKEY_COMMA          0x20
+#define AKEY_FULLSTOP       0x22
+#define AKEY_UNDERSCORE     0x4e
+#define AKEY_BRACKETLEFT    0x60
+#define AKEY_BRACKETRIGHT   0x62
+#define AKEY_CIRCUMFLEX     0x47
+#define AKEY_BACKSLASH      0x46
+#define AKEY_BAR            0x4f
+#define AKEY_CLEAR          (AKEY_SHFT | AKEY_LESS)
+#define AKEY_CARET          (AKEY_SHFT | AKEY_ASTERISK)
+#define AKEY_F1             0x03
+#define AKEY_F2             0x04
+#define AKEY_F3	            0x13
+#define AKEY_F4             0x14
 
 /* Following keys cannot be read with both shift and control pressed:
    J K L ; + * Z X C V B F1 F2 F3 F4 HELP	 */
 
-/* 5200 key codes */
-#define AKEY_5200_START 0x39
-#define AKEY_5200_PAUSE 0x31
-#define AKEY_5200_RESET 0x29
-#define AKEY_5200_0 0x25
-#define AKEY_5200_1 0x3f
-#define AKEY_5200_2 0x3d
-#define AKEY_5200_3 0x3b
-#define AKEY_5200_4 0x37
-#define AKEY_5200_5 0x35
-#define AKEY_5200_6 0x33
-#define AKEY_5200_7 0x2f
-#define AKEY_5200_8 0x2d
-#define AKEY_5200_9 0x2b
-#define AKEY_5200_HASH 0x23
-#define AKEY_5200_ASTERISK 0x27
 
 /* key_consol masks */
 /* Note: key_consol should be CONSOL_NONE if no consol key is pressed.
@@ -240,57 +224,10 @@ extern int key_consol;	/* Start, Select and Option keys */
 #define	STICK_FORWARD	0x0e
 #define	STICK_UR		0x06
 
-/* joy_autofire values */
-#define AUTOFIRE_OFF	0
-#define AUTOFIRE_FIRE	1	/* Fire dependent */
-#define AUTOFIRE_CONT	2	/* Continuous */
-
-extern int joy_autofire[4];		/* autofire mode for each Atari port */
-
-extern int joy_block_opposite_directions;	/* can't move joystick left
-											   and right simultaneously */
-
-extern int joy_multijoy;	/* emulate MultiJoy4 interface */
-
-/* 5200 joysticks values */
-extern int joy_5200_min;
-extern int joy_5200_center;
-extern int joy_5200_max;
-
-/* Mouse --------------------------------------------------------------- */
-
-/* mouse_mode values */
-#define MOUSE_OFF		0
-#define MOUSE_PAD		1	/* Paddles */
-#define MOUSE_TOUCH		2	/* Atari touch tablet */
-#define MOUSE_KOALA		3	/* Koala pad */
-#define MOUSE_PEN		4	/* Light pen */
-#define MOUSE_GUN		5	/* Light gun */
-#define MOUSE_AMIGA		6	/* Amiga mouse */
-#define MOUSE_ST		7	/* Atari ST mouse */
-#define MOUSE_TRAK		8	/* Atari CX22 Trak-Ball */
-#define MOUSE_JOY		9	/* Joystick */
-
-extern int mouse_mode;			/* device emulated with mouse */
-extern int mouse_port;			/* Atari port, to which the emulated device is attached */
-extern int mouse_delta_x;		/* x motion since last frame */
-extern int mouse_delta_y;		/* y motion since last frame */
-extern int mouse_buttons;		/* buttons (b0=1: first button pressed, b1=1: 2nd pressed, etc. */
-extern int mouse_speed;			/* how fast the mouse pointer moves */
-extern int mouse_pot_min;		/* min. value of POKEY's POT register */
-extern int mouse_pot_max;		/* max. value of POKEY's POT register */
-extern int mouse_pen_ofs_h;		/* light pen/gun horizontal offset (for calibration) */
-extern int mouse_pen_ofs_v;		/* light pen/gun vertical offset (for calibration) */
-extern int mouse_joy_inertia;	/* how long the mouse pointer can move (time in Atari frames)
-								   after a fast motion of mouse */
-
 /* Functions ----------------------------------------------------------- */
 
 void INPUT_Initialise(void);
 void INPUT_Frame(void);
 void INPUT_Scanline(void);
-void INPUT_SelectMultiJoy(int no);
-void INPUT_CenterMousePointer(void);
-void INPUT_DrawMousePointer(void);
 
-#endif /* __A5200_INPUT_H_ */
+#endif /* _A8DS_INPUT_H_ */

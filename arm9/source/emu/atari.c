@@ -116,10 +116,6 @@ void Coldstart(void)
 		/* hold Option during reboot */
 		consol_table[2] &= ~CONSOL_OPTION;
 	}
-	if (CASSETTE_hold_start) {
-		/* hold Start during reboot */
-		consol_table[2] &= ~CONSOL_START;
-	}
 	consol_table[1] = consol_table[2];
 }
 
@@ -182,7 +178,6 @@ int Atari800_Initialise(void)
     Devices_Initialise(&argc, argv);
     RTIME_Initialise();
     SIO_Initialise (&argc, argv);
-    CASSETTE_Initialise(&argc, argv);
     
     strcpy(disk_filename[DISK_XEX], "EMPTY");
     strcpy(disk_filename[DISK_1], "EMPTY");
