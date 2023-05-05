@@ -150,8 +150,8 @@ Tap the XEX icon or the Disk Drive to load a new game.
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
-V3.0 : xx-May-2023 by wavemotion-dave ... TBD coming soon
-  * Rebranding to A8DS with new 800XL stylized keyboard.
+V3.0 : 05-May-2023 by wavemotion-dave
+  * Rebranding to A8DS with new 800XL stylized keyboard and minor cleanups across the board.
   
 V2.9 : 12-Dec-2021 by wavemotion-dave
   * Reverted back to ARM7 SoundLib (a few games missing key sounds)
