@@ -105,7 +105,7 @@ wrong speed unless you're using the actual ATARI REV C rom.
 
 Missing :
 ----------------------------------------------------------------------------------
-Not much.  CART support is not included. The .ATX support is included but not 
+CART support is not included. The .ATX support is included but not 
 fully tested so compatibility may be lower. In order to get proper speed on the older DS-LITE 
 and DS-PHAT hardware, there is a Frame Skip option that defaults to ON for the older hardware 
 (and OFF for the DSi or above). This is not perfect - some games will not be happy to have 
