@@ -2143,7 +2143,10 @@ void dsMainLoop(void)
             }
             else if (dpad_type == 2) // Cursors
             {
-                //TODO:zzz
+                if (keys_pressed & KEY_UP)    {key_code = AKEY_UP;}
+                if (keys_pressed & KEY_LEFT)  {key_code = AKEY_LEFT;}
+                if (keys_pressed & KEY_RIGHT) {key_code = AKEY_RIGHT;}
+                if (keys_pressed & KEY_DOWN)  {key_code = AKEY_DOWN;}
             }
             else
             {
