@@ -875,7 +875,7 @@ bool dsWaitOnQuit(void)
     unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
     dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
 
-    strcpy(szName,"Quit XEGS-DS?");
+    strcpy(szName,"Quit A8DS?");
     dsPrintValue(17,2,0,szName);
     sprintf(szName,"%s","A TO CONFIRM, B TO GO BACK");
     dsPrintValue(16-strlen(szName)/2,23,0,szName);
@@ -1734,7 +1734,7 @@ int dsHandleKeyboard(int Tx, int Ty)
     {
         if ( !keyboard_debounce )   // To prevent from toggling so quickly...
         {
-            keyboard_debounce=10;
+            keyboard_debounce=15;
             if (shift == 0)
             {
                 shift = 1;
@@ -1750,15 +1750,17 @@ int dsHandleKeyboard(int Tx, int Ty)
     }
     else if (keyPress == AKEY_CTRL)
     {
-        ctrl = 1;
+        if ( !keyboard_debounce )   // To prevent from toggling so quickly...
+        {
+            keyboard_debounce=15;
+            ctrl ^= 1;
+            dsPrintValue(0,0,0, (ctrl ? "CTR":"   "));
+        }
         keyPress = AKEY_NONE;
-        dsPrintValue(0,0,0, "CTR");
     }
     else if (ctrl)
     {
         keyPress |= AKEY_CTRL;
-        ctrl=0;
-        dsPrintValue(0,0,0, "   ");
     }
     else if (keyPress != AKEY_NONE)
     {
@@ -2402,7 +2404,7 @@ void WriteGameSettings(void)
         {
             mkdir("/data", 0777);
         }
-        fp = fopen("/data/XEGS-DS.DAT", "wb+");
+        fp = fopen("/data/A8DS.DAT", "wb+");
         if (fp != NULL)
         {
             fwrite(&GameDB, sizeof(GameDB), 1, fp);
@@ -2412,7 +2414,7 @@ void WriteGameSettings(void)
 }
 
 // ----------------------------------------------------------------------------------
-// Read the XEGS-DS.DAT file from the SD card and into memory. If we can't find the
+// Read the A8DS.DAT file from the SD card and into memory. If we can't find the
 // file or if the file is corrupt, we will write out a blank default database.
 // ----------------------------------------------------------------------------------
 void ReadGameSettings(void)
@@ -2420,6 +2422,13 @@ void ReadGameSettings(void)
     FILE *fp;
 
     fp = fopen("/data/XEGS-DS.DAT", "rb");
+    if (fp != NULL)
+    {
+        fclose(fp);
+        rename("/data/XEGS-DS.DAT", "/data/A8DS.DAT");
+    }
+    
+    fp = fopen("/data/A8DS.DAT", "rb");
     if (fp != NULL)
     {
         fread(&GameDB, sizeof(GameDB), 1, fp);
@@ -2443,7 +2452,7 @@ void ReadGameSettings(void)
 }
 
 // ---------------------------------------------------------------------------------
-// Look for the game by hash in the XEGS-DS.DAT database. If found, we apply the 
+// Look for the game by hash in the A8DS.DAT database. If found, we apply the 
 // restored game-specific settings. Otherwise we use defaults.
 // ---------------------------------------------------------------------------------
 void ApplyGameSpecificSettings(void)

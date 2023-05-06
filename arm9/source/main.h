@@ -1,8 +1,8 @@
 /*
  * MAIN.C contains the entry point for the ARM9 execution.
  *
- * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
- * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ * A8DS - Atari 8-bit Emulator designed to run 8-bit games on the Nitendo DS/DSi
+ * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
  *
  * Copying and distribution of this file, with or without modification,
  * are permitted in any medium without royalty provided the copyright

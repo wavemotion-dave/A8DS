@@ -764,10 +764,6 @@ void ANTIC_Initialise(void) {
 	mode_e_an_lookup[1] = mode_e_an_lookup[4] = mode_e_an_lookup[0x10] = mode_e_an_lookup[0x40] = 0;
 	mode_e_an_lookup[2] = mode_e_an_lookup[8] = mode_e_an_lookup[0x20] = mode_e_an_lookup[0x80] = 1;
 	mode_e_an_lookup[3] = mode_e_an_lookup[12] = mode_e_an_lookup[0x30] = mode_e_an_lookup[0xc0] = 2;
-
-#ifdef DIRTYRECT
-		screen_dirty = (UBYTE *) Util_malloc(ATARI_HEIGHT * ATARI_WIDTH / 8);
-#endif
 }
 
 void ANTIC_Reset(void) {

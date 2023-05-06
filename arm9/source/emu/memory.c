@@ -117,7 +117,7 @@ static void AllocXEMemory(void)
 		ULONG size = (1 + (ram_size - 64) / 16) * 16384;
 		if (size != atarixe_memory_size) 
         {
-            atarixe_memory = (UBYTE *) xe_mem_buffer; //0x06860000;	//A convienent 272k of memory... it's a bit faster when bank switching
+            atarixe_memory = (UBYTE *) xe_mem_buffer; // Use the large 1088K buffer even if we don't use it all
 			atarixe_memory_size = size;
 			memset(atarixe_memory, 0, size);
 		}

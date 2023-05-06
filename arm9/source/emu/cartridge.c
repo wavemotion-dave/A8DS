@@ -75,8 +75,8 @@ int CART_Insert(int enabled)
         else
         {
             CopyROM(0xa000, 0xbfff, ROM_basic);
-
         }
+        CART_Start();
     }
     else
     {

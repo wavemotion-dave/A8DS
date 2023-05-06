@@ -30,9 +30,6 @@ extern int disk_readonly[DISK_MAX];
 
 /* Fundamental declarations ---------------------------------------------- */
 
-//#define DIRTYRECT
-#define NODIRTYCOMPARE
-
 #define PAGED_ATTRIB        1
 #define SOUND               1
 #define INTERPOLATE_SOUND   1
