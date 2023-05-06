@@ -9,7 +9,7 @@ configurations: the 320K (RAMBO) and 1088K for a few large games and demos
 plus an Atari 800 (non-XL) 48K machine for backwards compatibility with some older 
 games that don't play nice with a more "modern" XL/XE setup. As such, it's 
 really grown to be a full-featured 8-bit emulator to run nearly the entire 
-8-bit line up of games on their Nitendo DS/DSi handhelds.
+8-bit line up of games on their Nintendo DS/DSi handhelds.
 
 The emulator comes "equipped" with the ability to run executable images or disk 
 images which are the two most popular types. It does not support cart types yet.
@@ -27,7 +27,7 @@ Optional BIOS Roms
 There is a built-in Altirra BIOS (thanks to Avery Lee) which is reasonably compatibile
 with many games. However, a few games will require the original ATARI BIOS - and,
 unfortunately, there were many variations of those BIOS over the years to support
-various Atari computer models releaesed over a decade.
+various Atari computer models released over a decade.
 
 A8DS supports 3 optional Atari BIOS and BASIC files as follows:
 
@@ -48,17 +48,17 @@ I've not done exhaustive testing, but in many cases I find the Altirra BIOS does
 great job compared to the original Atari BIOS. I generally stick with the open source
 Altirra BIOS if it works but you can switch it on a per-game basis in the Options menu.
 
-Do not ask me about rom files, you will be propmptly ignored. A search with Google will certainly 
+Do not ask me about rom files, you will be promptly ignored. A search with Google will certainly 
 help you. 
 
 Copyright:
 --------------------------------------------------------------------------------
-A8DS - Atari 8-bit Emulator designed to run on the Nitendo DS/DSi is
+A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
 Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
 
 Copying and distribution of this emulator, its source code and associated 
 readme files, with or without modification, are permitted in any medium without 
-royalty provided the this copyright notice is used and wavemotion-dave, alekmaul 
+royalty provided this copyright notice is used and wavemotion-dave, alekmaul 
 (original port) and Avery Lee (Altirra OS) are credited and thanked profusely.
 
 The A8DS emulator is offered as-is, without any warranty.
@@ -85,7 +85,7 @@ toggle that when loading a game (or using the GEAR icon). Not every game runs wi
 emulator - but 99% will.  I'll try to improve compatibilty as time permits.
 
 The emulator supports multi-disk games. When you need to load a subsequent disk for
-a game, just use the Y button to disable Boot-Load which will simply just insert the new
+a game, just use the Y button to disable Boot-Load which will simply insert the new
 disk and you can continue to run. Not all games will utilize a 2nd disk drive but D2: is 
 available for those games that do. It's handy to have a few blank 90K single-sided disks 
 available on your setup which you can find easily online - these can be used as save disks.
@@ -95,8 +95,8 @@ been extensively tested beyond 360K).
 
 The emulator has the built-in Altirra BASIC 1.55 which is a drop-in replacement for the
 Atari Basic Rev C (only more full-featured). Normally you can leave this disabled but
-a few games require the BASIC cart be present and you can toggle this with the START button
-when you load a game.  If you try to load a game and it crashes, most likely you need
+a few games require the BASIC cart to be present and you can toggle this with the START button
+when you load a game. If you try to load a game and it crashes, most likely you need
 to have BASIC enabled. Most games don't want it enabled so that's the default. 
 If you want to play around with BASIC, enable the BASIC cart and pick a DOS 
 disk of some kind to get drive support and you can have fun writing programs. Be aware
@@ -110,7 +110,7 @@ fully tested so compatibility may be lower. In order to get proper speed on the 
 and DS-PHAT hardware, there is a Frame Skip option that defaults to ON for the older hardware 
 (and OFF for the DSi or above). This is not perfect - some games will not be happy to have 
 frames skipped as collisions are skipped in those frames. Notably: Caverns of Mars, Jumpman 
-and Buried Bucks will  not run right with Frame Skip ON. But this does render most games 
+and Buried Bucks will not run right with Frame Skip ON. But this does render most games 
 playable on older hardware. If a game is particularlly struggling to keep up on older 
 hardawre, there is an experimental 'Agressive' frameskip which should help... but use with caution. 
 
@@ -148,7 +148,7 @@ Installation :
 
 DS vs DSi vs DSi XL/LL :
 ----------------------------------------------------------------------------------
-The original DS-Lite or DS-Phat require an R4 card to run homebrews. With this setup you will be running in DS compatibility mode and emulator will default to a moderate level of frameskip. For the DSi or DSi XL/LL we can run just about everything full speed without frameskip. The XL/LL has a slightly slower decay on the LCD and it more closely mimics the phosphor fade of a TV. The helps with games that use small bullets - something like Centipede can be a little harder to see on the original DSi as the thin pixel shot fades quickly as it moves. You can somewhat compensate for this by increasing your screen brightness. For the DSi, I find a screen brightness of 4 to be reasonably good visibility. The XL/LL will generally operate just as well with a brigtness of 2 or 3. 
+The original DS-Lite or DS-Phat require an R4 card to run homebrews. With this setup you will be running in DS compatibility mode and emulator will default to a moderate level of frameskip. For the DSi or DSi XL/LL we can run just about everything full speed without frameskip. The XL/LL has a slightly slower decay on the LCD and it more closely mimics the phosphor fade of a TV. This helps with games that use small bullets - something like Centipede can be a little harder to see on the original DSi as the thin pixel shot fades quickly as it moves. You can somewhat compensate for this by increasing your screen brightness. For the DSi, I find a screen brightness of 4 to offer reasonably good visibility. The XL/LL will generally operate just as well with a brigtness of 2 or 3. 
 
 Screen resolution on a DS/DSi/XL/LL is always fixed at 256x192 pixels. The Atari 8-bit resolution tends to be larger - usually 320 horizontally and they often utilize a few more pixels vertically depending on the game. Use the Left/Right shoulder buttons along with the D-Pad to shift/scale the screen to your liking. Once you get the screen where you want - go into the GEAR icon and press START to save the options (including the screen position/scaling) on a per-game basis.
 
