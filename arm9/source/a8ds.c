@@ -78,7 +78,8 @@ int palett_type         = 0;                // default is "bright" palett
 int auto_fire           = 0;                // default autofire disabled
 int ram_type            = 0;                // default is 128k
 int blending_type       = 6;                // 0=Normal, 1=Blur1, 2=Blur2, etc
-int keyboard_type       = 0;                // Normal (full)... 1=Simplified
+int keyboard_type       = 0;                // Normal (Atari 800XL Style 1)
+int dpad_type           = 0;                // Normal
 
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
@@ -965,8 +966,9 @@ const struct options_t Option_Table[] =
     {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
     {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
     {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
-    {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", "400 STYLE", "130XE STYLE"}, &keyboard_type,4,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
-
+    {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", 
+                      "400 STYLE",  "130XE STYLE"},                     &keyboard_type,         4,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
+    {"D-PAD",       {"NORMAL","DIAGONALS", "CURSORS"},                  &dpad_type,             3,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},    
     {NULL,          {"",            ""},                                NULL,                   2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
 };
 
@@ -2132,14 +2134,28 @@ void dsMainLoop(void)
         // Only handle UP/DOWN/LEFT/RIGHT if shoulder buttons are not pressed (those are handled below)
         if ((keys_pressed & (KEY_R|KEY_L)) == 0)
         {
-            if (keys_pressed & KEY_UP) stick0 = STICK_FORWARD;
-            if (keys_pressed & KEY_LEFT) stick0 = STICK_LEFT;
-            if (keys_pressed & KEY_RIGHT) stick0 = STICK_RIGHT;
-            if (keys_pressed & KEY_DOWN) stick0 = STICK_BACK;
-            if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT)) stick0 = STICK_UL;
-            if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_UR;
-            if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick0 = STICK_LL;
-            if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_LR;
+            if (dpad_type == 1) // Diagonals
+            {
+                if (keys_pressed & KEY_UP)    {stick0 = STICK_UR;}
+                if (keys_pressed & KEY_LEFT)  {stick0 = STICK_UL;}
+                if (keys_pressed & KEY_RIGHT) {stick0 = STICK_LR;}
+                if (keys_pressed & KEY_DOWN)  {stick0 = STICK_LL;}
+            }
+            else if (dpad_type == 2) // Cursors
+            {
+                //TODO:zzz
+            }
+            else
+            {
+                if (keys_pressed & KEY_UP) stick0 = STICK_FORWARD;
+                if (keys_pressed & KEY_LEFT) stick0 = STICK_LEFT;
+                if (keys_pressed & KEY_RIGHT) stick0 = STICK_RIGHT;
+                if (keys_pressed & KEY_DOWN) stick0 = STICK_BACK;
+                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT)) stick0 = STICK_UL;
+                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_UR;
+                if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick0 = STICK_LL;
+                if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_LR;
+            }
         }
 
         if (keys_pressed & KEY_START) key_consol &= ~CONSOL_START;
@@ -2305,7 +2321,7 @@ struct GameSettings_t
     UBYTE bButtonMap;
     UBYTE key_click_disable;
     UBYTE keyboard_type;
-    UBYTE spare2;
+    UBYTE dpad_type;
     UBYTE spare3;
     UBYTE spare4;
     short int spare5;
@@ -2385,6 +2401,7 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].blending           = blending_type;
         GameDB.GameSettings[idx].key_click_disable  = key_click_disable;
         GameDB.GameSettings[idx].keyboard_type      = keyboard_type;
+        GameDB.GameSettings[idx].dpad_type          = dpad_type;
         GameDB.GameSettings[idx].disk_speedup       = ESC_enable_sio_patch;
 
         GameDB.checksum = 0;
@@ -2421,6 +2438,9 @@ void ReadGameSettings(void)
 {
     FILE *fp;
 
+    // -------------------------------------------------------------------------
+    // We want to rename the older XEGS-DS.DAT to the new rebranded A8DS.DAT
+    // -------------------------------------------------------------------------
     fp = fopen("/data/XEGS-DS.DAT", "rb");
     if (fp != NULL)
     {
@@ -2488,6 +2508,7 @@ void ApplyGameSpecificSettings(void)
       blending_type         = GameDB.GameSettings[idx].blending;
       key_click_disable     = GameDB.GameSettings[idx].key_click_disable;
       keyboard_type         = GameDB.GameSettings[idx].keyboard_type;
+      dpad_type             = GameDB.GameSettings[idx].dpad_type;
       ESC_enable_sio_patch  = GameDB.GameSettings[idx].disk_speedup;
 
       // ----------------------------------------------------------------------

@@ -1,12 +1,12 @@
 /*
- * CARTRIDGE.C contains a subset of Atari800 cart support. The XEGS-DS emulator
+ * CARTRIDGE.C contains a subset of Atari800 cart support. The A8DS emulator
  * is targeting XEX and ATR files... Carts are a different beast and the only
  * "cart" we are supporting is an external Atari BASIC cart. It's very possible
  * to go back to the core Atari800 sources and pull back in all the other cart
  * type supports - but that's an exercise left to the next generation!
  *
- * XEGS-DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
- * Copyright (c) 2021 Dave Bernazzani (wavemotion-dave)
+ * A8DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
+ * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
  *
  * Copying and distribution of this file, with or without modification,
  * are permitted in any medium without royalty provided the copyright
