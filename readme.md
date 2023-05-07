@@ -170,7 +170,7 @@ Compile Instructions :
 -----------------------
 devkitpro-pacman version 6.0.1-2
 gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0
-libnds 1.8.0
+libnds 1.8.2-1
 I use Ubuntu and the Pacman repositories (devkitpro-pacman version 6.0.1-2).  I'm told it should also build under 
 Windows but I've never done it and don't know how.
 
