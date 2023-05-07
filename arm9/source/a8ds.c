@@ -80,6 +80,7 @@ int ram_type            = 0;                // default is 128k
 int blending_type       = 6;                // 0=Normal, 1=Blur1, 2=Blur2, etc
 int keyboard_type       = 0;                // Normal (Atari 800XL Style 1)
 int dpad_type           = 0;                // Normal
+int cart_type           = CART_NONE;        // 
 
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
@@ -90,6 +91,7 @@ u16* aptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0x
 u16* bptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
 u16 sound_idx           __attribute__((section(".dtcm"))) = 0;
 u8 myPokeyBufIdx       __attribute__((section(".dtcm"))) = 0;
+u8 bMute               __attribute__((section(".dtcm"))) = 0;
 u16 sampleExtender[256] __attribute__((section(".dtcm"))) = {0};
 
 #define  cxBG (myGame_offset_x<<8)
@@ -196,13 +198,15 @@ void dsClearDiskActivity(void)
 // pipeline of sound values from the pokey buffer into the Nintendo DS sound
 // buffer which will be processed in the background by the ARM 7 processor.
 // ---------------------------------------------------------------------------
-void VsoundHandler(void)
+ITCM_CODE void VsoundHandler(void)
 {
     extern unsigned char pokey_buffer[];
     extern u16 pokeyBufIdx;
+    
+    if (bMute) *bptr = *aptr;
 
     // If there is a fresh sample... 
-    if (myPokeyBufIdx != pokeyBufIdx)
+    else if (myPokeyBufIdx != pokeyBufIdx)
     {
         u16 sample = sampleExtender[pokey_buffer[myPokeyBufIdx++]];
         *aptr = sample;
@@ -484,8 +488,8 @@ void dsInitScreenMain(void)
     SetYtrigger(190); //trigger 2 lines before vsync
     irqSet(IRQ_VBLANK, vblankIntr);
     irqEnable(IRQ_VBLANK);
-    vramSetBankA(VRAM_A_MAIN_BG);             // This is the main Emulation screen - Background 1 (we ALPHA blend this with BG2)
-    vramSetBankB(VRAM_B_MAIN_BG);             // This is the main Emulation screen - Background 2 (we ALPHA blend this with BG1)
+    vramSetBankA(VRAM_A_MAIN_BG);             // This is the main Emulation screen - Background
+    vramSetBankB(VRAM_B_LCD);                 // Not using this for video... but 128K of faster RAM always useful!  Mapped at 0x06820000
     vramSetBankC(VRAM_C_SUB_BG);              // This is the Sub-Screen (touch screen) display (2 layers)
     vramSetBankD(VRAM_D_LCD );                // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000
     vramSetBankE(VRAM_E_LCD );                // Not using this for video but  64K of faster RAM always useful!  Mapped at 0x06880000
@@ -696,6 +700,7 @@ void install_os(void)
 // -----------------------------------------------------------
 void dsShowRomInfo(void)
 {
+    extern int file_type;
     extern char disk_filename[DISK_MAX][256];
     char line1[25];
     char ramSizeBuf[8];
@@ -706,7 +711,7 @@ void dsShowRomInfo(void)
     {
         if (!bShowKeyboard)
         {
-            dsPrintValue(10,2,0, "XEX:  ");
+            dsPrintValue(10,2,0, (file_type == AFILE_CART) ? "CAR:  " : ((file_type == AFILE_ROM) ? "ROM:  " : "XEX:  "));
             strncpy(line1, disk_filename[DISK_XEX], 22);
             line1[22] = 0;
             sprintf(line2,"%-22s", line1);
@@ -769,7 +774,7 @@ unsigned char last_hash[33] = {'1','2','3','4','5','Z',0};
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
 {
     // Free buffer if needed
-    TIMER2_CR=0; irqDisable(IRQ_TIMER2);
+    TIMER2_CR=0; bMute = 1;
 
     if (disk_num == DISK_XEX)   // Force restart on XEX load...
     {
@@ -945,7 +950,7 @@ static int basic_opt=0;
 static int tv_type2=0;
 const struct options_t Option_Table[] =
 {
-    {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,              2,   "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
+    {"TV TYPE",     {"NTSC",        "PAL"},                            &tv_type2,              2,   "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
     {"MACHINE TYPE",{"128K XL/XE",  "320K XL/XE", 
                      "1088K XL/XE", "48K ATARI800"},                    &ram_type,              4,   "128K STANDARD FOR ",   "MOST GAMES. 320K /",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
     {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",
@@ -1144,8 +1149,6 @@ void dsChooseOptions(int bOkayToChangePalette)
 
     install_os();
 
-    dsInstallSoundEmuFIFO();
-
     // Restore original bottom graphic
     decompress(bgBottomTiles, bgGetGfxPtr(bg0b), LZ77Vram);
     decompress(bgBottomMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -1171,7 +1174,7 @@ void dsDisplayLoadOptions(void)
     char tmpBuf[32];
 
     dsPrintValue(0,0,0,file_load_id);
-    sprintf(tmpBuf, "%-4s %s", (tv_mode == TV_NTSC ? "NTSC":"PAL"), (bHaveBASIC ? "W BASIC":"       "));
+    sprintf(tmpBuf, "%-4s %s", (tv_mode == TV_NTSC ? "NTSC":"PAL "), (bHaveBASIC ? "W BASIC":"       "));
     dsPrintValue(19,0,0,tmpBuf);
     sprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
     dsPrintValue(14,1,0,tmpBuf);
@@ -1779,40 +1782,47 @@ int dsHandleKeyboard(int Tx, int Ty)
 // -----------------------------------------------------------------------
 void dsInstallSoundEmuFIFO(void)
 {
-    irqDisable(IRQ_TIMER2);    
-    fifoSendValue32(FIFO_USER_01,(1<<16) | SOUND_KILL);
-    *aptr = 0; *bptr=0;
-    // We are going to use the 16-bit sound engine so we need to scale up our 8-bit values...
-    for (int i=0; i<256; i++)
+    static int last_sound_fifo = -1;
+    if (last_sound_fifo == -1)
     {
-        sampleExtender[i] = (i << 8);
+        last_sound_fifo = 1;
+        irqDisable(IRQ_TIMER2);    
+        fifoSendValue32(FIFO_USER_01,(1<<16) | SOUND_KILL);
+        *aptr = 0; *bptr=0;
+        // We are going to use the 16-bit sound engine so we need to scale up our 8-bit values...
+        for (int i=0; i<256; i++)
+        {
+            sampleExtender[i] = (i << 8);
+        }
+
+        if (isDSiMode())
+        {
+            aptr = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
+            bptr = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
+        }
+        else
+        {
+            aptr = (u16*) ((u32)&sound_buffer[0] + 0x00400000);
+            bptr = (u16*) ((u32)&sound_buffer[2] + 0x00400000);
+        }
+        swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to stop...
+
+        FifoMessage msg;
+        msg.SoundPlay.data = &sound_buffer;
+        msg.SoundPlay.freq = SOUND_FREQ*2;
+        msg.SoundPlay.volume = 127;
+        msg.SoundPlay.pan = 64;
+        msg.SoundPlay.loop = 1;
+        msg.SoundPlay.format = ((1)<<4) | SoundFormat_16Bit;
+        msg.SoundPlay.loopPoint = 0;
+        msg.SoundPlay.dataSize = 4 >> 2;
+        msg.type = EMUARM7_PLAY_SND;
+        fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
+
+        swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to start chugging...
+        irqEnable(IRQ_TIMER2);
     }
     
-    if (isDSiMode())
-    {
-        aptr = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
-        bptr = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
-    }
-    else
-    {
-        aptr = (u16*) ((u32)&sound_buffer[0] + 0x00400000);
-        bptr = (u16*) ((u32)&sound_buffer[2] + 0x00400000);
-    }
-    swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to stop...
-    
-    FifoMessage msg;
-    msg.SoundPlay.data = &sound_buffer;
-    msg.SoundPlay.freq = SOUND_FREQ*2;
-    msg.SoundPlay.volume = 127;
-    msg.SoundPlay.pan = 64;
-    msg.SoundPlay.loop = 1;
-    msg.SoundPlay.format = ((1)<<4) | SoundFormat_16Bit;
-    msg.SoundPlay.loopPoint = 0;
-    msg.SoundPlay.dataSize = 4 >> 2;
-    msg.type = EMUARM7_PLAY_SND;
-    fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
-    
-    swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to start chugging...
 }
 
 // -------------------------------------------------------------------------------
@@ -1823,14 +1833,14 @@ void dsInstallSoundEmuFIFO(void)
 // we check for keys to be pressed on the DS and the touch screen and process
 // those as appopriate. 
 // -------------------------------------------------------------------------------
+char fpsbuf[32];
 void dsMainLoop(void)
 {
-  static unsigned int config_snap_counter=0;
-  static int last_key_code = -1;
+  static unsigned short int config_snap_counter=0;
+  static short int last_key_code = -1;
   static bool bFirstLoad = true;
-  char fpsbuf[32];
-  unsigned int keys_pressed,keys_touch=0, romSel=0;
-  int iTx,iTy;
+  unsigned short int keys_pressed,keys_touch=0, romSel=0;
+  short int iTx,iTy;
   bool bShowHelp = false;
 
   // Timers are fed with 33.513982 MHz clock.
@@ -1862,6 +1872,7 @@ void dsMainLoop(void)
       case A8_PLAYINIT:
         dsShowScreenEmu();
         irqEnable(IRQ_TIMER2);
+        bMute = 0;            
         emu_state = A8_PLAYGAME;
         break;
 
@@ -2062,7 +2073,8 @@ void dsMainLoop(void)
                         keys_touch = 1;
                         dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
                         irqEnable(IRQ_TIMER2);
-                        fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+                        bMute = 0;
+                        swiWaitForVBlank();                        
                     }
                     else if ((iTx>35) && (iTx<55) && (iTy>150) && (iTy<180))  // Help
                     {
@@ -2086,41 +2098,47 @@ void dsMainLoop(void)
                     }
                     else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT
                     {
-                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
+                      bMute = 1;
+                      swiWaitForVBlank();
                       soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                       if (dsWaitOnQuit()) emu_state=A8_QUITSTDS;
-                      else { irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); }
+                      else { bMute = 0; }
+                      swiWaitForVBlank();
                     }
                     else if ((iTx>204) && (iTx<235) && (iTy>150) && (iTy<180))  // Gear Icon = Settings
                     {
-                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
+                      bMute = 1;
+                      swiWaitForVBlank();
                       keys_touch=1;
                       dsChooseOptions(TRUE);
-                      irqEnable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME); 
+                      bMute = 0;
+                      swiWaitForVBlank();
                     }
                     else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75))      // XEX and D1 Disk Drive
                     {
-                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
+                      bMute = 1;
+                      swiWaitForVBlank();
                       // Find files in current directory and show it
                       keys_touch=1;
                       strcpy(file_load_id, "XEX/D1");
                       a8FindFiles();
                       romSel=dsWaitForRom();
                       if (romSel) { emu_state=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
-                      else { irqEnable(IRQ_TIMER2); }
-                      fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+                      else { bMute = 0; }
+                      swiWaitForVBlank();
                     }
                     else if ((iTx>5) && (iTx<80) && (iTy>77) && (iTy<114))      // D2 Disk Drive
                     {
-                      irqDisable(IRQ_TIMER2); fifoSendValue32(FIFO_USER_01,(1<<16) | (0) | SOUND_SET_VOLUME);
+                      bMute = 1;
+                      swiWaitForVBlank();
                       // Find files in current directory and show it
                       keys_touch=1;
                       strcpy(file_load_id, "D2");
                       a8FindFiles();
                       romSel=dsWaitForRom();
                       if (romSel) { emu_state=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_2, false, bLoadReadOnly); }
-                      else { irqEnable(IRQ_TIMER2); }
-                      fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+                      else { bMute = 0; }
+                      swiWaitForVBlank();
                     }
                  }
             }
@@ -2193,7 +2211,7 @@ void dsMainLoop(void)
             bFirstLoad = false;
             dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
             irqEnable(IRQ_TIMER2);
-            fifoSendValue32(FIFO_USER_01,(1<<16) | (127) | SOUND_SET_VOLUME);
+            bMute = 0;
         }
 
         break;
@@ -2263,6 +2281,16 @@ void a8FindFiles(void)
                 strcpy(a8romlist[count8bit].filename,filenametmp);
                 count8bit++;countfiles++;
               }
+              if ( (strcasecmp(strrchr(filenametmp, '.'), ".car") == 0) )  {
+                a8romlist[count8bit].directory = false;
+                strcpy(a8romlist[count8bit].filename,filenametmp);
+                count8bit++;countfiles++;
+              }
+              if ( (strcasecmp(strrchr(filenametmp, '.'), ".rom") == 0) )  {
+                a8romlist[count8bit].directory = false;
+                strcpy(a8romlist[count8bit].filename,filenametmp);
+                count8bit++;countfiles++;
+              }
           }
           if ( (strcasecmp(strrchr(filenametmp, '.'), ".atr") == 0) )  {
             a8romlist[count8bit].directory = false;
@@ -2291,7 +2319,7 @@ void a8FindFiles(void)
 }
 
 // ---------------------------------------------------------------------------
-// We write out XEGS.DAT to the /DATA/ directory on the SD card to keep
+// We write out A8DS.DAT to the /DATA/ directory on the SD card to keep
 // a database of user configured settings on a per-game basis. We use 
 // the HASH of a game so that we are not reliant on the filename (so even
 // if the user renames the file or moves it to another directory, the

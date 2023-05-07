@@ -2207,13 +2207,8 @@ UBYTE mode_type[32] __attribute__((section(".dtcm"))) = {
 	};
 UBYTE normal_lastline[16] __attribute__((section(".dtcm"))) = { 0, 0, 7, 9, 7, 15, 7, 15, 7, 3, 3, 1, 0, 1, 0, 0 };
 
-/* This function emulates one frame drawing screen at atari_screen */
-ITCM_CODE void ANTIC_Frame(int draw_display) 
+__attribute__((noinline)) void ANTIC_FrameSetup()
 {
-	UBYTE vscrol_flag = FALSE;
-	UBYTE no_jvb = TRUE;
-	UBYTE need_load;
-
 	ypos = 0;
 	do {
 		POKEY_Scanline();		/* check and generate IRQ */
@@ -2224,6 +2219,17 @@ ITCM_CODE void ANTIC_Frame(int draw_display)
     scrn_ptr = bgGetGfxPtr(bg2);
 
 	need_dl = TRUE;
+}
+
+/* This function emulates one frame drawing screen at atari_screen */
+ITCM_CODE void ANTIC_Frame(int draw_display) 
+{
+	UBYTE vscrol_flag = FALSE;
+	UBYTE no_jvb = TRUE;
+	UBYTE need_load;
+
+    ANTIC_FrameSetup();
+    
 	do {
         POKEY_Scanline();		/* check and generate IRQ */
 		pmg_dma();

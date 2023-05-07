@@ -44,11 +44,11 @@ extern int debug[];
 /* number of pokey chips currently emulated */
 static uint8 Num_pokeys;
 
-static uint8 AUDV[4 * MAXPOKEYS];	/* Channel volume - derived */
+static uint8 AUDV[4 * MAXPOKEYS] __attribute__((section(".dtcm")));	/* Channel volume - derived */
 
-static uint8 Outbit[4 * MAXPOKEYS];		/* current state of the output (high or low) */
+static uint8 Outbit[4 * MAXPOKEYS] __attribute__((section(".dtcm")));		/* current state of the output (high or low) */
 
-static uint8 Outvol[4 * MAXPOKEYS];		/* last output volume for each channel */
+static uint8 Outvol[4 * MAXPOKEYS] __attribute__((section(".dtcm")));		/* last output volume for each channel */
 
 /* Initialze the bit patterns for the polynomials. */
 
@@ -57,10 +57,10 @@ static uint8 Outvol[4 * MAXPOKEYS];		/* last output volume for each channel */
 /* single bit per byte keeps the math simple, which is important for */
 /* efficient processing. */
 
-static uint8 bit4[POLY4_SIZE] =
+static uint8 bit4[POLY4_SIZE] __attribute__((section(".dtcm"))) =
 {1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0};	/* new table invented by Perry */
 
-static uint8 bit5[POLY5_SIZE] =
+static uint8 bit5[POLY5_SIZE] __attribute__((section(".dtcm"))) =
 {1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0};
 
 static uint32 P4 = 0,			/* Global position pointer for the 4-bit  POLY array */
@@ -68,8 +68,8 @@ static uint32 P4 = 0,			/* Global position pointer for the 4-bit  POLY array */
  P9 = 0,						/* Global position pointer for the 9-bit  POLY array */
  P17 = 0;						/* Global position pointer for the 17-bit POLY array */
 
-static uint32 Div_n_cnt[4 * MAXPOKEYS],		/* Divide by n counter. one for each channel */
- Div_n_max[4 * MAXPOKEYS];		/* Divide by n maximum, one for each channel */
+static uint32 Div_n_cnt[4 * MAXPOKEYS] __attribute__((section(".dtcm")));		/* Divide by n counter. one for each channel */
+static uint32 Div_n_max[4 * MAXPOKEYS] __attribute__((section(".dtcm")));		/* Divide by n maximum, one for each channel */
 
 static uint32 Samp_n_max,		/* Sample max.  For accuracy, it is *256 */
  Samp_n_cnt[2] __attribute__ ((aligned (4)));					/* Sample cnt. */
@@ -87,8 +87,7 @@ void (*Pokey_process_ptr)(void *sndbuffer, unsigned int sndn) = null_pokey_proce
 
 static void Update_pokey_sound_rf(uint16, uint8, uint8, uint8);
 static void null_pokey_sound(uint16 addr, uint8 val, uint8 chip, uint8 gain) {}
-void (*Update_pokey_sound) (uint16 addr, uint8 val, uint8 chip, uint8 gain)
-  = null_pokey_sound;
+void (*Update_pokey_sound) (uint16 addr, uint8 val, uint8 chip, uint8 gain) = null_pokey_sound;
 
 /*****************************************************************************/
 /* In my routines, I treat the sample output as another divide by N counter  */

@@ -268,6 +268,18 @@ static UBYTE cycles[256] __attribute__((section(".dtcm"))) =
 	2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7		/* Fx */
 };
 
+int __attribute__((noinline))  CPU_Go_Startup(int limit)
+{
+	if (wsync_halt) {
+		if (limit < WSYNC_C)
+			return 1;
+		xpos = WSYNC_C;
+		wsync_halt = 0;
+	}
+	xpos_limit = limit;			/* needed for WSYNC store inside ANTIC */
+    return 0;
+}
+
 /* 6502 emulation routine */
 ITCM_CODE void GO(int limit)
 {
@@ -280,37 +292,37 @@ ITCM_CODE void GO(int limit)
 		&&opcode_08, &&opcode_09, &&opcode_0a, &&opcode_0b,
 		&&opcode_0c, &&opcode_0d, &&opcode_0e, &&opcode_0f,
 
-		&&opcode_10, &&opcode_11, &&opcode_12, &&opcode_13,
+		&&opcode_10, &&opcode_11, &&opcode_02, &&opcode_13,
 		&&opcode_14, &&opcode_15, &&opcode_16, &&opcode_17,
 		&&opcode_18, &&opcode_19, &&opcode_1a, &&opcode_1b,
 		&&opcode_1c, &&opcode_1d, &&opcode_1e, &&opcode_1f,
 
-		&&opcode_20, &&opcode_21, &&opcode_22, &&opcode_23,
+		&&opcode_20, &&opcode_21, &&opcode_02, &&opcode_23,
 		&&opcode_24, &&opcode_25, &&opcode_26, &&opcode_27,
 		&&opcode_28, &&opcode_29, &&opcode_2a, &&opcode_2b,
 		&&opcode_2c, &&opcode_2d, &&opcode_2e, &&opcode_2f,
 
-		&&opcode_30, &&opcode_31, &&opcode_32, &&opcode_33,
+		&&opcode_30, &&opcode_31, &&opcode_02, &&opcode_33,
 		&&opcode_34, &&opcode_35, &&opcode_36, &&opcode_37,
 		&&opcode_38, &&opcode_39, &&opcode_3a, &&opcode_3b,
 		&&opcode_3c, &&opcode_3d, &&opcode_3e, &&opcode_3f,
 
-		&&opcode_40, &&opcode_41, &&opcode_42, &&opcode_43,
+		&&opcode_40, &&opcode_41, &&opcode_02, &&opcode_43,
 		&&opcode_44, &&opcode_45, &&opcode_46, &&opcode_47,
 		&&opcode_48, &&opcode_49, &&opcode_4a, &&opcode_4b,
 		&&opcode_4c, &&opcode_4d, &&opcode_4e, &&opcode_4f,
 
-		&&opcode_50, &&opcode_51, &&opcode_52, &&opcode_53,
+		&&opcode_50, &&opcode_51, &&opcode_02, &&opcode_53,
 		&&opcode_54, &&opcode_55, &&opcode_56, &&opcode_57,
 		&&opcode_58, &&opcode_59, &&opcode_5a, &&opcode_5b,
 		&&opcode_5c, &&opcode_5d, &&opcode_5e, &&opcode_5f,
 
-		&&opcode_60, &&opcode_61, &&opcode_62, &&opcode_63,
+		&&opcode_60, &&opcode_61, &&opcode_02, &&opcode_63,
 		&&opcode_64, &&opcode_65, &&opcode_66, &&opcode_67,
 		&&opcode_68, &&opcode_69, &&opcode_6a, &&opcode_6b,
 		&&opcode_6c, &&opcode_6d, &&opcode_6e, &&opcode_6f,
 
-		&&opcode_70, &&opcode_71, &&opcode_72, &&opcode_73,
+		&&opcode_70, &&opcode_71, &&opcode_02, &&opcode_73,
 		&&opcode_74, &&opcode_75, &&opcode_76, &&opcode_77,
 		&&opcode_78, &&opcode_79, &&opcode_7a, &&opcode_7b,
 		&&opcode_7c, &&opcode_7d, &&opcode_7e, &&opcode_7f,
@@ -371,14 +383,7 @@ ITCM_CODE void GO(int limit)
       no way an NMI can be generated whilst in this routine.
 
    2. The timing of the IRQs are not that critical. */
-
-	if (wsync_halt) {
-		if (limit < WSYNC_C)
-			return;
-		xpos = WSYNC_C;
-		wsync_halt = 0;
-	}
-	xpos_limit = limit;			/* needed for WSYNC store inside ANTIC */
+    if (CPU_Go_Startup(limit)) return;
 
 	UPDATE_LOCAL_REGS;
 
@@ -1776,18 +1781,17 @@ ITCM_CODE void GO(int limit)
 #endif /* ASAP */
 
 	OPCODE_ALIAS(02)		/* CIM [unofficial - crash intermediate] */
-	OPCODE_ALIAS(12)
-	OPCODE_ALIAS(22)
-	OPCODE_ALIAS(32)
-	OPCODE_ALIAS(42)
-	OPCODE_ALIAS(52)
-	OPCODE_ALIAS(62)
-	OPCODE_ALIAS(72)
+	//OPCODE_ALIAS(12)
+	//OPCODE_ALIAS(22)
+	//OPCODE_ALIAS(32)
+	//OPCODE_ALIAS(42)
+	//OPCODE_ALIAS(52)
+	//OPCODE_ALIAS(62)
+	//OPCODE_ALIAS(72)
 	OPCODE_ALIAS(92)
 	OPCODE(b2)
 
 #ifdef ASAP
-
 		ASAP_CIM();
 		DONE
 
@@ -1795,16 +1799,18 @@ ITCM_CODE void GO(int limit)
 
 	/* OPCODE(d2) Used for ESCRTS #ab (CIM) */
 	/* OPCODE(f2) Used for ESC #ab (CIM) */
-		PC--;
-		UPDATE_GLOBAL_REGS;
-		CPU_GetStatus();
+		//PC--;
+		//UPDATE_GLOBAL_REGS;
+		//CPU_GetStatus();
 
 		cim_encountered = TRUE;
-		ENTER_MONITOR;
+        DONE
+		//ENTER_MONITOR;
+        //exit(0);
 
-		CPU_PutStatus();
-		UPDATE_LOCAL_REGS;
-		DONE
+		//CPU_PutStatus();
+		//UPDATE_LOCAL_REGS;
+		//DONE
 
 #endif /* ASAP */
 

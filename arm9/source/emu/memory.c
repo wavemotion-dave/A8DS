@@ -68,8 +68,8 @@ UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;              // T
 
 static int cart809F_enabled = FALSE;                                        // By default, no CART memory mapped to 0x8000 - 0x9FFF
 static int cartA0BF_enabled = FALSE;                                        // By default, no CART memory mapped to 0xA000 - 0xBFFF
-static UBYTE under_cart809F[8192];                                          // To save RAM under CART space
-static UBYTE under_cartA0BF[8192];                                          // To save RAM under CART space
+static UBYTE under_cart809F[8192];                                          // To save RAM under CART space   8K at 0x8000 - 0x9FFF
+static UBYTE under_cartA0BF[8192];                                          // To save RAM under CART space   8K at 0xA000 - 0xBFFF
 
 // ------------------------------------------------------------------
 // This is the huge 1MB+ buffer to support the maximum expanded RAM 
@@ -251,12 +251,12 @@ static int basic_disabled(UBYTE portb)
 // Although this was originally taken from the Atari800 emulator source code
 // it has been heavily modified so that we don't try to swap/move 16K of RAM
 // in and out of the 0x4000 to 0x7FFF region but instead we keep a pointer
-// to the expanded RAM area and by using this pointer in the dsGetByte() and
-// dsPutByte() routines (see Memory.H) we can make accessing expanded RAM
+// to the expanded RAM area and by using this pointer in the dGetByte() and
+// dPutByte() routines (see memory.h) we can make accessing expanded RAM
 // an order of magnitude faster than it has been in the past. This is really
 // needed speed on the older DS hardware that struggles to move 16K of RAM
 // around up to 500x per second. With this new scheme, awesome games like
-// PANG, Commando320, BombJack and AtariBlast! are playable!
+// PANG, Commando320, BombJack, Bosconian and AtariBlast! are playable!
 // --------------------------------------------------------------------------
 void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 {
@@ -297,7 +297,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
             }
             else
             {
-                memory_bank = (atarixe_memory + (bank << 14));
+                memory_bank = (atarixe_memory + ((bank-1) << 14));
                 memory_bank -= 0x4000;
             }
             xe_bank = bank;

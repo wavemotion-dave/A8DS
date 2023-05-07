@@ -71,6 +71,7 @@ int ram_size         = RAM_128K;        // We only allow RAM_128K or RAM_320_RAM
 int tv_mode          = TV_NTSC;
 int disable_basic    = TRUE;
 int skip_frames      = FALSE;
+int file_type        = AFILE_ERROR;
 
 char disk_filename[DISK_MAX][256];
 int  disk_readonly[DISK_MAX] = {true,true,true};
@@ -136,23 +137,26 @@ int Atari800_DetectFileType(const char *filename)
     if (strstr(filename, ".ATX") != 0) return  AFILE_ATX;
     if (strstr(filename, ".xex") != 0) return  AFILE_XEX;
     if (strstr(filename, ".XEX") != 0) return  AFILE_XEX;
+    if (strstr(filename, ".car") != 0) return  AFILE_CART;
+    if (strstr(filename, ".CAR") != 0) return  AFILE_CART;
+    if (strstr(filename, ".rom") != 0) return  AFILE_ROM;
+    if (strstr(filename, ".ROM") != 0) return  AFILE_ROM;
 	return AFILE_ERROR;
 }
 
 int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly, int bEnableBasic) 
 {
-    CART_Insert(bEnableBasic);
-  
-	int type = Atari800_DetectFileType(filename);
+	file_type = Atari800_DetectFileType(filename);
     
-	switch (type) 
+	switch (file_type) 
     {
     case AFILE_ATR:
     case AFILE_ATX:
       if (reboot)   // If we are booting a disk, empty out the XEX filename
       {
-        strcpy(disk_filename[DISK_XEX], "EMPTY");
-      }
+          CART_Insert(bEnableBasic, file_type, filename); 
+          strcpy(disk_filename[DISK_XEX], "EMPTY");
+      } // Else do not force any CART change here... needed so we can load a disk  on top of a CART
       strcpy(disk_filename[diskno], filename);
       disk_readonly[diskno] = readonly;
       if (!SIO_Mount(diskno, filename, readonly))
@@ -161,14 +165,29 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
         Coldstart();
       break;
     case AFILE_XEX:
+      CART_Insert(bEnableBasic, file_type, filename); 
       strcpy(disk_filename[DISK_1], "EMPTY");
       strcpy(disk_filename[DISK_2], "EMPTY");
       strcpy(disk_filename[DISK_XEX], filename);
       if (!BINLOAD_Loader(filename))
         return AFILE_ERROR;
       break;
+    case AFILE_CART:
+      CART_Insert(bEnableBasic, file_type, filename); 
+      strcpy(disk_filename[DISK_1], "EMPTY");
+      strcpy(disk_filename[DISK_2], "EMPTY");
+      strcpy(disk_filename[DISK_XEX], filename);
+      Atari800_Coldstart();
+      break;
+    case AFILE_ROM:
+      CART_Insert(bEnableBasic, file_type, filename); 
+      strcpy(disk_filename[DISK_1], "EMPTY");
+      strcpy(disk_filename[DISK_2], "EMPTY");
+      strcpy(disk_filename[DISK_XEX], filename);
+      Atari800_Coldstart();
+      break;
 	}
-	return type;
+	return file_type;
 }
 
 int Atari800_Initialise(void) 

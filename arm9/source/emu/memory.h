@@ -38,18 +38,18 @@ extern UBYTE *memory_bank;
 // ---------------------------------------------------------------------------------------
 inline UBYTE dGetByte(UWORD addr)
 {
-    if ((addr & 0xC000) == 0x4000)
-        return memory_bank[addr];    
-    else
+    if (((addr & 0xC000) ^ 0x4000))
         return memory[addr];    
+    else
+        return memory_bank[addr];    
 }
 
 inline void dPutByte(UWORD addr, UBYTE data)
 {
-    if ((addr & 0xC000) == 0x4000)
-        memory_bank[addr] = data;
-    else
+    if (((addr & 0xC000) ^ 0x4000))
         memory[addr] = data;
+    else
+        memory_bank[addr] = data;
 }
 
 typedef UBYTE (*rdfunc)(UWORD addr);

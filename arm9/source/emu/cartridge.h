@@ -46,39 +46,23 @@
 #define CART_BLIZZARD_16    40
 #define CART_ATMAX_128	    41
 #define CART_ATMAX_1024     42
-#define CART_LAST_SUPPORTED 42
+#define CART_SDX_128        43
+#define CART_LAST_SUPPORTED 43
 
-
-struct cart_t
-{
-    char *md5;
-    short int  type;
-    short int  control;
-    short int  use_analog;
-    short int  analog_speed;
-    short int  digital_min;
-    short int  digital_max;
-    short int  scale_x;
-    short int  scale_y;
-    short int  offset_x;
-    short int  offset_y;
-};
-
-extern struct cart_t myCart;
+extern int cart_type;
 
 #define CTRL_JOY        1
 #define CTRL_SWAP       2
-#define CTRL_FROG       3
-#define CTRL_QBERT      4
 
 #define DIGITAL         0
 #define ANALOG          1
 
-#define CART_MAX_SIZE	(64 * 1024)
-extern int cart_kb[CART_LAST_SUPPORTED + 1];
+#define CART_MAX_SIZE	(1024 * 1024)
+
+extern UBYTE *cart_mem_ptr;
 
 int CART_IsFor5200(int type);
-int CART_Insert(int enabled);
+int CART_Insert(int enabled, int type, const char *filename);
 void CART_Remove(void);
 void CART_Start(void);
 UBYTE CART_GetByte(UWORD addr);
