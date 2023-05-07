@@ -166,6 +166,16 @@ Screen resolution on a DS/DSi/XL/LL is always fixed at 256x192 pixels. The Atari
  
 Tap the XEX icon or the Disk Drive to load a new game.
 
+Compile Instructions :
+-----------------------
+devkitpro-pacman version 6.0.1-2
+gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0
+libnds 1.8.0
+I use Ubuntu and the Pacman repositories (devkitpro-pacman version 6.0.1-2).  I'm told it should also build under 
+Windows but I've never done it and don't know how.
+
+If you try to build on a newer gcc, you will likely find it bloats the code a bit and you'll run out of ITCM_CODE memory.
+
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
