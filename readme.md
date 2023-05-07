@@ -103,16 +103,31 @@ disk of some kind to get drive support and you can have fun writing programs. Be
 that the Altirra BASIC is faster than normal ATARI BASIC and so games might run at the
 wrong speed unless you're using the actual ATARI REV C rom.
 
+Cartridge support was added with A8DS 3.1 and later. It's partial support - the bank swaps
+are CPU intensive since memory chunks need to be moved in/out. It is strongly preferred
+to use XEX or ATR files which will utilize the highly optmized memory layout of this
+emulator. Having said that, you can load .CAR and .ROM files (using the XEX button).
+In general, the following cartridge layouts are supported:
+* Standard 8 KB and 16KB
+* OSS two chip 16KB
+* Williams 32K and 64K
+* XEGS/SwXEGS 32K up to 1MB
+* MegaCart 16K up to 1MB
+* Atarimax 128K and 1MB
+* SpartaDOS X 64K and 128K
+* Atrax 128K
+* Diamond 64K
+* Express 64K
+
 Missing :
 ----------------------------------------------------------------------------------
-CART support is not included. The .ATX support is included but not 
-fully tested so compatibility may be lower. In order to get proper speed on the older DS-LITE 
-and DS-PHAT hardware, there is a Frame Skip option that defaults to ON for the older hardware 
-(and OFF for the DSi or above). This is not perfect - some games will not be happy to have 
-frames skipped as collisions are skipped in those frames. Notably: Caverns of Mars, Jumpman 
-and Buried Bucks will not run right with Frame Skip ON. But this does render most games 
-playable on older hardware. If a game is particularlly struggling to keep up on older 
-hardawre, there is an experimental 'Agressive' frameskip which should help... but use with caution. 
+The .ATX support is included but not fully tested so compatibility may be lower. In order to 
+get proper speed on the older DS-LITE and DS-PHAT hardware, there is a Frame Skip option that 
+defaults to ON for the older hardware (and OFF for the DSi or above). This is not perfect - some 
+games will not be happy to have frames skipped as collisions are skipped in those frames. 
+Notably: Caverns of Mars, Jumpman and Buried Bucks will not run right with Frame Skip ON. But 
+this does render most games playable on older hardware. If a game is particularlly struggling 
+to keep up on older hardawre, there is an experimental 'Agressive' frameskip which should help... but use with caution. 
 
 Remember, emulation is rarely perfect. Further, this is a portable implementation of an Atari 8-bit 
 emulator on a limited resource system (67MHz CPU and 4MB of memory) so it won't match the amazing work 

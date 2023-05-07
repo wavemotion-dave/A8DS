@@ -47,7 +47,7 @@
 #define CART_ATMAX_128	    41
 #define CART_ATMAX_1024     42
 #define CART_SDX_128        43
-#define CART_LAST_SUPPORTED 43
+#define CART_ATMAX_NEW_1024 75
 
 extern int cart_type;
 

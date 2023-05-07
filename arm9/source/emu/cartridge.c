@@ -231,7 +231,7 @@ static void set_bank_SDX_128(UWORD addr)
             CartA0BF_Disable();
         else {
             CartA0BF_Enable();
-            CopyROM(0xa000, 0xbfff, cart_image + (((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf) * 0x2000);
+            BankSwap(((u8*)0x06860000+((((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf)*0x2000)), memory+0xa000, 0x2000);
         }
         bank = addr;
     }
@@ -442,6 +442,13 @@ void CART_Start(void)
         bank = 0x7f;
         if (skip_frames == 0) skip_frames=1; // It's the only way this will have enough speed due to the massive bankswaps
         break;
+    case CART_ATMAX_NEW_1024:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
+        bank = 0x00;
+        if (skip_frames == 0) skip_frames=1; // It's the only way this will have enough speed due to the massive bankswaps
+        break;
     default:
         // The only cart we support is an 8K built-in BASIC cart
         if (bHaveBASIC)
@@ -540,6 +547,7 @@ void CART_Access(UWORD addr)
         set_bank_A0BF_ATMAX128(addr & 0xff);
         break;
     case CART_ATMAX_1024:
+    case CART_ATMAX_NEW_1024:
         set_bank_A0BF_ATMAX1024(addr & 0xff);
         break;
 	case CART_SDX_128:
@@ -557,14 +565,12 @@ void CART_Access(UWORD addr)
 // -----------------------------------------------------------------
 UBYTE CART_GetByte(UWORD addr)
 {
-    if (cart_type != CART_NONE)
+    if (addr == 0xd5b8 || addr == 0xd5b9)
     {
-        if (addr == 0xd5b8 || addr == 0xd5b9)
-        {
-            return RTIME_GetByte();
-        }
-        CART_Access(addr);
+        return RTIME_GetByte();
     }
+    CART_Access(addr);
+
     return 0;
 }
 

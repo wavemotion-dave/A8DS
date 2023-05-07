@@ -146,6 +146,8 @@ int Atari800_DetectFileType(const char *filename)
 
 int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly, int bEnableBasic) 
 {
+    memset((UBYTE*)bgGetGfxPtr(bg2), 0x00, 128*1024);
+    
 	file_type = Atari800_DetectFileType(filename);
     
 	switch (file_type) 
