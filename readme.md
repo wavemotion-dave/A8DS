@@ -1,6 +1,6 @@
 A8DS
 --------------------------------------------------------------------------------
-A8DS is an Atari 8-bit computer emulator.  Specifically, it targets the 
+A8DS is an Atari 8-bit computer emulator for the Nintendo DS/DSi.  Specifically, it targets the 
 800XL / 130XE systems and various hardware extensions to increase the memory. 
 The stock 800XL had 64KB of RAM. The default A8DS configuration is an
 XL/XE machine with 128KB of RAM which will run most of the 8-bit library.
