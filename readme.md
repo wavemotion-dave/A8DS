@@ -167,8 +167,10 @@ The original DS-Lite or DS-Phat require an R4 card to run homebrews. With this s
 
 Screen resolution on a DS/DSi/XL/LL is always fixed at 256x192 pixels. The Atari 8-bit resolution tends to be larger - usually 320 horizontally and they often utilize a few more pixels vertically depending on the game. Use the Left/Right shoulder buttons along with the D-Pad to shift/scale the screen to your liking. Once you get the screen where you want - go into the GEAR icon and press START to save the options (including the screen position/scaling) on a per-game basis.
 
+Controller Mapping :
 ----------------------------------------------------------------------------------
- * D-pad  : the joystick ...
+
+ * D-pad  : the joystick ... can be set to be Joystick 1 or Joystick 2
  * A      : Fire button
  * B      : Alternate Fire button
  * X      : Space Bar (R+X for RETURN and L+X for ESCAPE) - useful to start a few games
@@ -179,13 +181,14 @@ Screen resolution on a DS/DSi/XL/LL is always fixed at 256x192 pixels. The Atari
  * START  : START console button
  * SELECT : SELECT console button
  
-Tap the XEX icon or the Disk Drive to load a new game.
+Tap the XEX icon or the Disk Drive to load a new game or the Door/Exit button to quit the emulator.
 
 Compile Instructions :
 -----------------------
-devkitpro-pacman version 6.0.1-2
-gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0
-libnds 1.8.2-1
+I'm using the following:
+* devkitpro-pacman version 6.0.1-2
+* gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0
+* libnds 1.8.2-1
 I use Ubuntu and the Pacman repositories (devkitpro-pacman version 6.0.1-2).  I'm told it should also build under 
 Windows but I've never done it and don't know how.
 
@@ -194,6 +197,15 @@ If you try to build on a newer gcc, you will likely find it bloats the code a bi
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.1 : 08-May-2023 by wavemotion-dave
+  * Added CAR and ROM support for the more popular cartridge types up to 1MB.
+  * Added new D-Pad options to support joystick 2 (for games like Wizard of Wor) and diagonals (Q-Bert like games).
+  * Improved keyboard handling so CTRL key is now sticky.
+  * Improved menu transitions to reduce audio 'pops' as much as possible.
+  * Auto-rename of XEGS-DS.DAT to A8DS.DAT to match new branding.
+  * Squeezed as much into fast ITCM_CODE as possible with almost no bytes left to spare.
+  * Other cleanups and minor bug fixes as time allowed.
+
 V3.0 : 05-May-2023 by wavemotion-dave
   * Rebranding to A8DS with new 800XL stylized keyboard and minor cleanups across the board.
   

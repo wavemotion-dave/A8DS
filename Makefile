@@ -3,7 +3,7 @@
 #DEVKITPPC=/opt/devkitpro/devkitPPC
 #DEVKITPRO=/opt/devkitpro
 
-VERSION=3.0b
+VERSION=3.1
 
 #---------------------------------------------------------------------------------
 .SUFFIXES:

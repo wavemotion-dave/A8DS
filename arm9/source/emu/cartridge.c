@@ -1,9 +1,7 @@
 /*
  * CARTRIDGE.C contains a subset of Atari800 cart support. The A8DS emulator
- * is targeting XEX and ATR files... Carts are a different beast and the only
- * "cart" we are supporting is an external Atari BASIC cart. It's very possible
- * to go back to the core Atari800 sources and pull back in all the other cart
- * type supports - but that's an exercise left to the next generation!
+ * is targeting XEX and ATR files... We are partially supporting the use of
+ * CAR (with 16-byte headers) and ROM (headerless... these are flat binary files).
  *
  * A8DS - Atari 8-bit Emulator designed to run 8-bit games on the Nintendo DS/DSi
  * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
@@ -57,7 +55,7 @@ extern UBYTE ROM_basic[];
 extern int basic_type;
 extern int bHaveBASIC;
 
-UBYTE cart_image[CART_MAX_SIZE];
+UBYTE cart_image[CART_MAX_SIZE];    // Big enough to hold the largest carts we support ... 1MB
 UBYTE cart_header[16];
 static int bank __attribute__((section(".dtcm")));
 static int last_main __attribute__((section(".dtcm"))) = 33333;
@@ -74,8 +72,8 @@ ITCM_CODE void BankSwap(UBYTE *from, UBYTE *to, UWORD size)
     }
 }
 
-
- void __attribute__((noinline))  SwapMainBank(int main)
+// This is infrequent enough and we take it out of contention for inlining to save precious ITCM space
+void __attribute__((noinline))  SwapMainBank(int main)
 {
     if (last_main != main)
     {
@@ -263,6 +261,11 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             fread(cart_header, 1, 16, fp);
             fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
+            // ----------------------------------------------------------------------------------
+            // Move some of the binary into the faster VRAM buffers which are otherwise unused.
+            // In total, we can move 400k of the binary image into the faster VRAM to help 
+            // speed up moving chunks of memory in and out out of main RAM.
+            // ----------------------------------------------------------------------------------
             memcpy((u8*)0x06860000, cart_image, 272*1024);
             memcpy((u8*)0x06820000, cart_image+(272*1024), 128*1024);
             cart_type = cart_header[7];
@@ -276,6 +279,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             int size = fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
             memcpy((u8*)0x06860000, cart_image, 272*1024);
+            memcpy((u8*)0x06820000, cart_image+(272*1024), 128*1024);
             size = size / 1024;
             if (size == 8)  cart_type = CART_STD_8;
             if (size == 16) cart_type = CART_STD_16;
@@ -450,7 +454,7 @@ void CART_Start(void)
         if (skip_frames == 0) skip_frames=1; // It's the only way this will have enough speed due to the massive bankswaps
         break;
     default:
-        // The only cart we support is an 8K built-in BASIC cart
+        // The only default cart we support is an 8K built-in BASIC cart
         if (bHaveBASIC)
         {
             Cart809F_Disable();
@@ -550,9 +554,9 @@ void CART_Access(UWORD addr)
     case CART_ATMAX_NEW_1024:
         set_bank_A0BF_ATMAX1024(addr & 0xff);
         break;
-	case CART_SDX_128:
-		set_bank_SDX_128(addr);
-		break;            
+    case CART_SDX_128:
+        set_bank_SDX_128(addr);
+        break;            
     default:
         break;
     }
@@ -581,11 +585,11 @@ UBYTE CART_GetByte(UWORD addr)
 // -----------------------------------------------------------------
 void CART_PutByte(UWORD addr, UBYTE byte)
 {
-	if (addr == 0xd5b8 || addr == 0xd5b9) 
+    if (addr == 0xd5b8 || addr == 0xd5b9) 
     {
-		RTIME_PutByte(byte);
+        RTIME_PutByte(byte);
         return;
-	}
+    }
     
     switch (cart_type) 
     {

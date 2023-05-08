@@ -61,7 +61,6 @@ extern int cart_type;
 
 extern UBYTE *cart_mem_ptr;
 
-int CART_IsFor5200(int type);
 int CART_Insert(int enabled, int type, const char *filename);
 void CART_Remove(void);
 void CART_Start(void);

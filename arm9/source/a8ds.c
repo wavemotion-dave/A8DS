@@ -946,35 +946,43 @@ struct options_t
     char *help4;
 };
 
+static u8 option_table=0;
 static int basic_opt=0;
 static int tv_type2=0;
-const struct options_t Option_Table[] =
+const struct options_t Option_Table[2][20] =
 {
-    {"TV TYPE",     {"NTSC",        "PAL"},                            &tv_type2,              2,   "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
-    {"MACHINE TYPE",{"128K XL/XE",  "320K XL/XE", 
-                     "1088K XL/XE", "48K ATARI800"},                    &ram_type,              4,   "128K STANDARD FOR ",   "MOST GAMES. 320K /",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
-    {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",
-                     "ALTIRRA 800",  "ATARIOSB.ROM"},                   &os_type,               4,   "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
-    {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,             3,   "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
-    {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,           3,   "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
-    {"PALETTE",     {"BRIGHT",      "MUTED"},                           &palett_type,           2,   "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
-    {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,         2,   "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
-    {"B BUTTON",    {"FIRE",        "DOWN"},                            &bUseB_KeyAsDN,         2,   "TOGGLE THE B KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY DOWN"},
-    {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,         2,   "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
+    // Page 1
+    {
+        {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,              2,   "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
+        {"MACHINE TYPE",{"128K XL/XE",  "320K XL/XE", 
+                         "1088K XL/XE", "48K ATARI800"},                    &ram_type,              4,   "128K STANDARD FOR ",   "MOST GAMES. 320K /",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
+        {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",
+                         "ALTIRRA 800",  "ATARIOSB.ROM"},                   &os_type,               4,   "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
+        {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,             3,   "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
+        {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,           3,   "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
+        {"PALETTE",     {"BRIGHT",      "MUTED"},                           &palett_type,           2,   "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
+        {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,         2,   "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
+        {"B BUTTON",    {"FIRE",        "DOWN"},                            &bUseB_KeyAsDN,         2,   "TOGGLE THE B KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY DOWN"},
+        {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,         2,   "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
 
-    {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &auto_fire,             4,   "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC     ",  "FAST = 15x/SEC    "},
-    {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &showFps,               3,   "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
-    {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
-                                    "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode,     5,   "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
-    {"BLENDING",    {"NORMAL",      "BLUR1", "BLUR2", "BLUR3", 
-                     "BLUR4","BLUR5","BLUR6","BLUR7"},                  &blending_type,         8,   "NORMAL IS SHARP   ",   "AND VARIOUS BLUR  ",  "LEVELS WILL HELP  ",  "SCREEN SCALING.   "},
-    {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
-    {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
-    {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
-    {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", 
-                      "400 STYLE",  "130XE STYLE"},                     &keyboard_type,         4,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
-    {"D-PAD",       {"NORMAL","DIAGONALS", "CURSORS"},                  &dpad_type,             3,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},    
-    {NULL,          {"",            ""},                                NULL,                   2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "},
+        {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &auto_fire,             4,   "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC     ",  "FAST = 15x/SEC    "},
+        {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &showFps,               3,   "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
+        {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
+                                        "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode,     5,   "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
+        {"BLENDING",    {"NORMAL",      "BLUR1", "BLUR2", "BLUR3", 
+                         "BLUR4","BLUR5","BLUR6","BLUR7"},                  &blending_type,         8,   "NORMAL IS SHARP   ",   "AND VARIOUS BLUR  ",  "LEVELS WILL HELP  ",  "SCREEN SCALING.   "},
+        {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
+        {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
+        {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
+        {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", 
+                          "400 STYLE",  "130XE STYLE"},                     &keyboard_type,         4,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
+        {"D-PAD",       {"JOY 1", "JOY 2", "DIAGONALS", "CURSORS"},         &dpad_type,             4,   "CHOOSE HOW THE    ",   "DPAD OPERATES     ",  "CAN SWAP JOY1 AND ",  "JOY2 IF NEEDED    "},    
+        {NULL,          {"",            ""},                                NULL,                   2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "}
+    },
+    // Page 2
+    {
+        {NULL,          {"",            ""},                                NULL,                   2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "}
+    }
 };
 
 // -----------------------------------------------------------------------------
@@ -1010,13 +1018,13 @@ void dsChooseOptions(int bOkayToChangePalette)
     idx=0;
     while (true)
     {
-        sprintf(strBuf, " %-12s  : %-12s ", Option_Table[idx].label, Option_Table[idx].option[*(Option_Table[idx].option_val)]);
+        sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][idx].label, Option_Table[option_table][idx].option[*(Option_Table[option_table][idx].option_val)]);
         dsPrintValue(1,5+idx, (idx==0 ? 1:0), strBuf);
         idx++;
-        if (Option_Table[idx].label == NULL) break;
+        if (Option_Table[option_table][idx].label == NULL) break;
     }
 
-    dsPrintValue(2,23, 0, "L/R=TOGGLE, B=EXIT, START=SAVE");
+    dsPrintValue(1,23, 0, "  B=EXIT, START=SAVE, X=MORE  ");
     optionHighlighted = 0;
     while (!bDone)
     {
@@ -1026,35 +1034,35 @@ void dsChooseOptions(int bOkayToChangePalette)
             last_keys_pressed = keys_pressed;
             if (keysCurrent() & KEY_UP) // Previous option
             {
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
+                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,0, strBuf);
                 if (optionHighlighted > 0) optionHighlighted--; else optionHighlighted=(idx-1);
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
+                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
             }
             if (keysCurrent() & KEY_DOWN) // Next option
             {
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
+                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,0, strBuf);
                 if (optionHighlighted < (idx-1)) optionHighlighted++;  else optionHighlighted=0;
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
+                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
             }
 
             if (keysCurrent() & KEY_RIGHT)  // Next Option 
             {
-                *(Option_Table[optionHighlighted].option_val) = (*(Option_Table[optionHighlighted].option_val) + 1) % Option_Table[optionHighlighted].option_max;
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
+                *(Option_Table[option_table][optionHighlighted].option_val) = (*(Option_Table[option_table][optionHighlighted].option_val) + 1) % Option_Table[option_table][optionHighlighted].option_max;
+                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
-                if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIXL.ROM")==0)
+                if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIXL.ROM")==0)
                 {
                     if (!bAtariOS) dsPrintValue(0,0,0,"ROM MISSING");
                 }
-                else if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIOSB.ROM")==0)
+                else if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIOSB.ROM")==0)
                 {
                     if (!bAtariOSB) dsPrintValue(0,0,0,"ROM MISSING");
                 }
-                else if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIBAS.ROM")==0)
+                else if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIBAS.ROM")==0)
                 {
                     if (!bAtariBASIC) dsPrintValue(0,0,0,"ROM MISSING");
                 }
@@ -1062,21 +1070,21 @@ void dsChooseOptions(int bOkayToChangePalette)
             }
             if (keysCurrent() & KEY_LEFT)  // Previous Option 
             {
-                if (*(Option_Table[optionHighlighted].option_val) > 0) 
-                    *(Option_Table[optionHighlighted].option_val) -= 1;
+                if (*(Option_Table[option_table][optionHighlighted].option_val) > 0) 
+                    *(Option_Table[option_table][optionHighlighted].option_val) -= 1;
                 else
-                     *(Option_Table[optionHighlighted].option_val) = Option_Table[optionHighlighted].option_max - 1;
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[optionHighlighted].label, Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)]);
+                     *(Option_Table[option_table][optionHighlighted].option_val) = Option_Table[option_table][optionHighlighted].option_max - 1;
+                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
-                if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIXL.ROM")==0)
+                if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIXL.ROM")==0)
                 {
                     if (!bAtariOS) dsPrintValue(0,0,0,"ROM MISSING");
                 }
-                else if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIOSB.ROM")==0)
+                else if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIOSB.ROM")==0)
                 {
                     if (!bAtariOSB) dsPrintValue(0,0,0,"ROM MISSING");
                 }
-                else if (strcmp(Option_Table[optionHighlighted].option[*(Option_Table[optionHighlighted].option_val)], "ATARIBAS.ROM")==0)
+                else if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIBAS.ROM")==0)
                 {
                     if (!bAtariBASIC) dsPrintValue(0,0,0,"ROM MISSING");
                 }
@@ -1107,10 +1115,10 @@ void dsChooseOptions(int bOkayToChangePalette)
                 if (bOkayToChangePalette) dsSetAtariPalette();
             }
 
-            dsPrintValue(14,0,0,Option_Table[optionHighlighted].help1);
-            dsPrintValue(14,1,0,Option_Table[optionHighlighted].help2);
-            dsPrintValue(14,2,0,Option_Table[optionHighlighted].help3);
-            dsPrintValue(14,3,0,Option_Table[optionHighlighted].help4);
+            dsPrintValue(14,0,0,Option_Table[option_table][optionHighlighted].help1);
+            dsPrintValue(14,1,0,Option_Table[option_table][optionHighlighted].help2);
+            dsPrintValue(14,2,0,Option_Table[option_table][optionHighlighted].help3);
+            dsPrintValue(14,3,0,Option_Table[option_table][optionHighlighted].help4);
         }
         swiWaitForVBlank();
     }
@@ -1949,7 +1957,10 @@ void dsMainLoop(void)
         }
         else
         {
-            trig0 = ((keys_pressed & KEY_A) || (keys_pressed & KEY_B)) ? 0 : 1;
+            if (dpad_type == 1)
+                trig1 = ((keys_pressed & KEY_A) || (keys_pressed & KEY_B)) ? 0 : 1;
+            else
+                trig0 = ((keys_pressed & KEY_A) || (keys_pressed & KEY_B)) ? 0 : 1;
         }
         stick0 = STICK_CENTRE;
         stick1 = STICK_CENTRE;
@@ -2149,33 +2160,47 @@ void dsMainLoop(void)
             keys_touch=0;
         }
 
+        // ---------------------------------------------------------------------------------------------
+        // Handle the NDS D-Pad which usually just controlls a joystick connected to the Player 1 PORT.
         // Only handle UP/DOWN/LEFT/RIGHT if shoulder buttons are not pressed (those are handled below)
+        // ---------------------------------------------------------------------------------------------
         if ((keys_pressed & (KEY_R|KEY_L)) == 0)
         {
-            if (dpad_type == 1) // Diagonals
+            if (dpad_type == 2) // Diagonals
             {
                 if (keys_pressed & KEY_UP)    {stick0 = STICK_UR;}
                 if (keys_pressed & KEY_LEFT)  {stick0 = STICK_UL;}
                 if (keys_pressed & KEY_RIGHT) {stick0 = STICK_LR;}
                 if (keys_pressed & KEY_DOWN)  {stick0 = STICK_LL;}
             }
-            else if (dpad_type == 2) // Cursors
+            else if (dpad_type == 3) // Cursors
             {
                 if (keys_pressed & KEY_UP)    {key_code = AKEY_UP;}
                 if (keys_pressed & KEY_LEFT)  {key_code = AKEY_LEFT;}
                 if (keys_pressed & KEY_RIGHT) {key_code = AKEY_RIGHT;}
                 if (keys_pressed & KEY_DOWN)  {key_code = AKEY_DOWN;}
             }
-            else
+            else if (dpad_type == 1) // Joystick 2
             {
-                if (keys_pressed & KEY_UP) stick0 = STICK_FORWARD;
-                if (keys_pressed & KEY_LEFT) stick0 = STICK_LEFT;
-                if (keys_pressed & KEY_RIGHT) stick0 = STICK_RIGHT;
-                if (keys_pressed & KEY_DOWN) stick0 = STICK_BACK;
-                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT)) stick0 = STICK_UL;
-                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_UR;
+                if (keys_pressed & KEY_UP)                                  stick1 = STICK_FORWARD;
+                if (keys_pressed & KEY_LEFT)                                stick1 = STICK_LEFT;
+                if (keys_pressed & KEY_RIGHT)                               stick1 = STICK_RIGHT;
+                if (keys_pressed & KEY_DOWN)                                stick1 = STICK_BACK;
+                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT))   stick1 = STICK_UL;
+                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT))  stick1 = STICK_UR;
+                if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick1 = STICK_LL;
+                if ((keys_pressed & KEY_DOWN) &&(keys_pressed & KEY_RIGHT)) stick1 = STICK_LR;
+            }
+            else // Joystick 1
+            {
+                if (keys_pressed & KEY_UP)                                  stick0 = STICK_FORWARD;
+                if (keys_pressed & KEY_LEFT)                                stick0 = STICK_LEFT;
+                if (keys_pressed & KEY_RIGHT)                               stick0 = STICK_RIGHT;
+                if (keys_pressed & KEY_DOWN)                                stick0 = STICK_BACK;
+                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT))   stick0 = STICK_UL;
+                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT))  stick0 = STICK_UR;
                 if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick0 = STICK_LL;
-                if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_RIGHT)) stick0 = STICK_LR;
+                if ((keys_pressed & KEY_DOWN) &&(keys_pressed & KEY_RIGHT)) stick0 = STICK_LR;
             }
         }
 
@@ -2194,15 +2219,15 @@ void dsMainLoop(void)
                 }
             } else config_snap_counter=0;
 
-            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))   myGame_offset_y++;
-            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN)) myGame_offset_y--;
+            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))    myGame_offset_y++;
+            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN))  myGame_offset_y--;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_LEFT))  myGame_offset_x++;
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_RIGHT)) myGame_offset_x--;
 
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_UP))   if (myGame_scale_y <= 256) myGame_scale_y++;
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_DOWN)) if (myGame_scale_y >= 192) myGame_scale_y--;
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_RIGHT))  if (myGame_scale_x < 320) myGame_scale_x++;
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_LEFT)) if (myGame_scale_x >= 192) myGame_scale_x--;
+            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_UP))     if (myGame_scale_y <= 256) myGame_scale_y++;
+            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_DOWN))   if (myGame_scale_y >= 192) myGame_scale_y--;
+            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_RIGHT))  if (myGame_scale_x < 320)  myGame_scale_x++;
+            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_LEFT))   if (myGame_scale_x >= 192) myGame_scale_x--;
         }
 
         // A bit of a hack... the first load requires a cold restart after the OS is running....
