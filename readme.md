@@ -29,7 +29,7 @@ with many games. However, a few games will require the original ATARI BIOS - and
 unfortunately, there were many variations of those BIOS over the years to support
 various Atari computer models released over a decade.
 
-A8DS supports 3 optional Atari BIOS and BASIC files as follows:
+A8DS supports 3 optional (but highly recommended) Atari BIOS and BASIC files as follows:
 
 *  atarixl.rom   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines
 *  atariosb.rom  - this is the 12k Atari 800 OS-B revision BIOS for older games
@@ -82,7 +82,7 @@ just load it again or hit the RESET button which will re-initialize the A8DS mac
 If a game crashes, you will get a message at the bottom of the screen after loading - 
 a crash usually means that the game requires the BASIC cart to be inserted and you can
 toggle that when loading a game (or using the GEAR icon). Not every game runs with this 
-emulator - but 99% will.  I'll try to improve compatibilty as time permits.
+emulator - but 90% will.  I'll try to improve compatibilty as time permits.
 
 The emulator supports multi-disk games. When you need to load a subsequent disk for
 a game, just use the Y button to disable Boot-Load which will simply insert the new
@@ -90,7 +90,7 @@ disk and you can continue to run. Not all games will utilize a 2nd disk drive bu
 available for those games that do. It's handy to have a few blank 90K single-sided disks 
 available on your setup which you can find easily online - these can be used as save disks.
 
-The .ATR disk support handles up to 360K disks (it may work with larger disks, but has not 
+The .ATR disk support handles up to 360K disks (it will probably work with larger disks, but has not 
 been extensively tested beyond 360K). 
 
 The emulator has the built-in Altirra BASIC 1.55 which is a drop-in replacement for the
@@ -130,7 +130,7 @@ this does render most games playable on older hardware. If a game is particularl
 to keep up on older hardawre, there is an experimental 'Agressive' frameskip which should help... but use with caution. 
 
 Remember, emulation is rarely perfect. Further, this is a portable implementation of an Atari 8-bit 
-emulator on a limited resource system (67MHz CPU and 4MB of memory) so it won't match the amazing work 
+emulator on a limited resource system (67MHz CPU and 4MB of memory) so it won't match the amazing output 
 of something like Altirra. If you're looking for the best in emulation accuracy - Altirra is going to 
 be what you're after. But if you want to enjoy a wide variety of classic 8-bit gaming on your DS/DSi 
 handheld - A8DS will work nicely.
@@ -151,8 +151,7 @@ If a game crashes (crash message shows at bottom of screen or game does not othe
 5. Lastly, try switching the DISKS SPEEDUP option to OFF to slow down I/O. Some games check this as a form of basic copy-protection 
    to ensure you're running from a legit disk.
 
-With those tips, you should be able to get 99% of all games running. There are still a few odd "never heard of" games of little 
-or no consequence (i.e. not major titles) that will not run with the emulator - such is life!
+With those tips, you should be able to get most games running. There are still a few odd games will not run with the emulator - such is life!
 
 Installation :
 ----------------------------------------------------------------------------------
