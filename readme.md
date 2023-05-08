@@ -201,6 +201,7 @@ History :
 --------------------------------------------------------------------------------
 V3.1 : 08-May-2023 by wavemotion-dave
   * Added CAR and ROM support for the more popular cartridge types up to 1MB.
+  * Added Real-Time Clock support for things like SpartaDOS X
   * Added new D-Pad options to support joystick 2 (for games like Wizard of Wor) and diagonals (Q-Bert like games).
   * Improved keyboard handling so CTRL key is now sticky.
   * Improved menu transitions to reduce audio 'pops' as much as possible.
