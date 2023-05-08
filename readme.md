@@ -12,9 +12,11 @@ really grown to be a full-featured 8-bit emulator to run nearly the entire
 8-bit line up of games on their Nintendo DS/DSi handhelds.
 
 The emulator comes "equipped" with the ability to run executable images or disk 
-images which are the two most popular types. It does not support cart types yet.
-Virtually everything that can be run on an 8-bit system has been converted 
-into an Executable image (.xex) or a Disk image (.atr) and, unlike cart
+images which are the two most popular types. Recent versions add preliminary 
+support for cart types (CAR or ROM files). Due to the optmization for expanded
+memory, it is strongly recomended you prefer XEX over CAR/ROM files. Almost
+everything that can be run on an 8-bit system has been converted into an 
+Executable image (.xex) or a Disk image (.atr) and, unlike cart
 ROM images, there is no complicated setup to pick the right banking setup. 
 The goal here is to make this as simple as possible - point to the executable
 8-bit Atari image you want to run and off it goes!
