@@ -29,7 +29,7 @@ Optional BIOS Roms
 There is a built-in Altirra BIOS (thanks to Avery Lee) which is reasonably compatibile
 with many games. However, a few games will require the original ATARI BIOS - and,
 unfortunately, there were many variations of those BIOS over the years to support
-various Atari computer models released over a decade.
+various Atari computer models released over a span of a decade.
 
 A8DS supports 3 optional (but highly recommended) Atari BIOS and BASIC files as follows:
 
