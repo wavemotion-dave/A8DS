@@ -105,10 +105,9 @@ disk of some kind to get drive support and you can have fun writing programs. Be
 that the Altirra BASIC is faster than normal ATARI BASIC and so games might run at the
 wrong speed unless you're using the actual ATARI REV C rom.
 
-Cartridge support was added with A8DS 3.1 and later. It's partial support - the bank swaps
-are CPU intensive since memory chunks need to be moved in/out. It is strongly preferred
-to use XEX or ATR files which will utilize the highly optmized memory layout of this
-emulator. Having said that, you can load .CAR and .ROM files (using the XEX button).
+Cartridge support was added with A8DS 3.1 and later. You can load .CAR and .ROM 
+files (using the XEX button).
+
 In general, the following cartridge layouts are supported:
 * Standard 8 KB and 16KB
 * OSS two chip 16KB
