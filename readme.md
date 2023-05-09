@@ -108,7 +108,7 @@ wrong speed unless you're using the actual ATARI REV C rom.
 Cartridge support was added with A8DS 3.1 and later. You can load .CAR and .ROM 
 files (using the XEX button).
 
-In general, the following cartridge layouts are supported:
+The following cartridge layouts are supported:
 * Standard 8 KB and 16KB
 * OSS two chip 16KB
 * Williams 32K and 64K
