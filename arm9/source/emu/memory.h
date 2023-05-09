@@ -28,8 +28,8 @@
 #define ROM       1
 #define HARDWARE  2
 
+extern UBYTE *mem_map[16];
 extern UBYTE memory[65536 + 2];
-extern UBYTE *memory_bank;
 
 // ---------------------------------------------------------------------------------------
 // Handles bank switching - if we are reading bank 2 (0x4000 to 0x7FFF) we will use the 
@@ -38,18 +38,14 @@ extern UBYTE *memory_bank;
 // ---------------------------------------------------------------------------------------
 inline UBYTE dGetByte(UWORD addr)
 {
-    if (((addr & 0xC000) ^ 0x4000))
-        return memory[addr];    
-    else
-        return memory_bank[addr];    
+    UBYTE *ptr = mem_map[addr >> 12];
+    return ptr[addr&0xFFF];
 }
 
 inline void dPutByte(UWORD addr, UBYTE data)
 {
-    if (((addr & 0xC000) ^ 0x4000))
-        memory[addr] = data;
-    else
-        memory_bank[addr] = data;
+    UBYTE *ptr = mem_map[addr >> 12];
+    ptr[addr&0xFFF] = data;
 }
 
 typedef UBYTE (*rdfunc)(UWORD addr);
@@ -102,6 +98,6 @@ void Cart809F_Disable(void);
 void Cart809F_Enable(void);
 void CartA0BF_Disable(void);
 void CartA0BF_Enable(void);
-void get_charset(UBYTE *cs);
+
 
 #endif /* _MEMORY_H_ */

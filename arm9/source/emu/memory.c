@@ -68,8 +68,8 @@ UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;              // T
 
 static int cart809F_enabled = FALSE;                                        // By default, no CART memory mapped to 0x8000 - 0x9FFF
 static int cartA0BF_enabled = FALSE;                                        // By default, no CART memory mapped to 0xA000 - 0xBFFF
-static UBYTE under_cart809F[8192];                                          // To save RAM under CART space   8K at 0x8000 - 0x9FFF
-static UBYTE under_cartA0BF[8192];                                          // To save RAM under CART space   8K at 0xA000 - 0xBFFF
+UBYTE *mem_map[16] __attribute__((section(".dtcm")));
+extern UBYTE ROM_basic[];
 
 // ------------------------------------------------------------------
 // This is the huge 1MB+ buffer to support the maximum expanded RAM 
@@ -80,7 +80,7 @@ static UBYTE under_cartA0BF[8192];                                          // T
 // available RAM. Stil... there isn't much else to do with the NDS
 // RAM so we may as well get the most out of it!  
 // ------------------------------------------------------------------
-UBYTE xe_mem_buffer[RAM_1088K * 1024];
+UBYTE xe_mem_buffer[(1024+16) * 1024]; // Allocate extra 16K since expanded banks are 1..64
 
 void ROM_PutByte(UWORD addr, UBYTE value) {}
 
@@ -119,7 +119,7 @@ static void AllocXEMemory(void)
         {
             atarixe_memory = (UBYTE *) xe_mem_buffer; // Use the large 1088K buffer even if we don't use it all
 			atarixe_memory_size = size;
-			memset(atarixe_memory, 0, size);
+			memset(atarixe_memory, 0x00, size);
 		}
 	}
 	/* atarixe_memory not needed, free it */
@@ -130,6 +130,7 @@ static void AllocXEMemory(void)
 	}
 }
 
+// ---------------------------------------------------------------------------------------
 // We don't support any of the Paralell Bus interface stuff... not needed for any gaming!
 // ---------------------------------------------------------------------------------------
 void PBI_Initialise(void) {}
@@ -147,6 +148,12 @@ void PBIM2_PutByte(UWORD addr, UBYTE byte) {}
 // ---------------------------------------------------------------------------------
 void MEMORY_InitialiseMachine(void) 
 {
+    // Set the memory map back to pointing to main memory
+    for (int i=0; i<16; i++)
+    {
+        mem_map[i] = memory + (0x1000 * i);
+    }
+    
 	switch (machine_type) 
     {
 	case MACHINE_OSA:
@@ -297,9 +304,14 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
             }
             else
             {
-                memory_bank = (atarixe_memory + ((bank-1) << 14));
+                memory_bank = (atarixe_memory + (bank << 14));
                 memory_bank -= 0x4000;
             }
+            mem_map[0x4] = memory_bank + 0x4000;
+            mem_map[0x5] = memory_bank + 0x5000;
+            mem_map[0x6] = memory_bank + 0x6000;
+            mem_map[0x7] = memory_bank + 0x7000;
+            
             xe_bank = bank;
         }
         
@@ -309,7 +321,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         // -----------------------------------------------------
 		if (ram_size == RAM_128K)
         {
-			switch (byte & 0x30) 
+			switch (byte & 0x30)
             {
 			case 0x20:	/* ANTIC: base, CPU: extended */
 				antic_xe_ptr = atarixe_memory;
@@ -382,7 +394,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 					memcpy(under_atari_basic, memory + 0xa000, 0x2000);
 					SetROM(0xa000, 0xbfff);
 				}
-				memcpy(memory + 0xa000, atari_basic, 0x2000);
+				memcpy(memory + 0xa000, ROM_basic, 0x2000);
 			}
 		}
 	}
@@ -420,13 +432,11 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 // -----------------------------------------------
 void Cart809F_Disable(void)
 {
-	if (cart809F_enabled) {
-		if (ram_size > 32) {
-			memcpy(memory + 0x8000, under_cart809F, 0x2000);
-			SetRAM(0x8000, 0x9fff);
-		}
-		else
-			dFillMem(0x8000, 0xff, 0x2000);
+	if (cart809F_enabled) 
+    {
+        mem_map[0x8] = memory + 0x8000;
+        mem_map[0x9] = memory + 0x9000;
+        SetRAM(0x8000, 0x9fff);
 		cart809F_enabled = FALSE;
 	}
 }
@@ -436,9 +446,10 @@ void Cart809F_Disable(void)
 // -----------------------------------------------
 void Cart809F_Enable(void)
 {
-	if (!cart809F_enabled) {
-		if (ram_size > 32) {
-			memcpy(under_cart809F, memory + 0x8000, 0x2000);
+	if (!cart809F_enabled) 
+    {
+		if (ram_size > 32) 
+        {
 			SetROM(0x8000, 0x9fff);
 		}
 		cart809F_enabled = TRUE;
@@ -450,20 +461,22 @@ void Cart809F_Enable(void)
 // -----------------------------------------------
 void CartA0BF_Disable(void)
 {
-	if (cartA0BF_enabled) {
+	if (cartA0BF_enabled) 
+    {
+        mem_map[0xA] = memory + 0xA000;
+        mem_map[0xB] = memory + 0xB000;
 		/* No BASIC if not XL/XE or bit 1 of PORTB set */
-		if ((machine_type != MACHINE_XLXE) || basic_disabled((UBYTE) (PORTB | PORTB_mask))) {
-			if (ram_size > 40) {
-				memcpy(memory + 0xa000, under_cartA0BF, 0x2000);
-				SetRAM(0xa000, 0xbfff);
-			}
-			else
-				dFillMem(0xa000, 0xff, 0x2000);
+		if ((machine_type != MACHINE_XLXE) || basic_disabled((UBYTE) (PORTB | PORTB_mask))) 
+        {
+            SetRAM(0xa000, 0xbfff);
 		}
 		else
-			memcpy(memory + 0xa000, atari_basic, 0x2000);
+        {
+			memcpy(memory + 0xa000, ROM_basic, 0x2000);
+        }
 		cartA0BF_enabled = FALSE;
-		if (machine_type == MACHINE_XLXE) {
+		if (machine_type == MACHINE_XLXE) 
+        {
 			TRIG[3] = 0;
 			if (GRACTL & 4)
 				TRIG_latch[3] = 0;
@@ -482,7 +495,6 @@ void CartA0BF_Enable(void)
 		if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02) || ((PORTB & 0x10) == 0 && (ram_size == 576 || ram_size == 1088)))) 
         {
 			/* Back-up 0xa000-0xbfff RAM */
-			memcpy(under_cartA0BF, memory + 0xa000, 0x2000);
 			SetROM(0xa000, 0xbfff);
 		}
 		cartA0BF_enabled = TRUE;

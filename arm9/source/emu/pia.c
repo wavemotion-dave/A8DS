@@ -53,7 +53,6 @@ UBYTE PORT_input[2] __attribute__((section(".dtcm")));
 int xe_bank __attribute__((section(".dtcm")))= 0;
 int selftest_enabled = 0;
 
-UBYTE atari_basic[8192];
 UBYTE atari_os[16384];
 
 UBYTE PORTA_mask __attribute__((section(".dtcm")));

@@ -58,48 +58,28 @@ extern int bHaveBASIC;
 UBYTE cart_image[CART_MAX_SIZE];    // Big enough to hold the largest carts we support ... 1MB
 UBYTE cart_header[16];
 static int bank __attribute__((section(".dtcm")));
-static int last_main __attribute__((section(".dtcm"))) = 33333;
 
-
-// Swap in bank using 32-bit moves... 
-ITCM_CODE void BankSwap(UBYTE *from, UBYTE *to, UWORD size)
-{
-    u32 *src = (u32*)from;
-    u32 *dest = (u32*)to;
-    for (int i=0; i < (size>>3); i++)
-    {
-        *dest++ = *src++;*dest++ = *src++;
-    }
-}
-
-// This is infrequent enough and we take it out of contention for inlining to save precious ITCM space
-void __attribute__((noinline))  SwapMainBank(int main)
-{
-    if (last_main != main)
-    {
-        CopyROM(0xa000, 0xbfff, cart_image + main);
-        last_main = main;
-    }
-}
 
 /* DB_32, XEGS_32, XEGS_64, XEGS_128, XEGS_256, XEGS_512, XEGS_1024 */
 /* SWXEGS_32, SWXEGS_64, SWXEGS_128, SWXEGS_256, SWXEGS_512, SWXEGS_1024 */
 ITCM_CODE static void set_bank_809F(int b, int main)
 {
     if (b != bank) {
-        if (b & 0x80) {
+        if (b & 0x80) 
+        {
             Cart809F_Disable();
             CartA0BF_Disable();
         }
         else {
             Cart809F_Enable();
             CartA0BF_Enable();
-            
-            BankSwap((b<34) ? ((u8*)0x06860000+b*0x2000) : (b<50) ? ((u8*)0x06820000+(b-34)*0x2000) : (cart_image + b*0x2000), memory+0x8000, 0x2000);
+            mem_map[0x8] = (cart_image + b*0x2000) + 0x0000;
+            mem_map[0x9] = (cart_image + b*0x2000) + 0x1000;
             
             if (bank & 0x80)
             {
-                SwapMainBank(main);
+                mem_map[0xA] = (cart_image + main) + 0x0000;
+                mem_map[0xB] = (cart_image + main) + 0x1000;
             }
         }
         bank = b;
@@ -114,9 +94,11 @@ static void set_bank_A0AF(int b, int main)
             CartA0BF_Disable();
         else {
             CartA0BF_Enable();
-            CopyROM(0xa000, 0xafff, cart_image + b * 0x1000);
+            mem_map[0xA] = (cart_image + b*0x1000);
             if (bank < 0)
-                CopyROM(0xb000, 0xbfff, cart_image + main);
+            {
+                mem_map[0xB] = (cart_image + main);
+            }
         }
         bank = b;
     }
@@ -125,12 +107,17 @@ static void set_bank_A0AF(int b, int main)
 /* EXP_64, DIAMOND_64, SDX_64 */
 static void set_bank_A0BF(int b)
 {
-    if (b != bank) {
+    if (b != bank) 
+    {
         if (b & 0x0008)
+        {
             CartA0BF_Disable();
-        else {
+        }
+        else 
+        {
             CartA0BF_Enable();
-            BankSwap(((u8*)0x06860000+(~b&7)*0x2000), memory+0xa000, 0x2000);
+            mem_map[0xA] = (cart_image + (~b&7)*0x2000) + 0x0000;
+            mem_map[0xB] = (cart_image + (~b&7)*0x2000) + 0x1000;
         }
         bank = b;
     }
@@ -141,10 +128,14 @@ static void set_bank_A0BF_WILL64(int b)
 {
     if (b != bank) {
         if (b & 0x0008)
+        {
             CartA0BF_Disable();
-        else {
+        }
+        else 
+        {
             CartA0BF_Enable();
-            BankSwap(((u8*)0x06860000+(b&7)*0x2000), memory+0xa000, 0x2000);
+            mem_map[0xA] = (cart_image + (b&7)*0x2000) + 0x0000;
+            mem_map[0xB] = (cart_image + (b&7)*0x2000) + 0x1000;
         }
         bank = b;
     }
@@ -156,11 +147,14 @@ static void set_bank_A0BF_WILL32(int b)
     if (b != bank) 
     {
         if (b & 0x0008)
+        {
             CartA0BF_Disable();
+        }
         else 
         {
             CartA0BF_Enable();
-            BankSwap(((u8*)0x06860000+(b&3)*0x2000), memory+0xa000, 0x2000);
+            mem_map[0xA] = (cart_image + (b&3)*0x2000) + 0x0000;
+            mem_map[0xB] = (cart_image + (b&3)*0x2000) + 0x1000;
         }
         bank = b;
     }
@@ -173,10 +167,13 @@ static void set_bank_A0BF_ATMAX128(int b)
         if (b >= 0x20)
             return;
         else if (b >= 0x10)
+        {
             CartA0BF_Disable();
+        }
         else {
             CartA0BF_Enable();
-            BankSwap(((u8*)0x06860000+b*0x2000), memory+0xa000, 0x2000);
+            mem_map[0xA] = (cart_image + b*0x2000) + 0x0000;
+            mem_map[0xB] = (cart_image + b*0x2000) + 0x1000;
         }
         bank = b;
     }
@@ -195,7 +192,8 @@ ITCM_CODE void set_bank_A0BF_ATMAX1024(int b)
         else 
         {
             CartA0BF_Enable();
-            BankSwap((b<34) ? ((u8*)0x06860000+b*0x2000) : (b<50) ? ((u8*)0x06820000+(b-34)*0x2000) : (cart_image + b*0x2000), memory+0xa000, 0x2000);
+            mem_map[0xA] = (cart_image + b*0x2000) + 0x0000;
+            mem_map[0xB] = (cart_image + b*0x2000) + 0x1000;
         }
         bank = b;
     }
@@ -205,16 +203,19 @@ ITCM_CODE void set_bank_A0BF_ATMAX1024(int b)
 static void set_bank_80BF(int b)
 {
     if (b != bank) {
-        if (b & 0x80) {
+        if (b & 0x80) 
+        {
             Cart809F_Disable();
             CartA0BF_Disable();
         }
-        else {
+        else 
+        {
             Cart809F_Enable();
             CartA0BF_Enable();
-            if (b < 17)      BankSwap(((u8*)0x06860000+b*0x4000), memory+0x8000, 0x4000);
-            else if (b < 25) BankSwap(((u8*)0x06820000+(b-34)*0x4000), memory+0x8000, 0x4000);
-            else             BankSwap((cart_image + b*0x4000), memory+0x8000, 0x4000);
+            mem_map[0x8] = (cart_image + b*0x4000) + 0x0000;
+            mem_map[0x9] = (cart_image + b*0x4000) + 0x1000;
+            mem_map[0xA] = (cart_image + b*0x4000) + 0x2000;
+            mem_map[0xB] = (cart_image + b*0x4000) + 0x3000;
         }
         bank = b;
     }
@@ -226,10 +227,14 @@ static void set_bank_SDX_128(UWORD addr)
     if ((addr & 0xe0) == 0xe0 && addr != bank) 
     {
         if (addr & 8)
+        {
             CartA0BF_Disable();
-        else {
+        }
+        else 
+        {
             CartA0BF_Enable();
-            BankSwap(((u8*)0x06860000+((((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf)*0x2000)), memory+0xa000, 0x2000);
+            mem_map[0xA] = (cart_image + ((((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf)*0x2000)) + 0x0000;
+            mem_map[0xB] = (cart_image + ((((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf)*0x2000)) + 0x1000;
         }
         bank = addr;
     }
@@ -249,7 +254,6 @@ int CART_Insert(int enabled, int file_type, const char *filename)
 {
     memset(cart_image, 0x00, sizeof(cart_image));
     bank = 0;
-    last_main=33333;
     cart_type = CART_NONE;
     CART_Remove();
     
@@ -261,13 +265,6 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             fread(cart_header, 1, 16, fp);
             fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
-            // ----------------------------------------------------------------------------------
-            // Move some of the binary into the faster VRAM buffers which are otherwise unused.
-            // In total, we can move 400k of the binary image into the faster VRAM to help 
-            // speed up moving chunks of memory in and out out of main RAM.
-            // ----------------------------------------------------------------------------------
-            memcpy((u8*)0x06860000, cart_image, 272*1024);
-            memcpy((u8*)0x06820000, cart_image+(272*1024), 128*1024);
             cart_type = cart_header[7];
         }
     }
@@ -278,8 +275,6 @@ int CART_Insert(int enabled, int file_type, const char *filename)
         {
             int size = fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
-            memcpy((u8*)0x06860000, cart_image, 272*1024);
-            memcpy((u8*)0x06820000, cart_image+(272*1024), 128*1024);
             size = size / 1024;
             if (size == 8)  cart_type = CART_STD_8;
             if (size == 16) cart_type = CART_STD_16;
@@ -444,14 +439,12 @@ void CART_Start(void)
         CartA0BF_Enable();
         CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
         bank = 0x7f;
-        if (skip_frames == 0) skip_frames=1; // It's the only way this will have enough speed due to the massive bankswaps
         break;
     case CART_ATMAX_NEW_1024:
         Cart809F_Disable();
         CartA0BF_Enable();
         CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
         bank = 0x00;
-        if (skip_frames == 0) skip_frames=1; // It's the only way this will have enough speed due to the massive bankswaps
         break;
     default:
         // The only default cart we support is an 8K built-in BASIC cart
@@ -462,11 +455,13 @@ void CART_Start(void)
             SetROM(0xa000, 0xbfff);
             if (basic_type == BASIC_ALTIRRA)
             {
-                CopyROM(0xa000, 0xbfff, ROM_altirra_basic);
+                mem_map[0xA] = ((UBYTE*)ROM_altirra_basic) + 0x0000;
+                mem_map[0xB] = ((UBYTE*)ROM_altirra_basic) + 0x1000;
             }
             else
             {
-                CopyROM(0xa000, 0xbfff, ROM_basic);
+                mem_map[0xA] = ((UBYTE*)ROM_basic) + 0x0000;
+                mem_map[0xB] = ((UBYTE*)ROM_basic) + 0x1000;
             }
         }
         break;
@@ -620,9 +615,11 @@ void CART_PutByte(UWORD addr, UBYTE byte)
         }
         else {
             int b = byte & 0xf;
-            if (b != bank) {
+            if (b != bank) 
+            {
                 CartA0BF_Enable();
-                CopyROM(0xa000, 0xbfff, cart_image + b * 0x2000);
+                mem_map[0xA] = (cart_image + b*0x2000) + 0x0000;
+                mem_map[0xB] = (cart_image + b*0x2000) + 0x1000;
                 bank = b;
             }
         }

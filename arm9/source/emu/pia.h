@@ -23,7 +23,6 @@ extern UBYTE PORT_input[2];
 extern int xe_bank;
 extern int selftest_enabled;
 
-extern UBYTE atari_basic[8192];
 extern UBYTE atari_os[16384];
 
 #define MEMORY_os atari_os

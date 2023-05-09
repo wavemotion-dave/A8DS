@@ -815,8 +815,6 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
       bAtariCrash = false;
       dsPrintValue(1,23,0, "                              ");
 
-      memset(sound_buffer, 0x00, SNDLENGTH);
-
       dsSetAtariPalette();
 
       // In case we switched PAL/NTSC
