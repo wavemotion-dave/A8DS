@@ -73,13 +73,13 @@ ITCM_CODE static void set_bank_809F(int b, int main)
         else {
             Cart809F_Enable();
             CartA0BF_Enable();
-            mem_map[0x8] = (cart_image + b*0x2000) + 0x0000;
-            mem_map[0x9] = (cart_image + b*0x2000) + 0x1000;
+            mem_map[0x8] = (cart_image + b*0x2000) + 0x0000 - 0x8000;
+            mem_map[0x9] = (cart_image + b*0x2000) + 0x1000 - 0x9000;
             
             if (bank & 0x80)
             {
-                mem_map[0xA] = (cart_image + main) + 0x0000;
-                mem_map[0xB] = (cart_image + main) + 0x1000;
+                mem_map[0xA] = (cart_image + main) + 0x0000 - 0xA000;
+                mem_map[0xB] = (cart_image + main) + 0x1000 - 0xB000;
             }
         }
         bank = b;
@@ -94,10 +94,10 @@ static void set_bank_A0AF(int b, int main)
             CartA0BF_Disable();
         else {
             CartA0BF_Enable();
-            mem_map[0xA] = (cart_image + b*0x1000);
+            mem_map[0xA] = (cart_image + b*0x1000) - 0xA000;
             if (bank < 0)
             {
-                mem_map[0xB] = (cart_image + main);
+                mem_map[0xB] = (cart_image + main) - 0xB000;
             }
         }
         bank = b;
@@ -116,8 +116,8 @@ static void set_bank_A0BF(int b)
         else 
         {
             CartA0BF_Enable();
-            mem_map[0xA] = (cart_image + (~b&7)*0x2000) + 0x0000;
-            mem_map[0xB] = (cart_image + (~b&7)*0x2000) + 0x1000;
+            mem_map[0xA] = (cart_image + (~b&7)*0x2000) + 0x0000 - 0xA000;
+            mem_map[0xB] = (cart_image + (~b&7)*0x2000) + 0x1000 - 0xB000;
         }
         bank = b;
     }
@@ -134,8 +134,8 @@ static void set_bank_A0BF_WILL64(int b)
         else 
         {
             CartA0BF_Enable();
-            mem_map[0xA] = (cart_image + (b&7)*0x2000) + 0x0000;
-            mem_map[0xB] = (cart_image + (b&7)*0x2000) + 0x1000;
+            mem_map[0xA] = (cart_image + (b&7)*0x2000) + 0x0000 - 0xA000;
+            mem_map[0xB] = (cart_image + (b&7)*0x2000) + 0x1000 - 0xB000;
         }
         bank = b;
     }
@@ -153,8 +153,8 @@ static void set_bank_A0BF_WILL32(int b)
         else 
         {
             CartA0BF_Enable();
-            mem_map[0xA] = (cart_image + (b&3)*0x2000) + 0x0000;
-            mem_map[0xB] = (cart_image + (b&3)*0x2000) + 0x1000;
+            mem_map[0xA] = (cart_image + (b&3)*0x2000) + 0x0000 - 0xA000;
+            mem_map[0xB] = (cart_image + (b&3)*0x2000) + 0x1000 - 0xB000;
         }
         bank = b;
     }
@@ -172,8 +172,8 @@ static void set_bank_A0BF_ATMAX128(int b)
         }
         else {
             CartA0BF_Enable();
-            mem_map[0xA] = (cart_image + b*0x2000) + 0x0000;
-            mem_map[0xB] = (cart_image + b*0x2000) + 0x1000;
+            mem_map[0xA] = (cart_image + b*0x2000) + 0x0000 - 0xA000;
+            mem_map[0xB] = (cart_image + b*0x2000) + 0x1000 - 0xB000;
         }
         bank = b;
     }
@@ -192,8 +192,8 @@ ITCM_CODE void set_bank_A0BF_ATMAX1024(int b)
         else 
         {
             CartA0BF_Enable();
-            mem_map[0xA] = (cart_image + b*0x2000) + 0x0000;
-            mem_map[0xB] = (cart_image + b*0x2000) + 0x1000;
+            mem_map[0xA] = (cart_image + b*0x2000) + 0x0000 - 0xA000;
+            mem_map[0xB] = (cart_image + b*0x2000) + 0x1000 - 0xB000;
         }
         bank = b;
     }
@@ -212,10 +212,10 @@ static void set_bank_80BF(int b)
         {
             Cart809F_Enable();
             CartA0BF_Enable();
-            mem_map[0x8] = (cart_image + b*0x4000) + 0x0000;
-            mem_map[0x9] = (cart_image + b*0x4000) + 0x1000;
-            mem_map[0xA] = (cart_image + b*0x4000) + 0x2000;
-            mem_map[0xB] = (cart_image + b*0x4000) + 0x3000;
+            mem_map[0x8] = (cart_image + b*0x4000) + 0x0000 - 0x8000;
+            mem_map[0x9] = (cart_image + b*0x4000) + 0x1000 - 0x9000;
+            mem_map[0xA] = (cart_image + b*0x4000) + 0x2000 - 0xA000;
+            mem_map[0xB] = (cart_image + b*0x4000) + 0x3000 - 0xB000;
         }
         bank = b;
     }
@@ -233,8 +233,8 @@ static void set_bank_SDX_128(UWORD addr)
         else 
         {
             CartA0BF_Enable();
-            mem_map[0xA] = (cart_image + ((((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf)*0x2000)) + 0x0000;
-            mem_map[0xB] = (cart_image + ((((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf)*0x2000)) + 0x1000;
+            mem_map[0xA] = (cart_image + ((((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf)*0x2000)) + 0x0000 - 0xA000;
+            mem_map[0xB] = (cart_image + ((((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf)*0x2000)) + 0x1000 - 0xB000;
         }
         bank = addr;
     }
@@ -315,26 +315,26 @@ void CART_Start(void)
         Cart809F_Disable();
         CartA0BF_Enable();
         //CopyROM(0xa000, 0xbfff, cart_image);
-        mem_map[0xA] = cart_image + 0x0000;
-        mem_map[0xB] = cart_image + 0x1000;            
+        mem_map[0xA] = cart_image + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         break;
     case CART_STD_16:
     case CART_BLIZZARD_16:
         Cart809F_Enable();
         CartA0BF_Enable();
         //CopyROM(0x8000, 0xbfff, cart_image);
-        mem_map[0x8] = cart_image + 0x0000;
-        mem_map[0x9] = cart_image + 0x1000;
-        mem_map[0xA] = cart_image + 0x2000;
-        mem_map[0xB] = cart_image + 0x3000;            
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + 0x2000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x3000 - 0xB000;
         break;
     case CART_OSS_16:
         Cart809F_Disable();
         CartA0BF_Enable();
         //CopyROM(0xa000, 0xafff, cart_image);
         //CopyROM(0xb000, 0xbfff, cart_image + 0x3000);
-        mem_map[0xA] = cart_image + 0x0000;
-        mem_map[0xB] = cart_image + 0x3000;            
+        mem_map[0xA] = cart_image + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x3000 - 0xB000;
         bank = 0;
         break;
     case CART_DB_32:
@@ -342,10 +342,10 @@ void CART_Start(void)
         CartA0BF_Enable();
         //CopyROM(0x8000, 0x9fff, cart_image);
         //CopyROM(0xa000, 0xbfff, cart_image + 0x6000);
-        mem_map[0x8] = cart_image + 0x0000;
-        mem_map[0x9] = cart_image + 0x1000;
-        mem_map[0xA] = cart_image + 0x6000;
-        mem_map[0xB] = cart_image + 0x7000;            
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + 0x6000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x7000 - 0xB000;
         bank = 0;
         break;
     case CART_WILL_64:
@@ -357,8 +357,8 @@ void CART_Start(void)
         Cart809F_Disable();
         CartA0BF_Enable();
         //CopyROM(0xa000, 0xbfff, cart_image);
-        mem_map[0xA] = cart_image + 0x0000;
-        mem_map[0xB] = cart_image + 0x1000;            
+        mem_map[0xA] = cart_image + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         bank = 0;
         break;
     case CART_XEGS_32:
@@ -367,10 +367,10 @@ void CART_Start(void)
         CartA0BF_Enable();
         //CopyROM(0x8000, 0x9fff, cart_image);
         //CopyROM(0xa000, 0xbfff, cart_image + 0x6000);
-        mem_map[0x8] = cart_image + 0x0000;
-        mem_map[0x9] = cart_image + 0x1000;
-        mem_map[0xA] = cart_image + 0x6000;
-        mem_map[0xB] = cart_image + 0x7000;            
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + 0x6000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x7000 - 0xB000;
         bank = 0;
         break;
     case CART_XEGS_64:
@@ -379,10 +379,10 @@ void CART_Start(void)
         CartA0BF_Enable();
         //CopyROM(0x8000, 0x9fff, cart_image);
         //CopyROM(0xa000, 0xbfff, cart_image + 0xe000);
-        mem_map[0x8] = cart_image + 0x0000;
-        mem_map[0x9] = cart_image + 0x1000;
-        mem_map[0xA] = cart_image + 0xe000;
-        mem_map[0xB] = cart_image + 0xf000;            
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + 0xe000 - 0xA000;
+        mem_map[0xB] = cart_image + 0xf000 - 0xB000;
         bank = 0;
         break;
     case CART_XEGS_128:
@@ -391,10 +391,10 @@ void CART_Start(void)
         CartA0BF_Enable();
         //CopyROM(0x8000, 0x9fff, cart_image);
         //CopyROM(0xa000, 0xbfff, cart_image + 0x1e000);
-        mem_map[0x8] = cart_image + 0x0000;
-        mem_map[0x9] = cart_image + 0x1000;
-        mem_map[0xA] = cart_image + 0x1e000;
-        mem_map[0xB] = cart_image + 0x1f000;            
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + 0x1e000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x1f000 - 0xB000;
         bank = 0;
         break;
     case CART_XEGS_256:
@@ -403,10 +403,10 @@ void CART_Start(void)
         CartA0BF_Enable();
         //CopyROM(0x8000, 0x9fff, cart_image);
         //CopyROM(0xa000, 0xbfff, cart_image + 0x3e000);
-        mem_map[0x8] = cart_image + 0x0000;
-        mem_map[0x9] = cart_image + 0x1000;
-        mem_map[0xA] = cart_image + 0x3e000;
-        mem_map[0xB] = cart_image + 0x3f000;            
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + 0x3e000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x3f000 - 0xB000;
         bank = 0;
         break;
     case CART_XEGS_512:
@@ -415,10 +415,10 @@ void CART_Start(void)
         CartA0BF_Enable();
         //CopyROM(0x8000, 0x9fff, cart_image);
         //CopyROM(0xa000, 0xbfff, cart_image + 0x7e000);
-        mem_map[0x8] = cart_image + 0x0000;
-        mem_map[0x9] = cart_image + 0x1000;
-        mem_map[0xA] = cart_image + 0x7e000;
-        mem_map[0xB] = cart_image + 0x7f000;            
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + 0x7e000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x7f000 - 0xB000;
         bank = 0;
         break;
     case CART_XEGS_1024:
@@ -427,10 +427,10 @@ void CART_Start(void)
         CartA0BF_Enable();
         //CopyROM(0x8000, 0x9fff, cart_image);
         //CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
-        mem_map[0x8] = cart_image + 0x0000;
-        mem_map[0x9] = cart_image + 0x1000;
-        mem_map[0xA] = cart_image + 0xfe000;
-        mem_map[0xB] = cart_image + 0xff000;            
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + 0xfe000 - 0xA000;
+        mem_map[0xB] = cart_image + 0xff000 - 0xB000;
         bank = 0;
         break;
     case CART_OSS2_16:
@@ -438,16 +438,16 @@ void CART_Start(void)
         CartA0BF_Enable();
         //CopyROM(0xa000, 0xafff, cart_image + 0x1000);
         //CopyROM(0xb000, 0xbfff, cart_image);
-        mem_map[0xA] = cart_image + 0x1000;
-        mem_map[0xB] = cart_image + 0x0000;
+        mem_map[0xA] = cart_image + 0x1000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x0000 - 0xB000;
         bank = 0;
         break;
     case CART_ATRAX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
         //CopyROM(0xa000, 0xbfff, cart_image);
-        mem_map[0xA] = cart_image + 0x0000;
-        mem_map[0xB] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         bank = 0;
         break;
     case CART_BBSB_40:
@@ -468,33 +468,33 @@ void CART_Start(void)
         Cart809F_Enable();
         CartA0BF_Enable();
         //CopyROM(0x8000, 0xbfff, cart_image);
-        mem_map[0x8] = cart_image + 0x0000;
-        mem_map[0x9] = cart_image + 0x1000;
-        mem_map[0xA] = cart_image + 0x2000;
-        mem_map[0xB] = cart_image + 0x3000;
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + 0x2000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x3000 - 0xB000;
         bank = 0;
         break;
     case CART_ATMAX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
         //CopyROM(0xa000, 0xbfff, cart_image);
-        mem_map[0xA] = cart_image + 0x0000;
-        mem_map[0xB] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         bank = 0;
         break;
     case CART_ATMAX_1024:
         Cart809F_Disable();
         CartA0BF_Enable();
         //CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
-        mem_map[0xA] = cart_image + 0xfe000;
-        mem_map[0xB] = cart_image + 0xff000;
+        mem_map[0xA] = cart_image + 0xfe000 - 0xA000;
+        mem_map[0xB] = cart_image + 0xff000 - 0xB000;
         bank = 0x7f;
         break;
     case CART_ATMAX_NEW_1024:
         Cart809F_Disable();
         CartA0BF_Enable();
-        mem_map[0xA] = cart_image + 0xfe000;
-        mem_map[0xB] = cart_image + 0xff000;
+        mem_map[0xA] = cart_image + 0xfe000 - 0xA000;
+        mem_map[0xB] = cart_image + 0xff000 - 0xB000;
         bank = 0x00;
         break;
     default:
@@ -506,13 +506,13 @@ void CART_Start(void)
             SetROM(0xa000, 0xbfff);
             if (basic_type == BASIC_ALTIRRA)
             {
-                mem_map[0xA] = ((UBYTE*)ROM_altirra_basic) + 0x0000;
-                mem_map[0xB] = ((UBYTE*)ROM_altirra_basic) + 0x1000;
+                mem_map[0xA] = ((UBYTE*)ROM_altirra_basic) + 0x0000 - 0xA000;
+                mem_map[0xB] = ((UBYTE*)ROM_altirra_basic) + 0x1000 - 0xB000;
             }
             else
             {
-                mem_map[0xA] = ((UBYTE*)ROM_basic) + 0x0000;
-                mem_map[0xB] = ((UBYTE*)ROM_basic) + 0x1000;
+                mem_map[0xA] = ((UBYTE*)ROM_basic) + 0x0000 - 0xA000;
+                mem_map[0xB] = ((UBYTE*)ROM_basic) + 0x1000 - 0xB000;
             }
         }
         break;
@@ -669,8 +669,8 @@ void CART_PutByte(UWORD addr, UBYTE byte)
             if (b != bank) 
             {
                 CartA0BF_Enable();
-                mem_map[0xA] = (cart_image + b*0x2000) + 0x0000;
-                mem_map[0xB] = (cart_image + b*0x2000) + 0x1000;
+                mem_map[0xA] = (cart_image + b*0x2000) + 0x0000 - 0xA000;
+                mem_map[0xB] = (cart_image + b*0x2000) + 0x1000 - 0xB000;
                 bank = b;
             }
         }

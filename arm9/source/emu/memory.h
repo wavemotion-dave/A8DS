@@ -31,24 +31,23 @@ extern UBYTE memory[65536 + 2];
 
 // ---------------------------------------------------------------------------------------
 // Handles bank switching - we use a memory map so we can easily swap in/out various
-// banks of RAM or Cartridge memory.
+// banks of RAM or Cartridge memory. The mem_map[] bank of pointers is always offset
+// by the start of each bank so that we don't have to mask addr when indexing. Thanks
+// to Phaeron (Altirra) for the keen suggestion!
 // ---------------------------------------------------------------------------------------
 inline UBYTE dGetByte(UWORD addr)
 {
-    UBYTE *ptr = mem_map[addr >> 12];
-    return ptr[addr&0xFFF];
+    return *(const UBYTE *)(mem_map[addr >> 12] + addr);
 }
 
 inline void dPutByte(UWORD addr, UBYTE data)
 {
-    UBYTE *ptr = mem_map[addr >> 12];
-    ptr[addr&0xFFF] = data;
+    *((UBYTE *) mem_map[addr >> 12] + addr) = data;
 }
 
 inline UBYTE *AnticMainMemLookup(unsigned int addr)
 {
-    UBYTE *ptr = mem_map[addr >> 12];
-    return (ptr + (addr&0xFFF));
+    return (UBYTE *) mem_map[addr >> 12] + addr;
 }
 
 inline void dCopyFromMem(unsigned int from, void* to, unsigned int size)

@@ -154,7 +154,7 @@ void MEMORY_InitialiseMachine(void)
     // Set the memory map back to pointing to main memory
     for (int i=0; i<16; i++)
     {
-        mem_map[i] = memory + (0x1000 * i);
+        mem_map[i] = memory + (0x1000 * i) - (0x1000 * i);  // Yes, pointless except to get across the point that we are offsetting the memory map to avoid having to mask the addr in memory.h
     }
     under_0x8 = mem_map[0x8];
     under_0x9 = mem_map[0x9];
@@ -314,10 +314,11 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
                 memory_bank = (atarixe_memory + (bank << 14));
                 memory_bank -= 0x4000;
             }
-            mem_map[0x4] = memory_bank + 0x4000;
-            mem_map[0x5] = memory_bank + 0x5000;
-            mem_map[0x6] = memory_bank + 0x6000;
-            mem_map[0x7] = memory_bank + 0x7000;
+            // Apply no offsets here so we can avoid having to mask addr in memory.h
+            mem_map[0x4] = memory_bank;
+            mem_map[0x5] = memory_bank;
+            mem_map[0x6] = memory_bank;
+            mem_map[0x7] = memory_bank;
             
             xe_bank = bank;
         }
@@ -400,8 +401,8 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 				/* Enable BASIC ROM */
                 under_0xA = mem_map[0xA];
                 under_0xB = mem_map[0xB];
-                mem_map[0xA] = ROM_basic + 0x0000;
-                mem_map[0xB] = ROM_basic + 0x1000;
+                mem_map[0xA] = ROM_basic + 0x0000 - 0xA000;
+                mem_map[0xB] = ROM_basic + 0x1000 - 0xB000;
                 SetROM(0xa000, 0xbfff);
 			}
 		}
@@ -478,8 +479,8 @@ void CartA0BF_Disable(void)
 		}
 		else
         {
-            mem_map[0xA] = ROM_basic + 0x0000;
-            mem_map[0xB] = ROM_basic + 0x1000;
+            mem_map[0xA] = ROM_basic + 0x0000 - 0xA000;
+            mem_map[0xB] = ROM_basic + 0x1000 - 0xB000;
             SetROM(0xa000, 0xbfff);
         }
 		cartA0BF_enabled = FALSE;

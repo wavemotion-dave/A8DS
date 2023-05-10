@@ -1154,7 +1154,7 @@ static void draw_antic_2_artif(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr
 }
 
 
-static void prepare_an_antic_2(int nchars, const UBYTE *ANTIC_memptr, const ULONG *t_pm_scanline_ptr)
+ITCM_CODE static void prepare_an_antic_2(int nchars, const UBYTE *ANTIC_memptr, const ULONG *t_pm_scanline_ptr)
 {
 	UBYTE *an_ptr = (UBYTE *) t_pm_scanline_ptr + (an_scanline - pm_scanline);
 	const UBYTE *chptr;
@@ -1174,7 +1174,7 @@ static void prepare_an_antic_2(int nchars, const UBYTE *ANTIC_memptr, const ULON
 	CHAR_LOOP_END
 }
 
-static void draw_antic_2_gtia9(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+ITCM_CODE static void draw_antic_2_gtia9(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
 	INIT_ANTIC_2
 	if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
@@ -1216,7 +1216,7 @@ static void draw_antic_2_gtia9(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr
 	do_border();
 }
 
-static void draw_antic_2_gtia10(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+ITCM_CODE static void draw_antic_2_gtia10(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
     UWORD lookup_gtia10[16];
 	INIT_ANTIC_2
@@ -1267,7 +1267,7 @@ static void draw_antic_2_gtia10(int nchars, const UBYTE *ANTIC_memptr, UWORD *pt
 	do_border_gtia10();
 }
 
-static void draw_antic_2_gtia11(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+ITCM_CODE static void draw_antic_2_gtia11(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
 	INIT_ANTIC_2
 	if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
@@ -1491,7 +1491,7 @@ static void prepare_an_antic_6(int nchars, const UBYTE *ANTIC_memptr, const ULON
 
 DEFINE_DRAW_AN(6)
 
-static void draw_antic_8(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+ITCM_CODE static void draw_antic_8(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
 	lookup2[0x00] = cl_lookup[C_BAK];
 	lookup2[0x40] = cl_lookup[C_PF0];
