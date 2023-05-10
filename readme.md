@@ -136,6 +136,12 @@ of something like Altirra. If you're looking for the best in emulation accuracy 
 be what you're after. But if you want to enjoy a wide variety of classic 8-bit gaming on your DS/DSi 
 handheld - A8DS will work nicely.
 
+Known Issues :
+----------------------------------------------------------------------------------
+* Jim Slide XL has some graphical gliching: horizontal lines on the intro screens. Cause unknown.
+* Space Harrier cart audio sounds "chip-monkish". Likely cause is frame timing being used vs. cycle-accurate timing.
+* Atari Blast! has one column of letters missing on the main title screen. Cause unknown.
+
 Troubleshooting :
 ----------------------------------------------------------------------------------
 Most games run as-is. Pick game, load game, play game, enjoy game.
