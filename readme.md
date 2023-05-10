@@ -144,6 +144,11 @@ Known Issues :
 * Cropky (music problems in game) - cause unknown.
 * Gun Fright (the game doesn't start when you press "3" key) - cause unknown.
 * Intellidiscs (no discs sounds in game) - cause unknown.
+* Dinos has graphical glitches - cause unknown.
+* TL Cars has graphical glitches - likely separate ANTIC and CPU memory not working right.
+* AD:6502 (Arsantica 2) has graphical glitches - likely separate ANTIC and CPU memory not working right.
+* Scorch final has issues - cause unknown.
+* Rewind demo seems to be missing a sound channel. Cause unknown.
 
 Troubleshooting :
 ----------------------------------------------------------------------------------
