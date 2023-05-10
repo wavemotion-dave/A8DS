@@ -55,7 +55,6 @@
 
 UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                      // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
 static UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));         // This is the 16K of OS memory that co-insides with some of the RAM in the upper bank
-static UBYTE under_atari_basic[8192] __attribute__ ((aligned (4)));         // This is the 8K of BASIC memory that co-incides with some of the RAM in the upper bank
 
 rdfunc readmap[256] __attribute__((section(".dtcm")));                      // The readmap tells the memory fetcher if we should do direct memory read or call a device function instead
 wrfunc writemap[256] __attribute__((section(".dtcm")));                     // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
@@ -70,6 +69,10 @@ static int cart809F_enabled = FALSE;                                        // B
 static int cartA0BF_enabled = FALSE;                                        // By default, no CART memory mapped to 0xA000 - 0xBFFF
 UBYTE *mem_map[16] __attribute__((section(".dtcm")));
 extern UBYTE ROM_basic[];
+
+
+UBYTE *under_0x8, *under_0x9, *under_0xA, *under_0xB;
+
 
 // ------------------------------------------------------------------
 // This is the huge 1MB+ buffer to support the maximum expanded RAM 
@@ -153,7 +156,11 @@ void MEMORY_InitialiseMachine(void)
     {
         mem_map[i] = memory + (0x1000 * i);
     }
-    
+    under_0x8 = mem_map[0x8];
+    under_0x9 = mem_map[0x9];
+    under_0xA = mem_map[0xA];
+    under_0xB = mem_map[0xB];
+
 	switch (machine_type) 
     {
 	case MACHINE_OSA:
@@ -375,52 +382,50 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 	}
 
 	/* Enable/disable BASIC ROM in 0xa000-0xbfff */
-	if (!cartA0BF_enabled) {
+	if (!cartA0BF_enabled) 
+    {
 		/* BASIC is disabled if bit 1 set or accessing extended 576K or 1088K memory */
 		int now_disabled = basic_disabled(byte);
-		if (basic_disabled(oldval) != now_disabled) {
-			if (now_disabled) {
+		if (basic_disabled(oldval) != now_disabled) 
+        {
+			if (now_disabled) 
+            {
 				/* Disable BASIC ROM */
-				if (ram_size > 40) {
-					memcpy(memory + 0xa000, under_atari_basic, 0x2000);
-					SetRAM(0xa000, 0xbfff);
-				}
-				else
-					dFillMem(0xa000, 0xff, 0x2000);
+                mem_map[0xA] = under_0xA;
+                mem_map[0xB] = under_0xB;
+                SetRAM(0xa000, 0xbfff);
 			}
-			else {
+			else 
+            {
 				/* Enable BASIC ROM */
-				if (ram_size > 40) {
-					memcpy(under_atari_basic, memory + 0xa000, 0x2000);
-					SetROM(0xa000, 0xbfff);
-				}
-				memcpy(memory + 0xa000, ROM_basic, 0x2000);
+                under_0xA = mem_map[0xA];
+                under_0xB = mem_map[0xB];
+                mem_map[0xA] = ROM_basic + 0x0000;
+                mem_map[0xB] = ROM_basic + 0x1000;
+                SetROM(0xa000, 0xbfff);
 			}
 		}
 	}
 
 	/* Enable/disable Self Test ROM in 0x5000-0x57ff */
-	if (byte & 0x80) {
-		if (selftest_enabled) {
+	if (byte & 0x80) 
+    {
+		if (selftest_enabled) 
+        {
 			/* Disable Self Test ROM */
-			if (ram_size > 20) {
-				memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
-				SetRAM(0x5000, 0x57ff);
-			}
-			else
-				dFillMem(0x5000, 0xff, 0x800);
+            memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
+            SetRAM(0x5000, 0x57ff);
 			selftest_enabled = FALSE;
 		}
 	}
-	else {
+	else 
+    {
 		/* We can enable Self Test only if the OS ROM is enabled */
 		if (!selftest_enabled && (byte & 0x01) && !((byte & 0x10) == 0 && ram_size == 1088)) 
         {
 			/* Enable Self Test ROM */
-			if (ram_size > 20) {
-				memcpy(under_atarixl_os + 0x1000, memory + 0x5000, 0x800);
-				SetROM(0x5000, 0x57ff);
-			}
+            memcpy(under_atarixl_os + 0x1000, memory + 0x5000, 0x800);
+            SetROM(0x5000, 0x57ff);
 			memcpy(memory + 0x5000, atari_os + 0x1000, 0x800);
 			selftest_enabled = TRUE;
 		}
@@ -434,8 +439,9 @@ void Cart809F_Disable(void)
 {
 	if (cart809F_enabled) 
     {
-        mem_map[0x8] = memory + 0x8000;
-        mem_map[0x9] = memory + 0x9000;
+        /* Restore 0x8000-0x9fff RAM */
+        mem_map[0x8] = under_0x8;
+        mem_map[0x9] = under_0x9;
         SetRAM(0x8000, 0x9fff);
 		cart809F_enabled = FALSE;
 	}
@@ -448,10 +454,10 @@ void Cart809F_Enable(void)
 {
 	if (!cart809F_enabled) 
     {
-		if (ram_size > 32) 
-        {
-			SetROM(0x8000, 0x9fff);
-		}
+        /* Back-up 0x8000-0x9fff RAM */
+        under_0x8 = mem_map[0x8];
+        under_0x9 = mem_map[0x9];
+        SetROM(0x8000, 0x9fff);
 		cart809F_enabled = TRUE;
 	}
 }
@@ -463,16 +469,18 @@ void CartA0BF_Disable(void)
 {
 	if (cartA0BF_enabled) 
     {
-        mem_map[0xA] = memory + 0xA000;
-        mem_map[0xB] = memory + 0xB000;
 		/* No BASIC if not XL/XE or bit 1 of PORTB set */
 		if ((machine_type != MACHINE_XLXE) || basic_disabled((UBYTE) (PORTB | PORTB_mask))) 
         {
+            mem_map[0xA] = under_0xA;
+            mem_map[0xB] = under_0xB;
             SetRAM(0xa000, 0xbfff);
 		}
 		else
         {
-			memcpy(memory + 0xa000, ROM_basic, 0x2000);
+            mem_map[0xA] = ROM_basic + 0x0000;
+            mem_map[0xB] = ROM_basic + 0x1000;
+            SetROM(0xa000, 0xbfff);
         }
 		cartA0BF_enabled = FALSE;
 		if (machine_type == MACHINE_XLXE) 
@@ -489,12 +497,15 @@ void CartA0BF_Disable(void)
 // -----------------------------------------------
 void CartA0BF_Enable(void)
 {
-	if (!cartA0BF_enabled) {
+	if (!cartA0BF_enabled) 
+    {
 		/* No BASIC if not XL/XE or bit 1 of PORTB set */
 		/* or accessing extended 576K or 1088K memory */
 		if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02) || ((PORTB & 0x10) == 0 && (ram_size == 576 || ram_size == 1088)))) 
         {
 			/* Back-up 0xa000-0xbfff RAM */
+            under_0xA = mem_map[0xA];
+            under_0xB = mem_map[0xB];
 			SetROM(0xa000, 0xbfff);
 		}
 		cartA0BF_enabled = TRUE;

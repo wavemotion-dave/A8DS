@@ -55,6 +55,7 @@
 
 int break_ypos __attribute__((section(".dtcm"))) = 999;
 
+
 /* Video memory access is hidden behind these macros. It allows to track dirty video memory
    to improve video system performance */
 
@@ -625,7 +626,7 @@ static void pmg_dma(void) {
 				if (antic_xe_ptr != NULL && pmbase_s < 0x8000 && pmbase_s >= 0x4000)
 					base = antic_xe_ptr + pmbase_s - 0x4000 + ypos;
 				else
-					base = memory + pmbase_s + ypos;
+					base = AnticMainMemLookup(pmbase_s + ypos);
 				if (ypos & 1) {
 					GRAFP0 = base[0x400];
 					GRAFP1 = base[0x500];
@@ -647,7 +648,7 @@ static void pmg_dma(void) {
 				if (antic_xe_ptr != NULL && pmbase_d < 0x8000 && pmbase_d >= 0x4000)
 					base = antic_xe_ptr + (pmbase_d - 0x4000) + (ypos >> 1);
 				else
-					base = memory + pmbase_d + (ypos >> 1);
+					base = AnticMainMemLookup(pmbase_d + (ypos >> 1));
 				if (ypos & 1) {
 					GRAFP0 = base[0x200];
 					GRAFP1 = base[0x280];
@@ -1081,14 +1082,13 @@ static void draw_an_gtia11(const ULONG *t_pm_scanline_ptr)
 	FOUR_LOOP_END(data)\
 }
 
-
 #define ADD_FONT_CYCLES xpos += font_cycles[md]
 
 #define INIT_ANTIC_2	const UBYTE *chptr;\
 	if (antic_xe_ptr != NULL && chbase_20 < 0x8000 && chbase_20 >= 0x4000)\
 		chptr = antic_xe_ptr + ((dctr ^ chbase_20) & 0x3c07);\
 	else\
-		chptr = memory + ((dctr ^ chbase_20) & 0xfc07);\
+		chptr = AnticMainMemLookup(((dctr ^ chbase_20) & 0xfc07));\
 	ADD_FONT_CYCLES;\
 	blank_lookup[0x60] = (anticmode == 2 || dctr & 0xe) ? 0xff : 0;\
 	blank_lookup[0x00] = blank_lookup[0x20] = blank_lookup[0x40] = (dctr & 0xe) == 8 ? 0 : 0xff;
@@ -1097,7 +1097,7 @@ static void draw_an_gtia11(const ULONG *t_pm_scanline_ptr)
 	if (blank_lookup[screendata & blank_mask])\
 		chdata ^= chptr[(screendata & 0x7f) << 3];
 
-static void draw_antic_2(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+ITCM_CODE static void draw_antic_2(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
 	INIT_BACKGROUND_6
 	INIT_ANTIC_2
@@ -1161,7 +1161,7 @@ static void prepare_an_antic_2(int nchars, const UBYTE *ANTIC_memptr, const ULON
 	if (antic_xe_ptr != NULL && chbase_20 < 0x8000 && chbase_20 >= 0x4000)
 		chptr = antic_xe_ptr + ((dctr ^ chbase_20) & 0x3c07);
 	else
-		chptr = memory + ((dctr ^ chbase_20) & 0xfc07);
+		chptr = AnticMainMemLookup(((dctr ^ chbase_20) & 0xfc07));
 
 	CHAR_LOOP_BEGIN
 		UBYTE screendata = *ANTIC_memptr++;
@@ -1309,14 +1309,14 @@ static void draw_antic_2_gtia11(int nchars, const UBYTE *ANTIC_memptr, UWORD *pt
 	do_border_gtia11();
 }
 
-static void draw_antic_4(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+ITCM_CODE static void draw_antic_4(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
 	INIT_BACKGROUND_8
 	const UBYTE *chptr;
 	if (antic_xe_ptr != NULL && chbase_20 < 0x8000 && chbase_20 >= 0x4000)
 		chptr = antic_xe_ptr + (((anticmode == 4 ? dctr : dctr >> 1) ^ chbase_20) & 0x3c07);
 	else
-		chptr = memory + (((anticmode == 4 ? dctr : dctr >> 1) ^ chbase_20) & 0xfc07);
+		chptr = AnticMainMemLookup((((anticmode == 4 ? dctr : dctr >> 1) ^ chbase_20) & 0xfc07));
 
 	ADD_FONT_CYCLES;
 	lookup2[0x0f] = lookup2[0x00] = cl_lookup[C_BAK];
@@ -1371,7 +1371,7 @@ static void prepare_an_antic_4(int nchars, const UBYTE *ANTIC_memptr, const ULON
 	if (antic_xe_ptr != NULL && chbase_20 < 0x8000 && chbase_20 >= 0x4000)
 		chptr = antic_xe_ptr + (((anticmode == 4 ? dctr : dctr >> 1) ^ chbase_20) & 0x3c07);
 	else
-		chptr = memory + (((anticmode == 4 ? dctr : dctr >> 1) ^ chbase_20) & 0xfc07);
+		chptr = AnticMainMemLookup((((anticmode == 4 ? dctr : dctr >> 1) ^ chbase_20) & 0xfc07));
 
 	ADD_FONT_CYCLES;
 	CHAR_LOOP_BEGIN
@@ -1392,13 +1392,13 @@ static void prepare_an_antic_4(int nchars, const UBYTE *ANTIC_memptr, const ULON
 
 DEFINE_DRAW_AN(4)
 
-static void draw_antic_6(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+ITCM_CODE static void draw_antic_6(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
 	const UBYTE *chptr;
 	if (antic_xe_ptr != NULL && chbase_20 < 0x8000 && chbase_20 >= 0x4000)
 		chptr = antic_xe_ptr + (((anticmode == 6 ? dctr & 7 : dctr >> 1) ^ chbase_20) - 0x4000);
 	else
-		chptr = memory + ((anticmode == 6 ? dctr & 7 : dctr >> 1) ^ chbase_20);
+		chptr = AnticMainMemLookup(((anticmode == 6 ? dctr & 7 : dctr >> 1) ^ chbase_20));
 
 	ADD_FONT_CYCLES;
 	CHAR_LOOP_BEGIN
@@ -1470,7 +1470,7 @@ static void prepare_an_antic_6(int nchars, const UBYTE *ANTIC_memptr, const ULON
 	if (antic_xe_ptr != NULL && chbase_20 < 0x8000 && chbase_20 >= 0x4000)
 		chptr = antic_xe_ptr + (((anticmode == 6 ? dctr & 7 : dctr >> 1) ^ chbase_20) - 0x4000);
 	else
-		chptr = memory + ((anticmode == 6 ? dctr & 7 : dctr >> 1) ^ chbase_20);
+		chptr = AnticMainMemLookup(((anticmode == 6 ? dctr & 7 : dctr >> 1) ^ chbase_20));
 
 	ADD_FONT_CYCLES;
 	CHAR_LOOP_BEGIN

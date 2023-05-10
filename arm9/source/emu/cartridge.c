@@ -314,26 +314,38 @@ void CART_Start(void)
     case CART_PHOENIX_8:
         Cart809F_Disable();
         CartA0BF_Enable();
-        CopyROM(0xa000, 0xbfff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image);
+        mem_map[0xA] = cart_image + 0x0000;
+        mem_map[0xB] = cart_image + 0x1000;            
         break;
     case CART_STD_16:
     case CART_BLIZZARD_16:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0xbfff, cart_image);
+        //CopyROM(0x8000, 0xbfff, cart_image);
+        mem_map[0x8] = cart_image + 0x0000;
+        mem_map[0x9] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0x2000;
+        mem_map[0xB] = cart_image + 0x3000;            
         break;
     case CART_OSS_16:
         Cart809F_Disable();
         CartA0BF_Enable();
-        CopyROM(0xa000, 0xafff, cart_image);
-        CopyROM(0xb000, 0xbfff, cart_image + 0x3000);
+        //CopyROM(0xa000, 0xafff, cart_image);
+        //CopyROM(0xb000, 0xbfff, cart_image + 0x3000);
+        mem_map[0xA] = cart_image + 0x0000;
+        mem_map[0xB] = cart_image + 0x3000;            
         bank = 0;
         break;
     case CART_DB_32:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0x9fff, cart_image);
-        CopyROM(0xa000, 0xbfff, cart_image + 0x6000);
+        //CopyROM(0x8000, 0x9fff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image + 0x6000);
+        mem_map[0x8] = cart_image + 0x0000;
+        mem_map[0x9] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0x6000;
+        mem_map[0xB] = cart_image + 0x7000;            
         bank = 0;
         break;
     case CART_WILL_64:
@@ -344,68 +356,98 @@ void CART_Start(void)
     case CART_SDX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
-        CopyROM(0xa000, 0xbfff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image);
+        mem_map[0xA] = cart_image + 0x0000;
+        mem_map[0xB] = cart_image + 0x1000;            
         bank = 0;
         break;
     case CART_XEGS_32:
     case CART_SWXEGS_32:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0x9fff, cart_image);
-        CopyROM(0xa000, 0xbfff, cart_image + 0x6000);
+        //CopyROM(0x8000, 0x9fff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image + 0x6000);
+        mem_map[0x8] = cart_image + 0x0000;
+        mem_map[0x9] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0x6000;
+        mem_map[0xB] = cart_image + 0x7000;            
         bank = 0;
         break;
     case CART_XEGS_64:
     case CART_SWXEGS_64:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0x9fff, cart_image);
-        CopyROM(0xa000, 0xbfff, cart_image + 0xe000);
+        //CopyROM(0x8000, 0x9fff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image + 0xe000);
+        mem_map[0x8] = cart_image + 0x0000;
+        mem_map[0x9] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0xe000;
+        mem_map[0xB] = cart_image + 0xf000;            
         bank = 0;
         break;
     case CART_XEGS_128:
     case CART_SWXEGS_128:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0x9fff, cart_image);
-        CopyROM(0xa000, 0xbfff, cart_image + 0x1e000);
+        //CopyROM(0x8000, 0x9fff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image + 0x1e000);
+        mem_map[0x8] = cart_image + 0x0000;
+        mem_map[0x9] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0x1e000;
+        mem_map[0xB] = cart_image + 0x1f000;            
         bank = 0;
         break;
     case CART_XEGS_256:
     case CART_SWXEGS_256:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0x9fff, cart_image);
-        CopyROM(0xa000, 0xbfff, cart_image + 0x3e000);
+        //CopyROM(0x8000, 0x9fff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image + 0x3e000);
+        mem_map[0x8] = cart_image + 0x0000;
+        mem_map[0x9] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0x3e000;
+        mem_map[0xB] = cart_image + 0x3f000;            
         bank = 0;
         break;
     case CART_XEGS_512:
     case CART_SWXEGS_512:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0x9fff, cart_image);
-        CopyROM(0xa000, 0xbfff, cart_image + 0x7e000);
+        //CopyROM(0x8000, 0x9fff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image + 0x7e000);
+        mem_map[0x8] = cart_image + 0x0000;
+        mem_map[0x9] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0x7e000;
+        mem_map[0xB] = cart_image + 0x7f000;            
         bank = 0;
         break;
     case CART_XEGS_1024:
     case CART_SWXEGS_1024:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0x9fff, cart_image);
-        CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
+        //CopyROM(0x8000, 0x9fff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
+        mem_map[0x8] = cart_image + 0x0000;
+        mem_map[0x9] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0xfe000;
+        mem_map[0xB] = cart_image + 0xff000;            
         bank = 0;
         break;
     case CART_OSS2_16:
         Cart809F_Disable();
         CartA0BF_Enable();
-        CopyROM(0xa000, 0xafff, cart_image + 0x1000);
-        CopyROM(0xb000, 0xbfff, cart_image);
+        //CopyROM(0xa000, 0xafff, cart_image + 0x1000);
+        //CopyROM(0xb000, 0xbfff, cart_image);
+        mem_map[0xA] = cart_image + 0x1000;
+        mem_map[0xB] = cart_image + 0x0000;
         bank = 0;
         break;
     case CART_ATRAX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
-        CopyROM(0xa000, 0xbfff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image);
+        mem_map[0xA] = cart_image + 0x0000;
+        mem_map[0xB] = cart_image + 0x1000;
         bank = 0;
         break;
     case CART_BBSB_40:
@@ -425,25 +467,34 @@ void CART_Start(void)
     case CART_MEGA_1024:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0xbfff, cart_image);
+        //CopyROM(0x8000, 0xbfff, cart_image);
+        mem_map[0x8] = cart_image + 0x0000;
+        mem_map[0x9] = cart_image + 0x1000;
+        mem_map[0xA] = cart_image + 0x2000;
+        mem_map[0xB] = cart_image + 0x3000;
         bank = 0;
         break;
     case CART_ATMAX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
-        CopyROM(0xa000, 0xbfff, cart_image);
+        //CopyROM(0xa000, 0xbfff, cart_image);
+        mem_map[0xA] = cart_image + 0x0000;
+        mem_map[0xB] = cart_image + 0x1000;
         bank = 0;
         break;
     case CART_ATMAX_1024:
         Cart809F_Disable();
         CartA0BF_Enable();
-        CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
+        //CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
+        mem_map[0xA] = cart_image + 0xfe000;
+        mem_map[0xB] = cart_image + 0xff000;
         bank = 0x7f;
         break;
     case CART_ATMAX_NEW_1024:
         Cart809F_Disable();
         CartA0BF_Enable();
-        CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
+        mem_map[0xA] = cart_image + 0xfe000;
+        mem_map[0xB] = cart_image + 0xff000;
         bank = 0x00;
         break;
     default:

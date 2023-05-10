@@ -20,8 +20,6 @@
 #define dPutWord(x, y)			        (dPutByte(x,(UBYTE)y), dPutByte(x+1, (UBYTE) ((y) >> 8)))
 #define dGetWordAligned(x)		        dGetWord(x)
 #define dPutWordAligned(x, y)	        dPutWord(x, y)
-#define dCopyFromMem(from, to, size)	memcpy(to, memory + (from), size)
-#define dCopyToMem(from, to, size)		memcpy(memory + (to), from, size)
 #define dFillMem(addr1, value, length)	memset(memory + (addr1), value, length)
 
 #define RAM       0
@@ -46,6 +44,22 @@ inline void dPutByte(UWORD addr, UBYTE data)
 {
     UBYTE *ptr = mem_map[addr >> 12];
     ptr[addr&0xFFF] = data;
+}
+
+inline UBYTE *AnticMainMemLookup(unsigned int addr)
+{
+    UBYTE *ptr = mem_map[addr >> 12];
+    return (ptr + (addr&0xFFF));
+}
+
+inline void dCopyFromMem(unsigned int from, void* to, unsigned int size)
+{
+    memcpy((UBYTE*)to, AnticMainMemLookup((unsigned int)from), size);
+}
+
+inline void dCopyToMem(void*from, unsigned int to, unsigned int size)		
+{
+    memcpy(AnticMainMemLookup((unsigned int)to), (UBYTE*)from, size);
 }
 
 typedef UBYTE (*rdfunc)(UWORD addr);
@@ -88,7 +102,7 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
 		} \
 	} while (0)
 
-#define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
+//#define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
 
 void MEMORY_InitialiseMachine(void);
 void CopyFromMem(UWORD from, UBYTE *to, int size);

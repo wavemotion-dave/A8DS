@@ -37,6 +37,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <nds.h>
 #include "atari.h"
 #include "cpu.h"
 #include "pia.h"
@@ -87,7 +88,7 @@ void POKEY_SetRandomCounter(ULONG value)
 	random_scanline_counter = value;
 }
 
-UBYTE POKEY_GetByte(UWORD addr)
+ITCM_CODE UBYTE POKEY_GetByte(UWORD addr)
 {
 	UBYTE byte = 0xff;
 
@@ -165,7 +166,7 @@ static int POKEY_siocheck(void)
 #define SOUND_GAIN 4
 #endif
 
-void POKEY_PutByte(UWORD addr, UBYTE byte)
+ITCM_CODE void POKEY_PutByte(UWORD addr, UBYTE byte)
 {
 	addr &= 0x0f;
 	switch (addr) {
@@ -351,7 +352,7 @@ void POKEY_Frame(void)
  ** called on a per-scanline basis, not very precise, but good enough     **
  ** for most applications                                                 **
  ***************************************************************************/
-void POKEY_Scanline(void) 
+ITCM_CODE void POKEY_Scanline(void) 
 {
     Pokey_process(&pokey_buffer[pokeyBufIdx], 1);	// Each scanline, compute 1 output samples. This corresponds to a 15720Khz output sample rate if running at 60FPS (good enough)
     pokeyBufIdx = (pokeyBufIdx+1) & (SNDLENGTH-1);
@@ -454,7 +455,7 @@ void POKEY_Scanline(void)
 /*                                                                           */
 /*****************************************************************************/
 
-void Update_Counter(int chan_mask)
+ITCM_CODE void Update_Counter(int chan_mask)
 {
 
 /************************************************************/
