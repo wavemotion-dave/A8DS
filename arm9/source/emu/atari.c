@@ -132,6 +132,7 @@ int Atari800_DetectFileType(const char *filename)
 {
     // Nothing fancy here... if the filename says it's ATR or XEX who are we to argue...
     if (strstr(filename, ".atr") != 0) return  AFILE_ATR;
+    if (strstr(filename, ".Atr") != 0) return  AFILE_ATR;
     if (strstr(filename, ".ATR") != 0) return  AFILE_ATR;
     if (strstr(filename, ".atx") != 0) return  AFILE_ATX;
     if (strstr(filename, ".ATX") != 0) return  AFILE_ATX;

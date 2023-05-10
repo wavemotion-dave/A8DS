@@ -92,7 +92,6 @@ void *Util_malloc(size_t size)
 	void *ptr = malloc(size);
 	if (ptr == NULL) {
 		Atari800_Exit(FALSE);
-		printf("Fatal error: out of memory\n");
 		exit(1);
 	}
     memset(ptr, 0, size);

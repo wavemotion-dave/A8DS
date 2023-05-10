@@ -30,9 +30,8 @@ extern UBYTE *mem_map[16];
 extern UBYTE memory[65536 + 2];
 
 // ---------------------------------------------------------------------------------------
-// Handles bank switching - if we are reading bank 2 (0x4000 to 0x7FFF) we will use the 
-// memory_bank pointer which might point to main memory or it might point to an extended
-// RAM bank - this is handled by the PORT-B access in Memory.c
+// Handles bank switching - we use a memory map so we can easily swap in/out various
+// banks of RAM or Cartridge memory.
 // ---------------------------------------------------------------------------------------
 inline UBYTE dGetByte(UWORD addr)
 {
