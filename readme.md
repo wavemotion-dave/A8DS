@@ -138,12 +138,12 @@ handheld - A8DS will work nicely.
 
 Known Issues :
 ----------------------------------------------------------------------------------
-* Jim Slide XL has some graphical gliching: horizontal lines on the intro screens. Cause unknown.
+* Jim Slide XL has some graphical glitching: horizontal lines on the intro screens. Cause unknown.
 * Space Harrier cart audio sounds "chip-monkish". Likely cause is frame timing being used vs. cycle-accurate timing.
 * Atari Blast! has one column of letters missing on the main title screen. Cause unknown.
-* Cropky (music problems in game)
-* Gun Fright (the game doesn't start when you press "3" key)
-* Intellidiscs (no discs sounds in game)
+* Cropky (music problems in game) - cause unknown.
+* Gun Fright (the game doesn't start when you press "3" key) - cause unknown.
+* Intellidiscs (no discs sounds in game) - cause unknown.
 
 Troubleshooting :
 ----------------------------------------------------------------------------------
