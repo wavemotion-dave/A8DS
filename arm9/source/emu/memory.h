@@ -12,15 +12,15 @@
 #ifndef _MEMORY_H_
 #define _MEMORY_H_
 
-#include <string.h>	/* memcpy, memset */
+#include <string.h> /* memcpy, memset */
 
 #include "atari.h"
 
-#define dGetWord(x)				        (dGetByte(x) + (dGetByte((x) + 1) << 8))
-#define dPutWord(x, y)			        (dPutByte(x,(UBYTE)y), dPutByte(x+1, (UBYTE) ((y) >> 8)))
-#define dGetWordAligned(x)		        dGetWord(x)
-#define dPutWordAligned(x, y)	        dPutWord(x, y)
-#define dFillMem(addr1, value, length)	memset(memory + (addr1), value, length)
+#define dGetWord(x)                     (dGetByte(x) + (dGetByte((x) + 1) << 8))
+#define dPutWord(x, y)                  (dPutByte(x,(UBYTE)y), dPutByte(x+1, (UBYTE) ((y) >> 8)))
+#define dGetWordAligned(x)              dGetWord(x)
+#define dPutWordAligned(x, y)           dPutWord(x, y)
+#define dFillMem(addr1, value, length)  memset(memory + (addr1), value, length)
 
 #define RAM       0
 #define ROM       1
@@ -55,7 +55,7 @@ inline void dCopyFromMem(unsigned int from, void* to, unsigned int size)
     memcpy((UBYTE*)to, AnticMainMemLookup((unsigned int)from), size);
 }
 
-inline void dCopyToMem(void*from, unsigned int to, unsigned int size)		
+inline void dCopyToMem(void*from, unsigned int to, unsigned int size)       
 {
     memcpy(AnticMainMemLookup((unsigned int)to), (UBYTE*)from, size);
 }
@@ -66,39 +66,39 @@ extern rdfunc readmap[256];
 extern wrfunc writemap[256];
 void ROM_PutByte(UWORD addr, UBYTE byte); 
 
-#define GetByte(addr)		(readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
-#define PutByte(addr,byte)	(writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
+#define GetByte(addr)       (readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
+#define PutByte(addr,byte)  (writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
 #define SetRAM(addr1, addr2) do { \
-		int i; \
-		for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
-			readmap[i] = NULL; \
-			writemap[i] = NULL; \
-		} \
-	} while (0)
+        int i; \
+        for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
+            readmap[i] = NULL; \
+            writemap[i] = NULL; \
+        } \
+    } while (0)
 #define SetROM(addr1, addr2) do { \
-		int i; \
-		for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
-			readmap[i] = NULL; \
-			writemap[i] = ROM_PutByte; \
-		} \
-	} while (0)
+        int i; \
+        for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
+            readmap[i] = NULL; \
+            writemap[i] = ROM_PutByte; \
+        } \
+    } while (0)
 
-#define MEMORY_GetByte(addr)		(readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
-#define MEMORY_PutByte(addr,byte)	(writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
+#define MEMORY_GetByte(addr)        (readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
+#define MEMORY_PutByte(addr,byte)   (writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
 #define MEMORY_SetRAM(addr1, addr2) do { \
-		int i; \
-		for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
-			readmap[i] = NULL; \
-			writemap[i] = NULL; \
-		} \
-	} while (0)
+        int i; \
+        for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
+            readmap[i] = NULL; \
+            writemap[i] = NULL; \
+        } \
+    } while (0)
 #define MEMORY_SetROM(addr1, addr2) do { \
-		int i; \
-		for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
-			readmap[i] = NULL; \
-			writemap[i] = ROM_PutByte; \
-		} \
-	} while (0)
+        int i; \
+        for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
+            readmap[i] = NULL; \
+            writemap[i] = ROM_PutByte; \
+        } \
+    } while (0)
 
 //#define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
 
