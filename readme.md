@@ -69,7 +69,7 @@ The A8DS emulator is offered as-is, without any warranty.
 Since much of the original codebase came from the Atari800 project, and since
 that project is released under the GPL V2, this program and source must also
 be distributed using that same licensing model. See COPYING for the full license
-but the original Atari800 copyright notice retained below:
+but the original Atari800 copyright notice is retained below:
 
 Atari800 is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -84,7 +84,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Atari800; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
 
 
 Credits:
