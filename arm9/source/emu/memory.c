@@ -1,7 +1,11 @@
 /*
  * MEMORY.C contains the emulation of the RAM Memory system for the Atari 800/XL/XE
- * The baseline for this file is the Atari800 4.20 source and has
+ * 
+ * The baseline for this file is the Atari800 2.0.x source and has
  * been heavily modified for optimization on the Nintendo DS/DSi.
+ * Atari800 has undergone numerous improvements and enhancements
+ * since the time this file was used as a baseline for A8DS and 
+ * it is strongly recommended you seek out the latest Atari800 sources.
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
  * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
@@ -68,14 +72,11 @@ wrfunc writemap[256] __attribute__((section(".dtcm")));                     // T
 static UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;      // Pointer to XE memory (expanded RAM)
 static ULONG atarixe_memory_size = 0;                                       // How much expanded RAM does the system have?
 
-extern const UBYTE *antic_xe_ptr;                                           // Separate ANTIC access to extended memory ... only for 128K system
-extern int ram_type;                                                        // The RAM type currently selected for use
 UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;              // The bank of memory currently pointed to (or it may point to the 16K bank in main memory)
 
 static int cart809F_enabled = FALSE;                                        // By default, no CART memory mapped to 0x8000 - 0x9FFF
 static int cartA0BF_enabled = FALSE;                                        // By default, no CART memory mapped to 0xA000 - 0xBFFF
 UBYTE *mem_map[16] __attribute__((section(".dtcm")));
-extern UBYTE ROM_basic[];
 
 
 UBYTE *under_0x8, *under_0x9, *under_0xA, *under_0xB;
@@ -90,7 +91,7 @@ UBYTE *under_0x8, *under_0x9, *under_0xA, *under_0xB;
 // available RAM. Stil... there isn't much else to do with the NDS
 // RAM so we may as well get the most out of it!  
 // ------------------------------------------------------------------
-UBYTE xe_mem_buffer[(1024+16) * 1024]; // Allocate extra 16K since expanded banks are 1..64
+UBYTE xe_mem_buffer[1024 * 1024]; // Expanded banks are 1..64 but we subtract one when indexing to give us 0..63 and 1024K of expanded memory (+64K base = 1088K)
 
 void ROM_PutByte(UWORD addr, UBYTE value) {}
 
@@ -318,7 +319,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
             }
             else
             {
-                memory_bank = (atarixe_memory + (bank << 14));
+                memory_bank = (atarixe_memory + ((bank-1) << 14));
                 memory_bank -= 0x4000;
             }
             // Apply no offsets here so we can avoid having to mask addr in memory.h
@@ -342,7 +343,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
                 antic_xe_ptr = memory + 0x4000;
                 break;
             case 0x10:  /* ANTIC: extended, CPU: base */
-                antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) >> 2) + 1) << 14);
+                antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) >> 2)) << 14);
                 break;
             default:    /* ANTIC same as CPU */
                 antic_xe_ptr = NULL;
@@ -365,27 +366,28 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
             memcpy(memory + 0xd800, atari_os + 0x1800, 0x2800);
             ESC_PatchOS();
         }
-        else {
+        else 
+        {
             /* Disable OS ROM */
-            if (ram_size > 48) {
+            if (ram_size > 48) 
+            {
                 memcpy(memory + 0xc000, under_atarixl_os, 0x1000);
                 memcpy(memory + 0xd800, under_atarixl_os + 0x1800, 0x2800);
                 SetRAM(0xc000, 0xcfff);
                 SetRAM(0xd800, 0xffff);
-            } else {
+            } 
+            else 
+            {
                 dFillMem(0xc000, 0xff, 0x1000);
                 dFillMem(0xd800, 0xff, 0x2800);
             }
             /* When OS ROM is disabled we also have to disable Self Test - Jindroush */
-            if (selftest_enabled) {
-                if (ram_size > 20) {
-                    memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
-                    SetRAM(0x5000, 0x57ff);
-                }
-                else
-                    dFillMem(0x5000, 0xff, 0x800);
-                selftest_enabled = FALSE;
+            if (selftest_enabled) 
+            {
+                memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
+                SetRAM(0x5000, 0x57ff);
             }
+            selftest_enabled = FALSE;
         }
     }
 

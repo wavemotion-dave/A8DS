@@ -1,11 +1,15 @@
 /*
  * CPU.ITCM.C contains the emulation of the Core 6502 CPU on the Atari 800. 
- * The baseline for this file is the Atari800 4.20 source and has
- * been heavily modified for optimization on the Nintendo DS/DSi.
  * 
+ * The baseline for this file is the Atari800 2.0.x source and has
+ * been heavily modified for optimization on the Nintendo DS/DSi.
+ * Atari800 has undergone numerous improvements and enhancements
+ * since the time this file was used as a baseline for A8DS and 
+ * it is strongly ecommended that you seek out the latest Atari800 sources.
+ *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
  * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
-
+ *
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
  * royalty provided this full copyright notice (including the Atari800 one below) 

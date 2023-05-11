@@ -1,7 +1,6 @@
 /*
  * MEMORY.H Various macros to access main and extended memory...
  *
- * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
  * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
 
@@ -62,6 +61,9 @@
 
 extern UBYTE *mem_map[16];
 extern UBYTE memory[65536 + 2];
+extern const UBYTE *antic_xe_ptr;
+extern int ram_type;
+extern UBYTE ROM_basic[];
 
 // ---------------------------------------------------------------------------------------
 // Handles bank switching - we use a memory map so we can easily swap in/out various
@@ -134,7 +136,6 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
         } \
     } while (0)
 
-//#define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
 
 void MEMORY_InitialiseMachine(void);
 void CopyFromMem(UWORD from, UBYTE *to, int size);
@@ -144,6 +145,5 @@ void Cart809F_Disable(void);
 void Cart809F_Enable(void);
 void CartA0BF_Disable(void);
 void CartA0BF_Enable(void);
-
 
 #endif /* _MEMORY_H_ */
