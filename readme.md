@@ -88,9 +88,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Credits:
 --------------------------------------------------------------------------------
-* Wintermute for devkitpro and libnds (http://www.devkitpro.org).
 * Atari800 team for source code (http://atari800.sourceforge.net/)
 * Altirra and Avery Lee for a kick-ass substitute BIOS, the Altirra Hardware Manual (a must read) and generally being awesome.
+* Wintermute for devkitpro and libnds (http://www.devkitpro.org).
 * Alekmaul for porting the original A5200DS of which this is heavily based.
 * Darryl Hirschler for the awesome Atari 8-bit Keyboard Graphics.
 * The good folks over on GBATemp and AtariAge for their support.
