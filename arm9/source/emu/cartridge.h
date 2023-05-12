@@ -2,6 +2,7 @@
 #define _CARTRIDGE_H_
 
 #include "atari.h"
+#include "../config.h"
 
 #define CART_NONE		    0
 #define CART_STD_8		    1
@@ -48,8 +49,6 @@
 #define CART_ATMAX_1024     42
 #define CART_SDX_128        43
 #define CART_ATMAX_NEW_1024 75
-
-extern int cart_type;
 
 #define CTRL_JOY        1
 #define CTRL_SWAP       2

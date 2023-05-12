@@ -50,6 +50,8 @@
 #include "kbd_400.h"
 #include "altirra_os.h"
 #include "altirra_basic.h"
+#include "screenshot.h"
+#include "config.h"
 
 #define MAX_FILES 1024                      // No more than this many files can be processed per directory
 
@@ -59,35 +61,9 @@ u16 gTotalAtariFrames = 0;                  // For FPS counting
 int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background "pointers"
 u16 emu_state;                              // Emulate State
 u16 atari_frames = 0;                       // Number of frames per second (60 for NTSC and 50 for PAL)
-
-short int myGame_offset_x = 32;             // Some sensible X/Y offsets and scale values
-short int myGame_offset_y = 24;             // Some sensible X/Y offsets and scale values
-short int myGame_scale_x = 256;             // Some sensible X/Y offsetbis and scale values
-short int myGame_scale_y = 256;             // Some sensible X/Y offsets and scale values
-
-int bAtariOS=false;                         // Real Atari XL BIOS is OFF by default
-int bAtariOSB=false;                        // Real Atari OSB BIOS is OFF by default
-int bAtariBASIC=false;                      // Real Atari Basic Rev C is OFF by default
 bool bShowKeyboard = false;
-
-
-int os_type             = OS_ALTIRRA_XL;    // Default is built-in OS from Alitirra
-int basic_type          = BASIC_ALTIRRA;    // Default BASIC is built-in from Alitirra
-int bHaveBASIC          = false;            // default is to disable BASIC
-int bUseA_KeyAsUP       = false;            // default is to use A as fire
-int bUseB_KeyAsDN       = false;            // default is to use B as fire
-int bUseX_KeyAsCR       = false;            // default is to use X as "space" bar (fairly common for games to use this as a 2nd button)
-int key_click_disable   = false;            // default is to enable key clicks on keyboard presses
-int bShowEmuText        = true;             // default is to show all EMU text
-int showFps             = false;            // default is not to show FPS counter
-int full_speed          = false;            // default is to run at normal speed
-int palett_type         = 0;                // default is "bright" palett
-int auto_fire           = 0;                // default autofire disabled
-int ram_type            = 0;                // default is 128k
-int blending_type       = 6;                // 0=Normal, 1=Blur1, 2=Blur2, etc
-int keyboard_type       = 0;                // Normal (Atari 800XL Style 1)
-int dpad_type           = 0;                // Normal
-int cart_type           = CART_NONE;        // 
+int screen_slide_x = 0;
+int screen_slide_y = 0;
 
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
@@ -101,10 +77,10 @@ u8 myPokeyBufIdx       __attribute__((section(".dtcm"))) = 0;
 u8 bMute               __attribute__((section(".dtcm"))) = 0;
 u16 sampleExtender[256] __attribute__((section(".dtcm"))) = {0};
 
-#define  cxBG (myGame_offset_x<<8)
-#define  cyBG (myGame_offset_y<<8)
-#define  xdxBG (((320 / myGame_scale_x) << 8) | (320 % myGame_scale_x))
-#define  ydyBG (((256 / myGame_scale_y) << 8) | (256 % myGame_scale_y))
+#define  cxBG (myConfig.xOffset<<8)
+#define  cyBG (myConfig.yOffset<<8)
+#define  xdxBG (((320 / myConfig.xScale) << 8) | (320 % myConfig.xScale))
+#define  ydyBG (((256 / myConfig.yScale) << 8) | (256 % myConfig.yScale))
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
 bool bAtariCrash = false;                   // We use this to track any crashes that might occur and give the user a message on screen
@@ -113,6 +89,8 @@ char last_boot_file[300] = {0};             // The last filename (.ATR or .XEX) 
 #define MAX_DEBUG 5
 int debug[MAX_DEBUG]={0};                   // Turn on DEBUG_DUMP to output some data to the lower screen... useful for emulator debug: just drop values into debug[] array.
 //#define DEBUG_DUMP
+
+u8 bFirstLoad = true;
 
 // ---------------------------------------------------------------------------
 // Dump Debug Data - wite out up to MAX_DEBUG values to the lower screen.
@@ -153,19 +131,6 @@ static void DumpDebugData(void)
         dsPrintValue(0,3+i,0, dbgbuf);
     }
 #endif
-}
-
-// ---------------------------------------------------------------------------
-// Write out the XEGS.DAT configuration file to capture the settings for
-// each game.
-// ---------------------------------------------------------------------------
-void dsWriteConfig(void)
-{
-    dsPrintValue(3,0,0, (char*)"CFG");
-    WriteGameSettings();
-
-    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    dsPrintValue(3,0,0, (char*)"   ");
 }
 
 
@@ -378,7 +343,7 @@ void dsSetAtariPalette(void)
     // Init palette
     for(index = 0; index < 256; index++)
     {
-      if (palett_type == 0)
+      if (myConfig.palette_type == 0)
       {
         r = palette_A[(index * 3) + 0];
         g = palette_A[(index * 3) + 1];
@@ -467,15 +432,23 @@ static u8 jitter[][4] __attribute__((section(".dtcm"))) =
      0x99, 0x99},
 };
 
-void vblankIntr()
+ITCM_CODE void vblankIntr()
 {
     REG_BG2PA = xdxBG;
     REG_BG2PD = ydyBG;
 
-    REG_BG2X = cxBG+jitter[blending_type][sIndex++];
-    REG_BG2Y = cyBG+jitter[blending_type][sIndex++];
-
+    REG_BG2X = cxBG+jitter[myConfig.blending][sIndex++]+(screen_slide_x<<8);
+    REG_BG2Y = cyBG+jitter[myConfig.blending][sIndex++]+(screen_slide_y<<8);
+    
     sIndex = sIndex & 0x03;
+    
+    if (sIndex == 0)
+    {
+        if (screen_slide_y < 0) screen_slide_y++;
+        else if (screen_slide_y > 0) screen_slide_y--;
+        if (screen_slide_x < 0) screen_slide_x++;
+        else if (screen_slide_x > 0) screen_slide_x--;
+    }
 }
 
 /*
@@ -574,6 +547,8 @@ void dsShowScreenMain(void)
     REG_BLDCNT=0; REG_BLDCNT_SUB=0; REG_BLDY=0; REG_BLDY_SUB=0;
 
     swiWaitForVBlank();
+    
+    dsShowRomInfo();
 }
 
 // -------------------------------------------------------------------
@@ -614,14 +589,14 @@ void load_os(void)
         // If we can't find the atari OS, we force the Altirra XL bios in...
         memcpy(ROM_atarios_xl, ROM_altirraos_xl, 0x4000);
         bAtariOS = false;
-        os_type = OS_ALTIRRA_XL;    // Default is built-in OS from Alitirra if XL rom not found
+        myConfig.os_type = OS_ALTIRRA_XL;    // Default is built-in OS from Alitirra if XL rom not found
     }
     else
     {
         fread(ROM_atarios_xl, 0x4000, 1, romfile);
         fclose(romfile);
         bAtariOS = true;
-        os_type = OS_ATARI_XL;    // Default is real Atari OS if available...
+        // os_type was already set prior to this call
     }
 
     // -------------------------------------------
@@ -676,17 +651,17 @@ void load_os(void)
 void install_os(void)
 {
     // Otherwise we either use the Atari OS or the Altirra based on user choice...
-    if (os_type == OS_ALTIRRA_XL)
+    if (myConfig.os_type == OS_ALTIRRA_XL)
     {
         memcpy(atari_os, ROM_altirraos_xl, 0x4000);
         machine_type = MACHINE_XLXE;
     }
-    else if (os_type == OS_ALTIRRA_800)
+    else if (myConfig.os_type == OS_ALTIRRA_800)
     {
         memcpy(atari_os, ROM_altirraos_800, 0x2800);
         machine_type = MACHINE_OSB;
     }
-    else if (os_type == OS_ATARI_OSB)
+    else if (myConfig.os_type == OS_ATARI_OSB)
     {
         memcpy(atari_os, ROM_atarios_b, 0x2800);
         machine_type = MACHINE_OSB;
@@ -707,14 +682,13 @@ void install_os(void)
 // -----------------------------------------------------------
 void dsShowRomInfo(void)
 {
-    extern int file_type;
     extern char disk_filename[DISK_MAX][256];
     char line1[25];
     char ramSizeBuf[8];
     char machineBuf[20];
     char line2[200];
 
-    if (bShowEmuText)
+    if (myConfig.emulatorText)
     {
         if (!bShowKeyboard)
         {
@@ -761,12 +735,12 @@ void dsShowRomInfo(void)
             dsPrintValue(10,13,0, line2);
         }
         
-        sprintf(ramSizeBuf, "%dK", ram_size);
-        if ((os_type == OS_ATARI_OSB) || (os_type==OS_ALTIRRA_800))
-            sprintf(machineBuf, "%-5s A800", (bHaveBASIC ? "BASIC": " "));
+        sprintf(ramSizeBuf, "%4dK", ram_size);
+        if ((myConfig.os_type == OS_ATARI_OSB) || (myConfig.os_type==OS_ALTIRRA_800))
+            sprintf(machineBuf, "%-5s A800", (myConfig.basic_type ? "BASIC": " "));
         else
-            sprintf(machineBuf, "%-5s XL/XE", (bHaveBASIC ? "BASIC": " "));
-        sprintf(line2, "%-12s %-4s %-4s", machineBuf, ramSizeBuf, (tv_mode == TV_NTSC ? "NTSC":"PAL "));
+            sprintf(machineBuf, "%-5s XL/XE", (myConfig.basic_type ? "BASIC": " "));
+        sprintf(line2, "%-12s %-4s %-4s", machineBuf, ramSizeBuf, (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "));
         dsPrintValue(7,0,0, line2);
     }
 }
@@ -814,7 +788,7 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
     }
 
       // load game if ok
-    if (Atari800_OpenFile(filename, bRestart, disk_num, bReadOnly, bHaveBASIC) != AFILE_ERROR)
+    if (Atari800_OpenFile(filename, bRestart, disk_num, bReadOnly, myConfig.basic_type) != AFILE_ERROR)
     {
       // Initialize the virtual console emulation
       dsShowScreenEmu();
@@ -931,253 +905,6 @@ bool dsWaitOnQuit(void)
 }
 
 
-// -----------------------------------------------------------------------------
-// Options are handled here... we have a number of things the user can tweak
-// and these options are applied immediately. The user can also save off 
-// their option choices for the currently running game into the XEGS.DAT
-// configuration database. When games are loaded back up, XEGS.DAT is read
-// to see if we have a match and the user settings can be restored for the 
-// game.
-// -----------------------------------------------------------------------------
-struct options_t
-{
-    char *label;
-    char *option[8];
-    int  *option_val;
-    int   option_max;
-    char *help1;
-    char *help2;
-    char *help3;
-    char *help4;
-};
-
-static u8 option_table=0;
-static int basic_opt=0;
-static int tv_type2=0;
-const struct options_t Option_Table[2][20] =
-{
-    // Page 1
-    {
-        {"TV TYPE",     {"NTSC",        "PAL"},                             &tv_type2,              2,   "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
-        {"MACHINE TYPE",{"128K XL/XE",  "320K XL/XE", 
-                         "1088K XL/XE", "48K ATARI800"},                    &ram_type,              4,   "128K STANDARD FOR ",   "MOST GAMES. 320K /",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
-        {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",
-                         "ALTIRRA 800",  "ATARIOSB.ROM"},                   &os_type,               4,   "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
-        {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &basic_opt,             3,   "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
-        {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &skip_frames,           3,   "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
-        {"PALETTE",     {"BRIGHT",      "MUTED"},                           &palett_type,           2,   "CHOOSE PALLETTE   ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
-        {"A BUTTON",    {"FIRE",        "UP"},                              &bUseA_KeyAsUP,         2,   "TOGGLE THE A KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY UP  "},
-        {"B BUTTON",    {"FIRE",        "DOWN"},                            &bUseB_KeyAsDN,         2,   "TOGGLE THE B KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE A FIRE  ",  "BUTTON OR JOY DOWN"},
-        {"X BUTTON",    {"SPACE",       "RETURN"},                          &bUseX_KeyAsCR,         2,   "TOGGLE THE X KEY  ",   "BEHAVIOR SUCH THAT",  "IT CAN BE SPACE OR",  "RETURN KEY        "},
-
-        {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &auto_fire,             4,   "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC     ",  "FAST = 15x/SEC    "},
-        {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &showFps,               3,   "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
-        {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
-                                        "3:RED/GREEN","4:GREEN/RED"},       &global_artif_mode,     5,   "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
-        {"BLENDING",    {"NORMAL",      "BLUR1", "BLUR2", "BLUR3", 
-                         "BLUR4","BLUR5","BLUR6","BLUR7"},                  &blending_type,         8,   "NORMAL IS SHARP   ",   "AND VARIOUS BLUR  ",  "LEVELS WILL HELP  ",  "SCREEN SCALING.   "},
-        {"DISK SPEEDUP",{"OFF",         "ON"},                              &ESC_enable_sio_patch,  2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
-        {"KEY CLICK",   {"ON",          "OFF"},                             &key_click_disable,     2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
-        {"EMULATOR TXT",{"OFF",         "ON"},                              &bShowEmuText,          2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
-        {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", 
-                          "400 STYLE",  "130XE STYLE"},                     &keyboard_type,         4,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
-        {"D-PAD",       {"JOY 1", "JOY 2", "DIAGONALS", "CURSORS"},         &dpad_type,             4,   "CHOOSE HOW THE    ",   "DPAD OPERATES     ",  "CAN SWAP JOY1 AND ",  "JOY2 IF NEEDED    "},    
-        {NULL,          {"",            ""},                                NULL,                   2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "}
-    },
-    // Page 2
-    {
-        {NULL,          {"",            ""},                                NULL,                   2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "}
-    }
-};
-
-// -----------------------------------------------------------------------------
-// Allows the user to move the cursor up and down through the various table 
-// enties  above to select options for the game they wish to play. 
-// -----------------------------------------------------------------------------
-void dsChooseOptions(int bOkayToChangePalette)
-{
-    static int last_pal=-1;
-    static int last_art=-1;
-    int optionHighlighted;
-    int idx;
-    bool bDone=false;
-    int keys_pressed;
-    int last_keys_pressed = 999;
-    char strBuf[64];
-
-    // Show the background...
-    decompress(bgFileSelTiles, bgGetGfxPtr(bg0b), LZ77Vram);
-    decompress(bgFileSelMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
-    dmaCopy((void *) bgFileSelPal,(u16*) BG_PALETTE_SUB,256*2);
-    unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
-    dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
-
-    tv_type2 =  (tv_mode == TV_NTSC ? 0:1);
-
-    basic_opt = 0;
-    if (bHaveBASIC)
-    {
-        basic_opt = (basic_type == BASIC_ALTIRRA ? 1:2);
-    }
-
-    idx=0;
-    while (true)
-    {
-        sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][idx].label, Option_Table[option_table][idx].option[*(Option_Table[option_table][idx].option_val)]);
-        dsPrintValue(1,5+idx, (idx==0 ? 1:0), strBuf);
-        idx++;
-        if (Option_Table[option_table][idx].label == NULL) break;
-    }
-
-    dsPrintValue(1,23, 0, "  B=EXIT, START=SAVE, X=MORE  ");
-    optionHighlighted = 0;
-    while (!bDone)
-    {
-        keys_pressed = keysCurrent();
-        if (keys_pressed != last_keys_pressed)
-        {
-            last_keys_pressed = keys_pressed;
-            if (keysCurrent() & KEY_UP) // Previous option
-            {
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
-                dsPrintValue(1,5+optionHighlighted,0, strBuf);
-                if (optionHighlighted > 0) optionHighlighted--; else optionHighlighted=(idx-1);
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
-                dsPrintValue(1,5+optionHighlighted,1, strBuf);
-            }
-            if (keysCurrent() & KEY_DOWN) // Next option
-            {
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
-                dsPrintValue(1,5+optionHighlighted,0, strBuf);
-                if (optionHighlighted < (idx-1)) optionHighlighted++;  else optionHighlighted=0;
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
-                dsPrintValue(1,5+optionHighlighted,1, strBuf);
-            }
-
-            if (keysCurrent() & KEY_RIGHT)  // Next Option 
-            {
-                *(Option_Table[option_table][optionHighlighted].option_val) = (*(Option_Table[option_table][optionHighlighted].option_val) + 1) % Option_Table[option_table][optionHighlighted].option_max;
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
-                dsPrintValue(1,5+optionHighlighted,1, strBuf);
-                if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIXL.ROM")==0)
-                {
-                    if (!bAtariOS) dsPrintValue(0,0,0,"ROM MISSING");
-                }
-                else if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIOSB.ROM")==0)
-                {
-                    if (!bAtariOSB) dsPrintValue(0,0,0,"ROM MISSING");
-                }
-                else if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIBAS.ROM")==0)
-                {
-                    if (!bAtariBASIC) dsPrintValue(0,0,0,"ROM MISSING");
-                }
-                else dsPrintValue(0,0,0,"           ");
-            }
-            if (keysCurrent() & KEY_LEFT)  // Previous Option 
-            {
-                if (*(Option_Table[option_table][optionHighlighted].option_val) > 0) 
-                    *(Option_Table[option_table][optionHighlighted].option_val) -= 1;
-                else
-                     *(Option_Table[option_table][optionHighlighted].option_val) = Option_Table[option_table][optionHighlighted].option_max - 1;
-                sprintf(strBuf, " %-12s  : %-12s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
-                dsPrintValue(1,5+optionHighlighted,1, strBuf);
-                if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIXL.ROM")==0)
-                {
-                    if (!bAtariOS) dsPrintValue(0,0,0,"ROM MISSING");
-                }
-                else if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIOSB.ROM")==0)
-                {
-                    if (!bAtariOSB) dsPrintValue(0,0,0,"ROM MISSING");
-                }
-                else if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIBAS.ROM")==0)
-                {
-                    if (!bAtariBASIC) dsPrintValue(0,0,0,"ROM MISSING");
-                }
-                else dsPrintValue(0,0,0,"           ");
-            }            
-            if (keysCurrent() & KEY_START)  // Save Options
-            {
-                if (bOkayToChangePalette)   // This lets us know that a game is selected...
-                {
-                    dsWriteConfig();
-                }
-            }
-            if (keysCurrent() & KEY_B)  // Exit options
-            {
-                break;
-            }
-
-            // In case the Artifacting global changed....
-            if (last_art != global_artif_mode)
-            {
-                last_art = global_artif_mode;
-                ANTIC_UpdateArtifacting();
-            }
-            // In case the Pallette global changed....
-            if (last_pal != palett_type)
-            {
-                last_pal = palett_type;
-                if (bOkayToChangePalette) dsSetAtariPalette();
-            }
-
-            dsPrintValue(14,0,0,Option_Table[option_table][optionHighlighted].help1);
-            dsPrintValue(14,1,0,Option_Table[option_table][optionHighlighted].help2);
-            dsPrintValue(14,2,0,Option_Table[option_table][optionHighlighted].help3);
-            dsPrintValue(14,3,0,Option_Table[option_table][optionHighlighted].help4);
-        }
-        swiWaitForVBlank();
-    }
-
-    tv_mode = (tv_type2 == 0 ? TV_NTSC:TV_PAL);
-    if (showFps == 2) full_speed=1; else full_speed=0;
-
-    bHaveBASIC = (basic_opt ? 1:0);
-    basic_type = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);
-
-    // ----------------------------------------------------------------------
-    // Map the  ram_type to actual ram_size for use by the emulator...
-    // ----------------------------------------------------------------------
-    if (ram_type == 0) ram_size = RAM_128K;
-    else if (ram_type == 1) ram_size = RAM_320_RAMBO;
-    else if (ram_type == 2) ram_size = RAM_1088K;
-    else ram_size = RAM_48K;
-
-    // ---------------------------------------------------------------------------------------------
-    // Sanity check... make sure if the user chose some odd combo of RAM and OS we fix it up...
-    // ---------------------------------------------------------------------------------------------
-    if (ram_size == RAM_48K) // If 48K... make sure we have OS set to one of the XLs
-    {
-        if ((os_type == OS_ALTIRRA_XL) || (os_type == OS_ATARI_XL))
-        {
-            os_type = OS_ALTIRRA_800;
-        }
-    }
-    else    // Must be 128K or 320K so make sure we aren't using older Atari 800 BIOS
-    {
-        if ((os_type == OS_ALTIRRA_800) || (os_type == OS_ATARI_OSB))
-        {
-            os_type = OS_ALTIRRA_XL;
-        }
-    }
-
-    install_os();
-
-    // Restore original bottom graphic
-    decompress(bgBottomTiles, bgGetGfxPtr(bg0b), LZ77Vram);
-    decompress(bgBottomMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
-    dmaCopy((void *) bgBottomPal,(u16*) BG_PALETTE_SUB,256*2);
-    dmaVal = *(bgGetMapPtr(bg1b) +31*32);
-    dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
-
-    dsShowRomInfo();
-    // Give a third of a second time delay...
-    for (int i=0; i<20; i++)
-    {
-        swiWaitForVBlank();
-    }
-
-    return;
-}
 
 char file_load_id[10];
 bool bLoadReadOnly = true;
@@ -1187,7 +914,7 @@ void dsDisplayLoadOptions(void)
     char tmpBuf[32];
 
     dsPrintValue(0,0,0,file_load_id);
-    sprintf(tmpBuf, "%-4s %s", (tv_mode == TV_NTSC ? "NTSC":"PAL "), (bHaveBASIC ? "W BASIC":"       "));
+    sprintf(tmpBuf, "%-4s %s", (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "), (myConfig.basic_type ? "W BASIC":"       "));
     dsPrintValue(19,0,0,tmpBuf);
     sprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
     dsPrintValue(14,1,0,tmpBuf);
@@ -1207,7 +934,7 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
 {
   unsigned int ucBcl,ucGame;
   u8 maxLen;
-  char szName[300];
+  static char szName[300];
 
   // Display all games if possible
   unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
@@ -1219,7 +946,7 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
 
   dsPrintValue(31,5,0,(char *) (NoDebGame>0 ? "<" : " "));
   dsPrintValue(31,22,0,(char *) (NoDebGame+14<count8bit ? ">" : " "));
-  sprintf(szName,"%s","A=PICK B=BACK SEL=PAL STA=BASIC");
+  sprintf(szName,"%s"," A=PICK B=BACK SEL=TV STA=BASIC ");
   dsPrintValue(0,23,0,szName);
   for (ucBcl=0;ucBcl<17; ucBcl++)
   {
@@ -1281,6 +1008,9 @@ unsigned int dsWaitForRom(void)
     romSelected=0;
   }
 
+  force_tv_type = 99;
+  force_basic_type = 99;
+    
   dsDisplayFiles(firstRomDisplay,romSelected);
   while (!bDone) {
     if (keysCurrent() & KEY_UP) {
@@ -1371,7 +1101,7 @@ unsigned int dsWaitForRom(void)
     else {
       ucSHaut = 0;
     }
-        if ( keysCurrent() & KEY_B ) {
+    if ( keysCurrent() & KEY_B ) {
       bDone=true;
       while (keysCurrent() & KEY_B);
     }
@@ -1380,25 +1110,41 @@ unsigned int dsWaitForRom(void)
     {
         if (last_sel_key != KEY_SELECT)
         {
-            if (tv_mode == TV_NTSC)
-                tv_mode = TV_PAL;
+            if (myConfig.tv_type == TV_NTSC)
+            {
+                myConfig.tv_type = TV_PAL;
+                force_tv_type = TV_PAL;
+            }
             else
-                tv_mode = TV_NTSC;
+            {
+                myConfig.tv_type = TV_NTSC;
+                force_tv_type = TV_NTSC;
+            }
             dsDisplayLoadOptions();
             last_sel_key = KEY_SELECT;
         }
     } else last_sel_key=0;
-
+      
     static int last_sta_key = 0;
     if (keysCurrent() & KEY_START)
     {
         if (last_sta_key != KEY_START)
         {
-            bHaveBASIC = 1-bHaveBASIC;
+            if (myConfig.basic_type == BASIC_NONE)
+            {
+                myConfig.basic_type = (bAtariBASIC ? BASIC_ATARIREVC : BASIC_ALTIRRA);
+                force_basic_type = myConfig.basic_type;
+            }
+            else
+            {
+                myConfig.basic_type = BASIC_NONE;
+                force_basic_type = myConfig.basic_type;
+            }
             dsDisplayLoadOptions();
             last_sta_key = KEY_START;
         }
     } else last_sta_key=0;
+      
 
     if (keysCurrent() & KEY_A) {
       if (!a8romlist[ucFicAct].directory) {
@@ -1495,7 +1241,7 @@ static u16 shift=0;
 static u16 ctrl=0;
 void dsShowKeyboard(void)
 {
-      if (keyboard_type == 3) // XE style
+      if (myConfig.keyboard_type == 3) // XE style
       {
           decompress(kbd_XETiles, bgGetGfxPtr(bg0b), LZ77Vram);
           decompress(kbd_XEMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -1503,7 +1249,7 @@ void dsShowKeyboard(void)
           unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
           dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
       }
-      else if (keyboard_type == 2) // 400 style
+      else if (myConfig.keyboard_type == 2) // 400 style
       {
           decompress(kbd_400Tiles, bgGetGfxPtr(bg0b), LZ77Vram);
           decompress(kbd_400Map, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -1511,7 +1257,7 @@ void dsShowKeyboard(void)
           unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
           dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
       }
-      else if (keyboard_type == 1) // XL2 style
+      else if (myConfig.keyboard_type == 1) // XL2 style
       {
           decompress(kbd_XL2Tiles, bgGetGfxPtr(bg0b), LZ77Vram);
           decompress(kbd_XL2Map, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -1847,11 +1593,12 @@ void dsInstallSoundEmuFIFO(void)
 // those as appopriate. 
 // -------------------------------------------------------------------------------
 char fpsbuf[32];
+u16 nds_keys[8] = {KEY_A, KEY_B, KEY_X, KEY_Y, KEY_L, KEY_R, KEY_START, KEY_SELECT};
+
 void dsMainLoop(void)
 {
   static unsigned short int config_snap_counter=0;
   static short int last_key_code = -1;
-  static bool bFirstLoad = true;
   unsigned short int keys_pressed,keys_touch=0, romSel=0;
   short int iTx,iTy;
   bool bShowHelp = false;
@@ -1863,10 +1610,10 @@ void dsMainLoop(void)
   TIMER1_DATA=0;
   TIMER1_CR=TIMER_ENABLE | TIMER_DIV_1024;
 
-  myGame_offset_x = 32;
-  myGame_offset_y = 24;
-  myGame_scale_x = 256;
-  myGame_scale_y = 256;
+  myConfig.xOffset = 32;
+  myConfig.yOffset = 24;
+  myConfig.xScale = 256;
+  myConfig.yScale = 256;
 
   while(emu_state != A8_QUITSTDS)
   {
@@ -1895,7 +1642,7 @@ void dsMainLoop(void)
         // 655 -> 50 fps and 546 -> 60 fps
         if (!full_speed)
         {
-            while(TIMER0_DATA < ((tv_mode == TV_NTSC ? 546:656)*atari_frames))
+            while(TIMER0_DATA < ((myConfig.tv_type == TV_NTSC ? 546:656)*atari_frames))
                 ;
         }
 
@@ -1911,7 +1658,7 @@ void dsMainLoop(void)
         // ----------------------------------------------------
         // If we have processed 60/50 frames we start anew...
         // ----------------------------------------------------
-        if (++atari_frames >= (tv_mode == TV_NTSC ? 60:50))
+        if (++atari_frames >= (myConfig.tv_type == TV_NTSC ? 60:50))
         {
             TIMER0_CR=0;
             TIMER0_DATA=0;
@@ -1928,8 +1675,8 @@ void dsMainLoop(void)
             TIMER1_DATA = 0;
             TIMER1_CR=TIMER_ENABLE | TIMER_DIV_1024;
 
-            if (gTotalAtariFrames == (tv_mode == TV_NTSC ? 61:51)) gTotalAtariFrames = (tv_mode == TV_NTSC ? 60:50);
-            if (showFps) { siprintf(fpsbuf,"%03d",gTotalAtariFrames); dsPrintValue(0,0,0, fpsbuf); } // Show FPS
+            if (gTotalAtariFrames == (myConfig.tv_type == TV_NTSC ? 61:51)) gTotalAtariFrames = (myConfig.tv_type == TV_NTSC ? 60:50);
+            if (myConfig.fps_setting) { siprintf(fpsbuf,"%03d",gTotalAtariFrames); dsPrintValue(0,0,0, fpsbuf); } // Show FPS
             if (full_speed) dsPrintValue(30,0,0,"FS");
             gTotalAtariFrames = 0;
             DumpDebugData();
@@ -1942,48 +1689,11 @@ void dsMainLoop(void)
         // --------------------------------------------
         keys_pressed=keysCurrent();
         key_consol = CONSOL_NONE;
-
         key_shift = 0;
         key_code = AKEY_NONE;
-        if (bUseA_KeyAsUP && bUseB_KeyAsDN)
-        {
-            if (keys_pressed & KEY_A) keys_pressed |= KEY_UP;
-            if (keys_pressed & KEY_B) keys_pressed |= KEY_DOWN;
-        }
-        else if (bUseA_KeyAsUP)
-        {
-            if (keys_pressed & KEY_A) keys_pressed |= KEY_UP;
-            trig0 = (keys_pressed & KEY_B) ? 0 : 1;
-        }
-        else if (bUseB_KeyAsDN)
-        {
-            if (keys_pressed & KEY_B) keys_pressed |= KEY_DOWN;
-            trig0 = (keys_pressed & KEY_A) ? 0 : 1;
-        }
-        else
-        {
-            if (dpad_type == 1)
-                trig1 = ((keys_pressed & KEY_A) || (keys_pressed & KEY_B)) ? 0 : 1;
-            else
-                trig0 = ((keys_pressed & KEY_A) || (keys_pressed & KEY_B)) ? 0 : 1;
-        }
         stick0 = STICK_CENTRE;
         stick1 = STICK_CENTRE;
-
-        if (keys_pressed & KEY_Y)
-        {
-            if (keys_pressed & KEY_L) key_code = AKEY_1;
-            else if (keys_pressed & KEY_R) key_code = AKEY_2;
-            else key_consol &= ~CONSOL_OPTION;
-        }
-
-        if (keys_pressed & KEY_X)
-        {
-            if (keys_pressed & KEY_L) key_code = AKEY_ESCAPE;
-            else if (keys_pressed & KEY_R) key_code = AKEY_RETURN;
-            else key_code = (bUseX_KeyAsCR ? AKEY_RETURN:AKEY_SPACE);
-        }
-
+            
         if (keyboard_debounce > 0) keyboard_debounce--;
 
         // ------------------------------------------------------
@@ -2051,7 +1761,7 @@ void dsMainLoop(void)
                               {
                                   if (last_key_code == AKEY_NONE)
                                   {
-                                      if (!key_click_disable) soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
+                                      if (!myConfig.key_click_disable) soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
                                       last_key_code = key_code;
                                   }
                               }
@@ -2071,16 +1781,7 @@ void dsMainLoop(void)
                 }
                 else
                 {
-                    if ((iTx>=0) && (iTx<16) && (iTy>0) && (iTy<18))   // Show FPS
-                    {
-                       if (keys_touch == 0)
-                       {
-                           showFps = (showFps ? 0:1);
-                           dsPrintValue(0,0,0, "   ");
-                           keys_touch = 1;
-                       }
-                    }
-                    else if ((iTx>192) && (iTx<250) && (iTy>120) && (iTy<143))  // RESET (reloads the game)
+                    if ((iTx>192) && (iTx<250) && (iTy>120) && (iTy<143))  // RESET (reloads the game)
                     {
                         if (!keys_touch)
                         {
@@ -2164,53 +1865,188 @@ void dsMainLoop(void)
             last_key_code = -1;
             keys_touch=0;
         }
-
+         
+        // ---------------------------------------------------------------------------
+        // Handle any of the 8 possible keys... ABXYLR and START, SELECT
+        // ---------------------------------------------------------------------------
+        u8 joy_fired = false;
+        u8 joy_moved[4] = {0,0,0,0};   // Up, Down, Left, Right
+        for (int i=0; i<8; i++)
+        {
+            if (keys_pressed & nds_keys[i]) // Is this key pressed?
+            {
+                switch (myConfig.keyMap[i])
+                {
+                    case 0:
+                        joy_fired = true;
+                        break;
+                    case 1:
+                        joy_moved[0] = true;
+                        break;
+                    case 2:
+                        joy_moved[1] = true;
+                        break;
+                    case 3:
+                        joy_moved[2] = true;
+                        break;
+                    case 4:
+                        joy_moved[3] = true;
+                        break;
+                    case 5:
+                        key_consol &= ~CONSOL_START;
+                        break;
+                    case 6:
+                        key_consol &= ~CONSOL_SELECT;
+                        break;
+                    case 7:
+                        key_consol &= ~CONSOL_OPTION;
+                        break;
+                    case 8:  key_code = AKEY_SPACE;     break;
+                    case 9:  key_code = AKEY_RETURN;    break;                        
+                    case 10: key_code = AKEY_ESCAPE;    break;
+                    case 11: key_code = AKEY_BREAK;     break;
+                    case 12: key_code = AKEY_A;         break;
+                    case 13: key_code = AKEY_B;         break;
+                    case 14: key_code = AKEY_C;         break;
+                    case 15: key_code = AKEY_D;         break;
+                    case 16: key_code = AKEY_E;         break;
+                    case 17: key_code = AKEY_F;         break;
+                    case 18: key_code = AKEY_G;         break;
+                    case 19: key_code = AKEY_H;         break;
+                    case 20: key_code = AKEY_I;         break;
+                    case 21: key_code = AKEY_J;         break;
+                    case 22: key_code = AKEY_K;         break;
+                    case 23: key_code = AKEY_L;         break;
+                    case 24: key_code = AKEY_M;         break;
+                    case 25: key_code = AKEY_N;         break;
+                    case 26: key_code = AKEY_O;         break;
+                    case 27: key_code = AKEY_P;         break;
+                    case 28: key_code = AKEY_Q;         break;
+                    case 29: key_code = AKEY_R;         break;
+                    case 30: key_code = AKEY_S;         break;
+                    case 31: key_code = AKEY_T;         break;
+                    case 32: key_code = AKEY_U;         break;
+                    case 33: key_code = AKEY_V;         break;
+                    case 34: key_code = AKEY_W;         break;
+                    case 35: key_code = AKEY_X;         break;
+                    case 36: key_code = AKEY_Y;         break;
+                    case 37: key_code = AKEY_Z;         break;
+                    case 38: key_code = AKEY_0;         break;
+                    case 39: key_code = AKEY_1;         break;
+                    case 40: key_code = AKEY_2;         break;
+                    case 41: key_code = AKEY_3;         break;
+                    case 42: key_code = AKEY_4;         break;
+                    case 43: key_code = AKEY_5;         break;
+                    case 44: key_code = AKEY_6;         break;
+                    case 45: key_code = AKEY_7;         break;
+                    case 46: key_code = AKEY_8;         break;
+                    case 47: key_code = AKEY_9;         break;
+                    case 48: key_code = AKEY_UP;        break;
+                    case 49: key_code = AKEY_DOWN;      break;
+                    case 50: key_code = AKEY_LEFT;      break;
+                    case 51: key_code = AKEY_RIGHT;     break;
+                    case 52: key_code = AKEY_NONE;      break;
+                    case 53: key_code = AKEY_NONE;      break;
+                    case 54: key_code = AKEY_NONE;      break;
+                    case 55: screen_slide_y = 10;       break;
+                    case 56: screen_slide_y = 20;       break;
+                    case 57: screen_slide_y = -10;      break;
+                    case 58: screen_slide_y = -20;      break;
+                    case 59: screen_slide_x = 32;       break;
+                    case 60: screen_slide_x = 64;       break;
+                    case 61: screen_slide_x = -32;      break;
+                    case 62: screen_slide_x = -64;      break;
+                    case 63:
+                        if (gTotalAtariFrames & 1)  // Every other frame...
+                        {
+                            if ((keys_pressed & KEY_UP))    myConfig.yOffset++;
+                            if ((keys_pressed & KEY_DOWN))  myConfig.yOffset--;
+                            if ((keys_pressed & KEY_LEFT))  myConfig.xOffset++;
+                            if ((keys_pressed & KEY_RIGHT)) myConfig.xOffset--;
+                        }
+                        break;
+                    case 64:
+                        if (gTotalAtariFrames & 1)  // Every other frame...
+                        {
+                            if ((keys_pressed & KEY_UP))     if (myConfig.yScale <= 256) myConfig.yScale++;
+                            if ((keys_pressed & KEY_DOWN))   if (myConfig.yScale >= 192) myConfig.yScale--;
+                            if ((keys_pressed & KEY_RIGHT))  if (myConfig.xScale < 320)  myConfig.xScale++;
+                            if ((keys_pressed & KEY_LEFT))   if (myConfig.xScale >= 192) myConfig.xScale--;
+                        }
+                        break;                        
+                        
+                }
+            }
+        }
+        
         // ---------------------------------------------------------------------------------------------
         // Handle the NDS D-Pad which usually just controlls a joystick connected to the Player 1 PORT.
         // Only handle UP/DOWN/LEFT/RIGHT if shoulder buttons are not pressed (those are handled below)
         // ---------------------------------------------------------------------------------------------
         if ((keys_pressed & (KEY_R|KEY_L)) == 0)
         {
-            if (dpad_type == 2) // Diagonals
+            if (myConfig.dpad_type == 2) // Diagonals (for Q-Bert like games)
             {
-                if (keys_pressed & KEY_UP)    {stick0 = STICK_UR;}
-                if (keys_pressed & KEY_LEFT)  {stick0 = STICK_UL;}
-                if (keys_pressed & KEY_RIGHT) {stick0 = STICK_LR;}
-                if (keys_pressed & KEY_DOWN)  {stick0 = STICK_LL;}
+                if (keys_pressed & KEY_UP)      {joy_moved[0] = true; joy_moved[3] = true;}
+                if (keys_pressed & KEY_LEFT)    {joy_moved[0] = true; joy_moved[2] = true;}
+                if (keys_pressed & KEY_RIGHT)   {joy_moved[1] = true; joy_moved[3] = true;}
+                if (keys_pressed & KEY_DOWN)    {joy_moved[1] = true; joy_moved[2] = true;}
             }
-            else if (dpad_type == 3) // Cursors
+            else if (myConfig.dpad_type == 3) // Cursor Keys
             {
-                if (keys_pressed & KEY_UP)    {key_code = AKEY_UP;}
-                if (keys_pressed & KEY_LEFT)  {key_code = AKEY_LEFT;}
-                if (keys_pressed & KEY_RIGHT) {key_code = AKEY_RIGHT;}
-                if (keys_pressed & KEY_DOWN)  {key_code = AKEY_DOWN;}
+                if (keys_pressed & KEY_UP)      {key_code = AKEY_UP;}
+                if (keys_pressed & KEY_LEFT)    {key_code = AKEY_LEFT;}
+                if (keys_pressed & KEY_RIGHT)   {key_code = AKEY_RIGHT;}
+                if (keys_pressed & KEY_DOWN)    {key_code = AKEY_DOWN;}
             }
-            else if (dpad_type == 1) // Joystick 2
+            else // Normal Joystick use...
             {
-                if (keys_pressed & KEY_UP)                                  stick1 = STICK_FORWARD;
-                if (keys_pressed & KEY_LEFT)                                stick1 = STICK_LEFT;
-                if (keys_pressed & KEY_RIGHT)                               stick1 = STICK_RIGHT;
-                if (keys_pressed & KEY_DOWN)                                stick1 = STICK_BACK;
-                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT))   stick1 = STICK_UL;
-                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT))  stick1 = STICK_UR;
-                if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick1 = STICK_LL;
-                if ((keys_pressed & KEY_DOWN) &&(keys_pressed & KEY_RIGHT)) stick1 = STICK_LR;
-            }
-            else // Joystick 1
-            {
-                if (keys_pressed & KEY_UP)                                  stick0 = STICK_FORWARD;
-                if (keys_pressed & KEY_LEFT)                                stick0 = STICK_LEFT;
-                if (keys_pressed & KEY_RIGHT)                               stick0 = STICK_RIGHT;
-                if (keys_pressed & KEY_DOWN)                                stick0 = STICK_BACK;
-                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_LEFT))   stick0 = STICK_UL;
-                if ((keys_pressed & KEY_UP) && (keys_pressed & KEY_RIGHT))  stick0 = STICK_UR;
-                if ((keys_pressed & KEY_DOWN) && (keys_pressed & KEY_LEFT)) stick0 = STICK_LL;
-                if ((keys_pressed & KEY_DOWN) &&(keys_pressed & KEY_RIGHT)) stick0 = STICK_LR;
+                if (keys_pressed & KEY_UP)      {joy_moved[0] = true;}
+                if (keys_pressed & KEY_DOWN)    {joy_moved[1] = true;}
+                if (keys_pressed & KEY_LEFT)    {joy_moved[2] = true;}
+                if (keys_pressed & KEY_RIGHT)   {joy_moved[3] = true;}
             }
         }
+            
+        // --------------------------------------------------------------------------
+        // If any DS key resulted in the fire button being pressed, handle that here
+        // --------------------------------------------------------------------------
+        if (myConfig.dpad_type == 1)
+            trig1 = (joy_fired ? 0 : 1);
+        else
+            trig0 = (joy_fired ? 0 : 1);
+            
+        // -----------------------------------------------------------------------
+        // If any DS key resulted in a joystick being moved, handle that here
+        // joy_moved[] array is: Up, Down, Left, Right
+        // -----------------------------------------------------------------------
+        if (myConfig.dpad_type == 1) // Is this player 2 Joystick?
+        {
+            if      (joy_moved[0] && joy_moved[2])    stick1 = STICK_UL;
+            else if (joy_moved[0] && joy_moved[3])    stick1 = STICK_UR;
+            else if (joy_moved[1] && joy_moved[2])    stick1 = STICK_LL;
+            else if (joy_moved[1] && joy_moved[3])    stick1 = STICK_LR;
+            else if (joy_moved[0])                    stick1 = STICK_FORWARD;
+            else if (joy_moved[1])                    stick1 = STICK_BACK;
+            else if (joy_moved[2])                    stick1 = STICK_LEFT;
+            else if (joy_moved[3])                    stick1 = STICK_RIGHT;
+        }
+        else  // Must be the player 1 joystick...
+        {
+            if      (joy_moved[0] && joy_moved[2])    stick0 = STICK_UL;
+            else if (joy_moved[0] && joy_moved[3])    stick0 = STICK_UR;
+            else if (joy_moved[1] && joy_moved[2])    stick0 = STICK_LL;
+            else if (joy_moved[1] && joy_moved[3])    stick0 = STICK_LR;
+            else if (joy_moved[0])                    stick0 = STICK_FORWARD;
+            else if (joy_moved[1])                    stick0 = STICK_BACK;
+            else if (joy_moved[2])                    stick0 = STICK_LEFT;
+            else if (joy_moved[3])                    stick0 = STICK_RIGHT;
+        }
 
-        if (keys_pressed & KEY_START) key_consol &= ~CONSOL_START;
-        if (keys_pressed & KEY_SELECT) key_consol &= ~CONSOL_SELECT;
+            
+        // ----------------------------------------------------------------------
+        // This is stuff that happens more rarely... like once per frame or two.
+        // ----------------------------------------------------------------------
         if (gTotalAtariFrames & 1)  // Every other frame...
         {
             if ((keys_pressed & KEY_R) && (keys_pressed & KEY_L))
@@ -2220,26 +2056,20 @@ void dsMainLoop(void)
                     if (keys_pressed & KEY_A)
                         lcdSwap();
                     else
-                        dsWriteConfig();
+                    {
+                        dsPrintValue(3,0,0, (char*)"SNAP");
+                        screenshot();
+                        dsPrintValue(3,0,0, (char*)"    ");
+                    }
                 }
             } else config_snap_counter=0;
-
-            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_UP))    myGame_offset_y++;
-            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_DOWN))  myGame_offset_y--;
-            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_LEFT))  myGame_offset_x++;
-            if ((keys_pressed & KEY_R) && (keys_pressed & KEY_RIGHT)) myGame_offset_x--;
-
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_UP))     if (myGame_scale_y <= 256) myGame_scale_y++;
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_DOWN))   if (myGame_scale_y >= 192) myGame_scale_y--;
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_RIGHT))  if (myGame_scale_x < 320)  myGame_scale_x++;
-            if ((keys_pressed & KEY_L) && (keys_pressed & KEY_LEFT))   if (myGame_scale_x >= 192) myGame_scale_x--;
         }
 
         // A bit of a hack... the first load requires a cold restart after the OS is running....
         if (bFirstLoad)
         {
-            bFirstLoad = false;
             dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
+            bFirstLoad = false;
             irqEnable(IRQ_TIMER2);
             bMute = 0;
         }
@@ -2348,255 +2178,5 @@ void a8FindFiles(void)
   }
 }
 
-// ---------------------------------------------------------------------------
-// We write out A8DS.DAT to the /DATA/ directory on the SD card to keep
-// a database of user configured settings on a per-game basis. We use 
-// the HASH of a game so that we are not reliant on the filename (so even
-// if the user renames the file or moves it to another directory, the
-// hash will be the same). We picked 1870 as the maximum number of entries
-// which works out to a convienent 128K of SD flash memory which is 
-// enough for just about anyone and keeps us to using only 4 clusters 
-// on the SD card. A reasonable compropmise... 
-// ---------------------------------------------------------------------------
-#define MAX_GAME_SETTINGS       1870
-#define GAME_DATABASE_VERSION   0x05
-struct GameSettings_t
-{
-    char game_hash[32];
-    UBYTE slot_used;
-    UBYTE tv_type;
-    UBYTE pallete_type;
-    UBYTE ram_type;
-    UBYTE os_type;
-    UBYTE basic_opt;
-    UBYTE skip_frames;
-    UBYTE aButtonMap;
-    UBYTE xButtonMap;
-    UBYTE auto_fire;
-    UBYTE artifacting;
-    UBYTE blending;
-    short int xOffset;
-    short int yOffset;
-    short int xScale;
-    short int yScale;
-    UBYTE bButtonMap;
-    UBYTE key_click_disable;
-    UBYTE keyboard_type;
-    UBYTE dpad_type;
-    UBYTE spare3;
-    UBYTE spare4;
-    short int spare5;
-    short int spare6;
-    short int spare7;
-    short int disk_speedup;
-    short int spare8;
-    short int spare9;
-};
-
-struct GameDatabase_t
-{
-    UBYTE                       db_version;
-    struct GameSettings_t       GameSettings[MAX_GAME_SETTINGS];
-    unsigned int                checksum;
-};
-
-struct GameDatabase_t GameDB;
-
-void InitGameSettings(void)
-{
-    // --------------------------------------------------
-    // This will set every byte to 0x00 but then we
-    // map a few specific things below...
-    // --------------------------------------------------
-    memset(&GameDB, 0x00, sizeof(GameDB));
-    for (int i=0; i<MAX_GAME_SETTINGS; i++)
-    {
-        GameDB.GameSettings[i].slot_used = 0;
-        GameDB.GameSettings[i].spare3 = 0;
-        GameDB.GameSettings[i].spare4 = 0;
-        GameDB.GameSettings[i].spare5 = 0;
-        GameDB.GameSettings[i].spare6 = 0;
-        // Map a few spares with a default of '1' which may come in handy in the future....
-        GameDB.GameSettings[i].spare8 = 1;
-        GameDB.GameSettings[i].spare9 = 1;
-    }
-}
-
-// -------------------------------------------------------------------------------------
-// Snap out the XEGS.DAT to the SD card. This is only done when the user asks for it 
-// to be written out... either by holding both L/R shoulder buttons on the DS for a
-// full half-second or by pressing START while in the configuration area. 
-// -------------------------------------------------------------------------------------
-void WriteGameSettings(void)
-{
-    FILE *fp;
-    int idx = 0;
-
-    GameDB.db_version = GAME_DATABASE_VERSION;
-    // Search through the Game Database to see if we have a match to our game filename....
-    for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
-    {
-        if (GameDB.GameSettings[idx].slot_used == 0) break;
-        if (memcmp (GameDB.GameSettings[idx].game_hash, last_hash, 32) == 0) break;
-    }
-
-    if (idx < MAX_GAME_SETTINGS)
-    {
-        memcpy(GameDB.GameSettings[idx].game_hash, last_hash, 32);
-        GameDB.GameSettings[idx].slot_used          = 1;
-        GameDB.GameSettings[idx].tv_type            = tv_type2;
-        GameDB.GameSettings[idx].pallete_type       = palett_type;
-        GameDB.GameSettings[idx].os_type            = os_type;
-        GameDB.GameSettings[idx].basic_opt          = basic_opt;
-        GameDB.GameSettings[idx].auto_fire          = auto_fire;
-        GameDB.GameSettings[idx].skip_frames        = skip_frames;
-        GameDB.GameSettings[idx].ram_type           = ram_type;
-        GameDB.GameSettings[idx].artifacting        = global_artif_mode;
-        GameDB.GameSettings[idx].xOffset            = myGame_offset_x;
-        GameDB.GameSettings[idx].yOffset            = myGame_offset_y;
-        GameDB.GameSettings[idx].xScale             = myGame_scale_x;
-        GameDB.GameSettings[idx].yScale             = myGame_scale_y;
-        GameDB.GameSettings[idx].aButtonMap         = bUseA_KeyAsUP;
-        GameDB.GameSettings[idx].bButtonMap         = bUseB_KeyAsDN;
-        GameDB.GameSettings[idx].xButtonMap         = bUseX_KeyAsCR;
-        GameDB.GameSettings[idx].blending           = blending_type;
-        GameDB.GameSettings[idx].key_click_disable  = key_click_disable;
-        GameDB.GameSettings[idx].keyboard_type      = keyboard_type;
-        GameDB.GameSettings[idx].dpad_type          = dpad_type;
-        GameDB.GameSettings[idx].disk_speedup       = ESC_enable_sio_patch;
-
-        GameDB.checksum = 0;
-        char *ptr = (char *)GameDB.GameSettings;
-        for (int i=0; i<sizeof(GameDB.GameSettings); i++)
-        {
-               GameDB.checksum += *ptr;
-        }
-
-        DIR* dir = opendir("/data");
-        if (dir)
-        {
-            /* Directory exists. */
-            closedir(dir);
-        }
-        else
-        {
-            mkdir("/data", 0777);
-        }
-        fp = fopen("/data/A8DS.DAT", "wb+");
-        if (fp != NULL)
-        {
-            fwrite(&GameDB, sizeof(GameDB), 1, fp);
-            fclose(fp);
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------------
-// Read the A8DS.DAT file from the SD card and into memory. If we can't find the
-// file or if the file is corrupt, we will write out a blank default database.
-// ----------------------------------------------------------------------------------
-void ReadGameSettings(void)
-{
-    FILE *fp;
-
-    // -------------------------------------------------------------------------
-    // We want to rename the older XEGS-DS.DAT to the new rebranded A8DS.DAT
-    // -------------------------------------------------------------------------
-    fp = fopen("/data/XEGS-DS.DAT", "rb");
-    if (fp != NULL)
-    {
-        fclose(fp);
-        rename("/data/XEGS-DS.DAT", "/data/A8DS.DAT");
-    }
-    
-    fp = fopen("/data/A8DS.DAT", "rb");
-    if (fp != NULL)
-    {
-        fread(&GameDB, sizeof(GameDB), 1, fp);
-        fclose(fp);
-
-        unsigned int checksum = 0;
-        char *ptr = (char *)GameDB.GameSettings;
-        for (int i=0; i<sizeof(GameDB.GameSettings); i++)
-        {
-               checksum += *ptr;
-        }
-        if ((GameDB.db_version != GAME_DATABASE_VERSION) || (GameDB.checksum != checksum))
-        {
-            InitGameSettings();
-        }
-    }
-    else
-    {
-        InitGameSettings();
-    }
-}
-
-// ---------------------------------------------------------------------------------
-// Look for the game by hash in the A8DS.DAT database. If found, we apply the 
-// restored game-specific settings. Otherwise we use defaults.
-// ---------------------------------------------------------------------------------
-void ApplyGameSpecificSettings(void)
-{
-    int idx = 0;
-
-    // Search through the Game Database to see if we have a match to our game filename....
-    for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
-    {
-        if (memcmp(GameDB.GameSettings[idx].game_hash, last_hash, 32) == 0) break;
-    }
-
-    full_speed = 0;
-    if (idx < MAX_GAME_SETTINGS)
-    {
-      myGame_offset_x       = GameDB.GameSettings[idx].xOffset;
-      myGame_offset_y       = GameDB.GameSettings[idx].yOffset;
-      myGame_scale_x        = GameDB.GameSettings[idx].xScale;
-      myGame_scale_y        = GameDB.GameSettings[idx].yScale;
-      tv_mode               = (GameDB.GameSettings[idx].tv_type == 0 ? TV_NTSC:TV_PAL);
-      global_artif_mode     = GameDB.GameSettings[idx].artifacting;
-      palett_type           = GameDB.GameSettings[idx].pallete_type;
-      os_type               = GameDB.GameSettings[idx].os_type;
-      basic_opt             = GameDB.GameSettings[idx].basic_opt;
-      bHaveBASIC            = (basic_opt ? 1:0);
-      basic_type            = (basic_opt == 2 ? BASIC_ATARIREVC:BASIC_ALTIRRA);
-      auto_fire             = GameDB.GameSettings[idx].auto_fire;
-      skip_frames           = GameDB.GameSettings[idx].skip_frames;
-      ram_type              = GameDB.GameSettings[idx].ram_type;
-      bUseA_KeyAsUP         = GameDB.GameSettings[idx].aButtonMap;
-      bUseB_KeyAsDN         = GameDB.GameSettings[idx].bButtonMap;
-      bUseX_KeyAsCR         = GameDB.GameSettings[idx].xButtonMap;
-      blending_type         = GameDB.GameSettings[idx].blending;
-      key_click_disable     = GameDB.GameSettings[idx].key_click_disable;
-      keyboard_type         = GameDB.GameSettings[idx].keyboard_type;
-      dpad_type             = GameDB.GameSettings[idx].dpad_type;
-      ESC_enable_sio_patch  = GameDB.GameSettings[idx].disk_speedup;
-
-      // ----------------------------------------------------------------------
-      // Map the saved ram_type to actual ram_size for use by the emulator...
-      // ----------------------------------------------------------------------
-      if (ram_type == 0) ram_size = RAM_128K;
-      else if (ram_type == 1) ram_size = RAM_320_RAMBO;
-      else if (ram_type == 2) ram_size = RAM_1088K;
-      else ram_size = RAM_48K;
-
-      install_os();
-    }
-    else
-    {
-      myGame_offset_x = 32;
-      myGame_offset_y = 24;
-      myGame_scale_x = 256;
-      myGame_scale_y = 256;
-      global_artif_mode=0;
-      skip_frames = (isDSiMode() ? 0:1);   // For older DS models, we skip frames to get full speed...
-      auto_fire=0;
-      bUseA_KeyAsUP=0;
-      bUseB_KeyAsDN=0;
-      bUseX_KeyAsCR=0;
-      key_click_disable = 0;
-      // Never default BASIC, OS, KEYBORD TYPE, TV-TYPE or MEMORY!
-    }
-}
 
 // End of file

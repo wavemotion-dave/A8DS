@@ -42,6 +42,7 @@ typedef struct FICtoLoad {
 extern int bg0, bg1, bg0b,bg1b;
 extern int bg2, bg3;
 extern unsigned int video_height;                  // Actual video height
+extern u8 bFirstLoad;
 
 extern void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr, unsigned char valEnd, unsigned char uWait);
 extern void vblankIntr();
@@ -62,11 +63,13 @@ extern void dsInstallSoundEmuFIFO(void);
 extern void dsMainLoop(void);
 extern int a8Filescmp (const void *c1, const void *c2);
 extern void a8FindFiles(void);
-
+extern void dsShowRomInfo(void);
 extern void InitGameSettings(void);
 extern void WriteGameSettings(void);
+extern void WriteGlobalSettings(void);
 extern void ReadGameSettings(void);
 extern void ApplyGameSpecificSettings(void);
-
+extern void install_os(void);
+extern void dsSetAtariPalette(void);
 
 #endif // _A8DS_H

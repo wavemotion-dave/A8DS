@@ -1406,7 +1406,7 @@ static UBYTE Command_Frame(void)
 void SIO_TapeMotor(int onoff)
 {
 	/* if sio is patched, do not do anything */
-	if (ESC_enable_sio_patch)
+	if (myConfig.disk_speedup)
 		return;
 	if (onoff) {
 		/* set frame to cassette frame, if not */

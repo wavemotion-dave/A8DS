@@ -28,7 +28,6 @@
 
 extern void load_os(void);
 extern void install_os(void);
-extern int skip_frames;
 
 // -----------------------------------------------------------------------
 // Program entry point - for things like Twilight Menu++ (TWL++), we can 
@@ -43,16 +42,6 @@ int main(int argc, char **argv)
     consoleDemoInit();
     soundEnable();
     lcdMainOnTop();
-    
-    // --------------------------------------------------------------------
-    // For older DS models, we force skip frames to get full speed...
-    // This does come with some problems - skipping frames can cause
-    // problems with a few games that don't get the collision detection
-    // right with skipped frames - Caverns of Mars, Buried Bucks and 
-    // Jumpman are examples of games that won't run right. The user can
-    // adjust the frame skip in the Options (Gear icon) area.
-    // --------------------------------------------------------------------
-    skip_frames = (isDSiMode() ? FALSE:TRUE);
 
     // Init FAT for file system use...
     if (!fatInitDefault()) 

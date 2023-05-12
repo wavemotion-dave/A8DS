@@ -62,7 +62,6 @@
 extern UBYTE *mem_map[16];
 extern UBYTE memory[65536 + 2];
 extern const UBYTE *antic_xe_ptr;
-extern int ram_type;
 extern UBYTE ROM_basic[];
 
 // ---------------------------------------------------------------------------------------

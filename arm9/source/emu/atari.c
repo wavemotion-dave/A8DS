@@ -70,17 +70,6 @@
 #include "util.h"
 #include "pokeysnd.h"
 
-// ----------------------------------------------------------------------------------
-// Some basic machine settings... we default to an XEGS with 128K of RAM installed.
-// This is a bit of a "custom" machine but is capable of running 98% of all games.
-// ----------------------------------------------------------------------------------
-int machine_type     = MACHINE_XLXE;
-int ram_size         = RAM_128K;        // We only allow RAM_128K or RAM_320_RAMBO and for backwards compatibility RAM_48K
-int tv_mode          = TV_NTSC;
-int disable_basic    = TRUE;
-int skip_frames      = FALSE;
-int file_type        = AFILE_ERROR;
-
 char disk_filename[DISK_MAX][256];
 int  disk_readonly[DISK_MAX] = {true,true,true};
 
@@ -328,7 +317,7 @@ void Atari800_Frame()
 	Devices_Frame();
 	INPUT_Frame();
 	GTIA_Frame();
-    ANTIC_Frame(skip_frames ? (gTotalAtariFrames & (skip_frames==1 ? 0x03:0x01)) : TRUE);  // Skip every 4th frame... or every other frame if we are "aggressive"
+    ANTIC_Frame(myConfig.skip_frames ? (gTotalAtariFrames & (myConfig.skip_frames==1 ? 0x03:0x01)) : TRUE);  // Skip every 4th frame... or every other frame if we are "aggressive"
     POKEY_Frame();
     
     gTotalAtariFrames++;

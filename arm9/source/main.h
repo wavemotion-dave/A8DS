@@ -31,6 +31,5 @@ extern volatile u16 vusCptVBL;             // VBL test
 
 extern u8 trig0, trig1;
 extern u8 stick0, stick1;
-extern int skip_frames;
 
 #endif

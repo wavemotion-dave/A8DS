@@ -695,8 +695,6 @@ static void pmg_dma(void) {
 
 /* Artifacting ------------------------------------------------------------ */
 
-int global_artif_mode=0;
-
 static ULONG art_lookup_normal[256];
 static ULONG art_lookup_reverse[256];
 static ULONG art_bkmask_normal[256];
@@ -1226,7 +1224,7 @@ ITCM_CODE static void draw_antic_2_gtia9(int nchars, const UBYTE *ANTIC_memptr, 
     do_border();
 }
 
-ITCM_CODE static void draw_antic_2_gtia10(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+static void draw_antic_2_gtia10(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
     UWORD lookup_gtia10[16];
     INIT_ANTIC_2
@@ -2074,7 +2072,7 @@ void ANTIC_UpdateArtifacting(void)
     UBYTE q;
     UBYTE art_white;
 
-    if (global_artif_mode == 0) {
+    if (myConfig.artifacting == 0) {
         draw_antic_table[0][2] = draw_antic_table[0][3] = draw_antic_2;
         draw_antic_table[0][0xf] = draw_antic_f;
         return;
@@ -2083,7 +2081,7 @@ void ANTIC_UpdateArtifacting(void)
   draw_antic_table[0][2] = draw_antic_table[0][3] = draw_antic_2_artif;
   draw_antic_table[0][0xf] = draw_antic_f_artif;
 
-    art_colours = (global_artif_mode <= 4 ? art_colour_table[global_artif_mode - 1] : art_colour_table[2]);
+    art_colours = (myConfig.artifacting <= 4 ? art_colour_table[myConfig.artifacting - 1] : art_colour_table[2]);
 
     art_reverse_colpf1_save = art_normal_colpf1_save = cl_lookup[C_PF1] & 0x0f0f;
     art_reverse_colpf2_save = art_normal_colpf2_save = cl_lookup[C_PF2];

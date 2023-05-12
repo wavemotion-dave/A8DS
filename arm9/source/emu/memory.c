@@ -110,8 +110,8 @@ static void SetAtari800Memory(void)
 // ------------------------------------------------------------
 static void SetAtariXLXEMemory(void)
 {
-    if (ram_type == 1) ram_size = RAM_320_RAMBO; 
-    else if (ram_type == 2) ram_size = RAM_1088K; 
+    if (myConfig.ram_type == 1) ram_size = RAM_320_RAMBO; 
+    else if (myConfig.ram_type == 2) ram_size = RAM_1088K; 
     else ram_size = RAM_128K;
 }
 

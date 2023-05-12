@@ -412,7 +412,7 @@ UBYTE GTIA_GetByte(UWORD addr)
 	case _TRIG3:
 		return TRIG[3] & TRIG_latch[3];
 	case _PAL:
-		return (tv_mode == TV_PAL) ? 0x01 : 0x0f;
+		return (myConfig.tv_type == TV_PAL) ? 0x01 : 0x0f;
 	case _CONSOL:
 		{
 			UBYTE byte = consol_table[consol_index] & consol_mask;

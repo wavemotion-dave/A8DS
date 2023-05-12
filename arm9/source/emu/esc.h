@@ -1,9 +1,6 @@
 #ifndef ESC_H_
 #define ESC_H_
 
-/* TRUE to enable patched (fast) Serial I/O. */
-extern int ESC_enable_sio_patch;
-
 /* Escape codes used to mark places in 6502 code that must
    be handled specially by the emulator. An escape sequence
    is an illegal 6502 opcode 0xF2 or 0xD2 followed

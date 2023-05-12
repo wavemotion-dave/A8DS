@@ -1,10 +1,18 @@
 #ifndef _ATARI_H_
 #define _ATARI_H_
 
+/* SBYTE and UBYTE must be exactly 1 byte long. */
+/* SWORD and UWORD must be exactly 2 bytes long. */
+/* SLONG and ULONG must be exactly 4 bytes long. */
+#define SBYTE signed char
+#define SWORD signed short
+#define SLONG signed int
+#define UBYTE unsigned char
+#define UWORD unsigned short
+#define ULONG unsigned int
+
 #include <stdio.h> /* FILENAME_MAX */
-#ifdef WIN32
-#include <windows.h>
-#endif
+#include "../config.h"
 
 extern int debug[];
 
@@ -13,10 +21,9 @@ extern int debug[];
 #define OS_ALTIRRA_800  2
 #define OS_ATARI_OSB    3
 
-#define BASIC_ALTIRRA   0
-#define BASIC_ATARIREVC 1
-
-extern int os_type;
+#define BASIC_NONE      0
+#define BASIC_ALTIRRA   1
+#define BASIC_ATARIREVC 2
 
 #define DISK_XEX    0
 #define DISK_1      1
@@ -26,7 +33,6 @@ extern int os_type;
 
 extern char disk_filename[DISK_MAX][256];
 extern int disk_readonly[DISK_MAX];
-
 
 /* Fundamental declarations ---------------------------------------------- */
 
@@ -43,28 +49,9 @@ extern int disk_readonly[DISK_MAX];
 #define TRUE   1
 #endif
 
-#define TV_PAL 312
-#define TV_NTSC 262
-
 // Some global sound defines
-#define SOUND_FREQ  (tv_mode == TV_NTSC ? 15720:15600)      // 60 frames per second. 264 scanlines per frame. 1 samples per scanline. 60*264*1 = 15720... slightly different for pal 50*312*1=15600
+#define SOUND_FREQ  (myConfig.tv_type == TV_NTSC ? 15720:15600)     // 60 frames per second. 264 scanlines per frame. 1 samples per scanline. 60*264*1 = 15720... slightly different for pal 50*312*1=15600
 #define SNDLENGTH  256                                     // Must be power of 2... so we can quicly mask it
-
-/* SBYTE and UBYTE must be exactly 1 byte long. */
-/* SWORD and UWORD must be exactly 2 bytes long. */
-/* SLONG and ULONG must be exactly 4 bytes long. */
-#define SBYTE signed char
-#define SWORD signed short
-#define SLONG signed int
-#define UBYTE unsigned char
-#define UWORD unsigned short
-#ifndef WIN32
-/* Windows headers typedef ULONG */
-#define ULONG unsigned int
-#endif
-/* Note: in various parts of the emulator we assume that char is 1 byte
-   and int is 4 bytes. */
-
 
 /* Public interface ------------------------------------------------------ */
 
@@ -79,9 +66,6 @@ extern int disk_readonly[DISK_MAX];
 #define Atari800_MACHINE_XLXE  MACHINE_XLXE
 #define Atari800_MACHINE_5200  MACHINE_5200
 
-extern int machine_type;
-#define Atari800_machine_type machine_type
-
 /* RAM size in kilobytes.
    Valid values for MACHINE_OSA and MACHINE_OSB are: 16, 48, 52.
    Valid values for MACHINE_XLXE are: 128, RAM_320_RAMBO */
@@ -89,18 +73,14 @@ extern int machine_type;
 #define RAM_128K            128
 #define RAM_320_RAMBO       320
 #define RAM_1088K           1088
-extern int ram_size;
 
 /* Always call Atari800_InitialiseMachine() after changing machine_type
    or ram_size! */
 
 /* Video system. */
-#define TV_NTSC         262
-#define TV_PAL          312
-extern int tv_mode;
+#define TV_NTSC_SCANLINES   262
+#define TV_PAL_SCANLINES    312
 
-/* TRUE to disable Atari BASIC when booting Atari (hold Option in XL/XE). */
-extern int disable_basic;
 
 /* Dimensions of atari_screen.
    atari_screen is ATARI_WIDTH * ATARI_HEIGHT bytes.
@@ -228,7 +208,7 @@ extern int xpos_limit;
 #define DMAR     9
 
 /* Number of scanlines per frame. */
-#define max_ypos tv_mode
+#define max_ypos (myConfig.tv_type == TV_NTSC ? TV_NTSC_SCANLINES:TV_PAL_SCANLINES)
 
 /* Main clock value at the beginning of the current scanline. */
 extern unsigned int screenline_cpu_clock;

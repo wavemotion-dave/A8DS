@@ -57,87 +57,87 @@ void INPUT_Frame(void)
     static int last_key_break = 0;
     static UBYTE last_stick[4] = {STICK_CENTRE, STICK_CENTRE, STICK_CENTRE, STICK_CENTRE};
 
-	/* handle keyboard */
-	i = (key_code == AKEY_BREAK);
+    /* handle keyboard */
+    i = (key_code == AKEY_BREAK);
   
-	if (i && !last_key_break) {
-		if (IRQEN & 0x80) {
-			IRQST &= ~0x80;
-			GenerateIRQ();
-		}
-	}
-	last_key_break = i;
+    if (i && !last_key_break) {
+        if (IRQEN & 0x80) {
+            IRQST &= ~0x80;
+            GenerateIRQ();
+        }
+    }
+    last_key_break = i;
 
     SKSTAT |= 0xc;
-	if (key_shift)
-		SKSTAT &= ~8;
+    if (key_shift)
+        SKSTAT &= ~8;
 
-	if (key_code < 0) 
+    if (key_code < 0) 
     {
-		if (CASSETTE_press_space) 
+        if (CASSETTE_press_space) 
         {
-			key_code = AKEY_SPACE;
-			CASSETTE_press_space = 0;
-		}
-		else 
+            key_code = AKEY_SPACE;
+            CASSETTE_press_space = 0;
+        }
+        else 
         {
-			last_key_code = AKEY_NONE;
-		}
-	}
-	if (key_code >= 0) 
+            last_key_code = AKEY_NONE;
+        }
+    }
+    if (key_code >= 0) 
     {
-	    SKSTAT &= ~4;
-		if ((key_code ^ last_key_code) & ~AKEY_SHFTCTRL) 
+        SKSTAT &= ~4;
+        if ((key_code ^ last_key_code) & ~AKEY_SHFTCTRL) 
         {
-		    /* ignore if only shift or control has changed its state */
-			last_key_code = key_code;
-			KBCODE = (UBYTE) key_code;
-			if (IRQEN & 0x40) {
-				if (IRQST & 0x40) {
-					IRQST &= ~0x40;
-					GenerateIRQ();
-				}
-				else {
-					/* keyboard over-run */
-					SKSTAT &= ~0x40;
-					/* assert(IRQ != 0); */
-				}
-			}
-		}
-	}
+            /* ignore if only shift or control has changed its state */
+            last_key_code = key_code;
+            KBCODE = (UBYTE) key_code;
+            if (IRQEN & 0x40) {
+                if (IRQST & 0x40) {
+                    IRQST &= ~0x40;
+                    GenerateIRQ();
+                }
+                else {
+                    /* keyboard over-run */
+                    SKSTAT &= ~0x40;
+                    /* assert(IRQ != 0); */
+                }
+            }
+        }
+    }
 
-	/* handle joysticks */
+    /* handle joysticks */
     i = (stick1 << 4) | stick0;
     OLDSTICK[0] = STICK[0];OLDSTICK[1] = STICK[1];
     STICK[0] = i & 0x0f;
     STICK[1] = (i >> 4) & 0x0f;
 
-	for (i = 0; i < 2; i++) 
+    for (i = 0; i < 2; i++) 
     {
-			if ((STICK[i] & 0x0c) == 0) {	/* right and left simultaneously */
-				if (last_stick[i] & 0x04)	/* if wasn't left before, move left */
-					STICK[i] |= 0x08;
-				else						/* else move right */
-					STICK[i] |= 0x04;
-			}
-			else {
-				last_stick[i] &= 0x03;
-				last_stick[i] |= STICK[i] & 0x0c;
-			}
-			if ((STICK[i] & 0x03) == 0) {	/* up and down simultaneously */
-				if (last_stick[i] & 0x01)	/* if wasn't up before, move up */
-					STICK[i] |= 0x02;
-				else						/* else move down */
-					STICK[i] |= 0x01;
-			}
-			else {
-				last_stick[i] &= 0x0c;
-				last_stick[i] |= STICK[i] & 0x03;
-			}
-		TRIG_input[i] = (i==0 ? trig0:trig1);
+        if ((STICK[i] & 0x0c) == 0) {   /* right and left simultaneously */
+            if (last_stick[i] & 0x04)   /* if wasn't left before, move left */
+                STICK[i] |= 0x08;
+            else                        /* else move right */
+                STICK[i] |= 0x04;
+        }
+        else {
+            last_stick[i] &= 0x03;
+            last_stick[i] |= STICK[i] & 0x0c;
+        }
+        if ((STICK[i] & 0x03) == 0) {   /* up and down simultaneously */
+            if (last_stick[i] & 0x01)   /* if wasn't up before, move up */
+                STICK[i] |= 0x02;
+            else                        /* else move down */
+                STICK[i] |= 0x01;
+        }
+        else {
+            last_stick[i] &= 0x0c;
+            last_stick[i] |= STICK[i] & 0x03;
+        }
         
-        extern int auto_fire;
-        switch(auto_fire)
+        TRIG_input[i] = (i==0 ? trig0:trig1);
+        
+        switch(myConfig.auto_fire)
         {
             case 1:
                 if (!TRIG_input[i])  TRIG_input[i] = (gTotalAtariFrames & 16) ? 1 : 0;
@@ -149,15 +149,15 @@ void INPUT_Frame(void)
                 if (!TRIG_input[i])  TRIG_input[i] = (gTotalAtariFrames & 4) ? 1 : 0;
                 break;
         }
-	}
+    }
 
     for (i = 0; i < 8; i++)
     {
         POT_input[i] = Atari_POT(i);
     }
     
-	TRIG[0] = TRIG_input[0];
-	TRIG[1] = TRIG_input[1];
-	PORT_input[0] = (STICK[1] << 4) | STICK[0];
+    TRIG[0] = TRIG_input[0];
+    TRIG[1] = TRIG_input[1];
+    PORT_input[0] = (STICK[1] << 4) | STICK[0];
 }
 

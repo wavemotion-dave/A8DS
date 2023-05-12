@@ -66,8 +66,6 @@
 #include "altirra_basic.h"
 
 extern UBYTE ROM_basic[];
-extern int basic_type;
-extern int bHaveBASIC;
 
 UBYTE cart_image[CART_MAX_SIZE];    // Big enough to hold the largest carts we support ... 1MB
 UBYTE cart_header[16];
@@ -84,7 +82,8 @@ ITCM_CODE static void set_bank_809F(int b, int main)
             Cart809F_Disable();
             CartA0BF_Disable();
         }
-        else {
+        else 
+        {
             Cart809F_Enable();
             CartA0BF_Enable();
             mem_map[0x8] = (cart_image + b*0x2000) + 0x0000 - 0x8000;
@@ -103,10 +102,12 @@ ITCM_CODE static void set_bank_809F(int b, int main)
 /* OSS_16, OSS2_16 */
 static void set_bank_A0AF(int b, int main)
 {
-    if (b != bank) {
+    if (b != bank) 
+    {
         if (b < 0)
             CartA0BF_Disable();
-        else {
+        else 
+        {
             CartA0BF_Enable();
             mem_map[0xA] = (cart_image + b*0x1000) - 0xA000;
             if (bank < 0)
@@ -177,7 +178,8 @@ static void set_bank_A0BF_WILL32(int b)
 /* CART_ATMAX_128 */
 static void set_bank_A0BF_ATMAX128(int b)
 {
-    if (b != bank) {
+    if (b != bank) 
+    {
         if (b >= 0x20)
             return;
         else if (b >= 0x10)
@@ -216,7 +218,8 @@ ITCM_CODE void set_bank_A0BF_ATMAX1024(int b)
 /* CART_MEGA_16 to CART_MEGA_1024 */
 static void set_bank_80BF(int b)
 {
-    if (b != bank) {
+    if (b != bank) 
+    {
         if (b & 0x80) 
         {
             Cart809F_Disable();
@@ -513,12 +516,12 @@ void CART_Start(void)
         break;
     default:
         // The only default cart we support is an 8K built-in BASIC cart
-        if (bHaveBASIC)
+        if (myConfig.basic_type)
         {
             Cart809F_Disable();
             CartA0BF_Enable();
             SetROM(0xa000, 0xbfff);
-            if (basic_type == BASIC_ALTIRRA)
+            if (myConfig.basic_type == BASIC_ALTIRRA)
             {
                 mem_map[0xA] = ((UBYTE*)ROM_altirra_basic) + 0x0000 - 0xA000;
                 mem_map[0xB] = ((UBYTE*)ROM_altirra_basic) + 0x1000 - 0xB000;

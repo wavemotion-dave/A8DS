@@ -99,8 +99,6 @@ extern unsigned int screenline_cpu_clock;
 
 #define XPOS xpos
 
-extern int global_artif_mode;
-
 extern UBYTE PENH_input;
 extern UBYTE PENV_input;
 
@@ -114,7 +112,7 @@ void ANTIC_PutByte(UWORD addr, UBYTE byte);
 UBYTE ANTIC_GetDLByte(UWORD *paddr);
 UWORD ANTIC_GetDLWord(UWORD *paddr);
 
-/* always call ANTIC_UpdateArtifacting after changing global_artif_mode */
+/* always call ANTIC_UpdateArtifacting after changing myConfig.artifacting */
 void ANTIC_UpdateArtifacting(void);
 
 /* Video memory access */

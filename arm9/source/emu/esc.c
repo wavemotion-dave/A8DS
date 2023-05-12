@@ -59,7 +59,6 @@
 #include "sio.h"
 #include <stdlib.h>
 
-int ESC_enable_sio_patch = TRUE;        // TRUE for fast Serial I/O. FALSE for slower access.
 
 /* Now we check address of every escape code, to make sure that the patch
    has been set by the emulator and is not a CIM in Atari program.
@@ -128,7 +127,7 @@ void ESC_Run(UBYTE esc_code)
 void ESC_PatchOS(void)
 {
 	int patched = Devices_PatchOS();
-	if (ESC_enable_sio_patch) {
+	if (myConfig.disk_speedup) {
 		UWORD addr_l;
 		UWORD addr_s;
 		UBYTE check_s_0;
@@ -138,7 +137,7 @@ void ESC_PatchOS(void)
         {
 		case Atari800_MACHINE_OSA:
 		case Atari800_MACHINE_OSB:
-            if (os_type == OS_ALTIRRA_800)
+            if (myConfig.os_type == OS_ALTIRRA_800)
 			    addr_l = 0xef91; /* Altirra Cassettle Handler*/
             else
                 addr_l = 0xef74; /* Atari */                
@@ -147,7 +146,7 @@ void ESC_PatchOS(void)
 			check_s_1 = 0x80;
 			break;
 		case Atari800_MACHINE_XLXE:
-            if (os_type == OS_ALTIRRA_XL)
+            if (myConfig.os_type == OS_ALTIRRA_XL)
             {
                 addr_l = 0xee4a;
             }
@@ -184,7 +183,7 @@ void ESC_PatchOS(void)
 	if (patched && Atari800_machine_type == Atari800_MACHINE_XLXE) 
     {
 		/* Disable Checksum Test */
-		if (os_type != OS_ALTIRRA_XL)
+		if (myConfig.os_type != OS_ALTIRRA_XL)
 		{
 		  dPutByte(0xc31d, 0xea);
 		  dPutByte(0xc31e, 0xea);
