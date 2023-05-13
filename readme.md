@@ -202,6 +202,8 @@ Screen resolution on a DS/DSi/XL/LL is always fixed at 256x192 pixels. The Atari
 
 Configuration :
 ----------------------------------------------------------------------------------
+Global Options can now be set - *before* you load a game, use the GEAR icon to set and save your options that will be applied to new games going forward (you can still override on a per-game basis).
+
 * TV TYPE - Select PAL vs NTSC for 50/60Hz operation.
 * MACHINE TYPE - select XL/XE 128K, 320K, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
 * OS Type - Select the built in Altirra OS or, if you have the OS ROMs available, the Atari OS.
@@ -215,6 +217,9 @@ Configuration :
 * KEY CLICK - if you want the mechanical key-click when using the virtual 800 keyboards.
 * EMULATOR TEXT - if you want a clean main screen with just the disk-drives shown, you can disable text.
 * KEYBOARD STYLE - select the style of virtual keyboard that you prefer.
+
+Using the X button, you can go to a second menu of options mostly for key handling.  This menu allows you to map any DS key to any of the A8DS functions (joystick, keyboard, console switches and a few 'meta' commands such as smooth scrolling the screen some number of pixels).
+
 
 Controller Mapping :
 ----------------------------------------------------------------------------------
