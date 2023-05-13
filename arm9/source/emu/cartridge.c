@@ -71,6 +71,7 @@ UBYTE cart_image[CART_MAX_SIZE];    // Big enough to hold the largest carts we s
 UBYTE cart_header[16];
 static int bank __attribute__((section(".dtcm")));
 
+UBYTE cart_type           = CART_NONE;     
 
 /* DB_32, XEGS_32, XEGS_64, XEGS_128, XEGS_256, XEGS_512, XEGS_1024 */
 /* SWXEGS_32, SWXEGS_64, SWXEGS_128, SWXEGS_256, SWXEGS_512, SWXEGS_1024 */

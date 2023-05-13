@@ -109,18 +109,14 @@ extern UBYTE bAtariOS;
 extern UBYTE bAtariOSB;
 extern UBYTE bAtariBASIC;
 
-extern UBYTE full_speed;
-extern UBYTE cart_type;
 extern UBYTE option_table;
-extern UBYTE basic_opt;
 extern UBYTE machine_type;
 extern UBYTE disable_basic;
-extern UBYTE file_type;
 
 extern UWORD  ram_size;
 
-extern UWORD force_tv_type;
-extern UWORD force_basic_type;
+extern UBYTE force_tv_type;
+extern UBYTE force_basic_type;
 
 
 #define TV_NTSC 0

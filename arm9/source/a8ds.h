@@ -34,9 +34,8 @@ typedef enum {
 } FifoMesType;
 
 typedef struct FICtoLoad {
-  char filename[300];
-  bool directory;
-  unsigned int uCrc;
+  char filename[299];
+  u8   directory;
 } FICA_A8;
 
 extern int bg0, bg1, bg0b,bg1b;

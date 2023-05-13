@@ -147,6 +147,8 @@ struct AFILE_ATR_Header {
 
 extern unsigned short gTotalAtariFrames;
 
+extern UBYTE file_type;
+
 /* Initializes Atari800 emulation core. */
 int Atari800_Initialise(void);
 

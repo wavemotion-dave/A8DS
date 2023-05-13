@@ -1,5 +1,5 @@
 /*
- * config.c contains configurion handling.
+ * config.c contains configurion handling to map all sorts of options into the emulator.
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
  * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
@@ -57,22 +57,18 @@ UBYTE bAtariOS=false;                         // Real Atari XL BIOS is OFF by de
 UBYTE bAtariOSB=false;                        // Real Atari OSB BIOS is OFF by default
 UBYTE bAtariBASIC=false;                      // Real Atari Basic Rev C is OFF by default
 
-UBYTE full_speed          = false;            // default is to run at normal speed
-UBYTE cart_type           = CART_NONE;        // 
-UBYTE option_table        = 0;
+UBYTE option_table        = 0;                // We have 2 pages of configuration options - this toggles between them
+UBYTE force_tv_type       = 99;               // When selecting a game, the user can force the TV type (NTSC vs PAL)
+UBYTE force_basic_type    = 99;               // When selecting a game, the user can force the use of BASIC
 
-UWORD force_tv_type       = 99;
-UWORD force_basic_type    = 99;
-
-// ----------------------------------------------------------------------------------
-// Some basic machine settings... we default to an XEGS with 128K of RAM installed.
-// This is a bit of a "custom" machine but is capable of running 98% of all games.
-// ----------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------
+// Some basic machine settings... we default to an Atari 800XL with 128K of RAM installed.
+// This is a bit of a "custom" machine but is capable of running 95% of all games.
+// -----------------------------------------------------------------------------------------
 UBYTE machine_type     = MACHINE_XLXE;
 UBYTE disable_basic    = TRUE;
-UBYTE file_type        = AFILE_ERROR;
 
-UWORD  ram_size         = RAM_128K;        // We only allow RAM_128K or RAM_320_RAMBO and for backwards compatibility RAM_48K
+UWORD  ram_size         = RAM_128K;        // We allow RAM_128K or RAM_320_RAMBO, RAM_1088K and for backwards compatibility RAM_48K
 
 void InitGameSettings(void)
 {
@@ -101,8 +97,40 @@ void InitGameSettings(void)
     GameDB.db_version = GAME_DATABASE_VERSION;
 }
 
+// --------------------------------------------------------------------------------------------
+// Set the install RAM size and make sure the OS selection makes sense for that amount of RAM
+// --------------------------------------------------------------------------------------------
+void SetRamSizeAndOS(void)
+{
+    // ----------------------------------------------------------------------
+    // Map the  ram_type to actual ram_size for use by the emulator...
+    // ----------------------------------------------------------------------
+    if      (myConfig.ram_type == 0) ram_size = RAM_128K;
+    else if (myConfig.ram_type == 1) ram_size = RAM_320_RAMBO;
+    else if (myConfig.ram_type == 2) ram_size = RAM_1088K;
+    else                             ram_size = RAM_48K;
+
+    // ---------------------------------------------------------------------------------------------
+    // Sanity check... make sure if the user chose some odd combo of RAM and OS we fix it up...
+    // ---------------------------------------------------------------------------------------------
+    if (ram_size == RAM_48K) // If 48K... make sure we have OS set to one of the XLs
+    {
+        if ((myConfig.os_type == OS_ALTIRRA_XL) || (myConfig.os_type == OS_ATARI_XL))
+        {
+            myConfig.os_type = OS_ALTIRRA_800;
+        }
+    }
+    else    // Must be 128K or 320K so make sure we aren't using older Atari 800 BIOS
+    {
+        if ((myConfig.os_type == OS_ALTIRRA_800) || (myConfig.os_type == OS_ATARI_OSB))
+        {
+            myConfig.os_type = OS_ALTIRRA_XL;
+        }
+    }
+}
+
 // -------------------------------------------------------------------------------------
-// Snap out the XEGS.DAT to the SD card. This is only done when the user asks for it 
+// Snap out the A8DS.DAT to the SD card. This is only done when the user asks for it 
 // to be written out... either by holding both L/R shoulder buttons on the DS for a
 // full half-second or by pressing START while in the configuration area. 
 // -------------------------------------------------------------------------------------
@@ -168,7 +196,7 @@ void WriteGameSettings(void)
 }
 
 // -------------------------------------------------------------------------------------
-// Snap out the XEGS.DAT to the SD card. This is only done when the user asks for it 
+// Snap out the A8DS.DAT to the SD card. This is only done when the user asks for it 
 // to be written out... either by holding both L/R shoulder buttons on the DS for a
 // full half-second or by pressing START while in the configuration area. 
 // -------------------------------------------------------------------------------------
@@ -223,7 +251,7 @@ void ReadGameSettings(void)
     FILE *fp;
 
     // -------------------------------------------------------------------------
-    // We want to rename the older XEGS-DS.DAT to the new rebranded A8DS.DAT
+    // We want to rename the older A8DS.DAT to the new rebranded A8DS.DAT
     // -------------------------------------------------------------------------
     fp = fopen("/data/XEGS-DS.DAT", "rb");
     if (fp != NULL)
@@ -267,33 +295,8 @@ void ReadGameSettings(void)
     myConfig.ram_type           = GameDB.default_ram_type;
     
     for (int i=0; i<8; i++) myConfig.keyMap[i] = GameDB.default_keyMap[i];
-    if (myConfig.fps_setting == 2) full_speed=1; else full_speed=0;
 
-    // ----------------------------------------------------------------------
-    // Map the  ram_type to actual ram_size for use by the emulator...
-    // ----------------------------------------------------------------------
-    if      (myConfig.ram_type == 0) ram_size = RAM_128K;
-    else if (myConfig.ram_type == 1) ram_size = RAM_320_RAMBO;
-    else if (myConfig.ram_type == 2) ram_size = RAM_1088K;
-    else                             ram_size = RAM_48K;
-
-    // ---------------------------------------------------------------------------------------------
-    // Sanity check... make sure if the user chose some odd combo of RAM and OS we fix it up...
-    // ---------------------------------------------------------------------------------------------
-    if (ram_size == RAM_48K) // If 48K... make sure we have OS set to one of the XLs
-    {
-        if ((myConfig.os_type == OS_ALTIRRA_XL) || (myConfig.os_type == OS_ATARI_XL))
-        {
-            myConfig.os_type = OS_ALTIRRA_800;
-        }
-    }
-    else    // Must be 128K or 320K so make sure we aren't using older Atari 800 BIOS
-    {
-        if ((myConfig.os_type == OS_ALTIRRA_800) || (myConfig.os_type == OS_ATARI_OSB))
-        {
-            myConfig.os_type = OS_ALTIRRA_XL;
-        }
-    }    
+    SetRamSizeAndOS();
 }
 
 void SetMyConfigDefaults(void)
@@ -330,7 +333,6 @@ void ApplyGameSpecificSettings(void)
         if (memcmp(GameDB.GameSettings[idx].game_hash, last_hash, 32) == 0) break;
     }
 
-    full_speed = 0;
     if (idx < MAX_GAME_SETTINGS)    // We found a match in the database... use it!
     {
         myConfig.xOffset            = GameDB.GameSettings[idx].xOffset;
@@ -371,20 +373,14 @@ void ApplyGameSpecificSettings(void)
         if (!bFirstLoad) force_basic_type = 99;
     }    
     
-    // ----------------------------------------------------------------------
-    // Map the saved ram_type to actual ram_size for use by the emulator...
-    // ----------------------------------------------------------------------
-    if      (myConfig.ram_type == 0) ram_size = RAM_128K;
-    else if (myConfig.ram_type == 1) ram_size = RAM_320_RAMBO;
-    else if (myConfig.ram_type == 2) ram_size = RAM_1088K;
-    else                             ram_size = RAM_48K;
-
+    SetRamSizeAndOS();
+    
     install_os();
 }
 
 
 // ---------------------------------------------------------------------------
-// Write out the XEGS.DAT configuration file to capture the settings for
+// Write out the A8DS.DAT configuration file to capture the settings for
 // each game.
 // ---------------------------------------------------------------------------
 void dsWriteConfig(void)
@@ -397,7 +393,7 @@ void dsWriteConfig(void)
 }
 
 // ---------------------------------------------------------------------------
-// Write out the XEGS.DAT configuration file to capture the settings for
+// Write out the A8DS.DAT configuration file to capture the settings for
 // each game.
 // ---------------------------------------------------------------------------
 void dsWriteGlobalConfig(void)
@@ -412,8 +408,8 @@ void dsWriteGlobalConfig(void)
 // -----------------------------------------------------------------------------
 // Options are handled here... we have a number of things the user can tweak
 // and these options are applied immediately. The user can also save off 
-// their option choices for the currently running game into the XEGS.DAT
-// configuration database. When games are loaded back up, XEGS.DAT is read
+// their option choices for the currently running game into the A8DS.DAT
+// configuration database. When games are loaded back up, A8DS.DAT is read
 // to see if we have a match and the user settings can be restored for the 
 // game.
 // -----------------------------------------------------------------------------
@@ -718,33 +714,7 @@ void dsChooseOptions(int bOkayToChangePalette)
         swiWaitForVBlank();
     }
 
-    if (myConfig.fps_setting == 2) full_speed=1; else full_speed=0;
-
-    // ----------------------------------------------------------------------
-    // Map the  ram_type to actual ram_size for use by the emulator...
-    // ----------------------------------------------------------------------
-    if      (myConfig.ram_type == 0) ram_size = RAM_128K;
-    else if (myConfig.ram_type == 1) ram_size = RAM_320_RAMBO;
-    else if (myConfig.ram_type == 2) ram_size = RAM_1088K;
-    else                             ram_size = RAM_48K;
-
-    // ---------------------------------------------------------------------------------------------
-    // Sanity check... make sure if the user chose some odd combo of RAM and OS we fix it up...
-    // ---------------------------------------------------------------------------------------------
-    if (ram_size == RAM_48K) // If 48K... make sure we have OS set to one of the XLs
-    {
-        if ((myConfig.os_type == OS_ALTIRRA_XL) || (myConfig.os_type == OS_ATARI_XL))
-        {
-            myConfig.os_type = OS_ALTIRRA_800;
-        }
-    }
-    else    // Must be 128K or 320K so make sure we aren't using older Atari 800 BIOS
-    {
-        if ((myConfig.os_type == OS_ALTIRRA_800) || (myConfig.os_type == OS_ATARI_OSB))
-        {
-            myConfig.os_type = OS_ALTIRRA_XL;
-        }
-    }
+    SetRamSizeAndOS();
 
     install_os();
 

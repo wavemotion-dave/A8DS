@@ -62,8 +62,6 @@ int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background "pointers"
 u16 emu_state;                              // Emulate State
 u16 atari_frames = 0;                       // Number of frames per second (60 for NTSC and 50 for PAL)
 bool bShowKeyboard = false;
-int screen_slide_x = 0;
-int screen_slide_y = 0;
 
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
@@ -72,10 +70,13 @@ int screen_slide_y = 0;
 u8 sound_buffer[SNDLENGTH] __attribute__ ((aligned (4))) = {0};
 u16* aptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
 u16* bptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
-u16 sound_idx           __attribute__((section(".dtcm"))) = 0;
+u16 sound_idx          __attribute__((section(".dtcm"))) = 0;
 u8 myPokeyBufIdx       __attribute__((section(".dtcm"))) = 0;
 u8 bMute               __attribute__((section(".dtcm"))) = 0;
 u16 sampleExtender[256] __attribute__((section(".dtcm"))) = {0};
+
+int screen_slide_x __attribute__((section(".dtcm"))) = 0;
+int screen_slide_y __attribute__((section(".dtcm"))) = 0;
 
 #define  cxBG (myConfig.xOffset<<8)
 #define  cyBG (myConfig.yOffset<<8)
@@ -686,7 +687,7 @@ void dsShowRomInfo(void)
     char line1[25];
     char ramSizeBuf[8];
     char machineBuf[20];
-    char line2[200];
+    static char line2[200];
 
     if (myConfig.emulatorText)
     {
@@ -852,7 +853,7 @@ bool dsWaitOnQuit(void)
     bool bRet=false, bDone=false;
     unsigned int keys_pressed;
     unsigned int posdeb=0;
-    char szName[32];
+    static char szName[32];
 
     decompress(bgFileSelTiles, bgGetGfxPtr(bg0b), LZ77Vram);
     decompress(bgFileSelMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -911,7 +912,7 @@ bool bLoadReadOnly = true;
 bool bLoadAndBoot = true;
 void dsDisplayLoadOptions(void)
 {
-    char tmpBuf[32];
+    static char tmpBuf[32];
 
     dsPrintValue(0,0,0,file_load_id);
     sprintf(tmpBuf, "%-4s %s", (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "), (myConfig.basic_type ? "W BASIC":"       "));
@@ -981,7 +982,7 @@ unsigned int dsWaitForRom(void)
 {
   bool bDone=false, bRet=false;
   u32 ucHaut=0x00, ucBas=0x00,ucSHaut=0x00, ucSBas=0x00,romSelected= 0, firstRomDisplay=0,nbRomPerPage, uNbRSPage, uLenFic=0,ucFlip=0, ucFlop=0;
-  char szName[300];
+  static char szName[300];
 
   decompress(bgFileSelTiles, bgGetGfxPtr(bg0b), LZ77Vram);
   decompress(bgFileSelMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -1318,7 +1319,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
   unsigned int keys_pressed;
   bool bDone=false, romSel;
   bool bShowHelp=false;
-  int iTx,iTy;
+  short int iTx,iTy;
 
   while (!bDone) 
   {
@@ -1640,7 +1641,7 @@ void dsMainLoop(void)
         // 32,728.5 ticks = 1 second
         // 1 frame = 1/50 or 1/60 (0.02 or 0.016)
         // 655 -> 50 fps and 546 -> 60 fps
-        if (!full_speed)
+        if (myConfig.fps_setting < 2)
         {
             while(TIMER0_DATA < ((myConfig.tv_type == TV_NTSC ? 546:656)*atari_frames))
                 ;
@@ -1676,8 +1677,11 @@ void dsMainLoop(void)
             TIMER1_CR=TIMER_ENABLE | TIMER_DIV_1024;
 
             if (gTotalAtariFrames == (myConfig.tv_type == TV_NTSC ? 61:51)) gTotalAtariFrames = (myConfig.tv_type == TV_NTSC ? 60:50);
-            if (myConfig.fps_setting) { siprintf(fpsbuf,"%03d",gTotalAtariFrames); dsPrintValue(0,0,0, fpsbuf); } // Show FPS
-            if (full_speed) dsPrintValue(30,0,0,"FS");
+            if (myConfig.fps_setting) 
+            { 
+                siprintf(fpsbuf,"%03d",gTotalAtariFrames); dsPrintValue(0,0,0, fpsbuf); // Show FPS
+                if (myConfig.fps_setting==2) dsPrintValue(30,0,0,"FS");
+            }
             gTotalAtariFrames = 0;
             DumpDebugData();
             dsClearDiskActivity();
@@ -1974,7 +1978,6 @@ void dsMainLoop(void)
                             if ((keys_pressed & KEY_LEFT))   if (myConfig.xScale >= 192) myConfig.xScale--;
                         }
                         break;                        
-                        
                 }
             }
         }
@@ -2054,7 +2057,9 @@ void dsMainLoop(void)
                 if (++config_snap_counter == 20)
                 {
                     if (keys_pressed & KEY_A)
-                        lcdSwap();
+                    {
+                        lcdSwap();  // Exchange (Swap) LCD screens...
+                    }
                     else
                     {
                         dsPrintValue(3,0,0, (char*)"SNAP");
@@ -2106,7 +2111,7 @@ void a8FindFiles(void)
   static bool bFirstTime = true;
   DIR *pdir;
   struct dirent *pent;
-  char filenametmp[300];
+  static char filenametmp[300];
 
   count8bit = countfiles= 0;
 

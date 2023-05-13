@@ -73,6 +73,8 @@
 char disk_filename[DISK_MAX][256];
 int  disk_readonly[DISK_MAX] = {true,true,true};
 
+UBYTE file_type        = AFILE_ERROR;
+
 void Warmstart(void) 
 {
 	if (machine_type == MACHINE_OSA || machine_type == MACHINE_OSB) 
