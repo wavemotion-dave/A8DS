@@ -230,6 +230,15 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.2 : 13-May-2023 by wavemotion-dave
+  * Enhanced configuration - unfortunately your old config save will be wiped to make way for the new method.
+  * Global options - use the GEAR icon before a game is loaded and you can save out defaults for newly loaded games.
+  * Key maps - set any of the DS keys to map into various joystick, console buttons, keyboard keys, etc. 
+  * Screenshot capability - press and hold L+R for ~1 second to take a .bmp snapshot (saved to a time-date.bmp file)
+  * New Smooth Scroll handling so you can set your scale/offset and then map any button to shift vertical/horizontal pixels (set keys to VERTICAL++, HORIZONTAL--, etc). The game will automatically smooth-scroll back into place when you let go of the pixel-shift button.
+  * Improved cart banking so that it's as fast as normal memory swaps. This should eliminate slowdown in Cart-based games.
+  * A few bug fixes as time permitted.
+
 V3.1 : 08-May-2023 by wavemotion-dave
   * Added CAR and ROM support for the more popular cartridge types up to 1MB.
   * Added Real-Time Clock support for things like SpartaDOS X
