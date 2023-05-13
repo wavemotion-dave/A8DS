@@ -120,6 +120,8 @@ disk of some kind to get drive support and you can have fun writing programs. Be
 that the Altirra BASIC is faster than normal ATARI BASIC and so games might run at the
 wrong speed unless you're using the actual ATARI REV C rom.
 
+A8DS will emulate the Real-Time clock mostly used for SpartaDOS X.
+
 Cartridge support was added with A8DS 3.1 and later. You can load .CAR and .ROM 
 files (using the XEX button).
 
