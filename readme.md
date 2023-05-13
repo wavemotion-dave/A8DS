@@ -135,6 +135,9 @@ The following cartridge layouts are supported:
 * Diamond 64K
 * Express 64K
 
+If you're using cartridge files, it is suggested you use .CAR files which contain type information to properly load up the cartirdge. Bare .ROM files 
+have ambiguities that are not always auto-detected by the emulator and as such will not always load.
+
 Missing :
 ----------------------------------------------------------------------------------
 The .ATX support is included but not fully tested so compatibility may be lower. In order to 
@@ -196,6 +199,22 @@ DS vs DSi vs DSi XL/LL :
 The original DS-Lite or DS-Phat require an R4 card to run homebrews. With this setup you will be running in DS compatibility mode and emulator will default to a moderate level of frameskip. For the DSi or DSi XL/LL we can run just about everything full speed without frameskip. The XL/LL has a slightly slower decay on the LCD and it more closely mimics the phosphor fade of a TV. This helps with games that use small bullets - something like Centipede can be a little harder to see on the original DSi as the thin pixel shot fades quickly as it moves. You can somewhat compensate for this by increasing your screen brightness. For the DSi, I find a screen brightness of 4 to offer reasonably good visibility. The XL/LL will generally operate just as well with a brigtness of 2 or 3. 
 
 Screen resolution on a DS/DSi/XL/LL is always fixed at 256x192 pixels. The Atari 8-bit resolution tends to be larger - usually 320 horizontally and they often utilize a few more pixels vertically depending on the game. Use the Left/Right shoulder buttons along with the D-Pad to shift/scale the screen to your liking. Once you get the screen where you want - go into the GEAR icon and press START to save the options (including the screen position/scaling) on a per-game basis.
+
+Configuration :
+----------------------------------------------------------------------------------
+* TV TYPE - Select PAL vs NTSC for 50/60Hz operation.
+* MACHINE TYPE - select XL/XE 128K, 320K, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
+* OS Type - Select the built in Altirra OS or, if you have the OS ROMs available, the Atari OS.
+* BASIC - Select if BASIC is enabled and what flavor of BASIC to run.
+* SKIP FRAMES - On the DSi you can keep this OFF for most games, but for the DS you may need a moderate-to-agressive frameskip.
+* PALETTE - Set to Bright or Muted to suit your preferences
+* FPS SETTING - Normally OFF but you might want to see the frames-per-second counter and you can set 'TURBO' mode to run full-speed (unthrottled) to check performance.
+* ARTIFACTING - Normally OFF but a few games utilize this high-rez mode trick that brings in a new set of colors to the output.
+* BLENDING - Since the DS screen is 256x192 and the Atari A8 output is 320x192 (and often more than 192 pixels utilizing overscan area), the blur will help show fractional pixels. Set to the value that looks most pleasing (and it will likely be a different value for different games).
+* DISK SPEEDUP - the SIO access is normally sped-up but a few games on disk (ATR/ATX) won't run properly with disk-speedup so you can disable on a per-game basis.
+* KEY CLICK - if you want the mechanical key-click when using the virtual 800 keyboards.
+* EMULATOR TEXT - if you want a clean main screen with just the disk-drives shown, you can disable text.
+* KEYBOARD STYLE - select the style of virtual keyboard that you prefer.
 
 Controller Mapping :
 ----------------------------------------------------------------------------------
