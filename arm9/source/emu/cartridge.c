@@ -258,6 +258,76 @@ static void set_bank_SDX_128(UWORD addr)
     }
 }
 
+
+// The cartridge with "Bounty Bob Strikes Back" game uses very strange
+// bank switching method:
+//  Four 4 KB banks (0,1,2,3) are mapped into $8000-$8FFF. An access to $8FF6
+//   selects bank 0, $8FF7 - bank 1, $8FF8 - bank 2, $8FF9 - bank 3.
+//  Four 4 KB banks (4,5,6,7) are mapped into $9000-$9FFF. An access to $9FF6
+//   selects bank 4, $9FF7 - bank 5, $9FF8 - bank 6, $9FF9 - bank 7.
+//  The remaining 8 KB is mapped to $A000-$BFFF.
+     
+#define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
+static UWORD last_bb1_bank = 1;
+static UWORD last_bb2_bank = 5;
+static void access_BountyBob1(UWORD addr)
+{
+    UWORD base_addr = (addr & 0xf000);
+    addr &= 0x00ff;
+    if (addr >= 0xf6 && addr <= 0xf9) 
+    {
+        int new_state;
+        addr -= 0xf6;
+        
+        new_state = (last_bb1_bank & 0x0c) | addr;
+        if (new_state != last_bb1_bank) 
+        {
+            CopyROM(base_addr, base_addr + 0x0fff, cart_image + addr * 0x1000);
+            last_bb1_bank = new_state;
+        }
+    }
+}
+
+static void access_BountyBob2(UWORD addr)
+{
+    UWORD base_addr = (addr & 0xf000);
+    addr &= 0x00ff;
+    if (addr >= 0xf6 && addr <= 0xf9) 
+    {
+        int new_state;
+        addr -= 0xf6;
+        new_state = (last_bb2_bank & 0x03) | (addr << 2);
+        if (new_state != last_bb2_bank) 
+        {
+            CopyROM(base_addr, base_addr + 0x0fff, cart_image + 0x4000 + addr * 0x1000);
+            last_bb2_bank = new_state;
+        }
+    }
+}
+
+UBYTE BountyBob1GetByte(UWORD addr)
+{
+    access_BountyBob1(addr);
+    return dGetByte(addr);
+}
+
+UBYTE BountyBob2GetByte(UWORD addr)
+{
+    access_BountyBob2(addr);
+    return dGetByte(addr);
+}
+
+void BountyBob1PutByte(UWORD addr, UBYTE value)
+{
+    access_BountyBob1(addr);
+}
+
+void BountyBob2PutByte(UWORD addr, UBYTE value)
+{
+    access_BountyBob2(addr);
+}
+
+
 // ---------------------------------------------------------------------
 // We support both .CAR and .ROM files but the bankswapping on those
 // is really CPU intensive since we need to move chunks of memory to
@@ -294,9 +364,11 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             int size = fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
             size = size / 1024;
+            if (size == 4)  cart_type = CART_STD_4;
             if (size == 8)  cart_type = CART_STD_8;
             if (size == 16) cart_type = CART_STD_16;
             if (size == 32) cart_type = CART_XEGS_32;
+            if (size == 40) cart_type = CART_BBSB_40;
             if (size == 64) cart_type = CART_XEGS_64;
             if (size == 128) cart_type = CART_XEGS_128;
             if (size == 256) cart_type = CART_XEGS_256;
@@ -326,8 +398,17 @@ void CART_Remove(void)
 
 void CART_Start(void) 
 {
+    last_bb1_bank = 1;
+    last_bb2_bank = 5;
+    
     switch (cart_type) 
     {
+    case CART_STD_4:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        mem_map[0xA] = cart_image + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x0000 - 0xB000;
+        break;
     case CART_STD_8:
     case CART_PHOENIX_8:
         Cart809F_Disable();
@@ -353,6 +434,16 @@ void CART_Start(void)
         //CopyROM(0xb000, 0xbfff, cart_image + 0x3000);
         mem_map[0xA] = cart_image + 0x0000 - 0xA000;
         mem_map[0xB] = cart_image + 0x3000 - 0xB000;
+        bank = 0;
+        break;
+    case CART_OSS2_16:
+    case CART_OSS_8:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        //CopyROM(0xa000, 0xafff, cart_image + 0x1000);
+        //CopyROM(0xb000, 0xbfff, cart_image);
+        mem_map[0xA] = cart_image + 0x1000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x0000 - 0xB000;
         bank = 0;
         break;
     case CART_DB_32:
@@ -451,15 +542,17 @@ void CART_Start(void)
         mem_map[0xB] = cart_image + 0xff000 - 0xB000;
         bank = 0;
         break;
-    case CART_OSS2_16:
-        Cart809F_Disable();
+    case CART_BBSB_40:
+        Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0xa000, 0xafff, cart_image + 0x1000);
-        //CopyROM(0xb000, 0xbfff, cart_image);
-        mem_map[0xA] = cart_image + 0x1000 - 0xA000;
-        mem_map[0xB] = cart_image + 0x0000 - 0xB000;
-        bank = 0;
-        break;
+        CopyROM(0x8000, 0x8fff, cart_image + (last_bb1_bank & 0x03) * 0x1000);
+        CopyROM(0x9000, 0x9fff, cart_image + 0x4000 + ((last_bb2_bank & 0x0c) >> 2) * 0x1000);
+        CopyROM(0xa000, 0xbfff, cart_image + 0x8000);
+        readmap[0x8f] = BountyBob1GetByte;
+        readmap[0x9f] = BountyBob2GetByte;
+        writemap[0x8f] = BountyBob1PutByte;
+        writemap[0x9f] = BountyBob2PutByte;
+        break;            
     case CART_ATRAX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
@@ -467,10 +560,6 @@ void CART_Start(void)
         mem_map[0xA] = cart_image + 0x0000 - 0xA000;
         mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         bank = 0;
-        break;
-    case CART_BBSB_40:
-        Cart809F_Disable();
-        CartA0BF_Disable();
         break;
     case CART_RIGHT_8:
         Cart809F_Disable();
@@ -546,7 +635,8 @@ void CART_Access(UWORD addr)
         if (addr & 0x08)
             b = -1;
         else
-            switch (addr & 0x07) {
+            switch (addr & 0x07) 
+            {
             case 0x00:
             case 0x01:
                 b = 0;
@@ -565,6 +655,40 @@ void CART_Access(UWORD addr)
                 break;
             }
         set_bank_A0AF(b, 0x3000);
+        break;
+    case CART_OSS2_16:
+        switch (addr & 0x09) 
+        {
+        case 0x00:
+            b = 1;
+            break;
+        case 0x01:
+            b = 3;
+            break;
+        case 0x08:
+            b = -1;
+            break;
+        case 0x09:
+            b = 2;
+            break;
+        }
+        set_bank_A0AF(b, 0x0000);
+        break;            
+    case CART_OSS_8:
+        switch (addr & 0x09) 
+        {
+        case 0x00:
+        case 0x01:
+            b = 1;
+            break;
+        case 0x08:
+            b = -1;
+            break;
+        case 0x09:
+            b = 0;
+            break;
+        }
+        set_bank_A0AF(b, 0x0000);
         break;
     case CART_DB_32:
         set_bank_809F(addr & 0x03, 0x6000);
@@ -586,23 +710,6 @@ void CART_Access(UWORD addr)
     case CART_SDX_64:
         if ((addr & 0xf0) == 0xe0)
             set_bank_A0BF(addr);
-        break;
-    case CART_OSS2_16:
-        switch (addr & 0x09) {
-        case 0x00:
-            b = 1;
-            break;
-        case 0x01:
-            b = 3;
-            break;
-        case 0x08:
-            b = -1;
-            break;
-        case 0x09:
-            b = 2;
-            break;
-        }
-        set_bank_A0AF(b, 0x0000);
         break;
     case CART_PHOENIX_8:
         CartA0BF_Disable();
