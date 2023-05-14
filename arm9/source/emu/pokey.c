@@ -74,11 +74,12 @@ int DELAYED_SEROUT_IRQ;
 int DELAYED_XMTDONE_IRQ;
 
 /* structures to hold the 9 pokey control bytes */
-UBYTE AUDF[4 * MAXPOKEYS];  /* AUDFx (D200, D202, D204, D206) */
-UBYTE AUDC[4 * MAXPOKEYS];  /* AUDCx (D201, D203, D205, D207) */
-UBYTE AUDCTL[MAXPOKEYS];    /* AUDCTL (D208) */
-int DivNIRQ[4], DivNMax[4];
-int Base_mult[MAXPOKEYS];       /* selects either 64Khz or 15Khz clock mult */
+UBYTE AUDF[4 * MAXPOKEYS] __attribute__((section(".dtcm")));  /* AUDFx (D200, D202, D204, D206) */
+UBYTE AUDC[4 * MAXPOKEYS] __attribute__((section(".dtcm")));  /* AUDCx (D201, D203, D205, D207) */
+UBYTE AUDCTL[MAXPOKEYS] __attribute__((section(".dtcm")));    /* AUDCTL (D208) */
+int DivNIRQ[4] __attribute__((section(".dtcm")));
+int DivNMax[4] __attribute__((section(".dtcm")));
+int Base_mult[MAXPOKEYS] __attribute__((section(".dtcm")));       /* selects either 64Khz or 15Khz clock mult */
 
 UBYTE POT_input[8] = {228, 228, 228, 228, 228, 228, 228, 228};
 UBYTE PCPOT_input[8] = {112, 112, 112, 112, 112, 112,112, 112};

@@ -168,6 +168,7 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].keyboard_type      = myConfig.keyboard_type;
         GameDB.GameSettings[idx].dpad_type          = myConfig.dpad_type;
         GameDB.GameSettings[idx].disk_speedup       = myConfig.disk_speedup;
+        GameDB.GameSettings[idx].cart_type          = myConfig.cart_type;
         for (int i=0; i<8; i++) GameDB.GameSettings[idx].keyMap[i] = myConfig.keyMap[i];
         GameDB.checksum = 0;
         char *ptr = (char *)GameDB.GameSettings;
@@ -306,6 +307,7 @@ void SetMyConfigDefaults(void)
     myConfig.xScale             = 256;
     myConfig.yScale             = 256;
     myConfig.artifacting        = 0;
+    myConfig.cart_type          = CART_NONE;
     myConfig.emulatorText       = true;
     myConfig.blending           = GameDB.default_blending;
     myConfig.skip_frames        = GameDB.default_skip_frames;
@@ -352,6 +354,7 @@ void ApplyGameSpecificSettings(void)
         myConfig.keyboard_type      = GameDB.GameSettings[idx].keyboard_type;
         myConfig.dpad_type          = GameDB.GameSettings[idx].dpad_type;
         myConfig.disk_speedup       = GameDB.GameSettings[idx].disk_speedup;
+        myConfig.cart_type          = GameDB.GameSettings[idx].cart_type;
         for (int i=0; i<8; i++)  myConfig.keyMap[i] = GameDB.GameSettings[idx].keyMap[i];
     }
     else // No match. Use defaults for this game...
@@ -436,6 +439,12 @@ struct options_t
                       "KEY 4", "KEY 5", "KEY 6", "KEY 7", "KEY 8", "KEY 9", "KEY UP", "KEY DOWN", "KEY LEFT", "KEY RIGHT", "KEY SPARE1", "KEY SPARE2",                              \
                       "KEY SPARE3", "VERTICAL+", "VERTICAL++", "VERTICAL-", "VERTICAL--", "HORIZONTAL+", "HORIZONTAL++", "HORIZONTAL-", "HORIZONTAL--", "OFFSET DPAD", "SCALE DPAD"}
 
+#define CART_TYPES {"00-NONE", "01-STD8", "02-STD16", "03-OSS16-034M", "04-NO SUPPORT", "05-DB32", "06-NO SUPPORT", "07-NO SUPPORT", "08-WILLIAMS64", "09-EXP64", "10-DIAMOND64", "11-SDX64", "12-XEGS32",       \
+                    "13-XEGS64", "14-XEGS128", "15-OSS16", "16-NO SUPPORT", "17-ATRAX128", "18-BOUNTY BOB", "19-NO SUPPORT", "20-NO SUPPORT", "21-NO SUPPORT", "22-WILLIAMS32", "23-XEGS256", "24-XEGS512",      \
+                    "25-XEGS1024", "26-MEGA16", "27-MEGA32", "28-MEGA64", "29-MEGA128", "30-MEGA256", "31-MEGA512", "32-MEGA1024", "33-SWXEGS32", "34-SWXEGS64", "35-SWXEGS128", "36-SWXEGS256", "37-SWXEGS512", \
+                    "38-SWXEGS1024", "39-PHOENIX8", "40-BLIZZARD16", "41-ATMAX128", "42-ATMAX1024", "43-SDX128", "44-OSS8", "45-OSS16-043M", "45-NO SUPPORT", "46-NO SUPPORT", "47-NO SUPPORT", "48-NO SUPPORT", \
+                    "49-NO SUPPORT", "50-TURBO64", "51-TURBO128", "52-NO SUPPORT", "53-NO SUPPORT", "54-SIC128", "55-SIC256", "56-SIC512", "57-NO SUPPORT", "58-STD4" }
+
 const struct options_t Option_Table[2][20] =
 {
     // Page 1
@@ -459,6 +468,7 @@ const struct options_t Option_Table[2][20] =
         {"EMULATOR TXT",{"OFF",         "ON"},                              &myConfig.emulatorText,         OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
         {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", 
                          "400 STYLE",  "130XE STYLE"},                      &myConfig.keyboard_type,        OPT_NORMAL, 4,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
+        {"CART TYPE",   CART_TYPES,                                         &myConfig.cart_type,            OPT_NORMAL, 59,  "ROM FILES DONT    ",   "ALWAYS AUTODETECT ",  "SO YOU CAN SET THE",  "CARTRIDGE TYPE    "},
         {NULL,          {"",            ""},                                NULL,                           OPT_NORMAL, 2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "}
     },
     // Page 2

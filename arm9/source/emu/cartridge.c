@@ -71,8 +71,6 @@ UBYTE cart_image[CART_MAX_SIZE];    // Big enough to hold the largest carts we s
 UBYTE cart_header[16];
 static int bank __attribute__((section(".dtcm")));
 
-UBYTE cart_type           = CART_NONE;     
-
 /* DB_32, XEGS_32, XEGS_64, XEGS_128, XEGS_256, XEGS_512, XEGS_1024 */
 /* SWXEGS_32, SWXEGS_64, SWXEGS_128, SWXEGS_256, SWXEGS_512, SWXEGS_1024 */
 ITCM_CODE static void set_bank_809F(int b, int main)
@@ -100,7 +98,7 @@ ITCM_CODE static void set_bank_809F(int b, int main)
     }
 }
 
-/* OSS_16, OSS2_16 */
+/* OSS_16, OSS_16 */
 static void set_bank_A0AF(int b, int main)
 {
     if (b != bank) 
@@ -156,6 +154,26 @@ static void set_bank_A0BF_WILL64(int b)
         bank = b;
     }
 }
+
+/* TURBOSOFT_64, TURBOSOFT_128 */
+static void set_bank_A0BF_TURBOSOFT(UBYTE b, UBYTE mask)
+{
+    if (b != bank) 
+    {
+        if (b & 0x08)
+        {
+            CartA0BF_Disable();
+        }
+        else 
+        {
+            CartA0BF_Enable();
+            mem_map[0xA] = (cart_image + (b&mask)*0x2000) + 0x0000 - 0xA000;
+            mem_map[0xB] = (cart_image + (b&mask)*0x2000) + 0x1000 - 0xB000;
+        }
+        bank = b;
+    }
+}
+
 
 /* CART_WILL_32 */
 static void set_bank_A0BF_WILL32(int b)
@@ -258,6 +276,37 @@ static void set_bank_SDX_128(UWORD addr)
     }
 }
 
+UBYTE cart_sic_data = 0x00;
+static void set_bank_SIC(UBYTE data, UBYTE bank_mask)
+{
+    UBYTE b = data & bank_mask;
+    
+    if (!(data & 0x20))
+    {
+        Cart809F_Disable();
+    }
+    else 
+    {
+        Cart809F_Enable();
+        mem_map[0x8] = (cart_image + b*0x4000) + 0x0000 - 0x8000;
+        mem_map[0x9] = (cart_image + b*0x4000) + 0x1000 - 0x9000;        
+    }
+    
+    if (data & 0x40)
+    {
+        CartA0BF_Disable();
+    }
+    else 
+    {
+        CartA0BF_Enable();
+        mem_map[0xA] = (cart_image + b*0x4000) + 0x2000 - 0xA000;
+        mem_map[0xB] = (cart_image + b*0x4000) + 0x3000 - 0xB000;
+    }
+    
+    cart_sic_data = data;
+    bank = b;
+}
+
 
 // The cartridge with "Bounty Bob Strikes Back" game uses very strange
 // bank switching method:
@@ -342,7 +391,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
 {
     memset(cart_image, 0x00, sizeof(cart_image));
     bank = 0;
-    cart_type = CART_NONE;
+
     CART_Remove();
     
     if (file_type == AFILE_CART)
@@ -353,7 +402,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             fread(cart_header, 1, 16, fp);
             fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
-            cart_type = cart_header[7];
+            myConfig.cart_type = cart_header[7];
         }
     }
     if (file_type == AFILE_ROM)
@@ -364,16 +413,20 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             int size = fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
             size = size / 1024;
-            if (size == 4)  cart_type = CART_STD_4;
-            if (size == 8)  cart_type = CART_STD_8;
-            if (size == 16) cart_type = CART_STD_16;
-            if (size == 32) cart_type = CART_XEGS_32;
-            if (size == 40) cart_type = CART_BBSB_40;
-            if (size == 64) cart_type = CART_XEGS_64;
-            if (size == 128) cart_type = CART_XEGS_128;
-            if (size == 256) cart_type = CART_XEGS_256;
-            if (size == 512) cart_type = CART_XEGS_512;
-            if (size == 1024) cart_type = CART_ATMAX_1024;
+            // If configuration hasn't been set for a Cartridge Type, guess at the type...
+            if (myConfig.cart_type == CART_NONE)
+            {
+                if (size == 4)      myConfig.cart_type = CART_STD_4;
+                if (size == 8)      myConfig.cart_type = CART_STD_8;
+                if (size == 16)     myConfig.cart_type = CART_STD_16;
+                if (size == 32)     myConfig.cart_type = CART_XEGS_32;
+                if (size == 40)     myConfig.cart_type = CART_BBSB_40;
+                if (size == 64)     myConfig.cart_type = CART_XEGS_64;
+                if (size == 128)    myConfig.cart_type = CART_XEGS_128;
+                if (size == 256)    myConfig.cart_type = CART_XEGS_256;
+                if (size == 512)    myConfig.cart_type = CART_XEGS_512;
+                if (size == 1024)   myConfig.cart_type = CART_ATMAX_1024;
+            }
         }
     }
     
@@ -401,7 +454,7 @@ void CART_Start(void)
     last_bb1_bank = 1;
     last_bb2_bank = 5;
     
-    switch (cart_type) 
+    switch (myConfig.cart_type) 
     {
     case CART_STD_4:
         Cart809F_Disable();
@@ -413,7 +466,6 @@ void CART_Start(void)
     case CART_PHOENIX_8:
         Cart809F_Disable();
         CartA0BF_Enable();
-        //CopyROM(0xa000, 0xbfff, cart_image);
         mem_map[0xA] = cart_image + 0x0000 - 0xA000;
         mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         break;
@@ -421,27 +473,23 @@ void CART_Start(void)
     case CART_BLIZZARD_16:
         Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0x8000, 0xbfff, cart_image);
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
         mem_map[0xA] = cart_image + 0x2000 - 0xA000;
         mem_map[0xB] = cart_image + 0x3000 - 0xB000;
         break;
-    case CART_OSS_16:
+    case CART_OSS_16_034M:
+    case CART_OSS_16_043M:
         Cart809F_Disable();
         CartA0BF_Enable();
-        //CopyROM(0xa000, 0xafff, cart_image);
-        //CopyROM(0xb000, 0xbfff, cart_image + 0x3000);
         mem_map[0xA] = cart_image + 0x0000 - 0xA000;
         mem_map[0xB] = cart_image + 0x3000 - 0xB000;
         bank = 0;
         break;
-    case CART_OSS2_16:
+    case CART_OSS_16:
     case CART_OSS_8:
         Cart809F_Disable();
         CartA0BF_Enable();
-        //CopyROM(0xa000, 0xafff, cart_image + 0x1000);
-        //CopyROM(0xb000, 0xbfff, cart_image);
         mem_map[0xA] = cart_image + 0x1000 - 0xA000;
         mem_map[0xB] = cart_image + 0x0000 - 0xB000;
         bank = 0;
@@ -449,8 +497,6 @@ void CART_Start(void)
     case CART_DB_32:
         Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0x8000, 0x9fff, cart_image);
-        //CopyROM(0xa000, 0xbfff, cart_image + 0x6000);
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
         mem_map[0xA] = cart_image + 0x6000 - 0xA000;
@@ -465,7 +511,6 @@ void CART_Start(void)
     case CART_SDX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
-        //CopyROM(0xa000, 0xbfff, cart_image);
         mem_map[0xA] = cart_image + 0x0000 - 0xA000;
         mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         bank = 0;
@@ -474,8 +519,6 @@ void CART_Start(void)
     case CART_SWXEGS_32:
         Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0x8000, 0x9fff, cart_image);
-        //CopyROM(0xa000, 0xbfff, cart_image + 0x6000);
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
         mem_map[0xA] = cart_image + 0x6000 - 0xA000;
@@ -486,8 +529,6 @@ void CART_Start(void)
     case CART_SWXEGS_64:
         Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0x8000, 0x9fff, cart_image);
-        //CopyROM(0xa000, 0xbfff, cart_image + 0xe000);
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
         mem_map[0xA] = cart_image + 0xe000 - 0xA000;
@@ -498,8 +539,6 @@ void CART_Start(void)
     case CART_SWXEGS_128:
         Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0x8000, 0x9fff, cart_image);
-        //CopyROM(0xa000, 0xbfff, cart_image + 0x1e000);
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
         mem_map[0xA] = cart_image + 0x1e000 - 0xA000;
@@ -510,8 +549,6 @@ void CART_Start(void)
     case CART_SWXEGS_256:
         Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0x8000, 0x9fff, cart_image);
-        //CopyROM(0xa000, 0xbfff, cart_image + 0x3e000);
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
         mem_map[0xA] = cart_image + 0x3e000 - 0xA000;
@@ -522,8 +559,6 @@ void CART_Start(void)
     case CART_SWXEGS_512:
         Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0x8000, 0x9fff, cart_image);
-        //CopyROM(0xa000, 0xbfff, cart_image + 0x7e000);
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
         mem_map[0xA] = cart_image + 0x7e000 - 0xA000;
@@ -534,8 +569,6 @@ void CART_Start(void)
     case CART_SWXEGS_1024:
         Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0x8000, 0x9fff, cart_image);
-        //CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
         mem_map[0xA] = cart_image + 0xfe000 - 0xA000;
@@ -556,7 +589,6 @@ void CART_Start(void)
     case CART_ATRAX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
-        //CopyROM(0xa000, 0xbfff, cart_image);
         mem_map[0xA] = cart_image + 0x0000 - 0xA000;
         mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         bank = 0;
@@ -574,17 +606,20 @@ void CART_Start(void)
     case CART_MEGA_1024:
         Cart809F_Enable();
         CartA0BF_Enable();
-        //CopyROM(0x8000, 0xbfff, cart_image);
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
         mem_map[0xA] = cart_image + 0x2000 - 0xA000;
         mem_map[0xB] = cart_image + 0x3000 - 0xB000;
         bank = 0;
         break;
+	case CART_TURBOSOFT_64:
+	case CART_TURBOSOFT_128:
+            bank = 99;
+            set_bank_A0BF_TURBOSOFT(0x00, 0x0F);
+        break;
     case CART_ATMAX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
-        //CopyROM(0xa000, 0xbfff, cart_image);
         mem_map[0xA] = cart_image + 0x0000 - 0xA000;
         mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         bank = 0;
@@ -592,7 +627,6 @@ void CART_Start(void)
     case CART_ATMAX_1024:
         Cart809F_Disable();
         CartA0BF_Enable();
-        //CopyROM(0xa000, 0xbfff, cart_image + 0xfe000);
         mem_map[0xA] = cart_image + 0xfe000 - 0xA000;
         mem_map[0xB] = cart_image + 0xff000 - 0xB000;
         bank = 0x7f;
@@ -603,7 +637,17 @@ void CART_Start(void)
         mem_map[0xA] = cart_image + 0xfe000 - 0xA000;
         mem_map[0xB] = cart_image + 0xff000 - 0xB000;
         bank = 0x00;
+        break;            
+    case CART_SIC_128:
+        set_bank_SIC(0x00, 0x07);
         break;
+    case CART_SIC_256:
+        set_bank_SIC(0x00, 0x0f);
+        break;
+    case CART_SIC_512:
+        set_bank_SIC(0x00, 0x1f);
+        break;
+            
     default:
         // The only default cart we support is an 8K built-in BASIC cart
         if (myConfig.basic_type)
@@ -629,9 +673,9 @@ void CART_Start(void)
 void CART_Access(UWORD addr)
 {
     int b = bank;
-    switch (cart_type) 
+    switch (myConfig.cart_type) 
     {
-    case CART_OSS_16:
+    case CART_OSS_16_034M:
         if (addr & 0x08)
             b = -1;
         else
@@ -656,7 +700,32 @@ void CART_Access(UWORD addr)
             }
         set_bank_A0AF(b, 0x3000);
         break;
-    case CART_OSS2_16:
+    case CART_OSS_16_043M:
+        if (addr & 0x08)
+            b = -1;
+        else
+            switch (addr & 0x07) 
+            {
+            case 0x00:
+            case 0x01:
+                b = 0;
+                break;
+            case 0x03:
+            case 0x07:
+                b = 2;
+                break;
+            case 0x04:
+            case 0x05:
+                b = 1;
+                break;
+            /* case 0x02:
+            case 0x06: */
+            default:
+                break;
+            }
+        set_bank_A0AF(b, 0x3000);
+        break;
+    case CART_OSS_16:
         switch (addr & 0x09) 
         {
         case 0x00:
@@ -728,6 +797,13 @@ void CART_Access(UWORD addr)
     case CART_SDX_128:
         set_bank_SDX_128(addr);
         break;            
+	case CART_TURBOSOFT_64:
+        set_bank_A0BF_TURBOSOFT(addr, 0x07);
+        break;
+	case CART_TURBOSOFT_128:
+        set_bank_A0BF_TURBOSOFT(addr, 0x0f);
+        break;
+            
     default:
         break;
     }
@@ -744,7 +820,18 @@ UBYTE CART_GetByte(UWORD addr)
     {
         return RTIME_GetByte();
     }
-    CART_Access(addr);
+    
+    switch (myConfig.cart_type) 
+    {
+    case CART_SIC_128:
+    case CART_SIC_256:
+    case CART_SIC_512:
+        if ((addr & 0xe0) == 0x00) return cart_sic_data; else return 0xFF;
+        break;            
+    default:
+        CART_Access(addr);
+        break;
+    }
 
     return 0;
 }
@@ -762,7 +849,7 @@ void CART_PutByte(UWORD addr, UBYTE byte)
         return;
     }
     
-    switch (cart_type) 
+    switch (myConfig.cart_type) 
     {
     case CART_XEGS_32:
         set_bank_809F(byte & 0x03, 0x6000);
@@ -839,6 +926,15 @@ void CART_PutByte(UWORD addr, UBYTE byte)
     case CART_SWXEGS_1024:
         set_bank_809F(byte, 0xfe000);
         break;
+    case CART_SIC_128:
+        if ((addr & 0xe0) == 0x00) set_bank_SIC(byte, 0x07);
+        break;
+    case CART_SIC_256:
+        if ((addr & 0xe0) == 0x00) set_bank_SIC(byte, 0x0f);
+        break;
+    case CART_SIC_512:
+        if ((addr & 0xe0) == 0x00) set_bank_SIC(byte, 0x1f);
+        break;            
     default:
         CART_Access(addr);
         break;

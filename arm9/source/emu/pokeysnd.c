@@ -38,11 +38,9 @@
   (*((unsigned char *)(x) + 3)) = (((i) >> 24) & 255); \
   }
 
-/* GLOBAL VARIABLE DEFINITIONS */
-extern int debug[];
 
 /* number of pokey chips currently emulated */
-static uint8 Num_pokeys;
+static uint8 Num_pokeys __attribute__((section(".dtcm")));
 
 static uint8 AUDV[4 * MAXPOKEYS] __attribute__((section(".dtcm"))); /* Channel volume - derived */
 

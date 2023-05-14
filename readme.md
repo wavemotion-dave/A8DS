@@ -26,11 +26,11 @@ with many games. However, a few games will require the original ATARI BIOS - and
 unfortunately, there were many variations of those BIOS over the years to support
 various Atari computer models released over a span of a decade.
 
-A8DS supports 3 optional (but highly recommended) Atari BIOS and BASIC files as follows:
+A8DS supports 3 optional (but highly recommended) Atari BIOS and BASIC files as follows (with their CRC32):
 
-*  atarixl.rom   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines
-*  atariosb.rom  - this is the 12k Atari 800 OS-B revision BIOS for older games
-*  ataribas.rom  - this is the 8k Atari BASIC cartridge (recommend Rev C)
+*  0x1f9cd270  atarixl.rom   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines
+*  0x3e28a1fe  atariosb.rom  - this is the 12k Atari 800 OS-B revision BIOS for older games
+*  0x7d684184  ataribas.rom  - this is the 8k Atari BASIC cartridge (recommend Rev C)
 
 You can install zero, one or more of these files and if you want to use these real ROMs
 they must reside in the same folder as the A8DS.NDS emulator or you can place your
@@ -42,8 +42,8 @@ which is released as open-source software.  Also optional is ataribas.rom for th
 program (Rev C is recommended). If not supplied, the built-in Altirra BASIC 1.55 is supplied.
 
 I've not done exhaustive testing, but in many cases I find the Altirra BIOS does a
-great job compared to the original Atari BIOS. I generally stick with the open source
-Altirra BIOS if it works but you can switch it on a per-game basis in the Options menu.
+great job as a replacement for the Atari OS/BASIC roms. However, for maximum compaitibility,
+it is recommended you find the above OS/BASIC roms.
 
 Do not ask me about rom files, you will be promptly ignored. A search with Google will certainly 
 help you. 
@@ -126,8 +126,8 @@ Cartridge support was added with A8DS 3.1 and later. You can load .CAR and .ROM
 files (using the XEX button).
 
 The following cartridge layouts are supported:
-* Standard 8 KB and 16KB
-* OSS two chip 16KB
+* Standard 4K, 8K and 16K
+* OSS two chip 16KB, OSS 8K
 * Williams 32K and 64K
 * XEGS/SwXEGS 32K up to 1MB
 * MegaCart 16K up to 1MB
@@ -136,9 +136,13 @@ The following cartridge layouts are supported:
 * Atrax 128K
 * Diamond 64K
 * Express 64K
+* Bounty Bob Strikes Back 40K
+* SIC 128K, 256K and 512K
+* Turbosoft 128K and 256K
 
 If you're using cartridge files, it is suggested you use .CAR files which contain type information to properly load up the cartirdge. Bare .ROM files 
-have ambiguities that are not always auto-detected by the emulator and as such will not always load.
+have ambiguities that are not always auto-detected by the emulator and as such will not always load correctly. You can go into the GEAR/Options menu
+to force a cartridge type and save it for that game.
 
 Missing :
 ----------------------------------------------------------------------------------
@@ -219,6 +223,7 @@ Global Options can now be set - *before* you load a game, use the GEAR icon to s
 * KEY CLICK - if you want the mechanical key-click when using the virtual 800 keyboards.
 * EMULATOR TEXT - if you want a clean main screen with just the disk-drives shown, you can disable text.
 * KEYBOARD STYLE - select the style of virtual keyboard that you prefer.
+* CART TYPE - If you load a Cartridge via a .CAR file, it should automatically pick the right Cart type. If you load via a .ROM file it will take a guess but it might not be right - so you can override (and SAVE) it here.
 
 Using the X button, you can go to a second menu of options mostly for key handling.  This menu allows you to map any DS key to any of the A8DS functions (joystick, keyboard, console switches and a few 'meta' commands such as smooth scrolling the screen some number of pixels).
 
