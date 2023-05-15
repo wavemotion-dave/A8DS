@@ -29,7 +29,6 @@
 #include "antic.h"
 #include "cartridge.h"
 #include "input.h"
-#include "hash.h"
 #include "esc.h"
 #include "rtime.h"
 #include "emu/pia.h"
@@ -144,12 +143,12 @@ void WriteGameSettings(void)
     for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
     {
         if (GameDB.GameSettings[idx].slot_used == 0) break;
-        if (memcmp (GameDB.GameSettings[idx].game_hash, last_hash, 32) == 0) break;
+        if (GameDB.GameSettings[idx].game_crc == last_crc) break;
     }
 
     if (idx < MAX_GAME_SETTINGS)
     {
-        memcpy(GameDB.GameSettings[idx].game_hash, last_hash, 32);
+        GameDB.GameSettings[idx].game_crc           = last_crc;
         GameDB.GameSettings[idx].slot_used          = 1;
         GameDB.GameSettings[idx].tv_type            = myConfig.tv_type;
         GameDB.GameSettings[idx].palette_type       = myConfig.palette_type;
@@ -332,7 +331,7 @@ void ApplyGameSpecificSettings(void)
     // Search through the Game Database to see if we have a match to our game filename....
     for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
     {
-        if (memcmp(GameDB.GameSettings[idx].game_hash, last_hash, 32) == 0) break;
+        if (GameDB.GameSettings[idx].game_crc == last_crc) break;
     }
 
     if (idx < MAX_GAME_SETTINGS)    // We found a match in the database... use it!

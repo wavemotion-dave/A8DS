@@ -262,6 +262,13 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.3 : 15-May-2023 by wavemotion-dave
+  * Switched to CRC32 (from md5sum) to save space and now allow 2500 game settings to be stored.
+  * Added additional cartridge banking schemes so more games run.
+  * Added ability to change/save a cartridge type in settings.
+  * Tweak of VERTICAL+ and VERTICAL- to offset by 16 pixels (was 10).
+  * Reduced memory footprint to allow for better future expansion.
+
 V3.2 : 13-May-2023 by wavemotion-dave
   * Enhanced configuration - unfortunately your old config save will be wiped to make way for the new method.
   * Global options - use the GEAR icon before a game is loaded and you can save out defaults for newly loaded games.

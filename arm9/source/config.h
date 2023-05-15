@@ -24,17 +24,17 @@
 // a database of user configured settings on a per-game basis. We use 
 // the HASH of a game so that we are not reliant on the filename (so even
 // if the user renames the file or moves it to another directory, the
-// hash will be the same). We picked 1675 as the maximum number of entries
+// hash will be the same). We picked 3000 as the maximum number of entries
 // which works out to a convienent 128K of SD flash memory which is 
 // enough for just about anyone and keeps us to using only 4 clusters 
 // on the SD card. A reasonable compropmise... 
 // ---------------------------------------------------------------------------
-#define MAX_GAME_SETTINGS       1675
-#define GAME_DATABASE_VERSION   0x07
+#define MAX_GAME_SETTINGS       2500
+#define GAME_DATABASE_VERSION   0x08
 
 struct GameSettings_t
 {
-    char game_hash[32];
+    unsigned int game_crc;
     UBYTE slot_used;
     UBYTE tv_type;
     UBYTE palette_type;
@@ -124,7 +124,7 @@ extern UBYTE force_basic_type;
 
 #define Atari800_machine_type machine_type
 
-extern unsigned char last_hash[];
+extern unsigned int last_crc;
 
 extern void InitGameSettings(void);
 extern void WriteGameSettings(void);

@@ -28,12 +28,12 @@
 
 #include "main.h"
 #include "a8ds.h"
+#include "CRC32.h"
 
 #include "atari.h"
 #include "antic.h"
 #include "cartridge.h"
 #include "input.h"
-#include "hash.h"
 #include "esc.h"
 #include "rtime.h"
 #include "emu/pia.h"
@@ -750,9 +750,7 @@ void dsShowRomInfo(void)
 // The master routine to read in a XEX or ATR file. We check the XEGS.DAT configuration 
 // database to see if the hash is found so we can restore user settings for the game.
 // ----------------------------------------------------------------------------------------
-#define HASH_FILE_LEN  (128*1024)
-unsigned char tempFileBuf[HASH_FILE_LEN];
-unsigned char last_hash[33] = {'1','2','3','4','5','Z',0};
+unsigned int last_crc = 0x55AABEEF;
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
 {
     // Free buffer if needed
@@ -771,14 +769,7 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
         }
 
         // Get the hash of the file... up to 128k (good enough)
-        memset(last_hash, 'Z', 33);
-        FILE *fp = fopen(filename, "rb");
-        if (fp)
-        {
-            unsigned int file_len = fread(tempFileBuf, 1, HASH_FILE_LEN, fp);
-            hash_Compute((const byte*)tempFileBuf, file_len, (byte *)last_hash);
-            fclose(fp);
-        }
+        last_crc = getFileCrc(filename);
 
         // -------------------------------------------------------------------
         // If we are cold starting, go see if we have settings we can read
@@ -1952,10 +1943,10 @@ void dsMainLoop(void)
                     case 52: key_code = AKEY_NONE;      break;
                     case 53: key_code = AKEY_NONE;      break;
                     case 54: key_code = AKEY_NONE;      break;
-                    case 55: screen_slide_y = 10;       break;
-                    case 56: screen_slide_y = 20;       break;
-                    case 57: screen_slide_y = -10;      break;
-                    case 58: screen_slide_y = -20;      break;
+                    case 55: screen_slide_y = 16;       break;
+                    case 56: screen_slide_y = 32;       break;
+                    case 57: screen_slide_y = -16;      break;
+                    case 58: screen_slide_y = -32;      break;
                     case 59: screen_slide_x = 32;       break;
                     case 60: screen_slide_x = 64;       break;
                     case 61: screen_slide_x = -32;      break;

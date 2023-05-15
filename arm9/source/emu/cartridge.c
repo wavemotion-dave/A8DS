@@ -57,7 +57,6 @@
 
 #include "main.h"
 #include "a8ds.h"
-#include "hash.h"
 #include "atari.h"
 #include "binload.h"
 #include "cartridge.h"
@@ -75,7 +74,8 @@ static int bank __attribute__((section(".dtcm")));
 /* SWXEGS_32, SWXEGS_64, SWXEGS_128, SWXEGS_256, SWXEGS_512, SWXEGS_1024 */
 ITCM_CODE static void set_bank_809F(int b, int main)
 {
-    if (b != bank) {
+    if (b != bank) 
+    {
         if (b & 0x80) 
         {
             Cart809F_Disable();

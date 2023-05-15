@@ -61,10 +61,10 @@ static uint8 bit4[POLY4_SIZE] __attribute__((section(".dtcm"))) =
 static uint8 bit5[POLY5_SIZE] __attribute__((section(".dtcm"))) =
 {1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0};
 
-static uint32 P4 = 0,           /* Global position pointer for the 4-bit  POLY array */
- P5 = 0,                        /* Global position pointer for the 5-bit  POLY array */
- P9 = 0,                        /* Global position pointer for the 9-bit  POLY array */
- P17 = 0;                       /* Global position pointer for the 17-bit POLY array */
+static uint32 P4 __attribute__((section(".dtcm"))) = 0;     /* Global position pointer for the 4-bit  POLY array */
+static uint32 P5 __attribute__((section(".dtcm"))) = 0;     /* Global position pointer for the 5-bit  POLY array */
+static uint32 P9 __attribute__((section(".dtcm"))) = 0;     /* Global position pointer for the 9-bit  POLY array */
+static uint32 P17 __attribute__((section(".dtcm"))) = 0;    /* Global position pointer for the 17-bit POLY array */
 
 static uint32 Div_n_cnt[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* Divide by n counter. one for each channel */
 static uint32 Div_n_max[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* Divide by n maximum, one for each channel */
