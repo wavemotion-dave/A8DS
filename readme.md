@@ -231,8 +231,16 @@ Screen Scaling and Smooth Scrolling :
 ----------------------------------------------------------------------------------
 An NTSC Atari 800 uses a video chip that outputs 320 x (nominally) 192. Many games utilize the overscan and underscan areas. Further, PAL systems have utilize more scalines. This is unfortunate for our hero the DS/DSi which has a fixed resolution of 256x192. As such, the system must scale the video image down - losing pixel rows and columns as it does so. A8DS allows for some help in this department - you can use the Gear/Settings to tweak the scaling and offsets toget as many usable pixels onto the screen (fore example, some games may utilize a "sky" or "ground" area that isn't critical for gameplay and can safely gbe off-screen).
 
-![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/caverns_01.bmp)
+One other trick is the use of Smooth Scroll. You can assign to any DS key (I usualy use the X and Y keys) one of the following 'meta' functions:
+VERTICAL+ or VERTICAL- ... shift the screen up or down 16 pixels and smooth-scroll it back into place
+VERTICAL++ or VERTICAL-- ... shift the screen up or down 32 pixels and smooth-scroll it back into place
+HORIZONTAL+ or HORIZONTAL- ... shift the screen left or right 32 pixels and smooth-scroll it back into place
+HORIZONTAL++ or HORIZONTAL-- ... shift the screen left or right 64 pixels and smooth-scroll it back into place
+
+This really helps games where there might be some score other infrequently referenced information at the top/bottom of the screen. Witness here Caverns of Mars which I've mapped to show the entire screen minus the bottom row of text... using VERTICAL+ I can press the X button to quickly glance at the bottom line and let it scroll back up during gameplay. 
+
 ![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/caverns_02.bmp)
+![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/caverns_01.bmp)
 
 Default Controller Mapping :
 ----------------------------------------------------------------------------------
