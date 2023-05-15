@@ -229,7 +229,7 @@ Using the X button, you can go to a second menu of options mostly for key handli
 
 Screen Scaling and Smooth Scrolling :
 ----------------------------------------------------------------------------------
-An NTSC Atari 800 uses a video chip that outputs 320 x 192 (nominal). Many games utilize the overscan and underscan areas. Further, PAL systems utilize more scalines. This is unfortunate for our hero the DS/DSi which has a fixed resolution of 256x192. As such, the system must scale the video image down - losing pixel rows and columns as it does so. A8DS allows for some help in this department - you can use the Gear/Settings to tweak the scaling and offsets to get as many usable pixels onto the screen (for example, some games may utilize a "sky" or "ground" area that isn't critical for gameplay and can safely be off-screen).
+An NTSC Atari 800 uses a video chip that outputs 320 x 192 (nominal). Many games utilize the overscan and underscan areas. Further, PAL systems utilize more scanlines. This is unfortunate for our hero the DS/DSi which has a fixed resolution of 256x192. As such, the system must scale the video image down - losing pixel rows and columns as it does so. A8DS allows for some help in this department - you can use the Gear/Settings to tweak the scaling and offsets to get as many usable pixels onto the screen (for example, some games may utilize a "sky" or "ground" area that isn't critical for gameplay and can safely be off-screen).
 
 One other trick is the use of Smooth Scroll. You can assign to any DS key (I usually use the X and Y keys) one of the following 'meta' functions:
 
