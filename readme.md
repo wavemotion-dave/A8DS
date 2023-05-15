@@ -229,10 +229,10 @@ Using the X button, you can go to a second menu of options mostly for key handli
 
 Screen Scaling and Smooth Scrolling :
 ----------------------------------------------------------------------------------
-Buttons can be re-configured in the Options (GEAR icon... press X for the keyboard map area)
+An NTSC Atari 800 uses a video chip that outputs 320 x (nominally) 192. Many games utilize the overscan and underscan areas. Further, PAL systems have utilize more scalines. This is unfortunate for our hero the DS/DSi which has a fixed resolution of 256x192. As such, the system must scale the video image down - losing pixel rows and columns as it does so. A8DS allows for some help in this department - you can use the Gear/Settings to tweak the scaling and offsets toget as many usable pixels onto the screen (fore example, some games may utilize a "sky" or "ground" area that isn't critical for gameplay and can safely gbe off-screen).
 
-![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/caverns_01.bmp)
-![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/caverns_02.bmp)
+![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/caverns_01.bmp)
+![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/caverns_02.bmp)
 
 Default Controller Mapping :
 ----------------------------------------------------------------------------------
