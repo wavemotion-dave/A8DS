@@ -10,7 +10,7 @@
 #include "bgBottom.h"
 
 #define MAX_HS_GAMES    500
-#define HS_VERSION      0x0003
+#define HS_VERSION      0x0004
 
 #define HS_OPT_SORTMASK  0x0003
 #define HS_OPT_SORTLOW   0x0001
@@ -278,7 +278,7 @@ void highscore_entry(short foundIdx)
         {
             strcpy(highscores.last_initials, score_entry.initials);
             memcpy(&highscores.highscore_table[foundIdx].scores[9], &score_entry, sizeof(score_entry));
-            highscores.highscore_table[foundIdx].crc = myConfig.game_crc;
+            highscores.highscore_table[foundIdx].crc = last_crc;
             highscore_sort(foundIdx);
             highscore_save();
             bEntryDone=1;
@@ -410,7 +410,7 @@ void highscore_options(short foundIdx)
         {
             strcpy(highscores.highscore_table[foundIdx].notes, notes);
             highscores.highscore_table[foundIdx].options = options;
-            highscores.highscore_table[foundIdx].crc = myConfig.game_crc;
+            highscores.highscore_table[foundIdx].crc = last_crc;
             highscore_sort(foundIdx);
             highscore_save();
             bEntryDone=1;
@@ -544,7 +544,7 @@ void highscore_display(void)
             }
         }
 
-        if (highscores.highscore_table[i].crc == myConfig.game_crc)
+        if (highscores.highscore_table[i].crc == last_crc)
         {
             foundIdx = i;
             break;
