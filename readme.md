@@ -243,7 +243,7 @@ This really helps games where there might be some score other infrequently refer
 ![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/caverns_02.bmp)
 ![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/caverns_01.bmp)
 
-Lastly - if a game was released for both NTSC and PAL and do not utilize the same number of visible scanlines, you're usually better off with the NTSC versions on the DS handheld. The reason is simple: you are less likely to have to scale and drop pixel rows with an NTSC output.  However, with the use of scaling and smooth scrolling, you should be able to get workable versions of games in either TV standard.
+Lastly - if a game was released for both NTSC and PAL and does not utilize the same number of visible scanlines, you're usually better off with the NTSC versions on the DS handheld. The reason is simple: you are less likely to have to scale and drop pixel rows with an NTSC output.  However, with the use of scaling and smooth scrolling, you should be able to get workable versions of games in either TV standard.
 
 Default Controller Mapping :
 ----------------------------------------------------------------------------------
