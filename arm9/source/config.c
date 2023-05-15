@@ -38,7 +38,6 @@
 #include "bgBottom.h"
 #include "bgTop.h"
 #include "bgFileSel.h"
-#include "bgInfo.h"
 #include "kbd_XL.h"
 #include "kbd_XL2.h"
 #include "kbd_XE.h"
