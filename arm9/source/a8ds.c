@@ -43,7 +43,6 @@
 #include "bgBottom.h"
 #include "bgTop.h"
 #include "bgFileSel.h"
-#include "bgInfo.h"
 #include "kbd_XL.h"
 #include "kbd_XL2.h"
 #include "kbd_XE.h"
@@ -52,6 +51,7 @@
 #include "altirra_basic.h"
 #include "screenshot.h"
 #include "config.h"
+#include "highscore.h"
 
 #define MAX_FILES 1024                      // No more than this many files can be processed per directory
 
@@ -1269,20 +1269,6 @@ void dsShowKeyboard(void)
       dsShowRomInfo();
 }
 
-// ----------------------------------------------------------------------------------
-// We have a single-screen PNG that we can show on the lower display to give the
-// user some basic help on how the emulator works. Useful since most users won't
-// ever read the extensive readme.txt file that comes with the emulator :)
-// ----------------------------------------------------------------------------------
-void dsShowHelp(void)
-{
-    decompress(bgInfoTiles, bgGetGfxPtr(bg0b), LZ77Vram);
-    decompress(bgInfoMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
-    dmaCopy((void *) bgInfoPal,(u16*) BG_PALETTE_SUB,256*2);
-    unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
-    dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
-    swiWaitForVBlank();
-}
 
 // ----------------------------------------------------------------------------------
 // After showing the help screen or one of the soft keyboard screens, we can call
@@ -1309,7 +1295,6 @@ unsigned int dsWaitOnMenu(unsigned int actState)
   unsigned int uState=A8_PLAYINIT;
   unsigned int keys_pressed;
   bool bDone=false, romSel;
-  bool bShowHelp=false;
   short int iTx,iTy;
 
   while (!bDone) 
@@ -1323,41 +1308,27 @@ unsigned int dsWaitOnMenu(unsigned int actState)
       iTx = touch.px;
       iTy = touch.py;
 
-      if (bShowHelp)
-      {
-        bShowHelp=false;
-        dsRestoreBottomScreen();
-      }
-      else
-      {
-            if ((iTx>204) && (iTx<240) && (iTy>150) && (iTy<185))  // Gear Icon = Settings
-            {
-                dsChooseOptions(FALSE);
-            }
-            else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT
-            {
-                soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
-                bDone=dsWaitOnQuit();
-                if (bDone) uState=A8_QUITSTDS;
-            }
-            else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75)) // cartridge slot (wide range)
-            {
-                bDone=true;
-                // Find files in current directory and show it
-                a8FindFiles();
-                strcpy(file_load_id, "XEX/D1");
-                romSel=dsWaitForRom();
-                if (romSel) { uState=A8_PLAYINIT;
-                  dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
-                else { uState=actState; }
-            }
-            else if ((iTx>35) && (iTx<55) && (iTy>150) && (iTy<180))  // Help
-            {
-                dsShowHelp();
-                bShowHelp = true;
-                swiWaitForVBlank();swiWaitForVBlank();swiWaitForVBlank();swiWaitForVBlank();swiWaitForVBlank();
-            }
-      }
+        if ((iTx>204) && (iTx<240) && (iTy>150) && (iTy<185))  // Gear Icon = Settings
+        {
+            dsChooseOptions(FALSE);
+        }
+        else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT
+        {
+            soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+            bDone=dsWaitOnQuit();
+            if (bDone) uState=A8_QUITSTDS;
+        }
+        else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75)) // cartridge slot (wide range)
+        {
+            bDone=true;
+            // Find files in current directory and show it
+            a8FindFiles();
+            strcpy(file_load_id, "XEX/D1");
+            romSel=dsWaitForRom();
+            if (romSel) { uState=A8_PLAYINIT;
+              dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
+            else { uState=actState; }
+        }
     }
     swiWaitForVBlank();
   }
@@ -1593,7 +1564,6 @@ void dsMainLoop(void)
   static short int last_key_code = -1;
   unsigned short int keys_pressed,keys_touch=0, romSel=0;
   short int iTx,iTy;
-  bool bShowHelp = false;
 
   // Timers are fed with 33.513982 MHz clock.
   // With DIV_1024 the clock is 32,728.5 ticks per sec...
@@ -1705,7 +1675,7 @@ void dsMainLoop(void)
             // START, SELECT and OPTION respond immediately - that is, we keep the buttons pressed
             // as long as the user is continuing to hold down the button on the touch screen...
             // ---------------------------------------------------------------------------------------
-            if (!(bShowHelp || bShowKeyboard))
+            if (!bShowKeyboard)
             {
                 if ((iTx>15) && (iTx<66) && (iTy>120) && (iTy<143))  // START
                 {
@@ -1738,7 +1708,7 @@ void dsMainLoop(void)
 
             if (!keys_touch)
             {
-                if (bShowHelp || bShowKeyboard)
+                if (bShowKeyboard)
                 {
                       if (bShowKeyboard)
                       {
@@ -1769,7 +1739,6 @@ void dsMainLoop(void)
                       }
                       else
                       {
-                          bShowHelp = false;
                           keys_touch = 1;
                           dsRestoreBottomScreen();
                       }
@@ -1788,14 +1757,15 @@ void dsMainLoop(void)
                         bMute = 0;
                         swiWaitForVBlank();                        
                     }
-                    else if ((iTx>35) && (iTx<55) && (iTy>150) && (iTy<180))  // Help
+                    else if ((iTx>35) && (iTx<55) && (iTy>145) && (iTy<185))  // HighScore
                     {
                         if (!keys_touch)
                         {
                             soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                         }
-                        dsShowHelp();
-                        bShowHelp = true;
+                        highscore_display();
+                        swiWaitForVBlank();                        
+                        dsRestoreBottomScreen();
                         keys_touch = 1;
                     }
                     else if ((iTx>88) && (iTx<175) && (iTy>150) && (iTy<180))  // Keyboard

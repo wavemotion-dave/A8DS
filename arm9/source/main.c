@@ -25,6 +25,7 @@
 #include "atari.h"
 #include "intro.h"
 #include "a8ds.h"
+#include "highscore.h"
 
 extern void load_os(void);
 extern void install_os(void);
@@ -54,6 +55,8 @@ int main(int argc, char **argv)
     intro_logo();  
     dsInitScreenMain();
     emu_state = A8_MENUINIT;
+    
+    highscore_init();
 
     load_os();          // Read in the "atarixl.rom" file or use the built-in Altirra OS
     install_os();       // And install the right OS into our system...
