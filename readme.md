@@ -227,6 +227,12 @@ Global Options can now be set - *before* you load a game, use the GEAR icon to s
 
 Using the X button, you can go to a second menu of options mostly for key handling.  This menu allows you to map any DS key to any of the A8DS functions (joystick, keyboard, console switches and a few 'meta' commands such as smooth scrolling the screen some number of pixels).
 
+Screen Scaling and Smooth Scrolling :
+----------------------------------------------------------------------------------
+Buttons can be re-configured in the Options (GEAR icon... press X for the keyboard map area)
+
+![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/caverns_01.bmp)
+![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/caverns_02.bmp)
 
 Default Controller Mapping :
 ----------------------------------------------------------------------------------
