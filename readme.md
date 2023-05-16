@@ -283,6 +283,7 @@ V3.4 : ??-May-2023 by wavemotion-dave - Not Yet Released
   * Default to using ATARI OS if bios files found.
   * Altirra OS updated to 3.33 and Altirra BASIC to 1.58
   * High Score saving added - save 10 scores per game.
+  * Improved PAL vs NTSC color palette
 
 V3.3 : 15-May-2023 by wavemotion-dave
   * Switched to CRC32 (from md5sum) to save space and now allow 2500 game settings to be stored.
