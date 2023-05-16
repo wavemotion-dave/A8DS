@@ -292,6 +292,7 @@ void ReadGameSettings(void)
     myConfig.key_click_disable  = GameDB.default_key_click_disable;
     myConfig.blending           = GameDB.default_blending;
     myConfig.ram_type           = GameDB.default_ram_type;
+    myConfig.emulatorText       = true;
     
     for (int i=0; i<8; i++) myConfig.keyMap[i] = GameDB.default_keyMap[i];
 
@@ -353,6 +354,7 @@ void ApplyGameSpecificSettings(void)
         myConfig.dpad_type          = GameDB.GameSettings[idx].dpad_type;
         myConfig.disk_speedup       = GameDB.GameSettings[idx].disk_speedup;
         myConfig.cart_type          = GameDB.GameSettings[idx].cart_type;
+        myConfig.emulatorText       = GameDB.GameSettings[idx].emulatorText;
         for (int i=0; i<8; i++)  myConfig.keyMap[i] = GameDB.GameSettings[idx].keyMap[i];
     }
     else // No match. Use defaults for this game...

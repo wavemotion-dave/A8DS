@@ -1913,10 +1913,10 @@ void dsMainLoop(void)
                     case 52: key_code = AKEY_NONE;      break;
                     case 53: key_code = AKEY_NONE;      break;
                     case 54: key_code = AKEY_NONE;      break;
-                    case 55: screen_slide_y = 16;       break;
-                    case 56: screen_slide_y = 32;       break;
-                    case 57: screen_slide_y = -16;      break;
-                    case 58: screen_slide_y = -32;      break;
+                    case 55: screen_slide_y = 12;       break;
+                    case 56: screen_slide_y = 24;       break;
+                    case 57: screen_slide_y = -12;      break;
+                    case 58: screen_slide_y = -24;      break;
                     case 59: screen_slide_x = 32;       break;
                     case 60: screen_slide_x = 64;       break;
                     case 61: screen_slide_x = -32;      break;
