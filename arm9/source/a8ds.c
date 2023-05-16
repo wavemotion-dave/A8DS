@@ -1969,31 +1969,28 @@ void dsMainLoop(void)
         // Handle the NDS D-Pad which usually just controlls a joystick connected to the Player 1 PORT.
         // Only handle UP/DOWN/LEFT/RIGHT if shoulder buttons are not pressed (those are handled below)
         // ---------------------------------------------------------------------------------------------
-        if ((keys_pressed & (KEY_R|KEY_L)) == 0)
+        if (myConfig.dpad_type == 2) // Diagonals (for Q-Bert like games)
         {
-            if (myConfig.dpad_type == 2) // Diagonals (for Q-Bert like games)
-            {
-                if (keys_pressed & KEY_UP)      {joy_moved[0] = true; joy_moved[3] = true;}
-                if (keys_pressed & KEY_LEFT)    {joy_moved[0] = true; joy_moved[2] = true;}
-                if (keys_pressed & KEY_RIGHT)   {joy_moved[1] = true; joy_moved[3] = true;}
-                if (keys_pressed & KEY_DOWN)    {joy_moved[1] = true; joy_moved[2] = true;}
-            }
-            else if (myConfig.dpad_type == 3) // Cursor Keys
-            {
-                if (keys_pressed & KEY_UP)      {key_code = AKEY_UP;}
-                if (keys_pressed & KEY_LEFT)    {key_code = AKEY_LEFT;}
-                if (keys_pressed & KEY_RIGHT)   {key_code = AKEY_RIGHT;}
-                if (keys_pressed & KEY_DOWN)    {key_code = AKEY_DOWN;}
-            }
-            else // Normal Joystick use...
-            {
-                if (keys_pressed & KEY_UP)      {joy_moved[0] = true;}
-                if (keys_pressed & KEY_DOWN)    {joy_moved[1] = true;}
-                if (keys_pressed & KEY_LEFT)    {joy_moved[2] = true;}
-                if (keys_pressed & KEY_RIGHT)   {joy_moved[3] = true;}
-            }
+            if (keys_pressed & KEY_UP)      {joy_moved[0] = true; joy_moved[3] = true;}
+            if (keys_pressed & KEY_LEFT)    {joy_moved[0] = true; joy_moved[2] = true;}
+            if (keys_pressed & KEY_RIGHT)   {joy_moved[1] = true; joy_moved[3] = true;}
+            if (keys_pressed & KEY_DOWN)    {joy_moved[1] = true; joy_moved[2] = true;}
         }
-            
+        else if (myConfig.dpad_type == 3) // Cursor Keys
+        {
+            if (keys_pressed & KEY_UP)      {key_code = AKEY_UP;}
+            if (keys_pressed & KEY_LEFT)    {key_code = AKEY_LEFT;}
+            if (keys_pressed & KEY_RIGHT)   {key_code = AKEY_RIGHT;}
+            if (keys_pressed & KEY_DOWN)    {key_code = AKEY_DOWN;}
+        }
+        else // Normal Joystick use...
+        {
+            if (keys_pressed & KEY_UP)      {joy_moved[0] = true;}
+            if (keys_pressed & KEY_DOWN)    {joy_moved[1] = true;}
+            if (keys_pressed & KEY_LEFT)    {joy_moved[2] = true;}
+            if (keys_pressed & KEY_RIGHT)   {joy_moved[3] = true;}
+        }
+           
         // --------------------------------------------------------------------------
         // If any DS key resulted in the fire button being pressed, handle that here
         // --------------------------------------------------------------------------
