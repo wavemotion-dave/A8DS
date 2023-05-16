@@ -214,8 +214,8 @@ Global Options can now be set - *before* you load a game, use the GEAR icon to s
 * MACHINE TYPE - select XL/XE 128K, 320K, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
 * OS Type - Select the built in Altirra OS or, if you have the OS ROMs available, the Atari OS.
 * BASIC - Select if BASIC is enabled and what flavor of BASIC to run.
+* PALETTE - Set to NTSC or PAL to suit your preferences (yes, you can run an NTSC palette on a PAL configurd system and vice-versa).
 * SKIP FRAMES - On the DSi you can keep this OFF for most games, but for the DS you may need a moderate-to-agressive frameskip.
-* PALETTE - Set to Bright or Muted to suit your preferences
 * FPS SETTING - Normally OFF but you might want to see the frames-per-second counter and you can set 'TURBO' mode to run full-speed (unthrottled) to check performance.
 * ARTIFACTING - Normally OFF but a few games utilize this high-rez mode trick that brings in a new set of colors to the output.
 * BLENDING - Since the DS screen is 256x192 and the Atari A8 output is 320x192 (and often more than 192 pixels utilizing overscan area), the blur will help show fractional pixels. Set to the value that looks most pleasing (and it will likely be a different value for different games).
