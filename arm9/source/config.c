@@ -453,8 +453,8 @@ const struct options_t Option_Table[2][20] =
         {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",
                          "ALTIRRA 800", "ATARIOSB.ROM"},                    &myConfig.os_type,              OPT_NORMAL, 4,   "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
         {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &myConfig.basic_type,           OPT_NORMAL, 3,   "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
+        {"PALETTE",     {"NTSC",        "PAL"},                             &myConfig.palette_type,         OPT_NORMAL, 2,   "CHOOSE PALETTE    ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
         {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &myConfig.skip_frames,          OPT_NORMAL, 3,   "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
-        {"PALETTE",     {"BRIGHT",      "MUTED"},                           &myConfig.palette_type,         OPT_NORMAL, 2,   "CHOOSE PALETTE    ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
         
         {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &myConfig.fps_setting,          OPT_NORMAL, 3,   "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
         {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
