@@ -167,6 +167,7 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].dpad_type          = myConfig.dpad_type;
         GameDB.GameSettings[idx].disk_speedup       = myConfig.disk_speedup;
         GameDB.GameSettings[idx].cart_type          = myConfig.cart_type;
+        GameDB.GameSettings[idx].emulatorText       = myConfig.emulatorText;
         for (int i=0; i<8; i++) GameDB.GameSettings[idx].keyMap[i] = myConfig.keyMap[i];
         GameDB.checksum = 0;
         char *ptr = (char *)GameDB.GameSettings;
