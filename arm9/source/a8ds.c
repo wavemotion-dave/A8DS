@@ -689,61 +689,83 @@ void dsShowRomInfo(void)
     char machineBuf[20];
     static char line2[200];
 
-    if (myConfig.emulatorText)
+    if (!bShowKeyboard)
     {
-        if (!bShowKeyboard)
-        {
+        if (myConfig.emulatorText)
             dsPrintValue(10,2,0, (file_type == AFILE_CART) ? "CAR:  " : ((file_type == AFILE_ROM) ? "ROM:  " : "XEX:  "));
-            strncpy(line1, disk_filename[DISK_XEX], 22);
-            line1[22] = 0;
-            sprintf(line2,"%-22s", line1);
-            dsPrintValue(10,3,0, line2);
+        else
+            dsPrintValue(10,2,0, "      ");
+        
+        strncpy(line1, disk_filename[DISK_XEX], 22);
+        line1[22] = 0;
+        sprintf(line2,"%-22s", line1);
+        if (!myConfig.emulatorText) strcpy(line2, "                      ");
+        dsPrintValue(10,3,0, line2);
 
+        if (myConfig.emulatorText)
+        {
             sprintf(line1, "D1: %s", (disk_readonly[DISK_1] ? "[R]":"[W]"));
             dsPrintValue(10,6,0, line1);
-            strncpy(line1, disk_filename[DISK_1], 22);
+        }
+        else
+        {
+            dsPrintValue(10,6,0, "        ");
+        }
+        strncpy(line1, disk_filename[DISK_1], 22);
+        line1[22] = 0;
+        sprintf(line2,"%-22s", line1);
+        if (!myConfig.emulatorText) strcpy(line2, "                      ");
+        dsPrintValue(10,7,0, line2);
+        if (!myConfig.emulatorText) strcpy(line2, "                      ");
+        if (strlen(disk_filename[DISK_1]) > 26)
+        {
+            strncpy(line1, &disk_filename[DISK_1][22], 22);
             line1[22] = 0;
             sprintf(line2,"%-22s", line1);
-            dsPrintValue(10,7,0, line2);
-            if (strlen(disk_filename[DISK_1]) > 26)
-            {
-                strncpy(line1, &disk_filename[DISK_1][22], 22);
-                line1[22] = 0;
-                sprintf(line2,"%-22s", line1);
-            }
-            else
-            {
-                sprintf(line2,"%-22s", " ");
-            }
-            dsPrintValue(10,8,0, line2);
+        }
+        else
+        {
+            sprintf(line2,"%-22s", " ");
+        }
+        if (!myConfig.emulatorText) strcpy(line2, "                      ");
+        dsPrintValue(10,8,0, line2);
 
+        if (myConfig.emulatorText)
+        {
             sprintf(line1, "D2: %s", (disk_readonly[DISK_2] ? "[R]":"[W]"));
             dsPrintValue(10,11,0, line1);
-            strncpy(line1, disk_filename[DISK_2], 22);
-            line1[22] = 0;
-            sprintf(line2,"%-22s", line1);
-            dsPrintValue(10,12,0, line2);
-            if (strlen(disk_filename[DISK_2]) > 26)
-            {
-                strncpy(line1, &disk_filename[DISK_2][22], 22);
-                line1[22] = 0;
-                sprintf(line2,"%-22s", line1);
-            }
-            else
-            {
-                sprintf(line2,"%-22s", " ");
-            }
-            dsPrintValue(10,13,0, line2);
+        }
+        else
+        {
+            dsPrintValue(10,11,0, "        ");
         }
         
-        sprintf(ramSizeBuf, "%4dK", ram_size);
-        if ((myConfig.os_type == OS_ATARI_OSB) || (myConfig.os_type==OS_ALTIRRA_800))
-            sprintf(machineBuf, "%-5s A800", (myConfig.basic_type ? "BASIC": " "));
+        strncpy(line1, disk_filename[DISK_2], 22);
+        line1[22] = 0;
+        sprintf(line2,"%-22s", line1);
+        if (!myConfig.emulatorText) strcpy(line2, "                      ");
+        dsPrintValue(10,12,0, line2);
+        if (strlen(disk_filename[DISK_2]) > 26)
+        {
+            strncpy(line1, &disk_filename[DISK_2][22], 22);
+            line1[22] = 0;
+            sprintf(line2,"%-22s", line1);
+        }
         else
-            sprintf(machineBuf, "%-5s XL/XE", (myConfig.basic_type ? "BASIC": " "));
-        sprintf(line2, "%-12s %-4s %-4s", machineBuf, ramSizeBuf, (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "));
-        dsPrintValue(7,0,0, line2);
+        {
+            sprintf(line2,"%-22s", " ");
+        }
+        if (!myConfig.emulatorText) strcpy(line2, "                      ");
+        dsPrintValue(10,13,0, line2);
     }
+
+    sprintf(ramSizeBuf, "%4dK", ram_size);
+    if ((myConfig.os_type == OS_ATARI_OSB) || (myConfig.os_type==OS_ALTIRRA_800))
+        sprintf(machineBuf, "%-5s A800", (myConfig.basic_type ? "BASIC": " "));
+    else
+        sprintf(machineBuf, "%-5s XL/XE", (myConfig.basic_type ? "BASIC": " "));
+    sprintf(line2, "%-12s %-4s %-4s", machineBuf, ramSizeBuf, (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "));
+    dsPrintValue(7,0,0, line2);
 }
 
 // ----------------------------------------------------------------------------------------
