@@ -82,7 +82,7 @@ void InitGameSettings(void)
         GameDB.GameSettings[i].spare6 = 1;
     }
     GameDB.default_skip_frames = (isDSiMode() ? 0:1);   // For older DS models, we skip frames to get full speed...
-    GameDB.default_os_type = OS_ALTIRRA_XL;
+    GameDB.default_os_type = (bAtariOS ? OS_ATARI_XL : OS_ALTIRRA_XL);
     GameDB.default_blending = 6;
     GameDB.default_keyMap[DB_KEY_A] = 0;
     GameDB.default_keyMap[DB_KEY_B] = 0;

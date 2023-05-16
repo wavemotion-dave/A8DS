@@ -51,15 +51,16 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    // Get these in before we load configuration 
+    load_os();          // Read in the "atarixl.rom" file or use the built-in Altirra OS
+    install_os();       // And install the right OS into our system...
+    
     // Intro and main screen
     intro_logo();  
     dsInitScreenMain();
     emu_state = A8_MENUINIT;
     
     highscore_init();
-
-    load_os();          // Read in the "atarixl.rom" file or use the built-in Altirra OS
-    install_os();       // And install the right OS into our system...
 
     // ----------------------------------------------------------------------
     // Load the game file if supplied on the command line (mostly for TWL++)
