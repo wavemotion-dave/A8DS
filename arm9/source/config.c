@@ -84,6 +84,7 @@ void InitGameSettings(void)
     GameDB.default_skip_frames = (isDSiMode() ? 0:1);   // For older DS models, we skip frames to get full speed...
     GameDB.default_os_type = (bAtariOS ? OS_ATARI_XL : OS_ALTIRRA_XL);
     GameDB.default_blending = 6;
+    GameDB.default_alphaBlend = 0;
     GameDB.default_keyMap[DB_KEY_A] = 0;
     GameDB.default_keyMap[DB_KEY_B] = 0;
     GameDB.default_keyMap[DB_KEY_X] = 8;
@@ -168,6 +169,7 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].disk_speedup       = myConfig.disk_speedup;
         GameDB.GameSettings[idx].cart_type          = myConfig.cart_type;
         GameDB.GameSettings[idx].emulatorText       = myConfig.emulatorText;
+        GameDB.GameSettings[idx].alphaBlend         = myConfig.alphaBlend;
         for (int i=0; i<8; i++) GameDB.GameSettings[idx].keyMap[i] = myConfig.keyMap[i];
         GameDB.checksum = 0;
         char *ptr = (char *)GameDB.GameSettings;
@@ -216,6 +218,7 @@ void WriteGlobalSettings(void)
     GameDB.default_key_click_disable  = myConfig.key_click_disable;
     GameDB.default_auto_fire          = myConfig.auto_fire;
     GameDB.default_blending           = myConfig.blending;
+    GameDB.default_alphaBlend         = myConfig.alphaBlend;
     for (int i=0; i<8; i++) GameDB.default_keyMap[i] = myConfig.keyMap[i];
     GameDB.checksum = 0;
     char *ptr = (char *)GameDB.GameSettings;
@@ -293,6 +296,7 @@ void ReadGameSettings(void)
     myConfig.key_click_disable  = GameDB.default_key_click_disable;
     myConfig.blending           = GameDB.default_blending;
     myConfig.ram_type           = GameDB.default_ram_type;
+    myConfig.alphaBlend         = GameDB.default_alphaBlend;
     myConfig.emulatorText       = true;
     
     for (int i=0; i<8; i++) myConfig.keyMap[i] = GameDB.default_keyMap[i];
@@ -310,6 +314,7 @@ void SetMyConfigDefaults(void)
     myConfig.cart_type          = CART_NONE;
     myConfig.emulatorText       = true;
     myConfig.blending           = GameDB.default_blending;
+    myConfig.alphaBlend         = GameDB.default_alphaBlend;
     myConfig.skip_frames        = GameDB.default_skip_frames;
     myConfig.os_type            = GameDB.default_os_type;
     myConfig.ram_type           = GameDB.default_ram_type;
@@ -356,6 +361,7 @@ void ApplyGameSpecificSettings(void)
         myConfig.disk_speedup       = GameDB.GameSettings[idx].disk_speedup;
         myConfig.cart_type          = GameDB.GameSettings[idx].cart_type;
         myConfig.emulatorText       = GameDB.GameSettings[idx].emulatorText;
+        myConfig.alphaBlend         = GameDB.GameSettings[idx].alphaBlend;
         for (int i=0; i<8; i++)  myConfig.keyMap[i] = GameDB.GameSettings[idx].keyMap[i];
     }
     else // No match. Use defaults for this game...
@@ -462,8 +468,9 @@ const struct options_t Option_Table[2][20] =
         {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &myConfig.fps_setting,          OPT_NORMAL, 3,   "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
         {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
                                         "3:RED/GREEN","4:GREEN/RED"},       &myConfig.artifacting,          OPT_NORMAL, 5,   "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
-        {"BLENDING",    {"NORMAL",      "BLUR1", "BLUR2", "BLUR3", 
+        {"SCREEN BLUR", {"NORMAL",      "BLUR1", "BLUR2", "BLUR3", 
                          "BLUR4","BLUR5","BLUR6","BLUR7"},                  &myConfig.blending,             OPT_NORMAL, 8,   "NORMALLY BLUR6    ",   "AND VARIOUS BLUR  ",  "LEVELS WILL HELP  ",  "SCREEN SCALING.   "},
+        {"ALPHA BLEND", {"OFF",         "ON"},                              &myConfig.alphaBlend,           OPT_NORMAL, 2,   "TURN THIS ON TO   ",   "BLEND FRAMES. THIS",  "MAKES THE SCREEN  ",  "BRIGHTER ON NON-XL"},
         {"DISK SPEEDUP",{"OFF",         "ON"},                              &myConfig.disk_speedup,         OPT_NORMAL, 2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
         {"KEY CLICK",   {"ON",          "OFF"},                             &myConfig.key_click_disable,    OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
         {"EMULATOR TXT",{"OFF",         "ON"},                              &myConfig.emulatorText,         OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},

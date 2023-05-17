@@ -55,7 +55,7 @@ struct GameSettings_t
     UBYTE cart_type;
     UBYTE fps_setting;
     UBYTE emulatorText;
-    UBYTE spare0;
+    UBYTE alphaBlend;
     UBYTE spare1;
     UBYTE spare2;
     UBYTE spare3;
@@ -84,7 +84,7 @@ struct GameDatabase_t
     UBYTE                       default_auto_fire;
     UBYTE                       default_blending;
     UBYTE                       default_keyMap[8];
-    UBYTE                       default_spare1;
+    UBYTE                       default_alphaBlend;
     UBYTE                       default_spare2;
     UBYTE                       default_spare3;
     UBYTE                       default_spare4;

@@ -36,7 +36,7 @@ bool screenshotbmp(const char* filename) {
     if(!file)
         return false;
 
-    REG_DISPCAPCNT = DCAP_BANK(DCAP_BANK_VRAM_B) | DCAP_SIZE(DCAP_SIZE_256x192) | DCAP_ENABLE;
+    REG_DISPCAPCNT = DCAP_BANK(DCAP_BANK_VRAM_D) | DCAP_SIZE(DCAP_SIZE_256x192) | DCAP_ENABLE;
     while(REG_DISPCAPCNT & DCAP_ENABLE);
 
     u8 *temp;
@@ -76,7 +76,7 @@ bool screenshotbmp(const char* filename) {
     u16 *ptr = (u16*)(temp + sizeof(HEADER) + sizeof(INFOHEADER));
     for(int y = 0; y < 192; y++) {
         for(int x = 0; x < 256; x++) {
-            u16 color = VRAM_B[256 * 191 - y * 256 + x];
+            u16 color = VRAM_D[256 * 191 - y * 256 + x];
             *(ptr++) = ((color >> 10) & 0x1F) | (color & (0x1F << 5)) << 1 | ((color & 0x1F) << 11);
         }
     }

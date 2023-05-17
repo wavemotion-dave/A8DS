@@ -2224,7 +2224,14 @@ __attribute__((noinline)) void ANTIC_FrameSetup()
     } while (ypos < 8);
 
     // Direct screen write...
-    scrn_ptr = bgGetGfxPtr(bg2);
+    if (myConfig.alphaBlend)
+    {
+        scrn_ptr = bgGetGfxPtr((gTotalAtariFrames&1) ? bg2:bg3);
+    }
+    else
+    {
+        scrn_ptr = bgGetGfxPtr(bg2);
+    }
 
     need_dl = TRUE;
 }

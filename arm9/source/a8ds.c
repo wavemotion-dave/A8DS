@@ -55,7 +55,7 @@
 
 #define MAX_FILES 1024                      // No more than this many files can be processed per directory
 
-FICA_A8 a8romlist[MAX_FILES];               // For reading all the .ATR and .XES files from the SD card
+FICA_A8 a8romlist[MAX_FILES];               // For reading all the .ATR .XEX .CAR and .ROM files from the SD card
 u16 count8bit=0, countfiles=0, ucFicAct=0;  // Counters for all the 8-bit files found on the SD card
 u16 gTotalAtariFrames = 0;                  // For FPS counting
 int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background "pointers"
@@ -67,13 +67,13 @@ bool bShowKeyboard = false;
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
 // This buffer cannot be in .dtcm fast memory because the ARM7 core wouldn't see it.
 // ----------------------------------------------------------------------------------
-u8 sound_buffer[SNDLENGTH] __attribute__ ((aligned (4))) = {0};
-u16* aptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
-u16* bptr __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
-u16 sound_idx          __attribute__((section(".dtcm"))) = 0;
-u8 myPokeyBufIdx       __attribute__((section(".dtcm"))) = 0;
-u8 bMute               __attribute__((section(".dtcm"))) = 0;
-u16 sampleExtender[256] __attribute__((section(".dtcm"))) = {0};
+u8 sound_buffer[SNDLENGTH]  __attribute__ ((aligned (4))) = {0};
+u16* aptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
+u16* bptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
+u16 sound_idx               __attribute__((section(".dtcm"))) = 0;
+u8 myPokeyBufIdx            __attribute__((section(".dtcm"))) = 0;
+u8 bMute                    __attribute__((section(".dtcm"))) = 0;
+u16 sampleExtender[256]     __attribute__((section(".dtcm"))) = {0};
 
 int screen_slide_x __attribute__((section(".dtcm"))) = 0;
 int screen_slide_y __attribute__((section(".dtcm"))) = 0;
@@ -188,11 +188,7 @@ ITCM_CODE void VsoundHandler(void)
 }
 
 // ---------------------------------------------------------------------------
-// We have 2 palettes that came from 2 different code bases for Atari800.
-// At first I thought one was the NTSC and the other PAL but now I'm far
-// from sure... so I simply name them Palette A and B and A appears to be
-// sightly brighter colors and B is more muted... the user can pick which
-// one they want on a per-game basis.
+// We have 2 palettes - one for NTSC and one for PAL.
 // ---------------------------------------------------------------------------
 #define PALETTE_SIZE 768
 const byte palette_NTSC[PALETTE_SIZE] =
@@ -438,9 +434,12 @@ ITCM_CODE void vblankIntr()
     REG_BG2PA = xdxBG;
     REG_BG2PD = ydyBG;
 
-    REG_BG2X = cxBG+jitter[myConfig.blending][sIndex++]+(screen_slide_x<<8);
-    REG_BG2Y = cyBG+jitter[myConfig.blending][sIndex++]+(screen_slide_y<<8);
+    REG_BG3PA = xdxBG;
+    REG_BG3PD = ydyBG;
     
+    REG_BG3X = REG_BG2X = cxBG+jitter[myConfig.blending][sIndex++]+(screen_slide_x<<8);
+    REG_BG3Y = REG_BG2Y = cyBG+jitter[myConfig.blending][sIndex++]+(screen_slide_y<<8);
+
     sIndex = sIndex & 0x03;
     
     if (sIndex == 0)
@@ -469,10 +468,10 @@ void dsInitScreenMain(void)
     SetYtrigger(190); //trigger 2 lines before vsync
     irqSet(IRQ_VBLANK, vblankIntr);
     irqEnable(IRQ_VBLANK);
-    vramSetBankA(VRAM_A_MAIN_BG);             // This is the main Emulation screen - Background
-    vramSetBankB(VRAM_B_LCD);                 // Not using this for video... but 128K of faster RAM always useful!  Mapped at 0x06820000
+    vramSetBankA(VRAM_A_MAIN_BG);             // This is the main Emulation screen - will be Alpha Blended with VRAM_B
+    vramSetBankB(VRAM_B_MAIN_BG);             // This is the main Emulation screen - will be Alpha Blended with VRAM_A
     vramSetBankC(VRAM_C_SUB_BG);              // This is the Sub-Screen (touch screen) display (2 layers)
-    vramSetBankD(VRAM_D_LCD );                // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000
+    vramSetBankD(VRAM_D_LCD );                // Not using this for video but need the 128K of VRAM to capture screenshots (DCAP)
     vramSetBankE(VRAM_E_LCD );                // Not using this for video but  64K of faster RAM always useful!  Mapped at 0x06880000
     vramSetBankF(VRAM_F_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06890000
     vramSetBankG(VRAM_G_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06894000
@@ -504,18 +503,52 @@ void dsInitTimer(void)
 void dsShowScreenEmu(void)
 {
     // Change vram
-    videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE);
-    bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
+    if (myConfig.alphaBlend)
+    {
+        videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
+        bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
+        bg3 = bgInit(3, BgType_Bmp8, BgSize_B8_512x512, 0,0);    
 
-    REG_BLDCNT=0; REG_BLDCNT_SUB=0; REG_BLDY=0; REG_BLDY_SUB=0;
-    
+        REG_BLDY=0;
+
+        // Trying a 50/50 Alpha Blend...
+        REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
+        REG_BLDALPHA = (0x8 << 8) | 0xF; // 50% / 50% 
+
+        REG_BG3PB = 0;
+        REG_BG3PC = 0;
+
+        REG_BG3X = cxBG;
+        REG_BG3Y = cyBG;
+        REG_BG3PA = xdxBG;
+        REG_BG3PD = ydyBG;
+    }
+    else
+    {
+        videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE);
+        bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
+
+        REG_BLDY=0;
+        REG_BLDCNT = 0;
+        REG_BLDALPHA = 0; 
+
+        REG_BG3PB = 0;
+        REG_BG3PC = 0;
+
+        REG_BG3X = 0;
+        REG_BG3Y = 0;
+        REG_BG3PA = 0;
+        REG_BG3PD = 0;
+    }
+
     REG_BG2PB = 0;
     REG_BG2PC = 0;
-
+    
     REG_BG2X = cxBG;
     REG_BG2Y = cyBG;
     REG_BG2PA = xdxBG;
     REG_BG2PD = ydyBG;
+    
 }
 
 // --------------------------------------------------------------------
@@ -545,7 +578,8 @@ void dsShowScreenMain(void)
     unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
     dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
 
-    REG_BLDCNT=0; REG_BLDCNT_SUB=0; REG_BLDY=0; REG_BLDY_SUB=0;
+    REG_BLDCNT=0; REG_BLDY=0;
+    REG_BLDCNT_SUB=0; REG_BLDY_SUB=0;
 
     swiWaitForVBlank();
     
