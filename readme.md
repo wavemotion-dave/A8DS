@@ -218,7 +218,8 @@ Global Options can now be set - *before* you load a game, use the GEAR icon to s
 * SKIP FRAMES - On the DSi you can keep this OFF for most games, but for the DS you may need a moderate-to-agressive frameskip.
 * FPS SETTING - Normally OFF but you might want to see the frames-per-second counter and you can set 'TURBO' mode to run full-speed (unthrottled) to check performance.
 * ARTIFACTING - Normally OFF but a few games utilize this high-rez mode trick that brings in a new set of colors to the output.
-* BLENDING - Since the DS screen is 256x192 and the Atari A8 output is 320x192 (and often more than 192 pixels utilizing overscan area), the blur will help show fractional pixels. Set to the value that looks most pleasing (and it will likely be a different value for different games).
+* SCREEN BLUR - Since the DS screen is 256x192 and the Atari A8 output is 320x192 (and often more than 192 pixels utilizing overscan area), the blur will help show fractional pixels. Set to the value that looks most pleasing (and it will likely be a different value for different games).
+* ALPHA BLEND - The DSi non-XL handhelds tend to have a fast LCD fade and that can make it hard to see small objects. Turn this ON to blend two successive frames. This has the effect of making the screen a bit lighter/brigher and small details tend to show more clearly.
 * DISK SPEEDUP - the SIO access is normally sped-up but a few games on disk (ATR/ATX) won't run properly with disk-speedup so you can disable on a per-game basis.
 * KEY CLICK - if you want the mechanical key-click when using the virtual 800 keyboards.
 * EMULATOR TEXT - if you want a clean main screen with just the disk-drives shown, you can disable text.
