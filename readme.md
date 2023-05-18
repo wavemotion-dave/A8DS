@@ -5,7 +5,7 @@ A8DS is an Atari 8-bit computer emulator for the Nintendo DS/DSi.  Specifically,
 The stock 800XL had 64KB of RAM. The default A8DS configuration is an
 XL/XE machine with 128KB of RAM which will run most of the 8-bit library.
 A8DS goes beyond the normal XL/XE 128K machine and provides three alternative 
-configurations: the 320K (RAMBO) and 1088K for a few large games and demos 
+configurations: the 320K (RAMBO), 576K (COMPY) and 1088K for a few large games and demos 
 plus an Atari 800 (non-XL) 48K machine for backwards compatibility with some older 
 games that don't play nice with a more "modern" XL/XE setup. As such, it's 
 really grown to be a full-featured 8-bit emulator to run nearly the entire 
@@ -219,7 +219,7 @@ Configuration :
 Global Options can now be set - *before* you load a game, use the GEAR icon to set and save your options that will be applied to new games going forward (you can still override on a per-game basis).
 
 * TV TYPE - Select PAL vs NTSC for 50/60Hz operation.
-* MACHINE TYPE - select XL/XE 128K, 320K, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
+* MACHINE TYPE - select XL/XE 128K, 320K, 576K, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
 * OS Type - Select the built in Altirra OS or, if you have the OS ROMs available, the Atari OS.
 * BASIC - Select if BASIC is enabled and what flavor of BASIC to run.
 * PALETTE - Set to NTSC or PAL to suit your preferences (yes, you can run an NTSC palette on a PAL configurd system and vice-versa).
