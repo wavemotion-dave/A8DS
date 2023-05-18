@@ -93,6 +93,14 @@ Credits:
 
 Features :
 ----------------------------------------------------------------------------------
+*  Memory configurations including 48K, 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
+*  Cart based games up to 1MB in size
+*  ATR and ATX disk-based games (two emululated drives supported)
+*  R-Time8 Real-Time Clock support (mostly for SpartaDOS X)
+*  Built in Altirra OS (3.33) and BASIC (1.58)
+*  High Score support for 10 scores per game
+*  Full configuration of DS keys to any Atari 8-bit joystick/key/button
+
 Most things you should expect from an emulator. Games generally run full-speed
 with just a handful of exceptions. If you load a game and it doesn't load properly,
 just load it again or hit the RESET button which will re-initialize the A8DS machine.
@@ -110,7 +118,7 @@ available on your setup which you can find easily online - these can be used as 
 The .ATR disk support handles up to 360K disks (it will probably work with larger disks, but has not 
 been extensively tested beyond 360K). 
 
-The emulator has the built-in Altirra BASIC 1.55 which is a drop-in replacement for the
+The emulator has the built-in Altirra BASIC 1.58 which is a drop-in replacement for the
 Atari Basic Rev C (only more full-featured). Normally you can leave this disabled but
 a few games require the BASIC cart to be present and you can toggle this with the START button
 when you load a game. If you try to load a game and it crashes, most likely you need
