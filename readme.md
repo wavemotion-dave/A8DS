@@ -95,6 +95,7 @@ Features :
 ----------------------------------------------------------------------------------
 *  Memory configurations including 48K, 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
 *  Cart based games up to 1MB in size
+*  XEX Atari 8-bit Executable images 
 *  ATR and ATX disk-based games (two emululated drives supported)
 *  R-Time8 Real-Time Clock support (mostly for SpartaDOS X)
 *  Built in Altirra OS (3.33) and BASIC (1.58)
