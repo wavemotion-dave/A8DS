@@ -84,7 +84,7 @@ but the original Atari800 copyright notice is retained below:
 Credits:
 --------------------------------------------------------------------------------
 * Atari800 team for source code (https://atari800.github.io/)
-* Altirra and Avery Lee for a kick-ass substitute BIOS, the Altirra Hardware Manual (a must read) and generally being awesome.
+* Altirra and Avery Lee for a kick-ass substitute BIOS, the Altirra Hardware Manual (a must read) and generally being awesome (https://www.virtualdub.org/altirra.html)
 * Wintermute for devkitpro and libnds (http://www.devkitpro.org).
 * Alekmaul for porting the original A5200DS of which this is heavily based.
 * Darryl Hirschler for the awesome Atari 8-bit Keyboard Graphics.
