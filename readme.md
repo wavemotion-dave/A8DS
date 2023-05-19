@@ -39,7 +39,7 @@ so named as shown above. These files are loaded into memory when the emulator st
 and remain available for the entire emulation session. Again, if you don't have a real BIOS, 
 a generic but excellent one is provided from the good folks who made Altirra (Avery Lee) 
 which is released as open-source software.  Also optional is ataribas.rom for the 8K basic 
-program (Rev C is recommended). If not supplied, the built-in Altirra BASIC 1.55 is supplied.
+program (Rev C is recommended). If not supplied, the built-in Altirra BASIC 1.58 is supplied.
 
 I've not done exhaustive testing, but in many cases I find the Altirra BIOS does a
 great job as a replacement for the Atari OS/BASIC roms. However, for maximum compaitibility,
