@@ -59,19 +59,16 @@ extern int disk_readonly[DISK_MAX];
 #define MACHINE_OSA   0
 #define MACHINE_OSB   1
 #define MACHINE_XLXE  2
-#define MACHINE_5200  3
 
 #define Atari800_MACHINE_OSA   MACHINE_OSA
 #define Atari800_MACHINE_OSB   MACHINE_OSB
 #define Atari800_MACHINE_XLXE  MACHINE_XLXE
-#define Atari800_MACHINE_5200  MACHINE_5200
 
-/* RAM size in kilobytes.
-   Valid values for MACHINE_OSA and MACHINE_OSB are: 16, 48, 52.
-   Valid values for MACHINE_XLXE are: 128, RAM_320_RAMBO */
+/* RAM size in kilobytes. */
 #define RAM_48K              48
 #define RAM_128K            128
 #define RAM_320_RAMBO       320
+#define RAM_576_COMPY       576
 #define RAM_1088K           1088
 
 /* Always call Atari800_InitialiseMachine() after changing machine_type

@@ -107,6 +107,7 @@ void SetRamSizeAndOS(void)
     if      (myConfig.ram_type == 0) ram_size = RAM_128K;
     else if (myConfig.ram_type == 1) ram_size = RAM_320_RAMBO;
     else if (myConfig.ram_type == 2) ram_size = RAM_1088K;
+    else if (myConfig.ram_type == 3) ram_size = RAM_576_COMPY;
     else                             ram_size = RAM_48K;
 
     // ---------------------------------------------------------------------------------------------
@@ -457,8 +458,8 @@ const struct options_t Option_Table[2][20] =
     // Page 1
     {
         {"TV TYPE",     {"NTSC",        "PAL"},                             &myConfig.tv_type,              OPT_NORMAL, 2,   "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
-        {"MACHINE TYPE",{"128K XL/XE",  "320K XL/XE", 
-                         "1088K XL/XE", "48K ATARI800"},                    &myConfig.ram_type,             OPT_NORMAL, 4,   "128K STANDARD FOR ",   "MOST GAMES. 320K /",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
+        {"MACHINE TYPE",{"128K XL/XE",  "320K RAMBO", "1088K RAMBO", 
+                         "576K COMPY",  "48K ATARI800"},                    &myConfig.ram_type,             OPT_NORMAL, 5,   "128K STANDARD FOR ",   "MOST GAMES. 320K /",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
         {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",
                          "ALTIRRA 800", "ATARIOSB.ROM"},                    &myConfig.os_type,              OPT_NORMAL, 4,   "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
         {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &myConfig.basic_type,           OPT_NORMAL, 3,   "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},

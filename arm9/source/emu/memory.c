@@ -112,13 +112,14 @@ static void SetAtariXLXEMemory(void)
 {
     if (myConfig.ram_type == 1) ram_size = RAM_320_RAMBO; 
     else if (myConfig.ram_type == 2) ram_size = RAM_1088K; 
+    else if (myConfig.ram_type == 3) ram_size = RAM_576_COMPY; 
     else ram_size = RAM_128K;
 }
 
-// ---------------------------------------------------------------------------------------
-// Note: We support 3 memory configurations for XE... Standard 130XE compatible 128K 
-// and the RAMBO 320K or 1088K.  There is also a backwards compatible 48K option.
-// ---------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
+// Note: We support 3 memory configurations for XE... Standard 130XE compatible 128K and
+// the RAMBO 320K, COMPY 576K or RAMBO 1088K.  There is also a backwards compatible 48K option.
+// ----------------------------------------------------------------------------------------------
 static void AllocXEMemory(void)
 {
     if (ram_size > 64) 
@@ -294,6 +295,8 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
                 bank = ((byte & 0x0c) >> 2) + 1;
             else if (ram_size == RAM_320_RAMBO)
                 bank = (((byte & 0x0c) + ((byte & 0x60) >> 1)) >> 2) + 1;
+            else if (ram_size == RAM_576_COMPY)
+                bank = (((byte & 0x0e) + ((byte & 0x60) >> 1)) >> 1) + 1;
             else // Assume RAM_1088K
                 bank = (((byte & 0x0e) + ((byte & 0xe0) >> 1)) >> 1) + 1;
         }
@@ -331,11 +334,11 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
             xe_bank = bank;
         }
         
-        // -----------------------------------------------------
-        // The 128k XE RAM and the COMPY RAM allow the Antic to 
-        // index into the RAM independently ... tricky stuff!
-        // -----------------------------------------------------
-        if (ram_size == RAM_128K)
+        // -------------------------------------------------------
+        // The 128k XE RAM and the COMPY 576k RAM allow the Antic 
+        // to index into the RAM independently ... tricky stuff!
+        // -------------------------------------------------------
+        if ((ram_size == RAM_128K) || (ram_size == RAM_576_COMPY))
         {
             switch (byte & 0x30)
             {
@@ -343,7 +346,10 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
                 antic_xe_ptr = memory + 0x4000;
                 break;
             case 0x10:  /* ANTIC: extended, CPU: base */
-                antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) >> 2)) << 14);
+                //if (ram_size == RAM_128K)
+                    antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) >> 2)) << 14);
+                //else // Assume 576K COMPY
+                  //  antic_xe_ptr = atarixe_memory + ((((byte & 0x0e) + ((byte & 0x60) >> 1)) >> 1) << 14);
                 break;
             default:    /* ANTIC same as CPU */
                 antic_xe_ptr = NULL;
@@ -418,9 +424,10 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
     }
 
     /* Enable/disable Self Test ROM in 0x5000-0x57ff */
-    if (byte & 0x80) 
+    /* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
+    if ((byte & 0x80) || ((ram_size == 576) && (byte & 0x20) == 0))
     {
-        if (selftest_enabled) 
+        if (selftest_enabled)
         {
             /* Disable Self Test ROM */
             memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
@@ -430,8 +437,10 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
     }
     else 
     {
-        /* We can enable Self Test only if the OS ROM is enabled */
-        if (!selftest_enabled && (byte & 0x01) && !((byte & 0x10) == 0 && ram_size == 1088)) 
+        /* We can enable Self Test only if the OS ROM is enabled and we are not 576K or 1088K */
+        if (!selftest_enabled && (byte & 0x01) && 
+               !((byte & 0x30) != 0x30 && ram_size == 576) &&
+               !((byte & 0x10) == 0 && ram_size == 1088)) 
         {
             /* Enable Self Test ROM */
             memcpy(under_atarixl_os + 0x1000, memory + 0x5000, 0x800);

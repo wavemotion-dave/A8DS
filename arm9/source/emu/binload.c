@@ -206,12 +206,6 @@ int BINLOAD_Loader(const char *filename)
 		BINLOAD_bin_file = NULL;
 		BINLOAD_loading_basic = 0;
 	}
-	if (Atari800_machine_type == Atari800_MACHINE_5200) {
-#ifdef LIBATARI800
-		CPU_cim_encountered = 1;
-#endif
-		return FALSE;
-	}
 	BINLOAD_bin_file = fopen(filename, "rb");
 	if (BINLOAD_bin_file == NULL) {	/* open */
 		return FALSE;
