@@ -94,8 +94,8 @@ extern unsigned int screenline_cpu_clock;
 #define ANTIC_xpos xpos
 #define ANTIC_ypos ypos
 
-#define NMIST_C	6
-#define NMI_C	12
+#define NMIST_C 6
+#define NMI_C   12
 
 #define XPOS xpos
 

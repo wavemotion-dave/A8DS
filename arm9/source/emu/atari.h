@@ -124,16 +124,16 @@ extern int disk_readonly[DISK_MAX];
 #define ATR_Header AFILE_ATR_Header
 /* ATR format header */
 struct AFILE_ATR_Header {
-	unsigned char magic1;
-	unsigned char magic2;
-	unsigned char seccountlo;
-	unsigned char seccounthi;
-	unsigned char secsizelo;
-	unsigned char secsizehi;
-	unsigned char hiseccountlo;
-	unsigned char hiseccounthi;
-	unsigned char gash[7];
-	unsigned char writeprotect;
+    unsigned char magic1;
+    unsigned char magic2;
+    unsigned char seccountlo;
+    unsigned char seccounthi;
+    unsigned char secsizelo;
+    unsigned char secsizehi;
+    unsigned char hiseccountlo;
+    unsigned char hiseccounthi;
+    unsigned char gash[7];
+    unsigned char writeprotect;
 };
 
 /* First two bytes of an ATR file. */

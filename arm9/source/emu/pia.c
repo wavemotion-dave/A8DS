@@ -70,26 +70,26 @@ UBYTE PORTA_mask __attribute__((section(".dtcm")));
 UBYTE PORTB_mask __attribute__((section(".dtcm")));
 
 void PIA_Initialise(void) {
-	PACTL = 0x3f;
-	PBCTL = 0x3f;
-	PORTA = 0xff;
-	PORTB = 0xff;
-	PORTA_mask = 0xff;
-	PORTB_mask = 0xff;
-	PORT_input[0] = 0xff;
-	PORT_input[1] = 0xff;
+    PACTL = 0x3f;
+    PBCTL = 0x3f;
+    PORTA = 0xff;
+    PORTB = 0xff;
+    PORTA_mask = 0xff;
+    PORTB_mask = 0xff;
+    PORT_input[0] = 0xff;
+    PORT_input[1] = 0xff;
 }
 
 void PIA_Reset(void) {
-	PORTA = 0xff;
-	if (machine_type == MACHINE_XLXE) {
-		MEMORY_HandlePORTB(0xff, (UBYTE) (PORTB | PORTB_mask));
-	}
-	PORTB = 0xff;
+    PORTA = 0xff;
+    if (machine_type == MACHINE_XLXE) {
+        MEMORY_HandlePORTB(0xff, (UBYTE) (PORTB | PORTB_mask));
+    }
+    PORTB = 0xff;
 }
 
 UBYTE PIA_GetByte(UWORD addr) {
-	switch (addr & 0x03) {
+    switch (addr & 0x03) {
     case _PACTL:
       return PACTL & 0x3f;
     case _PBCTL:
@@ -118,63 +118,63 @@ UBYTE PIA_GetByte(UWORD addr) {
         }
       }
   }
-	/* for stupid compilers */
-	return 0xff;
+    /* for stupid compilers */
+    return 0xff;
 }
 
 void PIA_PutByte(UWORD addr, UBYTE byte) {
-	switch (addr & 0x03) {
-	case _PACTL:
+    switch (addr & 0x03) {
+    case _PACTL:
                 /* This code is part of the cassette emulation */
-		if ((PACTL ^ byte) & 0x08) {
-			/* The motor status has changed */
-			SIO_TapeMotor(byte & 0x08 ? 0 : 1);
-		}
-		PACTL = byte;
-		break;
-	case _PBCTL:
-		/* This code is part of the serial I/O emulation */
-		if ((PBCTL ^ byte) & 0x08) {
-			/* The command line status has changed */
-			SIO_SwitchCommandFrame(byte & 0x08 ? 0 : 1);
-		}
-		PBCTL = byte;
-		break;
-	case _PORTA:
-		if ((PACTL & 0x04) == 0) {
-			/* set direction register */
- 			PORTA_mask = ~byte;
-		}
-		else {
-			/* set output register */
-			PORTA = byte;		/* change from thor */
-		}
-		break;
-	case _PORTB:
-		if (machine_type == MACHINE_XLXE) {
-			if ((PBCTL & 0x04) == 0) {
-				/* direction register */
-				MEMORY_HandlePORTB((UBYTE) (PORTB | ~byte), (UBYTE) (PORTB | PORTB_mask));
-				PORTB_mask = ~byte;
-			}
-			else {
-				/* output register */
-				MEMORY_HandlePORTB((UBYTE) (byte | PORTB_mask), (UBYTE) (PORTB | PORTB_mask));
-				PORTB = byte;
-			}
-		}
-		else {
-			if ((PBCTL & 0x04) == 0) {
-				/* direction register */
-				PORTB_mask = ~byte;
-			}
-			else {
-				/* output register */
-				PORTB = byte;
-			}
-		}
-		break;
-	}
+        if ((PACTL ^ byte) & 0x08) {
+            /* The motor status has changed */
+            SIO_TapeMotor(byte & 0x08 ? 0 : 1);
+        }
+        PACTL = byte;
+        break;
+    case _PBCTL:
+        /* This code is part of the serial I/O emulation */
+        if ((PBCTL ^ byte) & 0x08) {
+            /* The command line status has changed */
+            SIO_SwitchCommandFrame(byte & 0x08 ? 0 : 1);
+        }
+        PBCTL = byte;
+        break;
+    case _PORTA:
+        if ((PACTL & 0x04) == 0) {
+            /* set direction register */
+            PORTA_mask = ~byte;
+        }
+        else {
+            /* set output register */
+            PORTA = byte;       /* change from thor */
+        }
+        break;
+    case _PORTB:
+        if (machine_type == MACHINE_XLXE) {
+            if ((PBCTL & 0x04) == 0) {
+                /* direction register */
+                MEMORY_HandlePORTB((UBYTE) (PORTB | ~byte), (UBYTE) (PORTB | PORTB_mask));
+                PORTB_mask = ~byte;
+            }
+            else {
+                /* output register */
+                MEMORY_HandlePORTB((UBYTE) (byte | PORTB_mask), (UBYTE) (PORTB | PORTB_mask));
+                PORTB = byte;
+            }
+        }
+        else {
+            if ((PBCTL & 0x04) == 0) {
+                /* direction register */
+                PORTB_mask = ~byte;
+            }
+            else {
+                /* output register */
+                PORTB = byte;
+            }
+        }
+        break;
+    }
 }
 
 void PIAStateSave(void) {}

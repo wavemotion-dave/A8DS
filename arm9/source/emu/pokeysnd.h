@@ -47,11 +47,11 @@
 #define _TYPEDEF_H
 
 /* define some data types to keep it platform independent */
-#ifdef COMP16					/* if 16-bit compiler defined */
+#ifdef COMP16                   /* if 16-bit compiler defined */
 #define int8  char
 #define int16 int
 #define int32 long
-#else							/* else default to 32-bit compiler */
+#else                           /* else default to 32-bit compiler */
 #define int8  char
 #define int16 short
 #define int32 int
@@ -79,8 +79,8 @@
    the pitch of the output.  With these numbers, the pitch will be low
    by 0.127%.  (More than likely, an actual unit will vary by this much!) */
 
-#define FREQ_17_EXACT     1789790	/* exact 1.79 MHz clock freq */
-#define FREQ_17_APPROX    1787520	/* approximate 1.79 MHz clock freq */
+#define FREQ_17_EXACT     1789790   /* exact 1.79 MHz clock freq */
+#define FREQ_17_APPROX    1787520   /* approximate 1.79 MHz clock freq */
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,19 +88,19 @@ extern "C" {
 
 //#define SIGNED_SAMPLES  /* define for signed output */
 
-#ifdef  SIGNED_SAMPLES			/* if signed output selected */
-#define SAMP_MAX 127			/* then set signed 8-bit clipping ranges */
+#ifdef  SIGNED_SAMPLES          /* if signed output selected */
+#define SAMP_MAX 127            /* then set signed 8-bit clipping ranges */
 #define SAMP_MIN -128
 #define SAMP_MID 0
 #else
-#define SAMP_MAX 255			/* else set unsigned 8-bit clip ranges */
+#define SAMP_MAX 255            /* else set unsigned 8-bit clip ranges */
 #define SAMP_MIN 0
 #define SAMP_MID 128
 #endif
 
 /* init flags */
-#define SND_BIT16	1
-#define SND_STEREO	2
+#define SND_BIT16   1
+#define SND_STEREO  2
 
 extern int32 snd_playback_freq;
 extern uint8 snd_num_pokeys;

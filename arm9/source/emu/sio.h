@@ -8,10 +8,10 @@
 #define SIO_MAX_DRIVES 8
 
 typedef enum SIO_tagUnitStatus {
-	SIO_OFF,
-	SIO_NO_DISK,
-	SIO_READ_ONLY,
-	SIO_READ_WRITE
+    SIO_OFF,
+    SIO_NO_DISK,
+    SIO_READ_ONLY,
+    SIO_READ_WRITE
 } SIO_UnitStatus;
 
 extern char SIO_status[256];
@@ -58,4 +58,4 @@ int SIO_WriteSector(int unit, int sector, const UBYTE *buffer);
 void SIO_StateSave(void);
 void SIO_StateRead(void);
 
-#endif	/* SIO_H_ */
+#endif  /* SIO_H_ */

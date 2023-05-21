@@ -77,54 +77,54 @@ UBYTE file_type        = AFILE_ERROR;
 
 void Warmstart(void) 
 {
-	if (machine_type == MACHINE_OSA || machine_type == MACHINE_OSB) 
+    if (machine_type == MACHINE_OSA || machine_type == MACHINE_OSB) 
     {
-		/* RESET key in 400/800 does not reset chips,
-		   but only generates RNMI interrupt */
-		NMIST = 0x3f;
-		NMI();
-	}
-	else 
+        /* RESET key in 400/800 does not reset chips,
+           but only generates RNMI interrupt */
+        NMIST = 0x3f;
+        NMI();
+    }
+    else 
     {
-		PIA_Reset();
-		ANTIC_Reset();
-		/* CPU_Reset() must be after PIA_Reset(),
-		   because Reset routine vector must be read from OS ROM */
-		CPU_Reset();
-		/* note: POKEY and GTIA have no Reset pin */
-	}
+        PIA_Reset();
+        ANTIC_Reset();
+        /* CPU_Reset() must be after PIA_Reset(),
+           because Reset routine vector must be read from OS ROM */
+        CPU_Reset();
+        /* note: POKEY and GTIA have no Reset pin */
+    }
 }
 
 void Coldstart(void) 
 {
-	PIA_Reset();
-	ANTIC_Reset();
-	/* CPU_Reset() must be after PIA_Reset(),
-	   because Reset routine vector must be read from OS ROM */
-	CPU_Reset();
-	/* note: POKEY and GTIA have no Reset pin */
-	/* reset cartridge to power-up state */
-	CART_Start();
+    PIA_Reset();
+    ANTIC_Reset();
+    /* CPU_Reset() must be after PIA_Reset(),
+       because Reset routine vector must be read from OS ROM */
+    CPU_Reset();
+    /* note: POKEY and GTIA have no Reset pin */
+    /* reset cartridge to power-up state */
+    CART_Start();
 
-	/* set Atari OS Coldstart flag */
-	dPutByte(0x244, 1);
-	/* handle Option key (disable BASIC in XL/XE)
-	   and Start key (boot from cassette) */
-	consol_index = 2;
-	consol_table[2] = 0x0f;
-	if (disable_basic && !BINLOAD_loading_basic) {
-		/* hold Option during reboot */
-		consol_table[2] &= ~CONSOL_OPTION;
-	}
-	consol_table[1] = consol_table[2];
+    /* set Atari OS Coldstart flag */
+    dPutByte(0x244, 1);
+    /* handle Option key (disable BASIC in XL/XE)
+       and Start key (boot from cassette) */
+    consol_index = 2;
+    consol_table[2] = 0x0f;
+    if (disable_basic && !BINLOAD_loading_basic) {
+        /* hold Option during reboot */
+        consol_table[2] &= ~CONSOL_OPTION;
+    }
+    consol_table[1] = consol_table[2];
 }
 
 int Atari800_InitialiseMachine(void) 
 {
-	ESC_ClearAll();
-	MEMORY_InitialiseMachine();
-	Devices_UpdatePatches();
-	return TRUE;
+    ESC_ClearAll();
+    MEMORY_InitialiseMachine();
+    Devices_UpdatePatches();
+    return TRUE;
 }
 
 int Atari800_DetectFileType(const char *filename) 
@@ -141,16 +141,16 @@ int Atari800_DetectFileType(const char *filename)
     if (strstr(filename, ".CAR") != 0) return  AFILE_CART;
     if (strstr(filename, ".rom") != 0) return  AFILE_ROM;
     if (strstr(filename, ".ROM") != 0) return  AFILE_ROM;
-	return AFILE_ERROR;
+    return AFILE_ERROR;
 }
 
 int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly, int bEnableBasic) 
 {
     memset((UBYTE*)bgGetGfxPtr(bg2), 0x00, 128*1024);
     
-	file_type = Atari800_DetectFileType(filename);
+    file_type = Atari800_DetectFileType(filename);
     
-	switch (file_type) 
+    switch (file_type) 
     {
     case AFILE_ATR:
     case AFILE_ATX:
@@ -188,8 +188,8 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
       strcpy(disk_filename[DISK_XEX], filename);
       Atari800_Coldstart();
       break;
-	}
-	return file_type;
+    }
+    return file_type;
 }
 
 int Atari800_Initialise(void) 
@@ -232,13 +232,13 @@ int Atari800_Initialise(void)
 int Atari800_Exit(int run_monitor) 
 {
     extern bool bAtariCrash;
-	int restart;
+    int restart;
 
-	restart = Atari_Exit(run_monitor);
-	if (!restart) 
+    restart = Atari_Exit(run_monitor);
+    if (!restart) 
     {
-		SIO_Exit();	/* umount disks, so temporary files are deleted */
-	}
+        SIO_Exit(); /* umount disks, so temporary files are deleted */
+    }
     
     //TBD-DSB For now we are keeping the system alive. 
     // Mainly so the user can click into another game 
@@ -246,23 +246,23 @@ int Atari800_Exit(int run_monitor)
     bAtariCrash = true;
     
     restart = 1;
-	return restart;
+    return restart;
 }
 
 UBYTE Atari800_GetByte(UWORD addr) 
 {
     switch (addr & 0xff00) 
     {
-    case 0xd000:				/* GTIA */
+    case 0xd000:                /* GTIA */
         return GTIA_GetByte(addr);
         break;
-    case 0xd200:				/* POKEY */
+    case 0xd200:                /* POKEY */
         return POKEY_GetByte(addr);
         break;
-    case 0xd300:				/* PIA */
+    case 0xd300:                /* PIA */
         return PIA_GetByte(addr);
         break;
-    case 0xd400:				/* ANTIC */
+    case 0xd400:                /* ANTIC */
         return ANTIC_GetByte(addr);
         break;
     }
@@ -271,54 +271,54 @@ UBYTE Atari800_GetByte(UWORD addr)
 
 void Atari800_PutByte(UWORD addr, UBYTE byte) 
 {
-	switch (addr & 0xff00) 
+    switch (addr & 0xff00) 
     {
-    case 0xd000:				/* GTIA */
+    case 0xd000:                /* GTIA */
       GTIA_PutByte(addr, byte);
       break;
-    case 0xd200:				/* POKEY */
+    case 0xd200:                /* POKEY */
       POKEY_PutByte(addr, byte);
       break;
-    case 0xd300:				/* PIA */
+    case 0xd300:                /* PIA */
       PIA_PutByte(addr, byte);
       break;
-    case 0xd400:				/* ANTIC */
+    case 0xd400:                /* ANTIC */
       ANTIC_PutByte(addr, byte);
       break;
-	}
+    }
 }
 
 void Atari800_UpdatePatches(void) {
-	switch (machine_type) {
-	case MACHINE_OSA:
-	case MACHINE_OSB:
-		/* Restore unpatched OS */
-		dCopyToMem(atari_os, 0xd800, 0x2800);
-		/* Set patches */
-		ESC_PatchOS();
-		Devices_UpdatePatches();
-		break;
-	case MACHINE_XLXE:
-		/* Don't patch if OS disabled */
-		if ((PORTB & 1) == 0)
-			break;
-		/* Restore unpatched OS */
-		dCopyToMem(atari_os, 0xc000, 0x1000);
-		dCopyToMem(atari_os + 0x1800, 0xd800, 0x2800);
-		/* Set patches */
-		ESC_PatchOS();
-		Devices_UpdatePatches();
-		break;
-	default:
-		break;
-	}
+    switch (machine_type) {
+    case MACHINE_OSA:
+    case MACHINE_OSB:
+        /* Restore unpatched OS */
+        dCopyToMem(atari_os, 0xd800, 0x2800);
+        /* Set patches */
+        ESC_PatchOS();
+        Devices_UpdatePatches();
+        break;
+    case MACHINE_XLXE:
+        /* Don't patch if OS disabled */
+        if ((PORTB & 1) == 0)
+            break;
+        /* Restore unpatched OS */
+        dCopyToMem(atari_os, 0xc000, 0x1000);
+        dCopyToMem(atari_os + 0x1800, 0xd800, 0x2800);
+        /* Set patches */
+        ESC_PatchOS();
+        Devices_UpdatePatches();
+        break;
+    default:
+        break;
+    }
 }
 
 void Atari800_Frame() 
 {
-	Devices_Frame();
-	INPUT_Frame();
-	GTIA_Frame();
+    Devices_Frame();
+    INPUT_Frame();
+    GTIA_Frame();
     ANTIC_Frame(myConfig.skip_frames ? (gTotalAtariFrames & (myConfig.skip_frames==1 ? 0x03:0x01)) : TRUE);  // Skip every 4th frame... or every other frame if we are "aggressive"
     POKEY_Frame();
     

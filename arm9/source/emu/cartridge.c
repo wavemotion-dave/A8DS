@@ -612,8 +612,8 @@ void CART_Start(void)
         mem_map[0xB] = cart_image + 0x3000 - 0xB000;
         bank = 0;
         break;
-	case CART_TURBOSOFT_64:
-	case CART_TURBOSOFT_128:
+    case CART_TURBOSOFT_64:
+    case CART_TURBOSOFT_128:
             bank = 99;
             set_bank_A0BF_TURBOSOFT(0x00, 0x0F);
         break;
@@ -797,10 +797,10 @@ void CART_Access(UWORD addr)
     case CART_SDX_128:
         set_bank_SDX_128(addr);
         break;            
-	case CART_TURBOSOFT_64:
+    case CART_TURBOSOFT_64:
         set_bank_A0BF_TURBOSOFT(addr, 0x07);
         break;
-	case CART_TURBOSOFT_128:
+    case CART_TURBOSOFT_128:
         set_bank_A0BF_TURBOSOFT(addr, 0x0f);
         break;
             

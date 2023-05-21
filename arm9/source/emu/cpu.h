@@ -28,7 +28,7 @@
 #define Z_FLAG 0x02
 #define C_FLAG 0x01
 
-void CPU_Initialise(void);		/* used in the assembler version of cpu.c only */
+void CPU_Initialise(void);      /* used in the assembler version of cpu.c only */
 void CPU_GetStatus(void);
 void CPU_PutStatus(void);
 void CPU_Reset(void);

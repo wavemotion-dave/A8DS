@@ -17,17 +17,17 @@ int CASSETTE_press_space = 0;
 
 int CASSETTE_Initialise(int *argc, char *argv[])
 {
-	return TRUE;
+    return TRUE;
 }
 
 int CASSETTE_CheckFile(const char *filename, FILE **fp, char *description, int *last_block, int *isCAS)
 {
-	return TRUE;
+    return TRUE;
 }
 
 int CASSETTE_CreateFile(const char *filename, FILE **fp, int *isCAS)
 {
-	return TRUE;
+    return TRUE;
 }
 
 int CASSETTE_Insert(const char *filename)
@@ -41,7 +41,7 @@ void CASSETTE_Remove(void)
 
 int CASSETTE_AddGap(int gaptime)
 {
-	return 1;
+    return 1;
 }
 
 void CASSETTE_LeaderLoad(void)
@@ -79,7 +79,7 @@ int CASSETTE_GetInputIRQDelay(void)
 
 int CASSETTE_IsSaveFile(void)
 {
-	return 0;
+    return 0;
 }
 
 void CASSETTE_PutByte(int byte)

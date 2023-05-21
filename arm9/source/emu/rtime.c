@@ -52,15 +52,15 @@
 #define HAVE_TIME 
 #define HAVE_GETTIME
 
-#include <stdlib.h>	/* for NULL */
-#include <string.h>	/* for strcmp() */
+#include <stdlib.h> /* for NULL */
+#include <string.h> /* for strcmp() */
 #include <time.h>
 #include "atari.h"
 
 static int rtime_state = 0;
-				/* 0 = waiting for register # */
-				/* 1 = got register #, waiting for hi nibble */
-				/* 2 = got hi nibble, waiting for lo nibble */
+                /* 0 = waiting for register # */
+                /* 1 = got register #, waiting for hi nibble */
+                /* 2 = got hi nibble, waiting for lo nibble */
 static int rtime_tmp = 0;
 static int rtime_tmp2 = 0;
 
@@ -74,7 +74,7 @@ void RTIME_Initialise(void)
 
 static int hex2bcd(int h)
 {
-	return ((h / 10) << 4) | (h % 10);
+    return ((h / 10) << 4) | (h % 10);
 }
 
 // -------------------------------------------------------------------
@@ -85,63 +85,63 @@ static int hex2bcd(int h)
 // -------------------------------------------------------------------
 static int gettime(int p)
 {
-	time_t tt;
-	struct tm *lt;
+    time_t tt;
+    struct tm *lt;
 
-	tt = time(NULL);
-	lt = localtime(&tt);
+    tt = time(NULL);
+    lt = localtime(&tt);
 
-	switch (p) 
+    switch (p) 
     {
-	case 0:
-		return hex2bcd(lt->tm_sec);
-	case 1:
-		return hex2bcd(lt->tm_min);
-	case 2:
-		return hex2bcd(lt->tm_hour);
-	case 3:
-		return hex2bcd(lt->tm_mday);
-	case 4:
-		return hex2bcd(lt->tm_mon + 1);
-	case 5:
-		return hex2bcd(lt->tm_year % 100);
-	case 6:
-		return hex2bcd(((lt->tm_wday + 2) % 7) + 1);
-	}
-	return 0;
+    case 0:
+        return hex2bcd(lt->tm_sec);
+    case 1:
+        return hex2bcd(lt->tm_min);
+    case 2:
+        return hex2bcd(lt->tm_hour);
+    case 3:
+        return hex2bcd(lt->tm_mday);
+    case 4:
+        return hex2bcd(lt->tm_mon + 1);
+    case 5:
+        return hex2bcd(lt->tm_year % 100);
+    case 6:
+        return hex2bcd(((lt->tm_wday + 2) % 7) + 1);
+    }
+    return 0;
 }
 
 UBYTE RTIME_GetByte(void)
 {
-	switch (rtime_state) 
+    switch (rtime_state) 
     {
-	case 0:
-		return 0;   // Pretending rtime not busy, returning 0...
-	case 1:
-		rtime_state = 2;
-		return (rtime_tmp <= 6 ? gettime(rtime_tmp) : regset[rtime_tmp]) >> 4;
-	case 2:
-		rtime_state = 0;
-		return (rtime_tmp <= 6 ? gettime(rtime_tmp) : regset[rtime_tmp]) & 0x0f;
-	}
-	return 0;
+    case 0:
+        return 0;   // Pretending rtime not busy, returning 0...
+    case 1:
+        rtime_state = 2;
+        return (rtime_tmp <= 6 ? gettime(rtime_tmp) : regset[rtime_tmp]) >> 4;
+    case 2:
+        rtime_state = 0;
+        return (rtime_tmp <= 6 ? gettime(rtime_tmp) : regset[rtime_tmp]) & 0x0f;
+    }
+    return 0;
 }
 
 void RTIME_PutByte(UBYTE byte)
 {
-	switch (rtime_state) 
+    switch (rtime_state) 
     {
-	case 0:
-		rtime_tmp = byte & 0x0f;
-		rtime_state = 1;
-		break;
-	case 1:
-		rtime_tmp2 = byte << 4;
-		rtime_state = 2;
-		break;
-	case 2:
-		regset[rtime_tmp] = rtime_tmp2 | (byte & 0x0f);
-		rtime_state = 0;
-		break;
-	}
+    case 0:
+        rtime_tmp = byte & 0x0f;
+        rtime_state = 1;
+        break;
+    case 1:
+        rtime_tmp2 = byte << 4;
+        rtime_state = 2;
+        break;
+    case 2:
+        regset[rtime_tmp] = rtime_tmp2 | (byte & 0x0f);
+        rtime_state = 0;
+        break;
+    }
 }

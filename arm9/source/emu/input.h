@@ -1,3 +1,26 @@
+/*
+ * input.h - keyboard, joysticks and mouse emulation
+ *
+ * Copyright (C) 2001-2002 Piotr Fusik
+ * Copyright (C) 2001-2006 Atari800 development team (see DOC/CREDITS)
+ *
+ * This file is part of the Atari800 emulator project which emulates
+ * the Atari 400, 800, 800XL, 130XE, and 5200 8-bit computers.
+ *
+ * Atari800 is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Atari800 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Atari800; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 #ifndef _A8DS_INPUT_H_
 #define _A8DS_INPUT_H_
 
@@ -189,11 +212,11 @@
 #define AKEY_CARET          (AKEY_SHFT | AKEY_ASTERISK)
 #define AKEY_F1             0x03
 #define AKEY_F2             0x04
-#define AKEY_F3	            0x13
+#define AKEY_F3             0x13
 #define AKEY_F4             0x14
 
 /* Following keys cannot be read with both shift and control pressed:
-   J K L ; + * Z X C V B F1 F2 F3 F4 HELP	 */
+   J K L ; + * Z X C V B F1 F2 F3 F4 HELP    */
 
 
 /* key_consol masks */
@@ -201,28 +224,28 @@
    When a consol key is pressed, corresponding bit should be cleared.
  */
  
-#define CONSOL_NONE		0x07
-#define CONSOL_START	0x01
-#define CONSOL_SELECT	0x02
-#define CONSOL_OPTION	0x04
+#define CONSOL_NONE     0x07
+#define CONSOL_START    0x01
+#define CONSOL_SELECT   0x02
+#define CONSOL_OPTION   0x04
 
-extern int key_code;	/* regular Atari key code */
-extern int key_shift;	/* Shift key pressed */
-extern int key_consol;	/* Start, Select and Option keys */
+extern int key_code;    /* regular Atari key code */
+extern int key_shift;   /* Shift key pressed */
+extern int key_consol;  /* Start, Select and Option keys */
 
 /* Joysticks ----------------------------------------------------------- */
 
 /* joystick position */
 
-#define	STICK_LL		0x09
-#define	STICK_BACK		0x0d
-#define	STICK_LR		0x05
-#define	STICK_LEFT		0x0b
-#define	STICK_CENTRE	0x0f
-#define	STICK_RIGHT		0x07
-#define	STICK_UL		0x0a
-#define	STICK_FORWARD	0x0e
-#define	STICK_UR		0x06
+#define STICK_LL        0x09
+#define STICK_BACK      0x0d
+#define STICK_LR        0x05
+#define STICK_LEFT      0x0b
+#define STICK_CENTRE    0x0f
+#define STICK_RIGHT     0x07
+#define STICK_UL        0x0a
+#define STICK_FORWARD   0x0e
+#define STICK_UR        0x06
 
 /* Functions ----------------------------------------------------------- */
 
