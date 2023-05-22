@@ -100,6 +100,7 @@ Features :
 *  XEX Atari 8-bit Executable images 
 *  ATR and ATX disk-based games (two emulated drives supported)
 *  NTSC and PAL support
+*  Virtual keyboard in various Atari 800/XL/XE stylings
 *  R-Time8 Real-Time Clock support (mostly for SpartaDOS X)
 *  Built in Altirra OS (3.33) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware.
 *  High Score support for 10 scores per game
