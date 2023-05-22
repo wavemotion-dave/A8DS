@@ -96,11 +96,11 @@ Credits:
 Features :
 ----------------------------------------------------------------------------------
 *  Memory configurations including 48K, 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
-*  Cart based games up to 1MB in size
+*  Cart based games up to 1MB in size (.CAR and .ROM)
 *  XEX Atari 8-bit Executable images 
-*  ATR and ATX disk-based games (two emululated drives supported)
+*  ATR and ATX disk-based games (two emulated drives supported)
 *  R-Time8 Real-Time Clock support (mostly for SpartaDOS X)
-*  Built in Altirra OS (3.33) and BASIC (1.58)
+*  Built in Altirra OS (3.33) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware.
 *  High Score support for 10 scores per game
 *  Full configuration of DS keys to any Atari 8-bit joystick/key/button
 
