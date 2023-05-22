@@ -28,9 +28,11 @@ various Atari computer models released over a span of a decade.
 
 A8DS supports 3 optional (but highly recommended) Atari BIOS and BASIC files as follows (with their CRC32):
 
-*  0x1f9cd270  atarixl.rom   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines
-*  0x3e28a1fe  atariosb.rom  - this is the 12k Atari 800 OS-B revision BIOS for older games
-*  0x7d684184  ataribas.rom  - this is the 8k Atari BASIC cartridge (recommend Rev C)
+*  atarixl.rom (0x1f9cd270)   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines (NTSC Rev 02)
+*  atariosb.rom (0x3e28a1fe)  - this is the 12k Atari 800 OS-B revision BIOS for older games  (NTSC OS-B version 2)
+*  ataribas.rom (0x7d684184)  - this is the 8k Atari BASIC cartridge (Rev C)
+
+You can use other versions of these BIOS files, but these are the ones that I'm testing/running with.
 
 You can install zero, one or more of these files and if you want to use these real ROMs
 they must reside in the same folder as the A8DS.NDS emulator or you can place your
@@ -39,7 +41,7 @@ so named as shown above. These files are loaded into memory when the emulator st
 and remain available for the entire emulation session. Again, if you don't have a real BIOS, 
 a generic but excellent one is provided from the good folks who made Altirra (Avery Lee) 
 which is released as open-source software.  Also optional is ataribas.rom for the 8K basic 
-program (Rev C is recommended). If not supplied, the built-in Altirra BASIC 1.58 is supplied.
+program. If not supplied, the built-in Altirra BASIC 1.58 is used.
 
 I've not done exhaustive testing, but in many cases I find the Altirra BIOS does a
 great job as a replacement for the Atari OS/BASIC roms. However, for maximum compaitibility,
@@ -289,6 +291,10 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.5 : 22-May-2023 by wavemotion-dave
+  * Added 576K COMPY SHOP RAM type (with separate ANTIC access just like the 128K XE).
+  * More cleanup and minor bug fixes across the board.
+
 V3.4 : 16-May-2023 by wavemotion-dave
   * Default to using ATARI OS if bios files found.
   * Altirra OS updated to 3.33 and Altirra BASIC to 1.58

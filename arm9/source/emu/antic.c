@@ -126,7 +126,7 @@ UBYTE NMIST __attribute__((section(".dtcm")));
 UWORD *scrn_ptr __attribute__((section(".dtcm")));
 
 /* Separate access to XE extended memory ----------------------------------- */
-/* It's available in 130 XE and 320 KB Compy Shop.
+/* It's available in 130 XE and 576 KB Compy Shop.
    Note: during ANTIC access to extended memory in Compy Shop Self Test
    is disabled. It is unknown if this is true for real 130 XE. If not,
    then some extra code has to be added to:

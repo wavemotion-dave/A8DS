@@ -49,7 +49,7 @@
 
 #include "atari.h"
 
-#define dGetWord(x)                     (dGetByte(x) + (dGetByte((x) + 1) << 8))
+#define dGetWord(x)                     (dGetByte(x) | (dGetByte((x) + 1) << 8))
 #define dPutWord(x, y)                  (dPutByte(x,(UBYTE)y), dPutByte(x+1, (UBYTE) ((y) >> 8)))
 #define dGetWordAligned(x)              dGetWord(x)
 #define dPutWordAligned(x, y)           dPutWord(x, y)

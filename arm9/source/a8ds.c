@@ -511,7 +511,7 @@ void dsShowScreenEmu(void)
 
         REG_BLDY=0;
 
-        // Trying a 50/50 Alpha Blend...
+        // Trying a 25/75 Alpha Blend...
         REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
         REG_BLDALPHA = (0x9 << 8) | 0xF; // 25% / 75% 
 

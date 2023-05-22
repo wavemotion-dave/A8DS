@@ -346,10 +346,10 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
                 antic_xe_ptr = memory + 0x4000;
                 break;
             case 0x10:  /* ANTIC: extended, CPU: base */
-                //if (ram_size == RAM_128K)
+                if (ram_size == RAM_128K)
                     antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) >> 2)) << 14);
-                //else // Assume 576K COMPY
-                  //  antic_xe_ptr = atarixe_memory + ((((byte & 0x0e) + ((byte & 0x60) >> 1)) >> 1) << 14);
+                else // Assume 576K COMPY
+                    antic_xe_ptr = atarixe_memory + ((((byte & 0x0e) + ((byte & 0x60) >> 1)) >> 1) << 14);
                 break;
             default:    /* ANTIC same as CPU */
                 antic_xe_ptr = NULL;
