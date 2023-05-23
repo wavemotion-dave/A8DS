@@ -39,7 +39,7 @@ they must reside in the same folder as the A8DS.NDS emulator or you can place yo
 BIOS files in /roms/bios or /data/bios) and these files must be exactly
 so named as shown above. These files are loaded into memory when the emulator starts 
 and remain available for the entire emulation session. Again, if you don't have a real BIOS, 
-a generic but excellent one is provided from the good folks who made Altirra (Avery Lee) 
+a generic but excellent one is provided from Avery Lee who made Altirra 
 which is released as open-source software.  Also optional is ataribas.rom for the 8K basic 
 program. If not supplied, the built-in Altirra BASIC 1.58 is used.
 
@@ -209,9 +209,9 @@ With those tips, you should be able to get most games running. There are still a
 Installation :
 ----------------------------------------------------------------------------------
 * To run this on your DS or DSi (or 2DS/3DS) requires that you have the ability to launch homebrews. For the older DS units, this is usually accomplished via a FlashCart such as the R4 or one of the many clones. These tend to run about US$25. If you have a DSi or above, you can skip the R4 and instead soft-mod your unit and run something like Twilight Menu++ or Unlaunch which will run homebrew software on the DS. The DSi has a convienent SD card slot on the side that saw very little use back in the day but is a great way to enjoy homebrews. See https://dsi.cfw.guide/ to get started on how to soft-mod your unit.
-* You will the optional BIOS Files. See BIOS section above.
+* You will want the optional BIOS Files. See BIOS section above.
 * You will also need the emulator itself. You can get this from the GitHub page - the only file you need here is A8DS.nds (the .nds is a Nintendo executable file). You can put this anywhere - most people put the .nds file into the root of the SD card.
-* You will need games or applications in .XEX or .ATR format. Don't ask me for such files - you will be ignored.
+* You will need games or applications in .XEX .ATR .ATX .CAR or .ROM format. Don't ask me for such files - you will be ignored.
 
 DS vs DSi vs DSi XL/LL :
 ----------------------------------------------------------------------------------
