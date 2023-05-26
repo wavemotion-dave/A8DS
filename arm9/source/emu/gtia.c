@@ -112,10 +112,10 @@ void set_prior(UBYTE byte);         /* in antic.c */
 /* Player/Missile stuff ---------------------------------------------------- */
 
 /* change to 0x00 to disable collisions */
-UBYTE collisions_mask_missile_playfield  __attribute__((section(".dtcm")))= 0x0f;
-UBYTE collisions_mask_player_playfield   __attribute__((section(".dtcm")))= 0x0f;
-UBYTE collisions_mask_missile_player     __attribute__((section(".dtcm")))= 0x0f;
-UBYTE collisions_mask_player_player      __attribute__((section(".dtcm")))= 0x0f;
+#define collisions_mask_missile_playfield  0x0f
+#define collisions_mask_player_playfield   0x0f
+#define collisions_mask_missile_player     0x0f
+#define collisions_mask_player_player      0x0f
 
 #define P1PL_T P1PL
 #define P2PL_T P2PL

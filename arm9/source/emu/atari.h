@@ -36,12 +36,6 @@ extern int disk_readonly[DISK_MAX];
 
 /* Fundamental declarations ---------------------------------------------- */
 
-#define PAGED_ATTRIB        1
-#define SOUND               1
-#define INTERPOLATE_SOUND   1
-
-#define ATARI_TITLE  "XEGS-DS"
-
 #ifndef FALSE
 #define FALSE  0
 #endif
@@ -51,7 +45,7 @@ extern int disk_readonly[DISK_MAX];
 
 // Some global sound defines
 #define SOUND_FREQ  (myConfig.tv_type == TV_NTSC ? 15720:15600)     // 60 frames per second. 264 scanlines per frame. 1 samples per scanline. 60*264*1 = 15720... slightly different for pal 50*312*1=15600
-#define SNDLENGTH  256                                     // Must be power of 2... so we can quicly mask it
+#define SNDLENGTH  256                                              // Must be power of 2... so we can quicly mask it
 
 /* Public interface ------------------------------------------------------ */
 
@@ -84,8 +78,8 @@ extern int disk_readonly[DISK_MAX];
    Each byte is an Atari color code - use Palette_Get[RGB] functions
    to get actual RGB codes.
    You should never display anything outside the middle 336 columns. */
-#define ATARI_WIDTH  384
-#define ATARI_HEIGHT 240
+#define ATARI_WIDTH         384
+#define ATARI_HEIGHT        240
 
 /* Special key codes.
    Store in key_code. */
@@ -177,15 +171,8 @@ int Atari800_DetectFileType(const char *filename);
    readonly: mount disks as read-only */
 int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly, int bEnableBasic);
 
-/* Load Atari800 text configuration file. */
-int Atari800_LoadConfig(const char *alternate_config_filename);
-
-/* Writes Atari800 text configuration file. */
-int Atari800_WriteConfig(void);
-
 /* Shuts down Atari800 emulation core. */
 int Atari800_Exit(int run_monitor);
-
 
 /* Current clock cycle in a scanline.
    Normally 0 <= xpos && xpos < LINE_C, but in some cases xpos >= LINE_C,
@@ -215,12 +202,12 @@ extern unsigned int screenline_cpu_clock;
 /* Current main clock value. */
 #define cpu_clock (screenline_cpu_clock + xpos)
 
-#define UNALIGNED_STAT_DEF(stat_arr)
-#define UNALIGNED_STAT_DECL(stat_arr)
-#define UNALIGNED_GET_WORD(ptr, stat_arr)        (*(const UWORD *) (ptr))
-#define UNALIGNED_PUT_WORD(ptr, value, stat_arr) (*(UWORD *) (ptr) = (value))
-#define UNALIGNED_GET_LONG(ptr, stat_arr)        (*(const ULONG *) (ptr))
-#define UNALIGNED_PUT_LONG(ptr, value, stat_arr) (*(ULONG *) (ptr) = (value))
+#define UNALIGNED_STAT_DEF()
+#define UNALIGNED_STAT_DECL()
+#define UNALIGNED_GET_WORD(ptr)        (*(const UWORD *) (ptr))
+#define UNALIGNED_PUT_WORD(ptr, value) (*(UWORD *) (ptr) = (value))
+#define UNALIGNED_GET_LONG(ptr)        (*(const ULONG *) (ptr))
+#define UNALIGNED_PUT_LONG(ptr, value) (*(ULONG *) (ptr) = (value))
 
 /* Reads a byte from the specified special address (not RAM or ROM). */
 UBYTE Atari800_GetByte(UWORD addr);

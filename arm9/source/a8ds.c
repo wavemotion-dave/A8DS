@@ -87,7 +87,7 @@ int screen_slide_y __attribute__((section(".dtcm"))) = 0;
 bool bAtariCrash = false;                   // We use this to track any crashes that might occur and give the user a message on screen
 char last_boot_file[300] = {0};             // The last filename (.ATR or .XEX) we booted (and will be re-booted if RESET pressed)
 
-#define MAX_DEBUG 5
+#define MAX_DEBUG 10
 int debug[MAX_DEBUG]={0};                   // Turn on DEBUG_DUMP to output some data to the lower screen... useful for emulator debug: just drop values into debug[] array.
 //#define DEBUG_DUMP
 
@@ -104,31 +104,7 @@ static void DumpDebugData(void)
     char dbgbuf[32];
     for (int i=0; i<MAX_DEBUG; i++)
     {
-        int idx=0;
-        int val = debug[i];
-        if (val < 0)
-        {
-            dbgbuf[idx++] = '-';
-            val = val * -1;
-        }
-        else
-        {
-            dbgbuf[idx++] = '0' + (int)val/10000000;
-        }
-        val = val % 10000000;
-        dbgbuf[idx++] = '0' + (int)val/1000000;
-        val = val % 1000000;
-        dbgbuf[idx++] = '0' + (int)val/100000;
-        val = val % 100000;
-        dbgbuf[idx++] = '0' + (int)val/10000;
-        val = val % 10000;
-        dbgbuf[idx++] = '0' + (int)val/1000;
-        val= val % 1000;
-        dbgbuf[idx++] = '0' + (int)val/100;
-        val = val % 100;
-        dbgbuf[idx++] = '0' + (int)val/10;
-        dbgbuf[idx++] = '0' + (int)val%10;
-        dbgbuf[idx++] = 0;
+        siprintf(dbgbuf, "%02d: %10d  %08X", i, debug[i], debug[i]);
         dsPrintValue(0,3+i,0, dbgbuf);
     }
 #endif

@@ -67,6 +67,8 @@
 UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                      // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
 static UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));         // This is the 16K of OS memory that co-insides with some of the RAM in the upper bank
 
+UBYTE zero_page[0x1000] __attribute__((section(".dtcm")));                  // Fast memory for the first 4K of main memory
+
 rdfunc readmap[256] __attribute__((section(".dtcm")));                      // The readmap tells the memory fetcher if we should do direct memory read or call a device function instead
 wrfunc writemap[256] __attribute__((section(".dtcm")));                     // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
 static UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;      // Pointer to XE memory (expanded RAM)
@@ -165,6 +167,10 @@ void MEMORY_InitialiseMachine(void)
     {
         mem_map[i] = memory + (0x1000 * i) - (0x1000 * i);  // Yes, pointless except to get across the point that we are offsetting the memory map to avoid having to mask the addr in memory.h
     }
+    
+    // We have 4K of fast DTCM memory that we will map to the first 4K of address space on the Atari
+    mem_map[0x02]=zero_page-0x2000;
+    
     under_0x8 = mem_map[0x8];
     under_0x9 = mem_map[0x9];
     under_0xA = mem_map[0xA];

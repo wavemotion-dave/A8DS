@@ -55,10 +55,6 @@
 #define dPutWordAligned(x, y)           dPutWord(x, y)
 #define dFillMem(addr1, value, length)  memset(memory + (addr1), value, length)
 
-#define RAM       0
-#define ROM       1
-#define HARDWARE  2
-
 extern UBYTE *mem_map[16];
 extern UBYTE memory[65536 + 2];
 extern const UBYTE *antic_xe_ptr;
@@ -137,9 +133,9 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
 
 
 void MEMORY_InitialiseMachine(void);
+void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval);
 void CopyFromMem(UWORD from, UBYTE *to, int size);
 void CopyToMem(const UBYTE *from, UWORD to, int size);
-void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval);
 void Cart809F_Disable(void);
 void Cart809F_Enable(void);
 void CartA0BF_Disable(void);

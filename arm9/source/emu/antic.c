@@ -65,7 +65,6 @@
 
 int break_ypos __attribute__((section(".dtcm"))) = 999;
 
-
 /* Video memory access is hidden behind these macros. It allows to track dirty video memory
    to improve video system performance */
 
@@ -80,14 +79,14 @@ int break_ypos __attribute__((section(".dtcm"))) = 999;
 /* Some optimizations result in unaligned 32-bit accesses. These macros have
    been introduced for machines that don't allow unaligned memory accesses. */
 
-#define WRITE_VIDEO_LONG_UNALIGNED(ptr, val)  UNALIGNED_PUT_LONG((ptr), (val), atari_screen_write_long_stat)
+#define WRITE_VIDEO_LONG_UNALIGNED(ptr, val)  UNALIGNED_PUT_LONG((ptr), (val))
 
-#define IS_ZERO_ULONG(x) (((ULONG)x & 3) ? (!((const UBYTE *)(x))[0] && !((const UBYTE *)(x))[1] && !((const UBYTE *)(x))[2] && !((const UBYTE *)(x))[3]) : (! UNALIGNED_GET_LONG(x, pm_scanline_read_long_stat)))
+#define IS_ZERO_ULONG(x) (((ULONG)x & 0x03) ? (!((const UBYTE *)(x))[0] && !((const UBYTE *)(x))[1] && !((const UBYTE *)(x))[2] && !((const UBYTE *)(x))[3]) : (! UNALIGNED_GET_LONG(x)))
 
 #define DO_GTIA_BYTE(p, l, x) { \
         if (((ULONG)p & 0x03) == 0) { \
-          UNALIGNED_PUT_LONG((ULONG *) (p),     (l)[(x) >> 4], pm_scanline_read_long_stat); \
-          UNALIGNED_PUT_LONG((ULONG *) (p) + 1, (l)[(x) & 0xf], pm_scanline_read_long_stat); \
+          UNALIGNED_PUT_LONG((ULONG *) (p),     (l)[(x) >> 4]); \
+          UNALIGNED_PUT_LONG((ULONG *) (p) + 1, (l)[(x) & 0xf]); \
         } else { \
           WRITE_VIDEO((UWORD *) (p),     (UWORD) ((l)[(x) >> 4])); \
           WRITE_VIDEO((UWORD *) (p) + 1, (UWORD) ((l)[(x) >> 4])); \
