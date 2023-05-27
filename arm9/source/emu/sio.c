@@ -56,7 +56,6 @@
 #include "antic.h"  /* ANTIC_ypos */
 #include "atari.h"
 #include "binload.h"
-#include "cassette.h"
 #include "cpu.h"
 #include "esc.h"
 #include "memory.h"

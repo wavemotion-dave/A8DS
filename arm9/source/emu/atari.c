@@ -56,7 +56,6 @@
 #include "esc.h"
 #include "binload.h"
 #include "cartridge.h"
-#include "cassette.h"
 #include "cpu.h"
 #include "devices.h"
 #include "gtia.h"

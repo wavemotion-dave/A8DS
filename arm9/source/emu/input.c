@@ -25,7 +25,7 @@
 #include <string.h>
 #include "antic.h"
 #include "atari.h"
-#include "cassette.h"
+#include "esc.h"
 #include "cartridge.h"
 #include "cpu.h"
 #include "gtia.h"

@@ -99,4 +99,19 @@ void ESC_ClearAll(void);
 /* Reinitializes patches after enable_*_patch change. */
 void ESC_UpdatePatches(void);
 
+
+extern int CASSETTE_hold_start_on_reboot;
+extern int CASSETTE_hold_start;
+extern int CASSETTE_press_space;
+
+extern void CASSETTE_LeaderLoad(void);
+extern void CASSETTE_LeaderSave(void);
+extern int CASSETTE_GetByte(void);
+extern int CASSETTE_IOLineStatus(void);
+extern int CASSETTE_GetInputIRQDelay(void);
+extern int CASSETTE_IsSaveFile(void);
+extern void CASSETTE_PutByte(int byte);
+extern void CASSETTE_TapeMotor(int onoff);
+
+
 #endif /* ESC_H_ */

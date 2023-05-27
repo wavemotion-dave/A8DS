@@ -61,7 +61,7 @@ u16 gTotalAtariFrames = 0;                  // For FPS counting
 int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background "pointers"
 u16 emu_state;                              // Emulate State
 u16 atari_frames = 0;                       // Number of frames per second (60 for NTSC and 50 for PAL)
-bool bShowKeyboard = false;
+bool bShowKeyboard = false;                 // set to true when the virtual keyboard is showing
 
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
@@ -405,6 +405,9 @@ static u8 jitter[][4] __attribute__((section(".dtcm"))) =
      0x99, 0x99},
 };
 
+UBYTE dampen_slide_y __attribute__((section(".dtcm")))= 0;
+UBYTE dampen_slide_x __attribute__((section(".dtcm")))= 0;
+
 ITCM_CODE void vblankIntr()
 {
     REG_BG2PA = xdxBG;
@@ -420,10 +423,17 @@ ITCM_CODE void vblankIntr()
     
     if (sIndex == 0)
     {
-        if (screen_slide_y < 0) screen_slide_y++;
-        else if (screen_slide_y > 0) screen_slide_y--;
-        if (screen_slide_x < 0) screen_slide_x++;
-        else if (screen_slide_x > 0) screen_slide_x--;
+        if (dampen_slide_y == 0)
+        {
+            if (screen_slide_y < 0) screen_slide_y++;
+            else if (screen_slide_y > 0) screen_slide_y--;
+        } else dampen_slide_y--;
+        
+        if (dampen_slide_x == 0)
+        {
+            if (screen_slide_x < 0) screen_slide_x++;
+            else if (screen_slide_x > 0) screen_slide_x--;
+        } else dampen_slide_x--;
     }
 }
 
@@ -1945,14 +1955,14 @@ void dsMainLoop(void)
                     case 52: key_code = AKEY_NONE;      break;
                     case 53: key_code = AKEY_NONE;      break;
                     case 54: key_code = AKEY_NONE;      break;
-                    case 55: screen_slide_y = 12;       break;
-                    case 56: screen_slide_y = 24;       break;
-                    case 57: screen_slide_y = -12;      break;
-                    case 58: screen_slide_y = -24;      break;
-                    case 59: screen_slide_x = 32;       break;
-                    case 60: screen_slide_x = 64;       break;
-                    case 61: screen_slide_x = -32;      break;
-                    case 62: screen_slide_x = -64;      break;
+                    case 55: screen_slide_y = 12;  dampen_slide_y = 6;     break;
+                    case 56: screen_slide_y = 24;  dampen_slide_y = 6;     break;
+                    case 57: screen_slide_y = -12; dampen_slide_y = 6;     break;
+                    case 58: screen_slide_y = -24; dampen_slide_y = 6;     break;
+                    case 59: screen_slide_x = 32;  dampen_slide_x = 6;     break;
+                    case 60: screen_slide_x = 64;  dampen_slide_x = 6;     break;
+                    case 61: screen_slide_x = -32; dampen_slide_x = 6;     break;
+                    case 62: screen_slide_x = -64; dampen_slide_x = 6;     break;
                     case 63:
                         if (gTotalAtariFrames & 1)  // Every other frame...
                         {

@@ -50,7 +50,6 @@
 */
 
 #include "atari.h"
-#include "cassette.h"
 #include "cpu.h"
 #include "devices.h"
 #include "esc.h"
@@ -70,6 +69,20 @@
 */
 static UWORD esc_address[256];
 static ESC_FunctionType esc_function[256];
+
+int CASSETTE_hold_start_on_reboot = 0;
+int CASSETTE_hold_start = 0;
+int CASSETTE_press_space = 0;
+
+void CASSETTE_LeaderLoad(void){}
+void CASSETTE_LeaderSave(void){}
+int CASSETTE_GetByte(void){return 0;}
+int CASSETTE_IOLineStatus(void){return 0;}
+int CASSETTE_GetInputIRQDelay(void){return 0;}
+int CASSETTE_IsSaveFile(void){return 0;}
+void CASSETTE_PutByte(int byte){}
+void CASSETTE_TapeMotor(int onoff){}
+
 
 void ESC_ClearAll(void)
 {

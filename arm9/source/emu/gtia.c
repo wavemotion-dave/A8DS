@@ -51,7 +51,7 @@
 #include "atari.h"
 #include <string.h>
 #include "antic.h"
-#include "cassette.h"
+#include "esc.h"
 #include "gtia.h"
 #include "input.h"
 #include "pokeysnd.h"

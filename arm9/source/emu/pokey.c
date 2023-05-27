@@ -58,7 +58,7 @@
 #include "input.h"
 #include "pokeysnd.h"
 #include "antic.h"
-#include "cassette.h"
+#include "esc.h"
 
 unsigned short pokeyBufIdx __attribute__((section(".dtcm")))= 0;
 char pokey_buffer[SNDLENGTH] __attribute__((section(".dtcm")));
