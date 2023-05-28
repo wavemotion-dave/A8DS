@@ -40,13 +40,10 @@
 
 
 /* number of pokey chips currently emulated */
-static uint8 Num_pokeys __attribute__((section(".dtcm")));
-
-static uint8 AUDV[4 * MAXPOKEYS] __attribute__((section(".dtcm"))); /* Channel volume - derived */
-
-static uint8 Outbit[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* current state of the output (high or low) */
-
-static uint8 Outvol[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* last output volume for each channel */
+uint8 Num_pokeys __attribute__((section(".dtcm")));
+uint8 AUDV[4 * MAXPOKEYS] __attribute__((section(".dtcm"))); /* Channel volume - derived */
+uint8 Outbit[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* current state of the output (high or low) */
+uint8 Outvol[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* last output volume for each channel */
 
 /* Initialze the bit patterns for the polynomials. */
 
@@ -61,16 +58,16 @@ static uint8 bit4[POLY4_SIZE] __attribute__((section(".dtcm"))) =
 static uint8 bit5[POLY5_SIZE] __attribute__((section(".dtcm"))) =
 {1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0};
 
-static uint32 P4 __attribute__((section(".dtcm"))) = 0;     /* Global position pointer for the 4-bit  POLY array */
-static uint32 P5 __attribute__((section(".dtcm"))) = 0;     /* Global position pointer for the 5-bit  POLY array */
-static uint32 P9 __attribute__((section(".dtcm"))) = 0;     /* Global position pointer for the 9-bit  POLY array */
-static uint32 P17 __attribute__((section(".dtcm"))) = 0;    /* Global position pointer for the 17-bit POLY array */
+uint32 P4 __attribute__((section(".dtcm"))) = 0;     /* Global position pointer for the 4-bit  POLY array */
+uint32 P5 __attribute__((section(".dtcm"))) = 0;     /* Global position pointer for the 5-bit  POLY array */
+uint32 P9 __attribute__((section(".dtcm"))) = 0;     /* Global position pointer for the 9-bit  POLY array */
+uint32 P17 __attribute__((section(".dtcm"))) = 0;    /* Global position pointer for the 17-bit POLY array */
 
-static uint32 Div_n_cnt[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* Divide by n counter. one for each channel */
-static uint32 Div_n_max[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* Divide by n maximum, one for each channel */
+uint32 Div_n_cnt[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* Divide by n counter. one for each channel */
+uint32 Div_n_max[4 * MAXPOKEYS] __attribute__((section(".dtcm")));       /* Divide by n maximum, one for each channel */
 
-static uint32 Samp_n_max,       /* Sample max.  For accuracy, it is *256 */
- Samp_n_cnt[2] __attribute__ ((aligned (4)));                   /* Sample cnt. */
+uint32 Samp_n_max       __attribute__ ((aligned (4)));     /* Sample max.  For accuracy, it is *256 */
+uint32 Samp_n_cnt[2]    __attribute__ ((aligned (4)));     /* Sample cnt. */
 
 extern int sound_quality;
 /* Volume only emulations declarations */

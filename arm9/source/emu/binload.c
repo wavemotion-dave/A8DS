@@ -53,7 +53,6 @@
 #include "atari.h"
 #include "binload.h"
 #include "cpu.h"
-#include "devices.h"
 #include "esc.h"
 #include "memory.h"
 #include "sio.h"

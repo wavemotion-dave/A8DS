@@ -132,15 +132,15 @@ extern UBYTE missile_gra_enabled;
 extern UBYTE player_flickering;
 extern UBYTE missile_flickering;
 
-static UBYTE *hposp_ptr[4] __attribute__((section(".dtcm")));
-static UBYTE *hposm_ptr[4] __attribute__((section(".dtcm")));
-static ULONG hposp_mask[4] __attribute__((section(".dtcm")));
+UBYTE *hposp_ptr[4] __attribute__((section(".dtcm")));
+UBYTE *hposm_ptr[4] __attribute__((section(".dtcm")));
+ULONG hposp_mask[4] __attribute__((section(".dtcm")));
 
-static ULONG grafp_lookup[4][256];
-static ULONG *grafp_ptr[4] __attribute__((section(".dtcm")));
-static int global_sizem[4] __attribute__((section(".dtcm")));
+ULONG grafp_lookup[4][256];
+ULONG *grafp_ptr[4] __attribute__((section(".dtcm")));
+int global_sizem[4] __attribute__((section(".dtcm")));
 
-static UBYTE PM_Width[4]  __attribute__((section(".dtcm"))) = {1, 2, 1, 4};
+UBYTE PM_Width[4]  __attribute__((section(".dtcm"))) = {1, 2, 1, 4};
 
 /* Meaning of bits in pm_scanline:
 bit 0 - Player 0

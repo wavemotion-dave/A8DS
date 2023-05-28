@@ -64,22 +64,20 @@
 #include "pokeysnd.h"
 #include "util.h"
 
-UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                      // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
-static UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));         // This is the 16K of OS memory that co-insides with some of the RAM in the upper bank
+UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                  // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
+UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));            // This is the 16K of OS memory that co-insides with some of the RAM in the upper bank
 
-UBYTE fast_page[0x1000] __attribute__((section(".dtcm")));                  // Fast memory for the first 4K of main memory
+UBYTE fast_page[0x1000] __attribute__((section(".dtcm")));              // Fast memory for the first 4K of main memory
 
-rdfunc readmap[256] __attribute__((section(".dtcm")));                      // The readmap tells the memory fetcher if we should do direct memory read or call a device function instead
-wrfunc writemap[256] __attribute__((section(".dtcm")));                     // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
-static UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;      // Pointer to XE memory (expanded RAM)
-static ULONG atarixe_memory_size = 0;                                       // How much expanded RAM does the system have?
+rdfunc readmap[256] __attribute__((section(".dtcm")));                  // The readmap tells the memory fetcher if we should do direct memory read or call a device function instead
+wrfunc writemap[256] __attribute__((section(".dtcm")));                 // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
+UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;         // Pointer to XE memory (expanded RAM)
 
-UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;              // The bank of memory currently pointed to (or it may point to the 16K bank in main memory)
+static UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;   // The bank of memory currently pointed to (or it may point to the 16K bank in main memory)
 
-static int cart809F_enabled = FALSE;                                        // By default, no CART memory mapped to 0x8000 - 0x9FFF
-static int cartA0BF_enabled = FALSE;                                        // By default, no CART memory mapped to 0xA000 - 0xBFFF
-UBYTE *mem_map[16] __attribute__((section(".dtcm")));
-
+int cart809F_enabled __attribute__((section(".dtcm"))) = FALSE;         // By default, no CART memory mapped to 0x8000 - 0x9FFF
+int cartA0BF_enabled __attribute__((section(".dtcm"))) = FALSE;         // By default, no CART memory mapped to 0xA000 - 0xBFFF
+UBYTE *mem_map[16] __attribute__((section(".dtcm")));                   // This is the magic that allows us to index into banks of memory quickly
 
 UBYTE *under_0x8, *under_0x9, *under_0xA, *under_0xB;
 
@@ -105,7 +103,6 @@ static void SetAtari800Memory(void)
 {
     ram_size = RAM_48K; // Force 48k... 
     atarixe_memory = NULL;
-    atarixe_memory_size = 0;
 }
 // ------------------------------------------------------------
 // XL/XE has three supported memories... 128K, 320K and 1088K
@@ -129,18 +126,13 @@ static void AllocXEMemory(void)
         /* don't count 64 KB of base memory */
         /* count number of 16 KB banks, add 1 for saving base memory 0x4000-0x7fff */
         ULONG size = (1 + (ram_size - 64) / 16) * 16384;
-        if (size != atarixe_memory_size) 
-        {
-            atarixe_memory = (UBYTE *) xe_mem_buffer; // Use the large 1088K buffer even if we don't use it all
-            atarixe_memory_size = size;
-            memset(atarixe_memory, 0x00, size);
-        }
+        atarixe_memory = (UBYTE *) xe_mem_buffer; // Use the large 1088K buffer even if we don't use it all
+        memset(atarixe_memory, 0x00, size);
     }
     /* atarixe_memory not needed, free it */
     else if (atarixe_memory != NULL) 
     {
         atarixe_memory = NULL;
-        atarixe_memory_size = 0;
     }
 }
 
@@ -162,6 +154,12 @@ void PBIM2_PutByte(UWORD addr, UBYTE byte) {}
 // ---------------------------------------------------------------------------------
 void MEMORY_InitialiseMachine(void) 
 {
+    // Start with all memory clear...
+    memset(memory, 0x00, sizeof(memory));
+    memset(xe_mem_buffer, 0x00, sizeof(xe_mem_buffer));
+    
+    debug[0]++;
+           
     // Set the memory map back to pointing to main memory
     for (int i=0; i<16; i++)
     {

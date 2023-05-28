@@ -148,16 +148,20 @@ extern UBYTE PRIOR;
 extern UBYTE VDELAY;
 extern UBYTE POTENA;
 
-extern UBYTE collisions_mask_missile_playfield;
-extern UBYTE collisions_mask_player_playfield;
-extern UBYTE collisions_mask_missile_player;
-extern UBYTE collisions_mask_player_player;
-
+extern int atari_speaker;
+extern int consol_index;
+extern UBYTE consol_table[3];
+extern UBYTE consol_mask;
 extern UBYTE TRIG[4];
 extern UBYTE TRIG_latch[4];
 
-extern int consol_index;
-extern UBYTE consol_table[3];
+extern UBYTE *hposp_ptr[4];
+extern UBYTE *hposm_ptr[4];
+extern ULONG hposp_mask[4];
+extern ULONG grafp_lookup[4][256];
+extern ULONG *grafp_ptr[4];
+extern int global_sizem[4];
+extern UBYTE PM_Width[4];
 
 #define COLOUR_BLACK 0
 #define COLOUR_TO_WORD(dest,src) dest = (((UWORD) (src)) << 8) | (src);

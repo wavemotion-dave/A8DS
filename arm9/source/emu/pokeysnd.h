@@ -105,10 +105,18 @@ extern "C" {
 extern int32 snd_playback_freq;
 extern uint8 snd_num_pokeys;
 
-extern int enable_new_pokey;
-extern int stereo_enabled;
-extern int serio_sound_enabled;
-extern int console_sound_enabled;
+extern uint8 Num_pokeys;
+extern uint8 AUDV[4 * MAXPOKEYS];
+extern uint8 Outbit[4 * MAXPOKEYS];
+extern uint8 Outvol[4 * MAXPOKEYS];
+extern uint32 P4;
+extern uint32 P5;
+extern uint32 P9;
+extern uint32 P17;
+extern uint32 Div_n_cnt[4 * MAXPOKEYS];
+extern uint32 Div_n_max[4 * MAXPOKEYS];
+extern uint32 Samp_n_max;
+extern uint32 Samp_n_cnt[2];    
 
 extern void (*Pokey_process_ptr)(void *sndbuffer, unsigned int sndn);
 extern void (*Update_pokey_sound)(uint16 addr, uint8 val, uint8 /*chip*/, uint8 gain);

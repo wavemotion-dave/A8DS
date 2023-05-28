@@ -42,6 +42,10 @@ extern UBYTE regP;
 extern UBYTE regS;
 extern UBYTE regY;
 extern UBYTE regX;
+extern UBYTE N;
+extern UBYTE Z;
+extern UBYTE C;
+
 
 #define CPU_regPC regPC
 #define CPU_regA  regA

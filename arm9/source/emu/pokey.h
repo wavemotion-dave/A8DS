@@ -42,14 +42,6 @@
 
 #ifndef ASAP
 
-extern UBYTE KBCODE;
-extern UBYTE IRQST;
-extern UBYTE IRQEN;
-extern UBYTE SKSTAT;
-extern int DELAYED_SERIN_IRQ;
-extern int DELAYED_SEROUT_IRQ;
-extern int DELAYED_XMTDONE_IRQ;
-extern UBYTE POT_input[8];
 
 #define POKEY_DELAYED_SERIN_IRQ  DELAYED_SERIN_IRQ
 #define POKEY_AUDF AUDF
@@ -110,15 +102,30 @@ void POKEY_Scanline(void);
 #define CHIP4      12
 #define SAMPLE    127
 
-/* structures to hold the 9 pokey control bytes */
-extern UBYTE AUDF[4 * MAXPOKEYS];   /* AUDFx (D200, D202, D204, D206) */
-extern UBYTE AUDC[4 * MAXPOKEYS];   /* AUDCx (D201, D203, D205, D207) */
-extern UBYTE AUDCTL[MAXPOKEYS];     /* AUDCTL (D208) */
-
-extern int DivNIRQ[4], DivNMax[4];
-extern int Base_mult[MAXPOKEYS];    /* selects either 64Khz or 15Khz clock mult */
-
-extern UBYTE poly9_lookup[POLY9_SIZE];
+extern unsigned short pokeyBufIdx;
+extern char pokey_buffer[SNDLENGTH];
+extern UBYTE KBCODE;
+extern UBYTE SERIN;
+extern UBYTE IRQST;
+extern UBYTE IRQEN;
+extern UBYTE SKSTAT;
+extern UBYTE SKCTLS;
+extern int DELAYED_SERIN_IRQ;
+extern int DELAYED_SEROUT_IRQ;
+extern int DELAYED_XMTDONE_IRQ;
+extern UBYTE AUDF[4 * MAXPOKEYS];
+extern UBYTE AUDC[4 * MAXPOKEYS];
+extern UBYTE AUDCTL[MAXPOKEYS];
+extern int DivNIRQ[4];
+extern int DivNMax[4];
+extern int Base_mult[MAXPOKEYS];
+extern UBYTE POT_input[8];
+extern UBYTE PCPOT_input[8];
+extern UBYTE POT_all;
+extern UBYTE pot_scanline;
+extern ULONG random_scanline_counter;
+extern UBYTE poly9_lookup[511];
 extern UBYTE poly17_lookup[16385];
+
 
 #endif

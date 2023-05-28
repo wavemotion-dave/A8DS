@@ -42,6 +42,14 @@ extern int bg0, bg1, bg0b,bg1b;
 extern int bg2, bg3;
 extern unsigned int video_height;                  // Actual video height
 extern u8 bFirstLoad;
+extern char last_boot_file[];
+
+extern u16 gTotalAtariFrames;
+extern u16 emu_state;
+extern u16 atari_frames;
+
+extern u16 sound_idx;
+extern u8 myPokeyBufIdx;
 
 extern void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr, unsigned char valEnd, unsigned char uWait);
 extern void vblankIntr();

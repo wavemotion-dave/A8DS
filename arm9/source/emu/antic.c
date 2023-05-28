@@ -313,20 +313,20 @@ contains difference between bytes taken and cycles taken plus before_cycles. */
 
 /* Light pen support ------------------------------------------------------- */
 
-static UBYTE PENH __attribute__((section(".dtcm")));
-static UBYTE PENV __attribute__((section(".dtcm")));
+UBYTE PENH __attribute__((section(".dtcm")));
+UBYTE PENV __attribute__((section(".dtcm")));
 UBYTE PENH_input __attribute__((section(".dtcm")))= 0x00;
 UBYTE PENV_input __attribute__((section(".dtcm")))= 0xff;
 
 /* Internal ANTIC registers ------------------------------------------------ */
 
-static UWORD screenaddr __attribute__((section(".dtcm")));      /* Screen Pointer */
-static UBYTE IR __attribute__((section(".dtcm")));              /* Instruction Register */
-static UBYTE anticmode __attribute__((section(".dtcm")));       /* Antic mode */
-static UBYTE dctr __attribute__((section(".dtcm")));            /* Delta Counter */
-static UBYTE lastline __attribute__((section(".dtcm")));        /* dctr limit */
-static UBYTE need_dl __attribute__((section(".dtcm")));         /* boolean: fetch DL next line */
-static UBYTE vscrol_off __attribute__((section(".dtcm")));      /* boolean: displaying line ending VSC */
+UWORD screenaddr __attribute__((section(".dtcm")));      /* Screen Pointer */
+UBYTE IR __attribute__((section(".dtcm")));              /* Instruction Register */
+UBYTE anticmode __attribute__((section(".dtcm")));       /* Antic mode */
+UBYTE dctr __attribute__((section(".dtcm")));            /* Delta Counter */
+UBYTE lastline __attribute__((section(".dtcm")));        /* dctr limit */
+UBYTE need_dl __attribute__((section(".dtcm")));         /* boolean: fetch DL next line */
+UBYTE vscrol_off __attribute__((section(".dtcm")));      /* boolean: displaying line ending VSC */
 
 /* Pre-computed values for improved performance ---------------------------- */
 
@@ -336,41 +336,41 @@ static UBYTE vscrol_off __attribute__((section(".dtcm")));      /* boolean: disp
 #define SCROLL0 3               /* modes 2,3,4,5,0xd,0xe,0xf with HSC */
 #define SCROLL1 4               /* modes 6,7,0xa,0xb,0xc with HSC */
 #define SCROLL2 5               /* modes 8,9 with HSC */
-static int md __attribute__((section(".dtcm")));                    /* current mode NORMAL0..SCROLL2 */
+int md __attribute__((section(".dtcm")));                    /* current mode NORMAL0..SCROLL2 */
 /* tables for modes NORMAL0..SCROLL2 */
-static int chars_read[6] __attribute__((section(".dtcm")));
-static int chars_displayed[6] __attribute__((section(".dtcm")));
-static int x_min[6] __attribute__((section(".dtcm")));
-static int ch_offset[6] __attribute__((section(".dtcm")));
-static int load_cycles[6] __attribute__((section(".dtcm")));
-static int font_cycles[6] __attribute__((section(".dtcm")));
-static int before_cycles[6] __attribute__((section(".dtcm")));
-static int extra_cycles[6] __attribute__((section(".dtcm")));
+int chars_read[6] __attribute__((section(".dtcm")));
+int chars_displayed[6] __attribute__((section(".dtcm")));
+int x_min[6] __attribute__((section(".dtcm")));
+int ch_offset[6] __attribute__((section(".dtcm")));
+int load_cycles[6] __attribute__((section(".dtcm")));
+int font_cycles[6] __attribute__((section(".dtcm")));
+int before_cycles[6] __attribute__((section(".dtcm")));
+int extra_cycles[6] __attribute__((section(".dtcm")));
 
 /* border parameters for current display width */
-static int left_border_chars __attribute__((section(".dtcm")));
-static int right_border_start __attribute__((section(".dtcm")));
+int left_border_chars __attribute__((section(".dtcm")));
+int right_border_start __attribute__((section(".dtcm")));
 #define LBORDER_START (LCHOP * 4)
 #define RBORDER_END ((48 - RCHOP) * 4)
 
 /* set with CHBASE *and* CHACTL - bits 0..2 set if flip on */
-static UWORD chbase_20 __attribute__((section(".dtcm")));           /* CHBASE for 20 character mode */
+UWORD chbase_20 __attribute__((section(".dtcm")));           /* CHBASE for 20 character mode */
 
 /* set with CHACTL */
-static UBYTE invert_mask __attribute__((section(".dtcm")));
-static int blank_mask __attribute__((section(".dtcm")));
+UBYTE invert_mask __attribute__((section(".dtcm")));
+int blank_mask __attribute__((section(".dtcm")));
 
 /* A scanline of AN0 and AN1 signals as transmitted from ANTIC to GTIA.
    In every byte, bit 0 is AN0 and bit 1 is AN1 */
-static UBYTE an_scanline[ATARI_WIDTH / 2 + 8] __attribute__((section(".dtcm")));
+UBYTE an_scanline[ATARI_WIDTH / 2 + 8] __attribute__((section(".dtcm")));
 
 /* lookup tables */
-static UBYTE blank_lookup[256] __attribute__((section(".dtcm")));
-static UWORD lookup2[256] __attribute__((section(".dtcm")));
+UBYTE blank_lookup[256] __attribute__((section(".dtcm")));
+UWORD lookup2[256] __attribute__((section(".dtcm")));
 ULONG lookup_gtia9[16] __attribute__((section(".dtcm")));
 ULONG lookup_gtia11[16] __attribute__((section(".dtcm")));
-static UBYTE playfield_lookup[257] __attribute__((section(".dtcm")));
-static UBYTE mode_e_an_lookup[256] __attribute__((section(".dtcm")));
+UBYTE playfield_lookup[257] __attribute__((section(".dtcm")));
+UBYTE mode_e_an_lookup[256] __attribute__((section(".dtcm")));
 
 /* Colour lookup table
    This single table replaces 4 previously used: cl_word, cur_prior,
@@ -492,11 +492,11 @@ UWORD cl_lookup[128] __attribute__((section(".dtcm")));
 #define HIRES_LUM_01    0x0f00
 #define HIRES_LUM_10    0x000f
 
-static UWORD hires_lookup_n[128] __attribute__((section(".dtcm")));
-static UWORD hires_lookup_m[128] __attribute__((section(".dtcm")));
 #define hires_norm(x)   hires_lookup_n[(x) >> 1]
 #define hires_mask(x)   hires_lookup_m[(x) >> 1]
 
+UWORD hires_lookup_n[128] __attribute__((section(".dtcm")));
+UWORD hires_lookup_m[128] __attribute__((section(".dtcm")));
 UWORD hires_lookup_l[128] __attribute__((section(".dtcm")));    /* accessed in gtia.c */
 #define hires_lum(x)    hires_lookup_l[(x) >> 1]
 
@@ -508,7 +508,7 @@ UWORD hires_lookup_l[128] __attribute__((section(".dtcm")));    /* accessed in g
 #define PF3PM (*(UBYTE *) &cl_lookup[C_PF3 | C_COLLS])
 #define PF_COLLS(x) (((UBYTE *) &cl_lookup)[(x) + L_COLLS])
 
-static UBYTE singleline __attribute__((section(".dtcm")));
+UBYTE singleline __attribute__((section(".dtcm")));
 UBYTE player_dma_enabled __attribute__((section(".dtcm")));
 UBYTE player_gra_enabled __attribute__((section(".dtcm")));
 UBYTE missile_dma_enabled __attribute__((section(".dtcm")));
@@ -516,8 +516,8 @@ UBYTE missile_gra_enabled __attribute__((section(".dtcm")));
 UBYTE player_flickering __attribute__((section(".dtcm")));
 UBYTE missile_flickering __attribute__((section(".dtcm")));
 
-static UWORD pmbase_s __attribute__((section(".dtcm")));
-static UWORD pmbase_d __attribute__((section(".dtcm")));
+UWORD pmbase_s __attribute__((section(".dtcm")));
+UWORD pmbase_d __attribute__((section(".dtcm")));
 
 extern UBYTE pm_scanline[ATARI_WIDTH / 2 + 8] __attribute__((section(".dtcm")));
 extern UBYTE pm_dirty __attribute__((section(".dtcm")));
@@ -525,7 +525,7 @@ extern UBYTE pm_dirty __attribute__((section(".dtcm")));
 /* PMG lookup tables */
 UBYTE pm_lookup_table[20][256];
 /* current PMG lookup table */
-static const UBYTE *pm_lookup_ptr __attribute__((section(".dtcm")));
+const UBYTE *pm_lookup_ptr __attribute__((section(".dtcm")));
 
 #define PL_00   0   /* 0x00,0x01,0x02,0x03,0x04,0x06,0x08,0x09,0x0a,0x0b */
 #define PL_05   1   /* 0x05,0x07,0x0c,0x0d,0x0e,0x0f */
@@ -2041,9 +2041,9 @@ static draw_antic_function draw_antic_table[4][16] = {
         draw_antic_9_gtia11,    draw_antic_e_gtia11,    draw_antic_e_gtia11,    draw_antic_f_gtia11}};
 
 /* pointer to current GTIA/ANTIC mode routine */
-static draw_antic_function draw_antic_ptr = draw_antic_8;
+draw_antic_function draw_antic_ptr = draw_antic_8;
 /* pointer to current GTIA mode blank drawing routine */
-static void (*draw_antic_0_ptr)(void) = draw_antic_0;
+void (*draw_antic_0_ptr)(void) = draw_antic_0;
 
 /* Artifacting ------------------------------------------------------------ */
 
@@ -2754,8 +2754,4 @@ void ANTIC_PutByte(UWORD addr, UBYTE byte)
         break;
     }
 }
-
-/* State ------------------------------------------------------------------- */
-void AnticStateSave(void) {}
-void AnticStateRead(void) {}
 

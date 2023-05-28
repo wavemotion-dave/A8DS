@@ -52,6 +52,7 @@
 #include "screenshot.h"
 #include "config.h"
 #include "highscore.h"
+#include "loadsave.h"
 
 #define MAX_FILES 1024                      // No more than this many files can be processed per directory
 
@@ -67,7 +68,7 @@ bool bShowKeyboard = false;                 // set to true when the virtual keyb
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
 // This buffer cannot be in .dtcm fast memory because the ARM7 core wouldn't see it.
 // ----------------------------------------------------------------------------------
-u8 sound_buffer[SNDLENGTH]  __attribute__ ((aligned (4))) = {0};
+u8 sound_buffer[SNDLENGTH]  __attribute__((aligned (4))) = {0};
 u16* aptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
 u16* bptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
 u16 sound_idx               __attribute__((section(".dtcm"))) = 0;
@@ -89,25 +90,26 @@ char last_boot_file[300] = {0};             // The last filename (.ATR or .XEX) 
 
 #define MAX_DEBUG 10
 int debug[MAX_DEBUG]={0};                   // Turn on DEBUG_DUMP to output some data to the lower screen... useful for emulator debug: just drop values into debug[] array.
-//#define DEBUG_DUMP
+u8 DEBUG_DUMP = 0;
 
 u8 bFirstLoad = true;
 
 // ---------------------------------------------------------------------------
-// Dump Debug Data - wite out up to MAX_DEBUG values to the lower screen.
+// Dump Debug Data - write out up to MAX_DEBUG values to the lower screen.
 // Useful to help debug the emulator - this goes out approximately once
 // per second. Caller just needs to stuff values into the debug[] array.
 // ---------------------------------------------------------------------------
 static void DumpDebugData(void)
 {
-#ifdef DEBUG_DUMP
-    char dbgbuf[32];
-    for (int i=0; i<MAX_DEBUG; i++)
+    if (DEBUG_DUMP)
     {
-        siprintf(dbgbuf, "%02d: %10d  %08X", i, debug[i], debug[i]);
-        dsPrintValue(0,3+i,0, dbgbuf);
+        static char dbgbuf[33];
+        for (int i=0; i<MAX_DEBUG; i++)
+        {
+            siprintf(dbgbuf, "%02d: %10d  %08X", i, debug[i], debug[i]);
+            dsPrintValue(0,3+i,0, dbgbuf);
+        }
     }
-#endif
 }
 
 
@@ -718,13 +720,13 @@ void dsShowRomInfo(void)
         
         strncpy(line1, disk_filename[DISK_XEX], 22);
         line1[22] = 0;
-        sprintf(line2,"%-22s", line1);
+        siprintf(line2,"%-22s", line1);
         if (!myConfig.emulatorText) strcpy(line2, "                      ");
         dsPrintValue(10,3,0, line2);
 
         if (myConfig.emulatorText)
         {
-            sprintf(line1, "D1: %s", (disk_readonly[DISK_1] ? "[R]":"[W]"));
+            siprintf(line1, "D1: %s", (disk_readonly[DISK_1] ? "[R]":"[W]"));
             dsPrintValue(10,6,0, line1);
         }
         else
@@ -733,7 +735,7 @@ void dsShowRomInfo(void)
         }
         strncpy(line1, disk_filename[DISK_1], 22);
         line1[22] = 0;
-        sprintf(line2,"%-22s", line1);
+        siprintf(line2,"%-22s", line1);
         if (!myConfig.emulatorText) strcpy(line2, "                      ");
         dsPrintValue(10,7,0, line2);
         if (!myConfig.emulatorText) strcpy(line2, "                      ");
@@ -741,18 +743,18 @@ void dsShowRomInfo(void)
         {
             strncpy(line1, &disk_filename[DISK_1][22], 22);
             line1[22] = 0;
-            sprintf(line2,"%-22s", line1);
+            siprintf(line2,"%-22s", line1);
         }
         else
         {
-            sprintf(line2,"%-22s", " ");
+            siprintf(line2,"%-22s", " ");
         }
         if (!myConfig.emulatorText) strcpy(line2, "                      ");
         dsPrintValue(10,8,0, line2);
 
         if (myConfig.emulatorText)
         {
-            sprintf(line1, "D2: %s", (disk_readonly[DISK_2] ? "[R]":"[W]"));
+            siprintf(line1, "D2: %s", (disk_readonly[DISK_2] ? "[R]":"[W]"));
             dsPrintValue(10,11,0, line1);
         }
         else
@@ -762,29 +764,29 @@ void dsShowRomInfo(void)
         
         strncpy(line1, disk_filename[DISK_2], 22);
         line1[22] = 0;
-        sprintf(line2,"%-22s", line1);
+        siprintf(line2,"%-22s", line1);
         if (!myConfig.emulatorText) strcpy(line2, "                      ");
         dsPrintValue(10,12,0, line2);
         if (strlen(disk_filename[DISK_2]) > 26)
         {
             strncpy(line1, &disk_filename[DISK_2][22], 22);
             line1[22] = 0;
-            sprintf(line2,"%-22s", line1);
+            siprintf(line2,"%-22s", line1);
         }
         else
         {
-            sprintf(line2,"%-22s", " ");
+            siprintf(line2,"%-22s", " ");
         }
         if (!myConfig.emulatorText) strcpy(line2, "                      ");
         dsPrintValue(10,13,0, line2);
     }
 
-    sprintf(ramSizeBuf, "%4dK", ram_size);
+    siprintf(ramSizeBuf, "%4dK", ram_size);
     if ((myConfig.os_type == OS_ATARI_OSB) || (myConfig.os_type==OS_ALTIRRA_800))
-        sprintf(machineBuf, "%-5s A800", (myConfig.basic_type ? "BASIC": " "));
+        siprintf(machineBuf, "%-5s A800", (myConfig.basic_type ? "BASIC": " "));
     else
-        sprintf(machineBuf, "%-5s XL/XE", (myConfig.basic_type ? "BASIC": " "));
-    sprintf(line2, "%-12s %-4s %-4s", machineBuf, ramSizeBuf, (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "));
+        siprintf(machineBuf, "%-5s XL/XE", (myConfig.basic_type ? "BASIC": " "));
+    siprintf(line2, "%-12s %-4s %-4s", machineBuf, ramSizeBuf, (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "));
     dsPrintValue(7,0,0, line2);
 }
 
@@ -881,11 +883,15 @@ unsigned int dsReadPad(void)
 // corner of the main lower display. We ask the user to confirm
 // they really want to quit the emulator...
 // ---------------------------------------------------------------
-bool dsWaitOnQuit(void) 
+
+// ---------------------------------------------------------------
+// Called when the user clicks to load or save state
+// ---------------------------------------------------------------
+bool dsQuery(char *str) 
 {
     bool bRet=false, bDone=false;
-    unsigned int keys_pressed;
-    unsigned int posdeb=0;
+    short unsigned int keys_pressed;
+    short unsigned int posdeb=0;
     static char szName[32];
 
     decompress(bgFileSelTiles, bgGetGfxPtr(bg0b), LZ77Vram);
@@ -894,15 +900,15 @@ bool dsWaitOnQuit(void)
     unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
     dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
 
-    strcpy(szName,"Quit A8DS?");
-    dsPrintValue(17,2,0,szName);
-    sprintf(szName,"%s","A TO CONFIRM, B TO GO BACK");
+    strcpy(szName,str);
+    dsPrintValue(16-strlen(szName)/2,8,0,szName);
+    siprintf(szName,"%s","A TO CONFIRM, B TO GO BACK");
     dsPrintValue(16-strlen(szName)/2,23,0,szName);
 
     while(!bDone) 
     {
         strcpy(szName,"          YES          ");
-        dsPrintValue(5,10+0,(posdeb == 0 ? 1 :  0),szName);
+        dsPrintValue(5,12+0,(posdeb == 0 ? 1 :  0),szName);
         strcpy(szName,"          NO           ");
         dsPrintValue(5,14+1,(posdeb == 2 ? 1 :  0),szName);
         swiWaitForVBlank();
@@ -948,13 +954,13 @@ void dsDisplayLoadOptions(void)
     static char tmpBuf[32];
 
     dsPrintValue(0,0,0,file_load_id);
-    sprintf(tmpBuf, "%-4s %s", (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "), (myConfig.basic_type ? "W BASIC":"       "));
+    siprintf(tmpBuf, "%-4s %s", (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "), (myConfig.basic_type ? "W BASIC":"       "));
     dsPrintValue(19,0,0,tmpBuf);
-    sprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
+    siprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
     dsPrintValue(14,1,0,tmpBuf);
     if (strcmp(file_load_id,"D2")!=0)      // For D2: we don't allow boot load
     {
-        sprintf(tmpBuf, "[%c]  BOOT LOAD", (bLoadAndBoot ? 'Y':' '));
+        siprintf(tmpBuf, "[%c]  BOOT LOAD", (bLoadAndBoot ? 'Y':' '));
         dsPrintValue(14,2,0,tmpBuf);
     }
 }
@@ -975,12 +981,12 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
   dmaFillWords(dmaVal | (dmaVal<<16),(void*) (bgGetMapPtr(bg1b)),32*24*2);
 
   dsDisplayLoadOptions();
-  countfiles ? sprintf(szName,"%04d/%04d GAMES",(int)(1+ucSel+NoDebGame),countfiles) : sprintf(szName,"%04d/%04d FOLDERS",(int)(1+ucSel+NoDebGame),count8bit);
+  countfiles ? siprintf(szName,"%04d/%04d GAMES",(int)(1+ucSel+NoDebGame),countfiles) : siprintf(szName,"%04d/%04d FOLDERS",(int)(1+ucSel+NoDebGame),count8bit);
   dsPrintValue(14,3,0,szName);
 
   dsPrintValue(31,5,0,(char *) (NoDebGame>0 ? "<" : " "));
   dsPrintValue(31,22,0,(char *) (NoDebGame+14<count8bit ? ">" : " "));
-  sprintf(szName,"%s"," A=PICK B=BACK SEL=TV STA=BASIC ");
+  siprintf(szName,"%s"," A=PICK B=BACK SEL=TV STA=BASIC ");
   dsPrintValue(0,23,0,szName);
   for (ucBcl=0;ucBcl<17; ucBcl++)
   {
@@ -994,13 +1000,13 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
       if (a8romlist[ucGame].directory)
       {
         char szName3[36];
-        sprintf(szName3,"[%s]",szName);
-        sprintf(szName2,"%-29s",szName3);
+        siprintf(szName3,"[%s]",szName);
+        siprintf(szName2,"%-29s",szName3);
         dsPrintValue(0,5+ucBcl,(ucSel == ucBcl ? 1 :  0),szName2);
       }
       else
       {
-        sprintf(szName2,"%-29s",strupr(szName));
+        siprintf(szName2,"%-29s",strupr(szName));
         dsPrintValue(1,5+ucBcl,(ucSel == ucBcl ? 1 : 0),szName2);
       }
     }
@@ -1135,7 +1141,8 @@ unsigned int dsWaitForRom(void)
     else {
       ucSHaut = 0;
     }
-    if ( keysCurrent() & KEY_B ) {
+    if ( keysCurrent() & KEY_B ) 
+    {
       bDone=true;
       while (keysCurrent() & KEY_B);
     }
@@ -1180,12 +1187,16 @@ unsigned int dsWaitForRom(void)
     } else last_sta_key=0;
       
 
-    if (keysCurrent() & KEY_A) {
-      if (!a8romlist[ucFicAct].directory) {
+    if (keysCurrent() & KEY_A) 
+    {
+      if (!a8romlist[ucFicAct].directory) 
+      {
         bRet=true;
         bDone=true;
+        DEBUG_DUMP = (keysCurrent() & KEY_X) ? 1:0;
       }
-      else {
+      else 
+      {
         chdir(a8romlist[ucFicAct].filename);
         a8FindFiles();
         ucFicAct = 0;
@@ -1229,7 +1240,7 @@ unsigned int dsWaitForRom(void)
         }
     } else last_y_key = 0;
 
-    // Scroll la selection courante
+    // Scroll the current selection
     if (strlen(a8romlist[ucFicAct].filename) > 29) {
       ucFlip++;
       if (ucFlip >= 10) {
@@ -1357,7 +1368,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
         else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT
         {
             soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
-            bDone=dsWaitOnQuit();
+            bDone=dsQuery("QUIT A8DS?");
             if (bDone) uState=A8_QUITSTDS;
         }
         else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75)) // cartridge slot (wide range)
@@ -1825,8 +1836,24 @@ void dsMainLoop(void)
                       bMute = 1;
                       swiWaitForVBlank();
                       soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
-                      if (dsWaitOnQuit()) emu_state=A8_QUITSTDS;
+                      if (dsQuery("QUIT A8DS?")) emu_state=A8_QUITSTDS;
                       else { bMute = 0; }
+                      swiWaitForVBlank();
+                    }
+                    else if ((iTx>230) && (iTx<256) && (iTy>46) && (iTy<75))  // SAVE GAME
+                    {
+                      if (dsQuery("SAVE GAME STATE?"))
+                      {
+                        SaveGame();
+                      }
+                      swiWaitForVBlank();
+                    }
+                    else if ((iTx>230) && (iTx<256) && (iTy>85) && (iTy<111))  // LOAD GAME
+                    {
+                      if (dsQuery("LOAD GAME STATE?"))
+                      {
+                        LoadGame();
+                      }
                       swiWaitForVBlank();
                     }
                     else if ((iTx>204) && (iTx<235) && (iTy>150) && (iTy<180))  // Gear Icon = Settings

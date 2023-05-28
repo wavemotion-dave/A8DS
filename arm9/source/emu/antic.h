@@ -74,21 +74,30 @@
 #define _NMIRES     0x0f
 #define _NMIST      0x0f
 
-extern UBYTE CHACTL;
-extern UBYTE CHBASE;
-extern UWORD dlist;
+/* pointer to a function that draws a single line of graphics */
+typedef void (*draw_antic_function)(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr);
+
+extern draw_antic_function draw_antic_ptr;
+extern void (*draw_antic_0_ptr)(void);
+
+extern UBYTE ANTIC_memory[52];
 extern UBYTE DMACTL;
+extern UBYTE CHACTL;
+extern UWORD dlist;
 extern UBYTE HSCROL;
+extern UBYTE VSCROL;
+extern UBYTE PMBASE;
+extern UBYTE CHBASE;
 extern UBYTE NMIEN;
 extern UBYTE NMIST;
-extern UBYTE PMBASE;
-extern UBYTE VSCROL;
-
+extern UWORD *scrn_ptr;
+extern const UBYTE *antic_xe_ptr;
 extern int break_ypos;
 extern int ypos;
 extern UBYTE wsync_halt;
-
 extern unsigned int screenline_cpu_clock;
+extern UBYTE PENH_input;
+extern UBYTE PENV_input;
 
 #define ANTIC_CPU_CLOCK (screenline_cpu_clock + xpos)
 #define ANTIC_xpos xpos
@@ -99,20 +108,61 @@ extern unsigned int screenline_cpu_clock;
 
 #define XPOS xpos
 
-extern UBYTE PENH_input;
-extern UBYTE PENV_input;
+extern UBYTE PENH;
+extern UBYTE PENV;
+extern UWORD screenaddr;
+extern UBYTE IR;
+extern UBYTE anticmode;
+extern UBYTE dctr;
+extern UBYTE lastline;
+extern UBYTE need_dl;
+extern UBYTE vscrol_off;
+extern int md;
+extern int chars_read[6];
+extern int chars_displayed[6];
+extern int x_min[6];
+extern int ch_offset[6];
+extern int load_cycles[6];
+extern int font_cycles[6];
+extern int before_cycles[6];
+extern int extra_cycles[6];
+extern int left_border_chars;
+extern int right_border_start;
+extern UWORD chbase_20;
+extern UBYTE invert_mask;
+extern int blank_mask;
+extern UBYTE an_scanline[ATARI_WIDTH / 2 + 8];
+extern UBYTE blank_lookup[256];
+extern UWORD lookup2[256];
+extern ULONG lookup_gtia9[16];
+extern ULONG lookup_gtia11[16];
+extern UBYTE playfield_lookup[257];
+extern UBYTE mode_e_an_lookup[256];
+extern UWORD cl_lookup[128];
+extern UWORD hires_lookup_n[128];
+extern UWORD hires_lookup_m[128];
+extern UWORD hires_lookup_l[128];
+extern UBYTE singleline;
+extern UBYTE player_dma_enabled;
+extern UBYTE player_gra_enabled;
+extern UBYTE missile_dma_enabled;
+extern UBYTE missile_gra_enabled;
+extern UBYTE player_flickering;
+extern UBYTE missile_flickering;
+extern UWORD pmbase_s;
+extern UWORD pmbase_d;
+extern UBYTE pm_scanline[ATARI_WIDTH / 2 + 8];
+extern UBYTE pm_dirty;
+extern const UBYTE *pm_lookup_ptr;
+
 
 void ANTIC_Initialise(void);
 void ANTIC_Reset(void);
 void ANTIC_Frame(int draw_display);
-//void ANTIC_Frame(void);
 UBYTE ANTIC_GetByte(UWORD addr);
 void ANTIC_PutByte(UWORD addr, UBYTE byte);
-
 UBYTE ANTIC_GetDLByte(UWORD *paddr);
 UWORD ANTIC_GetDLWord(UWORD *paddr);
-
-/* always call ANTIC_UpdateArtifacting after changing myConfig.artifacting */
 void ANTIC_UpdateArtifacting(void);
 
 /* Video memory access */

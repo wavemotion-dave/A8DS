@@ -126,12 +126,12 @@ UBYTE IRQ __attribute__((section(".dtcm")));
 
 
 /* 6502 flags local to this module */
-static UBYTE N __attribute__((section(".dtcm")));                   /* bit7 set => N flag set */
+UBYTE N __attribute__((section(".dtcm")));                   /* bit7 set => N flag set */
 #ifndef NO_V_FLAG_VARIABLE
-static UBYTE V __attribute__((section(".dtcm")));                 /* non-zero => V flag set */
+UBYTE V __attribute__((section(".dtcm")));                 /* non-zero => V flag set */
 #endif
-static UBYTE Z __attribute__((section(".dtcm")));                   /* zero     => Z flag set */
-static UBYTE C __attribute__((section(".dtcm")));                   /* must be 0 or 1 */
+UBYTE Z __attribute__((section(".dtcm")));                   /* zero     => Z flag set */
+UBYTE C __attribute__((section(".dtcm")));                   /* must be 0 or 1 */
 /* B, D, I are always in regP */
 
 inline void CPU_GetStatus(void)

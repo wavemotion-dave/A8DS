@@ -82,20 +82,23 @@ void dsShowDiskActivity(int);
 #define BOOT_SECTORS_LOGICAL    0
 #define BOOT_SECTORS_PHYSICAL   1
 #define BOOT_SECTORS_SIO2PC     2
-static int boot_sectors_type[SIO_MAX_DRIVES];
 
-static int image_type[SIO_MAX_DRIVES];
 #define IMAGE_TYPE_XFD  0
 #define IMAGE_TYPE_ATR  1
 #define IMAGE_TYPE_PRO  2
 #define IMAGE_TYPE_VAPI 3
-static FILE *disk[SIO_MAX_DRIVES] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+
+static short int boot_sectors_type[SIO_MAX_DRIVES];
+static short int image_type[SIO_MAX_DRIVES];
+static FILE *disk[SIO_MAX_DRIVES] = { NULL, NULL, NULL, NULL };
 static int sectorcount[SIO_MAX_DRIVES];
 static int sectorsize[SIO_MAX_DRIVES];
+
 /* these two are used by the 1450XLD parallel disk device */
-int SIO_format_sectorcount[SIO_MAX_DRIVES];
-int SIO_format_sectorsize[SIO_MAX_DRIVES];
+static int SIO_format_sectorcount[SIO_MAX_DRIVES];
+static int SIO_format_sectorsize[SIO_MAX_DRIVES];
 static int io_success[SIO_MAX_DRIVES];
+
 /* stores dup sector counter for PRO images */
 typedef struct tagpro_additional_info_t {
     int max_sector;
@@ -170,33 +173,15 @@ static void *additional_info[SIO_MAX_DRIVES];
 
 SIO_UnitStatus SIO_drive_status[SIO_MAX_DRIVES];
 char SIO_filename[SIO_MAX_DRIVES][FILENAME_MAX];
-
-Util_tmpbufdef(static, sio_tmpbuf[SIO_MAX_DRIVES])
-
-int SIO_last_op;
-int SIO_last_op_time = 0;
 int SIO_last_drive;
-int SIO_last_sector;
-char SIO_status[256];
+UBYTE CommandFrame[6];
+int CommandIndex = 0;
+UBYTE DataBuffer[256 + 3];
+int DataIndex = 0;
+int TransferStatus = SIO_NoFrame;
+int ExpectedBytes = 0;
 
-/* Serial I/O emulation support */
-#define SIO_NoFrame         (0x00)
-#define SIO_CommandFrame    (0x01)
-#define SIO_StatusRead      (0x02)
-#define SIO_ReadFrame       (0x03)
-#define SIO_WriteFrame      (0x04)
-#define SIO_FinalStatus     (0x05)
-#define SIO_FormatFrame     (0x06)
-#define SIO_CasRead         (0x60)
-#define SIO_CasWrite        (0x61)
-static UBYTE CommandFrame[6];
-static int CommandIndex = 0;
-static UBYTE DataBuffer[256 + 3];
-static int DataIndex = 0;
-static int TransferStatus = SIO_NoFrame;
-static int ExpectedBytes = 0;
-
-int ignore_header_writeprotect = FALSE;
+const int ignore_header_writeprotect = FALSE;
 
 int SIO_Initialise(int *argc, char *argv[])
 {
@@ -592,8 +577,6 @@ static int SeekSector(int unit, int sector)
     ULONG offset;
     int size;
 
-    SIO_last_sector = sector;
-    snprintf(SIO_status, sizeof(SIO_status), "%d: %d", unit + 1, sector);
     SIO_SizeOfSector((UBYTE) unit, sector, &size, &offset);
     fseek(disk[unit], offset, SEEK_SET);
 
@@ -616,8 +599,6 @@ int SIO_ReadSector(int unit, int sector, UBYTE *buffer)
         return 'N';
     if (sector <= 0 || sector > sectorcount[unit])
         return 'E';
-    SIO_last_op = SIO_LAST_READ;
-    SIO_last_op_time = 1;
     SIO_last_drive = unit + 1;
     /* FIXME: what sector size did the user expect? */
     size = SeekSector(unit, sector);
@@ -788,8 +769,6 @@ int SIO_WriteSector(int unit, int sector, const UBYTE *buffer)
         return 'E';
     
     dsShowDiskActivity(unit);
-    SIO_last_op = SIO_LAST_WRITE;
-    SIO_last_op_time = 1;
     SIO_last_drive = unit + 1;
 #ifdef VAPI_WRITE_ENABLE    
     if (image_type[unit] == IMAGE_TYPE_VAPI) {
@@ -1305,8 +1284,6 @@ static UBYTE Command_Frame(void)
         ExpectedBytes = realsize + 1;
         DataIndex = 0;
         TransferStatus = SIO_WriteFrame;
-        SIO_last_op = SIO_LAST_WRITE;
-        SIO_last_op_time = 10;
         SIO_last_drive = unit + 1;
         return 'A';
     case 0x52:              /* Read */
@@ -1342,8 +1319,6 @@ static UBYTE Command_Frame(void)
             delay_counter = 0;
         }
 #endif
-        SIO_last_op = SIO_LAST_READ;
-        SIO_last_op_time = 10;
         SIO_last_drive = unit + 1;
         return 'A';
     case 0x53:              /* Status */
@@ -1414,16 +1389,13 @@ void SIO_TapeMotor(int onoff)
             if (CASSETTE_IsSaveFile()) {
                 TransferStatus = SIO_CasWrite;
                 CASSETTE_TapeMotor(onoff);
-                SIO_last_op = SIO_LAST_WRITE;
             }
             else {
                 TransferStatus = SIO_CasRead;
                 CASSETTE_TapeMotor(onoff);
                 POKEY_DELAYED_SERIN_IRQ = CASSETTE_GetInputIRQDelay();
-                SIO_last_op = SIO_LAST_READ;
             };
             SIO_last_drive = 0x60;
-            SIO_last_op_time = 0x10;
         }
         else {
             CASSETTE_TapeMotor(onoff);
@@ -1444,7 +1416,6 @@ void SIO_TapeMotor(int onoff)
             CASSETTE_TapeMotor(onoff);
             POKEY_DELAYED_SERIN_IRQ = 0; /* off */
         }
-        SIO_last_op_time = 0;
     }
 }
 

@@ -51,7 +51,6 @@
 
 #include "atari.h"
 #include "cpu.h"
-#include "devices.h"
 #include "esc.h"
 #include "memory.h"
 #include "pia.h"
@@ -139,7 +138,7 @@ void ESC_Run(UBYTE esc_code)
 
 void ESC_PatchOS(void)
 {
-    int patched = Devices_PatchOS();
+    int patched = FALSE;
     if (myConfig.disk_speedup) {
         UWORD addr_l;
         UWORD addr_s;
@@ -215,7 +214,6 @@ void ESC_UpdatePatches(void)
         dCopyToMem(atari_os, 0xd800, 0x2800);
         /* Set patches */
         ESC_PatchOS();
-        Devices_UpdatePatches();
         break;
     case Atari800_MACHINE_XLXE:
         /* Don't patch if OS disabled */
@@ -226,7 +224,6 @@ void ESC_UpdatePatches(void)
         dCopyToMem(atari_os + 0x1800, 0xd800, 0x2800);
         /* Set patches */
         ESC_PatchOS();
-        Devices_UpdatePatches();
         break;
     default:
         break;

@@ -57,7 +57,6 @@
 #include "binload.h"
 #include "cartridge.h"
 #include "cpu.h"
-#include "devices.h"
 #include "gtia.h"
 #include "input.h"
 #include "memory.h"
@@ -122,7 +121,7 @@ int Atari800_InitialiseMachine(void)
 {
     ESC_ClearAll();
     MEMORY_InitialiseMachine();
-    Devices_UpdatePatches();
+    //Devices_UpdatePatches();
     return TRUE;
 }
 
@@ -195,7 +194,7 @@ int Atari800_Initialise(void)
 {
     int argc=0;
     char *argv[]={""};
-    Devices_Initialise(&argc, argv);
+    //Devices_Initialise(&argc, argv);
     RTIME_Initialise();
     SIO_Initialise (&argc, argv);
     
@@ -295,7 +294,7 @@ void Atari800_UpdatePatches(void) {
         dCopyToMem(atari_os, 0xd800, 0x2800);
         /* Set patches */
         ESC_PatchOS();
-        Devices_UpdatePatches();
+        //Devices_UpdatePatches();
         break;
     case MACHINE_XLXE:
         /* Don't patch if OS disabled */
@@ -306,7 +305,7 @@ void Atari800_UpdatePatches(void) {
         dCopyToMem(atari_os + 0x1800, 0xd800, 0x2800);
         /* Set patches */
         ESC_PatchOS();
-        Devices_UpdatePatches();
+        //Devices_UpdatePatches();
         break;
     default:
         break;
@@ -315,7 +314,7 @@ void Atari800_UpdatePatches(void) {
 
 void Atari800_Frame() 
 {
-    Devices_Frame();
+    //Devices_Frame();
     INPUT_Frame();
     GTIA_Frame();
     ANTIC_Frame(myConfig.skip_frames ? (gTotalAtariFrames & (myConfig.skip_frames==1 ? 0x03:0x01)) : TRUE);  // Skip every 4th frame... or every other frame if we are "aggressive"

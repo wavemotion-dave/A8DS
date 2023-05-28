@@ -85,10 +85,11 @@ UBYTE POT_input[8] = {228, 228, 228, 228, 228, 228, 228, 228};
 UBYTE PCPOT_input[8] = {112, 112, 112, 112, 112, 112,112, 112};
 UBYTE POT_all;
 UBYTE pot_scanline;
+ULONG random_scanline_counter;
 
 UBYTE poly9_lookup[511];
 UBYTE poly17_lookup[16385];
-static ULONG random_scanline_counter;
+
 
 ULONG POKEY_GetRandomCounter(void)
 {

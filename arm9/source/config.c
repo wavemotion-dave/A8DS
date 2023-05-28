@@ -574,7 +574,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 }
                 else
                 {
-                    sprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
+                    siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
                 dsPrintValue(1,5+optionHighlighted,0, strBuf);
                 if (optionHighlighted > 0) optionHighlighted--; else optionHighlighted=(idx-1);
@@ -584,7 +584,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 }
                 else
                 {
-                    sprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
+                    siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
             }
@@ -596,7 +596,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 }
                 else
                 {
-                    sprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
+                    siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
                 dsPrintValue(1,5+optionHighlighted,0, strBuf);
                 if (optionHighlighted < (idx-1)) optionHighlighted++;  else optionHighlighted=0;
@@ -606,7 +606,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 }
                 else
                 {
-                    sprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
+                    siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
             }
@@ -622,7 +622,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 else
                 {
                     *(Option_Table[option_table][optionHighlighted].option_val) = (*(Option_Table[option_table][optionHighlighted].option_val) + 1) % Option_Table[option_table][optionHighlighted].option_max;
-                    sprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
+                    siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
                 if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIXL.ROM")==0)
@@ -653,7 +653,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                         *(Option_Table[option_table][optionHighlighted].option_val) -= 1;
                     else
                          *(Option_Table[option_table][optionHighlighted].option_val) = Option_Table[option_table][optionHighlighted].option_max - 1;
-                    sprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
+                    siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
                 dsPrintValue(1,5+optionHighlighted,1, strBuf);
                 if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIXL.ROM")==0)
