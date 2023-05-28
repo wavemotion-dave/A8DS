@@ -67,6 +67,7 @@
 #define CART_MAX_SIZE   (1024 * 1024)
 
 extern UBYTE *cart_mem_ptr;
+extern UBYTE cart_image[];
 
 int CART_Insert(int enabled, int type, const char *filename);
 void CART_Remove(void);

@@ -77,10 +77,7 @@ static UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;   // The b
 
 int cart809F_enabled __attribute__((section(".dtcm"))) = FALSE;         // By default, no CART memory mapped to 0x8000 - 0x9FFF
 int cartA0BF_enabled __attribute__((section(".dtcm"))) = FALSE;         // By default, no CART memory mapped to 0xA000 - 0xBFFF
-UBYTE *mem_map[16] __attribute__((section(".dtcm")));                   // This is the magic that allows us to index into banks of memory quickly
-
-UBYTE *under_0x8, *under_0x9, *under_0xA, *under_0xB;
-
+UBYTE *mem_map[20] __attribute__((section(".dtcm")));                   // This is the magic that allows us to index into banks of memory quickly
 
 // ------------------------------------------------------------------
 // This is the huge 1MB+ buffer to support the maximum expanded RAM 
@@ -158,8 +155,6 @@ void MEMORY_InitialiseMachine(void)
     memset(memory, 0x00, sizeof(memory));
     memset(xe_mem_buffer, 0x00, sizeof(xe_mem_buffer));
     
-    debug[0]++;
-           
     // Set the memory map back to pointing to main memory
     for (int i=0; i<16; i++)
     {
@@ -169,10 +164,10 @@ void MEMORY_InitialiseMachine(void)
     // We have 4K of fast DTCM memory that we will map to a common 4K RAM space on the Atari
     mem_map[0x02]=fast_page-0x2000;
     
-    under_0x8 = mem_map[0x8];
-    under_0x9 = mem_map[0x9];
-    under_0xA = mem_map[0xA];
-    under_0xB = mem_map[0xB];
+    mem_map[UNDER_0x8] = mem_map[0x8];
+    mem_map[UNDER_0x9] = mem_map[0x9];
+    mem_map[UNDER_0xA] = mem_map[0xA];
+    mem_map[UNDER_0xB] = mem_map[0xB];
 
     switch (machine_type) 
     {
@@ -411,15 +406,15 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
             if (now_disabled) 
             {
                 /* Disable BASIC ROM */
-                mem_map[0xA] = under_0xA;
-                mem_map[0xB] = under_0xB;
+                mem_map[0xA] = mem_map[UNDER_0xA];
+                mem_map[0xB] = mem_map[UNDER_0xB];
                 SetRAM(0xa000, 0xbfff);
             }
             else 
             {
                 /* Enable BASIC ROM */
-                under_0xA = mem_map[0xA];
-                under_0xB = mem_map[0xB];
+                mem_map[UNDER_0xA] = mem_map[0xA];
+                mem_map[UNDER_0xB] = mem_map[0xB];
                 mem_map[0xA] = ROM_basic + 0x0000 - 0xA000;
                 mem_map[0xB] = ROM_basic + 0x1000 - 0xB000;
                 SetROM(0xa000, 0xbfff);
@@ -463,8 +458,8 @@ void Cart809F_Disable(void)
     if (cart809F_enabled) 
     {
         /* Restore 0x8000-0x9fff RAM */
-        mem_map[0x8] = under_0x8;
-        mem_map[0x9] = under_0x9;
+        mem_map[0x8] = mem_map[UNDER_0x8];
+        mem_map[0x9] = mem_map[UNDER_0x9];
         SetRAM(0x8000, 0x9fff);
         cart809F_enabled = FALSE;
     }
@@ -478,8 +473,8 @@ void Cart809F_Enable(void)
     if (!cart809F_enabled) 
     {
         /* Back-up 0x8000-0x9fff RAM */
-        under_0x8 = mem_map[0x8];
-        under_0x9 = mem_map[0x9];
+        mem_map[UNDER_0x8] = mem_map[0x8];
+        mem_map[UNDER_0x9] = mem_map[0x9];
         SetROM(0x8000, 0x9fff);
         cart809F_enabled = TRUE;
     }
@@ -495,8 +490,8 @@ void CartA0BF_Disable(void)
         /* No BASIC if not XL/XE or bit 1 of PORTB set */
         if ((machine_type != MACHINE_XLXE) || basic_disabled((UBYTE) (PORTB | PORTB_mask))) 
         {
-            mem_map[0xA] = under_0xA;
-            mem_map[0xB] = under_0xB;
+            mem_map[0xA] = mem_map[UNDER_0xA];
+            mem_map[0xB] = mem_map[UNDER_0xB];
             SetRAM(0xa000, 0xbfff);
         }
         else
@@ -527,8 +522,8 @@ void CartA0BF_Enable(void)
         if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02) || ((PORTB & 0x10) == 0 && (ram_size == 576 || ram_size == 1088)))) 
         {
             /* Back-up 0xa000-0xbfff RAM */
-            under_0xA = mem_map[0xA];
-            under_0xB = mem_map[0xB];
+            mem_map[UNDER_0xA] = mem_map[0xA];
+            mem_map[UNDER_0xB] = mem_map[0xB];
             SetROM(0xa000, 0xbfff);
         }
         cartA0BF_enabled = TRUE;

@@ -2014,8 +2014,6 @@ static void draw_antic_f_gtia_bug(int nchars, const UBYTE *ANTIC_memptr, UWORD *
     do_border();
 }
 
-/* pointer to a function that draws a single line of graphics */
-typedef void (*draw_antic_function)(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr);
 
 /* tables for all GTIA and ANTIC modes */
 static draw_antic_function draw_antic_table[4][16] = {
@@ -2039,6 +2037,62 @@ static draw_antic_function draw_antic_table[4][16] = {
         draw_antic_4_gtia11,    draw_antic_4_gtia11,    draw_antic_6_gtia11,    draw_antic_6_gtia11,
         draw_antic_8_gtia11,    draw_antic_9_gtia11,    draw_antic_a_gtia11,    draw_antic_9_gtia11,
         draw_antic_9_gtia11,    draw_antic_e_gtia11,    draw_antic_e_gtia11,    draw_antic_f_gtia11}};
+
+
+draw_antic_function antic_functions[] = 
+{
+    draw_antic_2,           draw_antic_2,           draw_antic_4,           
+    draw_antic_4,           draw_antic_6,           draw_antic_6,
+    draw_antic_8,           draw_antic_9,           draw_antic_a,
+    draw_antic_c,           draw_antic_c,           draw_antic_e,
+    draw_antic_e,           draw_antic_f,           draw_antic_2_gtia9,
+    draw_antic_4_gtia9,     draw_antic_6_gtia10,    draw_antic_8_gtia10,
+    draw_antic_9_gtia10,    draw_antic_a_gtia10,    draw_antic_e_gtia10,
+    draw_antic_f_gtia10,    draw_antic_2_gtia11,    draw_antic_4_gtia11,
+    draw_antic_6_gtia11,    draw_antic_8_gtia11,    draw_antic_9_gtia11,
+    draw_antic_a_gtia11,    draw_antic_e_gtia11,    draw_antic_f_gtia11,    
+    NULL
+};
+
+draw_antic_0_function antic_0_functions[] = 
+{
+    draw_antic_0,
+    draw_antic_0_gtia10,
+    draw_antic_0_gtia11,
+    NULL
+};
+
+UBYTE get_antic_function_idx(void)
+{
+    UBYTE idx=0;
+    while (antic_functions[idx] != NULL)
+    {
+        if ((void*)antic_functions[idx] == draw_antic_ptr) break;
+        idx++;
+    }
+    return idx;
+}
+
+void set_antic_function_by_idx(UBYTE idx)
+{
+    draw_antic_ptr = antic_functions[idx];
+}
+
+UBYTE get_antic_0_function_idx(void)
+{
+    UBYTE idx=0;
+    while (antic_0_functions[idx] != NULL)
+    {
+        if ((void*)antic_0_functions[idx] == draw_antic_0_ptr) break;
+        idx++;
+    }
+    return idx;
+}
+
+void set_antic_0_function_by_idx(UBYTE idx)
+{
+    draw_antic_0_ptr = antic_0_functions[idx];
+}
 
 /* pointer to current GTIA/ANTIC mode routine */
 draw_antic_function draw_antic_ptr = draw_antic_8;

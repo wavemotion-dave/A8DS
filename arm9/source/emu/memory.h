@@ -62,16 +62,17 @@ extern UBYTE memory[65536 + 2];
 extern UBYTE under_atarixl_os[16384];
 extern UBYTE fast_page[0x1000];
 extern UBYTE *atarixe_memory;
-extern ULONG atarixe_memory_size;
 extern int cart809F_enabled;
 extern int cartA0BF_enabled;
-extern UBYTE *mem_map[16];
-extern UBYTE *under_0x8;
-extern UBYTE *under_0x9;
-extern UBYTE *under_0xA;
-extern UBYTE *under_0xB;
+extern UBYTE *mem_map[20];
 extern UBYTE xe_mem_buffer[1024 * 1024];
 
+
+// We extend the mem_map[] by 4 entries to support some 'under' saving of memory blocks where the CART stuff goes...
+#define UNDER_0x8   16
+#define UNDER_0x9   17
+#define UNDER_0xA   18
+#define UNDER_0xB   19
 
 // ---------------------------------------------------------------------------------------
 // Handles bank switching - we use a memory map so we can easily swap in/out various

@@ -76,6 +76,7 @@
 
 /* pointer to a function that draws a single line of graphics */
 typedef void (*draw_antic_function)(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr);
+typedef void (*draw_antic_0_function)(void);
 
 extern draw_antic_function draw_antic_ptr;
 extern void (*draw_antic_0_ptr)(void);
@@ -164,6 +165,10 @@ void ANTIC_PutByte(UWORD addr, UBYTE byte);
 UBYTE ANTIC_GetDLByte(UWORD *paddr);
 UWORD ANTIC_GetDLWord(UWORD *paddr);
 void ANTIC_UpdateArtifacting(void);
+UBYTE get_antic_function_idx(void);
+void set_antic_function_by_idx(UBYTE idx);
+UBYTE get_antic_0_function_idx(void);
+void set_antic_0_function_by_idx(UBYTE idx);
 
 /* Video memory access */
 void video_memset(UBYTE *ptr, UBYTE val, ULONG size);

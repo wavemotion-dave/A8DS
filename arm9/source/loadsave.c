@@ -43,7 +43,7 @@
 
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
-#define SAVE_FILE_REV   0x9999
+#define SAVE_FILE_REV   0x0001
 
 char save_filename[300+4];
 
@@ -61,9 +61,113 @@ u32 XE_MemUsed(void)
 }
 
 
+// -------------------------------------------------------------------------------------------------------------
+// The memory mapping allows us to save/load types and offsets of the internal memory map. This is necessary
+// since every compilation might shift the memory buffers around and we don't want to save pointers to memory
+// since a re-load might not point to the same buffers. With this scheme, we can restore the proper pointers.
+// -------------------------------------------------------------------------------------------------------------
+#define MEM_MAP_UNKNOWN 0x00
+#define MEM_MAP_CART    0x01
+#define MEM_MAP_MAINMEM 0x02
+#define MEM_MAP_XEMEM   0x03
+#define MEM_MAP_FAST    0x04
+#define MEM_MAP_BASIC   0x05
+
+struct MemoryMap_t
+{
+    u8  where;
+    u32 offset;
+};
+
+struct MemoryMap_t ls_mem_map[20];
+
+void SaveMemMap()
+{
+    memset(ls_mem_map, 0x00, sizeof(ls_mem_map));
+    
+    for (int i=0; i<20; i++)
+    {
+        UBYTE *ptr = mem_map[i] + ((i<16) ? (i * 0x1000) : ((i-8)*0x1000));
+        if ((ptr >= memory) && (ptr <= (memory+65535)))
+        {
+            ls_mem_map[i].where = MEM_MAP_MAINMEM;
+            ls_mem_map[i].offset = ptr - memory;
+        }
+        else if ((ptr >= xe_mem_buffer) && (ptr <= (xe_mem_buffer+(1024*1024))))
+        {
+            ls_mem_map[i].where = MEM_MAP_XEMEM;
+            ls_mem_map[i].offset = ptr - xe_mem_buffer;
+        }
+        else if ((ptr >= cart_image) && (ptr <= (cart_image+(1024*1024))))
+        {
+            ls_mem_map[i].where = MEM_MAP_CART;
+            ls_mem_map[i].offset = ptr - cart_image;
+        }
+        else if ((ptr >= fast_page) && (ptr <= (fast_page+(0x1000))))
+        {
+            ls_mem_map[i].where = MEM_MAP_FAST;
+            ls_mem_map[i].offset = ptr - fast_page;
+        }            
+        else if ((ptr >= ROM_basic) && (ptr <= (ROM_basic+(0x2000))))
+        {
+            ls_mem_map[i].where = MEM_MAP_BASIC;
+            ls_mem_map[i].offset = ptr - ROM_basic;
+        }
+    }
+}
+
+u8 LoadMemMap()
+{
+    u8 err = 0;
+    for (int i=0; i<20; i++)
+    {
+        switch (ls_mem_map[i].where)
+        {
+            case MEM_MAP_MAINMEM:
+                mem_map[i] = memory + ls_mem_map[i].offset - (i * 0x1000);
+                break;
+            case MEM_MAP_XEMEM:
+                mem_map[i] = xe_mem_buffer + ls_mem_map[i].offset - (i * 0x1000);
+                break;
+            case MEM_MAP_CART:
+                mem_map[i] = cart_image + ls_mem_map[i].offset - (i * 0x1000);
+                break;
+            case MEM_MAP_FAST:
+                mem_map[i] = fast_page + ls_mem_map[i].offset - (i * 0x1000);
+                break;
+            case MEM_MAP_BASIC:
+                mem_map[i] = ROM_basic + ls_mem_map[i].offset - (i * 0x1000);
+                break;
+            default:
+                err = 1;
+                break;
+        }
+    }
+    return err;
+}
+
+#define XE_NULL         0
+#define XE_MAIN_MEM     1
+#define XE_EXTENDED     2
+
+u8 GetAnticXEType()
+{
+    if (antic_xe_ptr == NULL) return XE_NULL;
+    if (antic_xe_ptr == memory + 0x4000) return XE_MAIN_MEM;
+    return XE_EXTENDED;
+}
+
+void LoadAnticXE(u8 xeType, u32 offset)
+{
+    if (xeType == XE_NULL) antic_xe_ptr = NULL;
+    else if (xeType == XE_MAIN_MEM) antic_xe_ptr = memory + 0x4000;
+    else antic_xe_ptr = atarixe_memory + offset;
+}
+
+
 void SaveGame(void)
 {
-    
+    UWORD t0 = TIMER0_DATA;
     DIR* dir = opendir("sav");
     if (dir)
     {
@@ -91,14 +195,14 @@ void SaveGame(void)
         fwrite(fast_page,                       sizeof(fast_page),                      1, fp);
         fwrite(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
         fwrite(&cartA0BF_enabled,               sizeof(cartA0BF_enabled),               1, fp);
-        for (int i=0; i<16; i++)
-        {
-            fwrite(&mem_map[i],                 sizeof(mem_map[i]),                     1, fp);
-        }
-        fwrite(&under_0x8,                      sizeof(under_0x8),                      1, fp);
-        fwrite(&under_0x9,                      sizeof(under_0x9),                      1, fp);
-        fwrite(&under_0xA,                      sizeof(under_0xA),                      1, fp);
-        fwrite(&under_0xB,                      sizeof(under_0xB),                      1, fp);
+        
+        SaveMemMap();
+        fwrite(ls_mem_map,                      sizeof(ls_mem_map),                     1, fp);
+        
+        u8 xeType = GetAnticXEType();
+        u32 offset = (xeType == XE_EXTENDED ? (antic_xe_ptr-atarixe_memory) : 0);
+        fwrite(&xeType,                         sizeof(xeType),                         1, fp);
+        fwrite(&offset,                         sizeof(offset),                         1, fp);
         
         // CPU
         fwrite(&regPC,                          sizeof(regPC),                          1, fp);
@@ -126,7 +230,6 @@ void SaveGame(void)
         fwrite(&NMIEN,                          sizeof(NMIEN),                          1, fp);
         fwrite(&NMIST,                          sizeof(NMIST),                          1, fp);
         fwrite(&scrn_ptr,                       sizeof(scrn_ptr),                       1, fp);
-        fwrite(&antic_xe_ptr,                   sizeof(antic_xe_ptr),                   1, fp);
         fwrite(&break_ypos,                     sizeof(break_ypos),                     1, fp);
         fwrite(&ypos,                           sizeof(ypos),                           1, fp);
         fwrite(&wsync_halt,                     sizeof(wsync_halt),                     1, fp);
@@ -182,8 +285,10 @@ void SaveGame(void)
         fwrite(&pm_lookup_ptr,                  sizeof(pm_lookup_ptr),                  1, fp);
         fwrite(pm_scanline,                     sizeof(pm_scanline),                    1, fp);
         
-        fwrite(&draw_antic_ptr,                 sizeof(draw_antic_ptr),                 1, fp);
-        fwrite(&draw_antic_0_ptr,               sizeof(draw_antic_0_ptr),               1, fp);
+        UBYTE idx = get_antic_function_idx();
+        fwrite(&idx,                            sizeof(idx),                            1, fp);
+        idx = get_antic_0_function_idx();
+        fwrite(&idx,                            sizeof(idx),                            1, fp);
         
         // GTIA
         fwrite(&GRAFM,                          sizeof(GRAFM),                          1, fp);
@@ -312,8 +417,9 @@ void SaveGame(void)
         fwrite(&atari_frames,                   sizeof(atari_frames),                   1, fp);
         fwrite(&sound_idx,                      sizeof(sound_idx),                      1, fp);
         fwrite(&myPokeyBufIdx,                  sizeof(myPokeyBufIdx),                  1, fp);
+        fwrite(&t0,                             sizeof(t0),                             1, fp);
         
-        // XE Memory
+        // XE Memory - this is potentially big so we only save used memory which might shrink this considerably
         u32 mem_used = XE_MemUsed();
         fwrite(&mem_used,                       sizeof(mem_used),                       1, fp);
         fwrite(xe_mem_buffer,                   sizeof(UBYTE),                          mem_used, fp); 
@@ -335,7 +441,7 @@ void LoadGame(void)
     {
         u16 rev=0;
         // Revision
-        fread(&rev,                            sizeof(rev),                            1, fp);
+        fread(&rev,                                sizeof(rev),                            1, fp);
         
         if (rev == SAVE_FILE_REV)
         {            
@@ -346,14 +452,15 @@ void LoadGame(void)
             fread(fast_page,                       sizeof(fast_page),                      1, fp);
             fread(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
             fread(&cartA0BF_enabled,               sizeof(cartA0BF_enabled),               1, fp);
-            for (int i=0; i<16; i++)
-            {
-                fread(&mem_map[i],                 sizeof(mem_map[i]),                     1, fp);
-            }
-            fread(&under_0x8,                      sizeof(under_0x8),                      1, fp);
-            fread(&under_0x9,                      sizeof(under_0x9),                      1, fp);
-            fread(&under_0xA,                      sizeof(under_0xA),                      1, fp);
-            fread(&under_0xB,                      sizeof(under_0xB),                      1, fp);
+            
+            fread(ls_mem_map,                      sizeof(ls_mem_map),                     1, fp);
+            err = LoadMemMap();
+
+            u8 xeType = 0;
+            u32 offset = 0;
+            fread(&xeType,                         sizeof(xeType),                         1, fp);
+            fread(&offset,                         sizeof(offset),                         1, fp);
+            LoadAnticXE(xeType, offset);
 
             // CPU
             fread(&regPC,                          sizeof(regPC),                          1, fp);
@@ -381,7 +488,6 @@ void LoadGame(void)
             fread(&NMIEN,                          sizeof(NMIEN),                          1, fp);
             fread(&NMIST,                          sizeof(NMIST),                          1, fp);
             fread(&scrn_ptr,                       sizeof(scrn_ptr),                       1, fp);
-            fread(&antic_xe_ptr,                   sizeof(antic_xe_ptr),                   1, fp);
             fread(&break_ypos,                     sizeof(break_ypos),                     1, fp);
             fread(&ypos,                           sizeof(ypos),                           1, fp);
             fread(&wsync_halt,                     sizeof(wsync_halt),                     1, fp);
@@ -437,9 +543,12 @@ void LoadGame(void)
             fread(&pm_lookup_ptr,                  sizeof(pm_lookup_ptr),                  1, fp);
             fread(pm_scanline,                     sizeof(pm_scanline),                    1, fp);
 
-            fread(&draw_antic_ptr,                 sizeof(draw_antic_ptr),                 1, fp);
-            fread(&draw_antic_0_ptr,               sizeof(draw_antic_0_ptr),               1, fp);
-
+            UBYTE idx = 0;
+            fread(&idx,                            sizeof(idx),                            1, fp);
+            set_antic_function_by_idx(idx);
+            fread(&idx,                            sizeof(idx),                            1, fp);
+            set_antic_0_function_by_idx(idx);
+            
             // GTIA
             fread(&GRAFM,                          sizeof(GRAFM),                          1, fp);
             fread(&GRAFP0,                         sizeof(GRAFP0),                         1, fp);
@@ -565,8 +674,11 @@ void LoadGame(void)
             fread(&atari_frames,                   sizeof(atari_frames),                   1, fp);
             fread(&sound_idx,                      sizeof(sound_idx),                      1, fp);
             fread(&myPokeyBufIdx,                  sizeof(myPokeyBufIdx),                  1, fp);
+            UWORD t0;
+            fread(&t0,                             sizeof(t0),                             1, fp);
+            TIMER0_DATA = t0;
 
-            // XE Memory
+            // XE Memory - this is potentially big so we only save used memory which might shrink this considerably
             u32 mem_used = 0;
             fread(&mem_used,                        sizeof(mem_used),                      1, fp);
             fread(xe_mem_buffer,                    sizeof(UBYTE),                         mem_used, fp); 
