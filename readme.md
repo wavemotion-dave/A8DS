@@ -304,7 +304,7 @@ History :
 --------------------------------------------------------------------------------
 V3.6 : 29-May-2023 by wavemotion-dave
   * Added the ability to save and restore state - use the DOWN/UP icons on the main screen.
-  * Minor memory optmization to squeeze out another frame or two of performance.
+  * Minor memory optimization to squeeze out another frame or two of performance.
 
 V3.5 : 22-May-2023 by wavemotion-dave
   * Added 576K COMPY SHOP RAM type (with separate ANTIC access just like the 128K XE).
