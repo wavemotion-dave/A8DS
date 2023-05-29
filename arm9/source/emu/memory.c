@@ -73,8 +73,6 @@ rdfunc readmap[256] __attribute__((section(".dtcm")));                  // The r
 wrfunc writemap[256] __attribute__((section(".dtcm")));                 // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
 UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;         // Pointer to XE memory (expanded RAM)
 
-static UBYTE *memory_bank __attribute__((section(".dtcm"))) = memory;   // The bank of memory currently pointed to (or it may point to the 16K bank in main memory)
-
 int cart809F_enabled __attribute__((section(".dtcm"))) = FALSE;         // By default, no CART memory mapped to 0x8000 - 0x9FFF
 int cartA0BF_enabled __attribute__((section(".dtcm"))) = FALSE;         // By default, no CART memory mapped to 0xA000 - 0xBFFF
 UBYTE *mem_map[20] __attribute__((section(".dtcm")));                   // This is the magic that allows us to index into banks of memory quickly
@@ -225,7 +223,6 @@ void MEMORY_InitialiseMachine(void)
         }
         if (hole_end < 0xd000)
             SetROM(hole_end, 0xcfff);
-        SetROM(0xd800, 0xffff);
 
         readmap[0xd0] = GTIA_GetByte;
         readmap[0xd1] = PBI_GetByte;
@@ -315,6 +312,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         // --------------------------------------------------------------------------------
         if (bank != xe_bank) 
         {
+            UBYTE *memory_bank;
             if (bank == 0)
             {
                 memory_bank = memory;

@@ -43,7 +43,7 @@
 
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
-#define SAVE_FILE_REV   0x0001
+#define SAVE_FILE_REV   0x0002
 
 char save_filename[300+4];
 
@@ -116,7 +116,7 @@ void SaveMemMap()
     }
 }
 
-u8 LoadMemMap()
+u8 RestoreMemMap()
 {
     u8 err = 0;
     for (int i=0; i<20; i++)
@@ -146,6 +146,28 @@ u8 LoadMemMap()
     return err;
 }
 
+u8 saved_writemap[256];
+void SaveWriteMap(void)
+{
+    memset(saved_writemap, 0x00, sizeof(saved_writemap));
+    for (int i=0; i<256; i++)
+    {
+        if (writemap[i] == NULL) saved_writemap[i] = 0;
+        else if (writemap[i] == ROM_PutByte) saved_writemap[i] = 1;
+        else saved_writemap[i] = 2;        
+    }
+}
+
+void RestoreWriteMap(void)
+{
+    for (int i=0; i<256; i++)
+    {
+        if (saved_writemap[i] == 0) writemap[i] = NULL;
+        else if (saved_writemap[i] == 1) writemap[i] = ROM_PutByte;
+        // else do nothing... no change
+    }
+}
+    
 #define XE_NULL         0
 #define XE_MAIN_MEM     1
 #define XE_EXTENDED     2
@@ -195,6 +217,9 @@ void SaveGame(void)
         fwrite(fast_page,                       sizeof(fast_page),                      1, fp);
         fwrite(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
         fwrite(&cartA0BF_enabled,               sizeof(cartA0BF_enabled),               1, fp);
+
+        SaveWriteMap();
+        fwrite(saved_writemap,                  sizeof(saved_writemap),                 1, fp);
         
         SaveMemMap();
         fwrite(ls_mem_map,                      sizeof(ls_mem_map),                     1, fp);
@@ -453,8 +478,11 @@ void LoadGame(void)
             fread(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
             fread(&cartA0BF_enabled,               sizeof(cartA0BF_enabled),               1, fp);
             
+            fread(saved_writemap,                  sizeof(saved_writemap),                 1, fp);
+            RestoreWriteMap();
+            
             fread(ls_mem_map,                      sizeof(ls_mem_map),                     1, fp);
-            err = LoadMemMap();
+            err = RestoreMemMap();
 
             u8 xeType = 0;
             u32 offset = 0;
