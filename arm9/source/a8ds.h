@@ -1,5 +1,5 @@
 /*
- * A8DS.H contains externs and defines related to XEGS-DS emulator.
+ * A8DS.H contains externs and defines related to A8DS emulator.
  *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
  * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)

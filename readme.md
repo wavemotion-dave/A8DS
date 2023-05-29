@@ -105,6 +105,7 @@ Features :
 *  Built in Altirra OS (3.33) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware.
 *  High Score support for 10 scores per game
 *  Full configuration of DS keys to any Atari 8-bit joystick/key/button
+*  Save and Restore state so you can snap out the memory/CPU and restore it to pick back up exactly where you left off.
 
 Most things you should expect from an emulator. Games generally run full-speed
 with just a handful of exceptions. If you load a game and it doesn't load properly,
@@ -276,6 +277,14 @@ Buttons can be re-configured in the Options (GEAR icon... press X for the keyboa
  
 Tap the XEX icon or the Disk Drive to load a new game or the Door/Exit button to quit the emulator.
 
+Saving and Restoring Emulator State :
+-----------------------
+A8DS has the ability to save memory/cpu and restore it so you can snap out a save state and restore it back. Use the icons on the main screen.
+The DOWN arrow icon saves state (with confirmation).
+The UP arrow icon restores state (with confirmation).
+The .sav files have the same name as the game/rom you are playing and are stored in the 'sav' folder under where you keep your game roms. 
+Note: the emulator does not save startup information so you should let any game come up to the natural title screen before trying to restore state.
+
 Compile Instructions :
 -----------------------
 I'm using the following:
@@ -293,6 +302,10 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.6 : 29-May-2023 by wavemotion-dave
+  * Added the ability to save and restore state - use the DOWN/UP icons on the main screen.
+  * Minor memory optmization to squeeze out another frame or two of performance.
+
 V3.5 : 22-May-2023 by wavemotion-dave
   * Added 576K COMPY SHOP RAM type (with separate ANTIC access just like the 128K XE).
   * More cleanup and minor bug fixes across the board.

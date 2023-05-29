@@ -65,7 +65,7 @@
 #include "util.h"
 
 UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                  // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
-UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));            // This is the 16K of OS memory that co-insides with some of the RAM in the upper bank
+UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));            // This is the 16K of OS memory that co-insides with some of the RAM in the upper bank when > 48K
 
 UBYTE fast_page[0x1000] __attribute__((section(".dtcm")));              // Fast memory for the first 4K of main memory
 
@@ -73,16 +73,16 @@ rdfunc readmap[256] __attribute__((section(".dtcm")));                  // The r
 wrfunc writemap[256] __attribute__((section(".dtcm")));                 // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
 UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;         // Pointer to XE memory (expanded RAM)
 
-int cart809F_enabled __attribute__((section(".dtcm"))) = FALSE;         // By default, no CART memory mapped to 0x8000 - 0x9FFF
-int cartA0BF_enabled __attribute__((section(".dtcm"))) = FALSE;         // By default, no CART memory mapped to 0xA000 - 0xBFFF
-UBYTE *mem_map[20] __attribute__((section(".dtcm")));                   // This is the magic that allows us to index into banks of memory quickly
+UBYTE cart809F_enabled __attribute__((section(".dtcm"))) = FALSE;       // By default, no CART memory mapped to 0x8000 - 0x9FFF
+UBYTE cartA0BF_enabled __attribute__((section(".dtcm"))) = FALSE;       // By default, no CART memory mapped to 0xA000 - 0xBFFF
+UBYTE *mem_map[20] __attribute__((section(".dtcm")));                   // This is the magic that allows us to index into banks of memory quickly. 16 banks of 4K plus an additional 4 banks to handle the "under 0x8, 0x9, 0xA and 0xB" areas
 
 // ------------------------------------------------------------------
 // This is the huge 1MB+ buffer to support the maximum expanded RAM 
 // for the emulator. We support the 1088K version of the Atari XL/XE
 // which only a few games can even access...  The DS has 4MB of 
 // general RAM available and that must hold all our data plus the 
-// XEGS-DS.NDS executable itself. So this takes up a full 25% of our
+// A8DS.NDS executable itself. So this takes up a full 25% of our
 // available RAM. Stil... there isn't much else to do with the NDS
 // RAM so we may as well get the most out of it!  
 // ------------------------------------------------------------------
@@ -167,6 +167,8 @@ void MEMORY_InitialiseMachine(void)
     mem_map[UNDER_0xA] = mem_map[0xA];
     mem_map[UNDER_0xB] = mem_map[0xB];
 
+    antic_xe_ptr = NULL;
+    
     switch (machine_type) 
     {
     case MACHINE_OSA:
@@ -182,67 +184,39 @@ void MEMORY_InitialiseMachine(void)
             dFillMem(ram_size * 1024, 0xff, 0xd000 - ram_size * 1024);
             SetROM(ram_size * 1024, 0xcfff);
         }
-        readmap[0xd0] = GTIA_GetByte;
-        readmap[0xd1] = PBI_GetByte;
-        readmap[0xd2] = POKEY_GetByte;
-        readmap[0xd3] = PIA_GetByte;
-        readmap[0xd4] = ANTIC_GetByte;
-        readmap[0xd5] = CART_GetByte;
-        readmap[0xd6] = PBIM1_GetByte;
-        readmap[0xd7] = PBIM2_GetByte;
-        writemap[0xd0] = GTIA_PutByte;
-        writemap[0xd1] = PBI_PutByte;
-        writemap[0xd2] = POKEY_PutByte;
-        writemap[0xd3] = PIA_PutByte;
-        writemap[0xd4] = ANTIC_PutByte;
-        writemap[0xd5] = CART_PutByte;
-        writemap[0xd6] = PBIM1_PutByte;
-        writemap[0xd7] = PBIM2_PutByte;
         SetROM(0xd800, 0xffff);
         break;
             
     case MACHINE_XLXE:
-        SetAtariXLXEMemory();    
-            
-        int os_size = 0x4000;
-        int os_rom_start = 0x10000 - os_size;
-        int base_ram = ram_size > 64 ? 64 * 1024 : ram_size * 1024;
-        int hole_end = (os_rom_start < 0xd000 ? os_rom_start : 0xd000);
-        int hole_start = base_ram > hole_end ? hole_end : base_ram;
-        antic_xe_ptr = NULL;
-            
+        SetAtariXLXEMemory();
+        SetRAM(0x0000, 0xbfff);
+        SetROM(0xc000, 0xffff);
         memcpy(memory + 0xc000, atari_os, 0x4000);
         ESC_PatchOS();
-            
-        dFillMem(0x0000, 0x00, hole_start);
-        SetRAM(0x0000, hole_start - 1);
-        if (hole_start < hole_end) 
-        {
-            dFillMem(hole_start, 0xff, hole_end - hole_start);
-            SetROM(hole_start, hole_end - 1);
-        }
-        if (hole_end < 0xd000)
-            SetROM(hole_end, 0xcfff);
-
-        readmap[0xd0] = GTIA_GetByte;
-        readmap[0xd1] = PBI_GetByte;
-        readmap[0xd2] = POKEY_GetByte;
-        readmap[0xd3] = PIA_GetByte;
-        readmap[0xd4] = ANTIC_GetByte;
-        readmap[0xd5] = CART_GetByte;
-        readmap[0xd6] = PBIM1_GetByte;
-        readmap[0xd7] = PBIM2_GetByte;
-        writemap[0xd0] = GTIA_PutByte;
-        writemap[0xd1] = PBI_PutByte;
-        writemap[0xd2] = POKEY_PutByte;
-        writemap[0xd3] = PIA_PutByte;
-        writemap[0xd4] = ANTIC_PutByte;
-        writemap[0xd5] = CART_PutByte;
-        writemap[0xd6] = PBIM1_PutByte;
-        writemap[0xd7] = PBIM2_PutByte;
-        SetROM(0xd800, 0xffff);
         break;
     }
+
+    // ----------------------------------------------------------------
+    // Setup the D000-D800 area to point to all the various hardware 
+    // chips that trigger on reads and/or writes to that memory area.
+    // ----------------------------------------------------------------
+    readmap[0xd0] = GTIA_GetByte;
+    readmap[0xd1] = PBI_GetByte;
+    readmap[0xd2] = POKEY_GetByte;
+    readmap[0xd3] = PIA_GetByte;
+    readmap[0xd4] = ANTIC_GetByte;
+    readmap[0xd5] = CART_GetByte;
+    readmap[0xd6] = PBIM1_GetByte;
+    readmap[0xd7] = PBIM2_GetByte;
+    writemap[0xd0] = GTIA_PutByte;
+    writemap[0xd1] = PBI_PutByte;
+    writemap[0xd2] = POKEY_PutByte;
+    writemap[0xd3] = PIA_PutByte;
+    writemap[0xd4] = ANTIC_PutByte;
+    writemap[0xd5] = CART_PutByte;
+    writemap[0xd6] = PBIM1_PutByte;
+    writemap[0xd7] = PBIM2_PutByte;
+    
     AllocXEMemory();
     
     Cart809F_Disable();    
@@ -353,7 +327,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
                 break;
             }
         }
-    }
+    } // End of >64K
 
     /* Enable/disable OS ROM in 0xc000-0xcfff and 0xd800-0xffff */
     if ((oldval ^ byte) & 0x01) {

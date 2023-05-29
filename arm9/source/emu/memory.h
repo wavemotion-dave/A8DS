@@ -62,8 +62,8 @@ extern UBYTE memory[65536 + 2];
 extern UBYTE under_atarixl_os[16384];
 extern UBYTE fast_page[0x1000];
 extern UBYTE *atarixe_memory;
-extern int cart809F_enabled;
-extern int cartA0BF_enabled;
+extern UBYTE cart809F_enabled;
+extern UBYTE cartA0BF_enabled;
 extern UBYTE *mem_map[20];
 extern UBYTE xe_mem_buffer[1024 * 1024];
 

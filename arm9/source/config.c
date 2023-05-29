@@ -254,16 +254,6 @@ void ReadGameSettings(void)
 {
     FILE *fp;
 
-    // -------------------------------------------------------------------------
-    // We want to rename the older A8DS.DAT to the new rebranded A8DS.DAT
-    // -------------------------------------------------------------------------
-    fp = fopen("/data/XEGS-DS.DAT", "rb");
-    if (fp != NULL)
-    {
-        fclose(fp);
-        rename("/data/XEGS-DS.DAT", "/data/A8DS.DAT");
-    }
-    
     fp = fopen("/data/A8DS.DAT", "rb");
     if (fp != NULL)
     {

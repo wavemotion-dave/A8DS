@@ -35,7 +35,7 @@ void vblankIntro()
 // --------------------------------------------------------------------------
 // Intro with portabledev logo... Alekmaul did the initial translation 
 // of the Atari 800 emulator to the Nintendo DS and without that effort,
-// this new XEGS-DS version would not exist... so credit where credit due!
+// this new A8DS version would not exist... so credit where credit due!
 // --------------------------------------------------------------------------
 void intro_logo(void) 
 {

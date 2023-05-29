@@ -1,5 +1,5 @@
 /*
- * CPU.ITCM.C contains the emulation of the Core 6502 CPU on the Atari 800. 
+ * CPU.C contains the emulation of the Core 6502 CPU on the Atari 800. 
  * 
  * The baseline for this file is the Atari800 2.0.x source and has
  * been heavily modified for optimization on the Nintendo DS/DSi.

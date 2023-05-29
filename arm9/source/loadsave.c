@@ -43,7 +43,7 @@
 
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
-#define SAVE_FILE_REV   0x0002
+#define SAVE_FILE_REV   0x0003
 
 char save_filename[300+4];
 
@@ -187,6 +187,8 @@ void LoadAnticXE(u8 xeType, u32 offset)
 }
 
 
+u8 spare_bytes[256];
+
 void SaveGame(void)
 {
     UWORD t0 = TIMER0_DATA;
@@ -207,14 +209,15 @@ void SaveGame(void)
     {
         dsPrintValue(0,0,0, "SAVE");
         u16 rev = SAVE_FILE_REV;
+        memset(spare_bytes, 0x00, 256);
         
         // Revision
         fwrite(&rev,                            sizeof(rev),                            1, fp);
         
         // Memory
+        memcpy(memory+0x2000, fast_page, 0x1000);
         fwrite(memory,                          sizeof(memory),                         1, fp);
         fwrite(under_atarixl_os,                sizeof(under_atarixl_os),               1, fp);
-        fwrite(fast_page,                       sizeof(fast_page),                      1, fp);
         fwrite(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
         fwrite(&cartA0BF_enabled,               sizeof(cartA0BF_enabled),               1, fp);
 
@@ -228,6 +231,7 @@ void SaveGame(void)
         u32 offset = (xeType == XE_EXTENDED ? (antic_xe_ptr-atarixe_memory) : 0);
         fwrite(&xeType,                         sizeof(xeType),                         1, fp);
         fwrite(&offset,                         sizeof(offset),                         1, fp);
+        fwrite(spare_bytes,                     32,                                     1, fp);
         
         // CPU
         fwrite(&regPC,                          sizeof(regPC),                          1, fp);
@@ -241,6 +245,7 @@ void SaveGame(void)
         fwrite(&C,                              sizeof(C),                              1, fp);        
         fwrite(&IRQ,                            sizeof(IRQ),                            1, fp);
         fwrite(&cim_encountered,                sizeof(cim_encountered),                1, fp);
+        fwrite(spare_bytes,                     32,                                     1, fp);
         
         // ANTIC
         fwrite(ANTIC_memory,                    sizeof(ANTIC_memory),                   1, fp);
@@ -314,6 +319,7 @@ void SaveGame(void)
         fwrite(&idx,                            sizeof(idx),                            1, fp);
         idx = get_antic_0_function_idx();
         fwrite(&idx,                            sizeof(idx),                            1, fp);
+        fwrite(spare_bytes,                     32,                                     1, fp);
         
         // GTIA
         fwrite(&GRAFM,                          sizeof(GRAFM),                          1, fp);
@@ -372,6 +378,7 @@ void SaveGame(void)
         fwrite(grafp_ptr,                       sizeof(grafp_ptr),                      1, fp);
         fwrite(global_sizem,                    sizeof(global_sizem),                   1, fp);
         fwrite(PM_Width,                        sizeof(PM_Width),                       1, fp);       
+        fwrite(spare_bytes,                     32,                                     1, fp);
         
         // PIA
         fwrite(&PACTL,                          sizeof(PACTL),                          1, fp);
@@ -383,6 +390,7 @@ void SaveGame(void)
         fwrite(PORT_input,                      sizeof(PORT_input),                     1, fp);
         fwrite(&xe_bank,                        sizeof(xe_bank),                        1, fp);
         fwrite(&selftest_enabled,               sizeof(selftest_enabled),               1, fp);
+        fwrite(spare_bytes,                     32,                                     1, fp);
         
         
         // SIO
@@ -394,6 +402,7 @@ void SaveGame(void)
         fwrite(&DataIndex,                      sizeof(DataIndex),                      1, fp);
         fwrite(&TransferStatus,                 sizeof(TransferStatus),                 1, fp);
         fwrite(&ExpectedBytes,                  sizeof(ExpectedBytes),                  1, fp);
+        fwrite(spare_bytes,                     32,                                     1, fp);
 
         // POKEY
         fwrite(&pokeyBufIdx,                    sizeof(pokeyBufIdx),                    1, fp);
@@ -435,6 +444,7 @@ void SaveGame(void)
         fwrite(&P17,                            sizeof(P17),                            1, fp);
         fwrite(&Samp_n_max,                     sizeof(Samp_n_max),                     1, fp);
         fwrite(Samp_n_cnt,                      sizeof(Samp_n_cnt),                     1, fp);
+        fwrite(spare_bytes,                     32,                                     1, fp);
         
         //A8DS
         fwrite(&gTotalAtariFrames,              sizeof(gTotalAtariFrames),              1, fp);
@@ -443,23 +453,29 @@ void SaveGame(void)
         fwrite(&sound_idx,                      sizeof(sound_idx),                      1, fp);
         fwrite(&myPokeyBufIdx,                  sizeof(myPokeyBufIdx),                  1, fp);
         fwrite(&t0,                             sizeof(t0),                             1, fp);
+        fwrite(spare_bytes,                     32,                                     1, fp);
         
         // XE Memory - this is potentially big so we only save used memory which might shrink this considerably
         u32 mem_used = XE_MemUsed();
         fwrite(&mem_used,                       sizeof(mem_used),                       1, fp);
         fwrite(xe_mem_buffer,                   sizeof(UBYTE),                          mem_used, fp); 
+        
+        // Spare Bytes - Reduce this as needed to eat into spare memory
+        fwrite(spare_bytes,                     256,                                    1, fp); 
 
         fclose(fp);
     }
     else dsPrintValue(0,0,0, "ERR ");
     
-    WAITVBL;WAITVBL;WAITVBL;
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;
     dsPrintValue(0,0,0, "    ");
 }
 
 void LoadGame(void)
 {
     u8 err = false;
+    UWORD t0 = 0;
+    
     siprintf(save_filename, "sav/%s.sav", last_boot_file);
     FILE *fp = fopen(save_filename, "rb");
     if (fp != NULL)
@@ -473,8 +489,8 @@ void LoadGame(void)
             dsPrintValue(0,0,0, "LOAD");
             // Memory
             fread(memory,                          sizeof(memory),                         1, fp);
+            memcpy(fast_page, memory+0x2000, 0x1000);
             fread(under_atarixl_os,                sizeof(under_atarixl_os),               1, fp);
-            fread(fast_page,                       sizeof(fast_page),                      1, fp);
             fread(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
             fread(&cartA0BF_enabled,               sizeof(cartA0BF_enabled),               1, fp);
             
@@ -489,6 +505,7 @@ void LoadGame(void)
             fread(&xeType,                         sizeof(xeType),                         1, fp);
             fread(&offset,                         sizeof(offset),                         1, fp);
             LoadAnticXE(xeType, offset);
+            fread(spare_bytes,                     32,                                     1, fp);
 
             // CPU
             fread(&regPC,                          sizeof(regPC),                          1, fp);
@@ -502,6 +519,7 @@ void LoadGame(void)
             fread(&C,                              sizeof(C),                              1, fp);        
             fread(&IRQ,                            sizeof(IRQ),                            1, fp);
             fread(&cim_encountered,                sizeof(cim_encountered),                1, fp);
+            fread(spare_bytes,                     32,                                     1, fp);
 
             // ANTIC
             fread(ANTIC_memory,                    sizeof(ANTIC_memory),                   1, fp);
@@ -576,6 +594,8 @@ void LoadGame(void)
             set_antic_function_by_idx(idx);
             fread(&idx,                            sizeof(idx),                            1, fp);
             set_antic_0_function_by_idx(idx);
+
+            fread(spare_bytes,                     32,                                     1, fp);
             
             // GTIA
             fread(&GRAFM,                          sizeof(GRAFM),                          1, fp);
@@ -634,6 +654,7 @@ void LoadGame(void)
             fread(grafp_ptr,                       sizeof(grafp_ptr),                      1, fp);
             fread(global_sizem,                    sizeof(global_sizem),                   1, fp);
             fread(PM_Width,                        sizeof(PM_Width),                       1, fp);       
+            fread(spare_bytes,                     32,                                     1, fp);
 
             // PIA
             fread(&PACTL,                          sizeof(PACTL),                          1, fp);
@@ -645,6 +666,7 @@ void LoadGame(void)
             fread(PORT_input,                      sizeof(PORT_input),                     1, fp);
             fread(&xe_bank,                        sizeof(xe_bank),                        1, fp);
             fread(&selftest_enabled,               sizeof(selftest_enabled),               1, fp);
+            fread(spare_bytes,                     32,                                     1, fp);
 
             // SIO
             fread(SIO_drive_status,                sizeof(SIO_drive_status),               1, fp);
@@ -655,6 +677,7 @@ void LoadGame(void)
             fread(&DataIndex,                      sizeof(DataIndex),                      1, fp);
             fread(&TransferStatus,                 sizeof(TransferStatus),                 1, fp);
             fread(&ExpectedBytes,                  sizeof(ExpectedBytes),                  1, fp);
+            fread(spare_bytes,                     32,                                     1, fp);
             
             // POKEY
             fread(&pokeyBufIdx,                    sizeof(pokeyBufIdx),                    1, fp);
@@ -695,6 +718,7 @@ void LoadGame(void)
             fread(&P17,                            sizeof(P17),                            1, fp);
             fread(&Samp_n_max,                     sizeof(Samp_n_max),                     1, fp);
             fread(Samp_n_cnt,                      sizeof(Samp_n_cnt),                     1, fp);
+            fread(spare_bytes,                     32,                                     1, fp);
 
             //A8DS
             fread(&gTotalAtariFrames,              sizeof(gTotalAtariFrames),              1, fp);
@@ -702,25 +726,28 @@ void LoadGame(void)
             fread(&atari_frames,                   sizeof(atari_frames),                   1, fp);
             fread(&sound_idx,                      sizeof(sound_idx),                      1, fp);
             fread(&myPokeyBufIdx,                  sizeof(myPokeyBufIdx),                  1, fp);
-            UWORD t0;
             fread(&t0,                             sizeof(t0),                             1, fp);
-            TIMER0_DATA = t0;
+            fread(spare_bytes,                     32,                                     1, fp);
 
             // XE Memory - this is potentially big so we only save used memory which might shrink this considerably
             u32 mem_used = 0;
             fread(&mem_used,                        sizeof(mem_used),                      1, fp);
             fread(xe_mem_buffer,                    sizeof(UBYTE),                         mem_used, fp); 
+            
+            // Spare Bytes - Reduce this as needed to eat into spare memory
+            fread(spare_bytes,                     256,                                    1, fp); 
+            
         } else err = true;
         
         pm_dirty = true;
         fclose(fp);
     } else err = true;
     
-    
     if (err) dsPrintValue(0,0,0, "ERR ");
     
-    WAITVBL;WAITVBL;WAITVBL;
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;
     dsPrintValue(0,0,0, "    ");
+    if (!err) TIMER0_DATA = t0;
 }
 
 

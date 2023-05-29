@@ -791,7 +791,7 @@ void dsShowRomInfo(void)
 }
 
 // ----------------------------------------------------------------------------------------
-// The master routine to read in a XEX or ATR file. We check the XEGS.DAT configuration 
+// The master routine to read in a XEX or ATR file. We check the A8DS.DAT configuration 
 // database to see if the hash is found so we can restore user settings for the game.
 // ----------------------------------------------------------------------------------------
 unsigned int last_crc = 0x55AABEEF;
