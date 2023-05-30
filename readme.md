@@ -305,6 +305,7 @@ History :
 V3.6a : 30-May-2023 by wavemotion-dave
   * Hotfix for state save/restore. Sorry!
   * Added ability to map Joystick 2 so you can play twin-stick games like Robotron and Space Dungeon.
+  * Added ability to map the Atari HELP key.
   * Added 64K memory option and put all memory options in the correct order.
 
 V3.6 : 29-May-2023 by wavemotion-dave
