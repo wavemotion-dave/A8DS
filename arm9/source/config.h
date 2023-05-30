@@ -24,13 +24,13 @@
 // a database of user configured settings on a per-game basis. We use 
 // the HASH of a game so that we are not reliant on the filename (so even
 // if the user renames the file or moves it to another directory, the
-// hash will be the same). We picked 3000 as the maximum number of entries
+// hash will be the same). We picked 2500 as the maximum number of entries
 // which works out to a convienent 128K of SD flash memory which is 
 // enough for just about anyone and keeps us to using only 4 clusters 
 // on the SD card. A reasonable compropmise... 
 // ---------------------------------------------------------------------------
 #define MAX_GAME_SETTINGS       2500
-#define GAME_DATABASE_VERSION   0x08
+#define GAME_DATABASE_VERSION   0x09
 
 struct GameSettings_t
 {
@@ -114,6 +114,13 @@ extern UBYTE machine_type;
 extern UBYTE disable_basic;
 
 extern UWORD  ram_size;
+
+#define RAM_IDX_48K         0
+#define RAM_IDX_64K         1
+#define RAM_IDX_128K        2
+#define RAM_IDX_320K        3
+#define RAM_IDX_576K        4
+#define RAM_IDX_1088K       5
 
 extern UBYTE force_tv_type;
 extern UBYTE force_basic_type;

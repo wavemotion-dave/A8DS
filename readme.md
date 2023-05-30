@@ -302,6 +302,11 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.6a : 30-May-2023 by wavemotion-dave
+  * Hotfix for state save/restore. Sorry!
+  * Added ability to map Joystick 2 so you can play twin-stick games like Robotron and Space Dungeon.
+  * Added 64K memory option and put all memory options in the correct order.
+
 V3.6 : 29-May-2023 by wavemotion-dave
   * Added the ability to save and restore state - use the DOWN/UP icons on the main screen.
   * Minor memory optimization to squeeze out another frame or two of performance.

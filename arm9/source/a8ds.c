@@ -1903,94 +1903,88 @@ void dsMainLoop(void)
         // ---------------------------------------------------------------------------
         // Handle any of the 8 possible keys... ABXYLR and START, SELECT
         // ---------------------------------------------------------------------------
-        u8 joy_fired = false;
-        u8 joy_moved[4] = {0,0,0,0};   // Up, Down, Left, Right
+        u8 joy1_fired = false; u8 joy2_fired = false;
+        u8 joy1_moved[4] = {0,0,0,0};   // Up, Down, Left, Right - Joystick 1
+        u8 joy2_moved[4] = {0,0,0,0};   // Up, Down, Left, Right - Joystick 2
         for (int i=0; i<8; i++)
         {
             if (keys_pressed & nds_keys[i]) // Is this key pressed?
             {
                 switch (myConfig.keyMap[i])
                 {
-                    case 0:
-                        joy_fired = true;
-                        break;
-                    case 1:
-                        joy_moved[0] = true;
-                        break;
-                    case 2:
-                        joy_moved[1] = true;
-                        break;
-                    case 3:
-                        joy_moved[2] = true;
-                        break;
-                    case 4:
-                        joy_moved[3] = true;
-                        break;
-                    case 5:
-                        key_consol &= ~CONSOL_START;
-                        break;
-                    case 6:
-                        key_consol &= ~CONSOL_SELECT;
-                        break;
-                    case 7:
-                        key_consol &= ~CONSOL_OPTION;
-                        break;
-                    case 8:  key_code = AKEY_SPACE;     break;
-                    case 9:  key_code = AKEY_RETURN;    break;                        
-                    case 10: key_code = AKEY_ESCAPE;    break;
-                    case 11: key_code = AKEY_BREAK;     break;
-                    case 12: key_code = AKEY_A;         break;
-                    case 13: key_code = AKEY_B;         break;
-                    case 14: key_code = AKEY_C;         break;
-                    case 15: key_code = AKEY_D;         break;
-                    case 16: key_code = AKEY_E;         break;
-                    case 17: key_code = AKEY_F;         break;
-                    case 18: key_code = AKEY_G;         break;
-                    case 19: key_code = AKEY_H;         break;
-                    case 20: key_code = AKEY_I;         break;
-                    case 21: key_code = AKEY_J;         break;
-                    case 22: key_code = AKEY_K;         break;
-                    case 23: key_code = AKEY_L;         break;
-                    case 24: key_code = AKEY_M;         break;
-                    case 25: key_code = AKEY_N;         break;
-                    case 26: key_code = AKEY_O;         break;
-                    case 27: key_code = AKEY_P;         break;
-                    case 28: key_code = AKEY_Q;         break;
-                    case 29: key_code = AKEY_R;         break;
-                    case 30: key_code = AKEY_S;         break;
-                    case 31: key_code = AKEY_T;         break;
-                    case 32: key_code = AKEY_U;         break;
-                    case 33: key_code = AKEY_V;         break;
-                    case 34: key_code = AKEY_W;         break;
-                    case 35: key_code = AKEY_X;         break;
-                    case 36: key_code = AKEY_Y;         break;
-                    case 37: key_code = AKEY_Z;         break;
-                    case 38: key_code = AKEY_0;         break;
-                    case 39: key_code = AKEY_1;         break;
-                    case 40: key_code = AKEY_2;         break;
-                    case 41: key_code = AKEY_3;         break;
-                    case 42: key_code = AKEY_4;         break;
-                    case 43: key_code = AKEY_5;         break;
-                    case 44: key_code = AKEY_6;         break;
-                    case 45: key_code = AKEY_7;         break;
-                    case 46: key_code = AKEY_8;         break;
-                    case 47: key_code = AKEY_9;         break;
-                    case 48: key_code = AKEY_UP;        break;
-                    case 49: key_code = AKEY_DOWN;      break;
-                    case 50: key_code = AKEY_LEFT;      break;
-                    case 51: key_code = AKEY_RIGHT;     break;
-                    case 52: key_code = AKEY_NONE;      break;
-                    case 53: key_code = AKEY_NONE;      break;
-                    case 54: key_code = AKEY_NONE;      break;
-                    case 55: screen_slide_y = 12;  dampen_slide_y = 6;     break;
-                    case 56: screen_slide_y = 24;  dampen_slide_y = 6;     break;
-                    case 57: screen_slide_y = -12; dampen_slide_y = 6;     break;
-                    case 58: screen_slide_y = -24; dampen_slide_y = 6;     break;
-                    case 59: screen_slide_x = 32;  dampen_slide_x = 6;     break;
-                    case 60: screen_slide_x = 64;  dampen_slide_x = 6;     break;
-                    case 61: screen_slide_x = -32; dampen_slide_x = 6;     break;
-                    case 62: screen_slide_x = -64; dampen_slide_x = 6;     break;
-                    case 63:
+                    case 0: joy1_fired = true;              break;
+                    case 1: joy1_moved[0] = true;           break;
+                    case 2: joy1_moved[1] = true;           break;
+                    case 3: joy1_moved[2] = true;           break;
+                    case 4: joy1_moved[3] = true;           break;
+                    case 5: joy2_fired = true;              break;
+                    case 6: joy2_moved[0] = true;           break;
+                    case 7: joy2_moved[1] = true;           break;
+                    case 8: joy2_moved[2] = true;           break;
+                    case 9: joy2_moved[3] = true;           break;
+                        
+                    case 10: key_consol &= ~CONSOL_START;   break;
+                    case 11: key_consol &= ~CONSOL_SELECT;  break;
+                    case 12: key_consol &= ~CONSOL_OPTION;  break;
+                    case 13: key_code = AKEY_HELP;          break;
+                        
+                    case 14:  key_code = AKEY_SPACE;        break;
+                    case 15:  key_code = AKEY_RETURN;       break;                        
+                    case 16: key_code = AKEY_ESCAPE;        break;
+                    case 17: key_code = AKEY_BREAK;         break;
+                    case 18: key_code = AKEY_A;             break;
+                    case 19: key_code = AKEY_B;             break;
+                    case 20: key_code = AKEY_C;             break;
+                    case 21: key_code = AKEY_D;             break;
+                    case 22: key_code = AKEY_E;             break;
+                    case 23: key_code = AKEY_F;             break;
+                    case 24: key_code = AKEY_G;             break;
+                    case 25: key_code = AKEY_H;             break;
+                    case 26: key_code = AKEY_I;             break;
+                    case 27: key_code = AKEY_J;             break;
+                    case 28: key_code = AKEY_K;             break;
+                    case 29: key_code = AKEY_L;             break;
+                    case 30: key_code = AKEY_M;             break;
+                    case 31: key_code = AKEY_N;             break;
+                    case 32: key_code = AKEY_O;             break;
+                    case 33: key_code = AKEY_P;             break;
+                    case 34: key_code = AKEY_Q;             break;
+                    case 35: key_code = AKEY_R;             break;
+                    case 36: key_code = AKEY_S;             break;
+                    case 37: key_code = AKEY_T;             break;
+                    case 38: key_code = AKEY_U;             break;
+                    case 39: key_code = AKEY_V;             break;
+                    case 40: key_code = AKEY_W;             break;
+                    case 41: key_code = AKEY_X;             break;
+                    case 42: key_code = AKEY_Y;             break;
+                    case 43: key_code = AKEY_Z;             break;
+                    case 44: key_code = AKEY_0;             break;
+                    case 45: key_code = AKEY_1;             break;
+                    case 46: key_code = AKEY_2;             break;
+                    case 47: key_code = AKEY_3;             break;
+                    case 48: key_code = AKEY_4;             break;
+                    case 49: key_code = AKEY_5;             break;
+                    case 50: key_code = AKEY_6;             break;
+                    case 51: key_code = AKEY_7;             break;
+                    case 52: key_code = AKEY_8;             break;
+                    case 53: key_code = AKEY_9;             break;
+                    case 54: key_code = AKEY_UP;            break;
+                    case 55: key_code = AKEY_DOWN;          break;
+                    case 56: key_code = AKEY_LEFT;          break;
+                    case 57: key_code = AKEY_RIGHT;         break;
+                    case 58: key_code = AKEY_NONE;          break;
+                    case 59: key_code = AKEY_NONE;          break;
+                    case 60: key_code = AKEY_NONE;          break;
+                        
+                    case 61: screen_slide_y = 12;  dampen_slide_y = 6;     break;
+                    case 62: screen_slide_y = 24;  dampen_slide_y = 6;     break;
+                    case 63: screen_slide_y = -12; dampen_slide_y = 6;     break;
+                    case 64: screen_slide_y = -24; dampen_slide_y = 6;     break;
+                    case 65: screen_slide_x = 32;  dampen_slide_x = 6;     break;
+                    case 66: screen_slide_x = 64;  dampen_slide_x = 6;     break;
+                    case 67: screen_slide_x = -32; dampen_slide_x = 6;     break;
+                    case 68: screen_slide_x = -64; dampen_slide_x = 6;     break;
+                    case 69:
                         if (gTotalAtariFrames & 1)  // Every other frame...
                         {
                             if ((keys_pressed & KEY_UP))    myConfig.yOffset++;
@@ -1999,7 +1993,7 @@ void dsMainLoop(void)
                             if ((keys_pressed & KEY_RIGHT)) myConfig.xOffset--;
                         }
                         break;
-                    case 64:
+                    case 70:
                         if (gTotalAtariFrames & 1)  // Every other frame...
                         {
                             if ((keys_pressed & KEY_UP))     if (myConfig.yScale <= 256) myConfig.yScale++;
@@ -2016,12 +2010,12 @@ void dsMainLoop(void)
         // Handle the NDS D-Pad which usually just controlls a joystick connected to the Player 1 PORT.
         // Only handle UP/DOWN/LEFT/RIGHT if shoulder buttons are not pressed (those are handled below)
         // ---------------------------------------------------------------------------------------------
-        if (myConfig.dpad_type == 2) // Diagonals (for Q-Bert like games)
+        if (myConfig.dpad_type == 2) // Diagonals (for Q-Bert like games - only supported on Joystick 1)
         {
-            if (keys_pressed & KEY_UP)      {joy_moved[0] = true; joy_moved[3] = true;}
-            if (keys_pressed & KEY_LEFT)    {joy_moved[0] = true; joy_moved[2] = true;}
-            if (keys_pressed & KEY_RIGHT)   {joy_moved[1] = true; joy_moved[3] = true;}
-            if (keys_pressed & KEY_DOWN)    {joy_moved[1] = true; joy_moved[2] = true;}
+            if (keys_pressed & KEY_UP)      {joy1_moved[0] = true; joy1_moved[3] = true;}
+            if (keys_pressed & KEY_LEFT)    {joy1_moved[0] = true; joy1_moved[2] = true;}
+            if (keys_pressed & KEY_RIGHT)   {joy1_moved[1] = true; joy1_moved[3] = true;}
+            if (keys_pressed & KEY_DOWN)    {joy1_moved[1] = true; joy1_moved[2] = true;}
         }
         else if (myConfig.dpad_type == 3) // Cursor Keys
         {
@@ -2030,49 +2024,48 @@ void dsMainLoop(void)
             if (keys_pressed & KEY_RIGHT)   {key_code = AKEY_RIGHT;}
             if (keys_pressed & KEY_DOWN)    {key_code = AKEY_DOWN;}
         }
-        else // Normal Joystick use...
+        else if (myConfig.dpad_type == 1) // Joystick Player 2
         {
-            if (keys_pressed & KEY_UP)      {joy_moved[0] = true;}
-            if (keys_pressed & KEY_DOWN)    {joy_moved[1] = true;}
-            if (keys_pressed & KEY_LEFT)    {joy_moved[2] = true;}
-            if (keys_pressed & KEY_RIGHT)   {joy_moved[3] = true;}
+            if (keys_pressed & KEY_UP)      {joy2_moved[0] = true;}
+            if (keys_pressed & KEY_DOWN)    {joy2_moved[1] = true;}
+            if (keys_pressed & KEY_LEFT)    {joy2_moved[2] = true;}
+            if (keys_pressed & KEY_RIGHT)   {joy2_moved[3] = true;}
+        }
+        else                              // Joystick Player 1 is the default
+        {
+            if (keys_pressed & KEY_UP)      {joy1_moved[0] = true;}
+            if (keys_pressed & KEY_DOWN)    {joy1_moved[1] = true;}
+            if (keys_pressed & KEY_LEFT)    {joy1_moved[2] = true;}
+            if (keys_pressed & KEY_RIGHT)   {joy1_moved[3] = true;}
         }
            
         // --------------------------------------------------------------------------
         // If any DS key resulted in the fire button being pressed, handle that here
         // --------------------------------------------------------------------------
-        if (myConfig.dpad_type == 1)
-            trig1 = (joy_fired ? 0 : 1);
-        else
-            trig0 = (joy_fired ? 0 : 1);
+        trig0 = (joy1_fired ? 0 : 1);
+        trig1 = (joy2_fired ? 0 : 1);
             
         // -----------------------------------------------------------------------
         // If any DS key resulted in a joystick being moved, handle that here
         // joy_moved[] array is: Up, Down, Left, Right
         // -----------------------------------------------------------------------
-        if (myConfig.dpad_type == 1) // Is this player 2 Joystick?
-        {
-            if      (joy_moved[0] && joy_moved[2])    stick1 = STICK_UL;
-            else if (joy_moved[0] && joy_moved[3])    stick1 = STICK_UR;
-            else if (joy_moved[1] && joy_moved[2])    stick1 = STICK_LL;
-            else if (joy_moved[1] && joy_moved[3])    stick1 = STICK_LR;
-            else if (joy_moved[0])                    stick1 = STICK_FORWARD;
-            else if (joy_moved[1])                    stick1 = STICK_BACK;
-            else if (joy_moved[2])                    stick1 = STICK_LEFT;
-            else if (joy_moved[3])                    stick1 = STICK_RIGHT;
-        }
-        else  // Must be the player 1 joystick...
-        {
-            if      (joy_moved[0] && joy_moved[2])    stick0 = STICK_UL;
-            else if (joy_moved[0] && joy_moved[3])    stick0 = STICK_UR;
-            else if (joy_moved[1] && joy_moved[2])    stick0 = STICK_LL;
-            else if (joy_moved[1] && joy_moved[3])    stick0 = STICK_LR;
-            else if (joy_moved[0])                    stick0 = STICK_FORWARD;
-            else if (joy_moved[1])                    stick0 = STICK_BACK;
-            else if (joy_moved[2])                    stick0 = STICK_LEFT;
-            else if (joy_moved[3])                    stick0 = STICK_RIGHT;
-        }
-
+        if      (joy1_moved[0] && joy1_moved[2])   stick0 = STICK_UL;
+        else if (joy1_moved[0] && joy1_moved[3])   stick0 = STICK_UR;
+        else if (joy1_moved[1] && joy1_moved[2])   stick0 = STICK_LL;
+        else if (joy1_moved[1] && joy1_moved[3])   stick0 = STICK_LR;
+        else if (joy1_moved[0])                    stick0 = STICK_FORWARD;
+        else if (joy1_moved[1])                    stick0 = STICK_BACK;
+        else if (joy1_moved[2])                    stick0 = STICK_LEFT;
+        else if (joy1_moved[3])                    stick0 = STICK_RIGHT;
+            
+        if      (joy2_moved[0] && joy2_moved[2])   stick1 = STICK_UL;
+        else if (joy2_moved[0] && joy2_moved[3])   stick1 = STICK_UR;
+        else if (joy2_moved[1] && joy2_moved[2])   stick1 = STICK_LL;
+        else if (joy2_moved[1] && joy2_moved[3])   stick1 = STICK_LR;
+        else if (joy2_moved[0])                    stick1 = STICK_FORWARD;
+        else if (joy2_moved[1])                    stick1 = STICK_BACK;
+        else if (joy2_moved[2])                    stick1 = STICK_LEFT;
+        else if (joy2_moved[3])                    stick1 = STICK_RIGHT;
             
         // ----------------------------------------------------------------------
         // This is stuff that happens more rarely... like once per frame or two.

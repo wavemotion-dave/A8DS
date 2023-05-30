@@ -66,7 +66,59 @@ UBYTE force_basic_type    = 99;               // When selecting a game, the user
 UBYTE machine_type     = MACHINE_XLXE;
 UBYTE disable_basic    = TRUE;
 
-UWORD  ram_size         = RAM_128K;        // We allow RAM_128K or RAM_320_RAMBO, RAM_1088K and for backwards compatibility RAM_48K
+UWORD  ram_size         = RAM_128K;        // We allow everything from the backwards compatible 48K to the massive 1088K
+
+u8 UpgradeConfig(void)
+{
+    u8 bInitNeeded = true;  // We only handle some upgrades.. default to requiring a full config re-init unless we prove otherwise
+    
+    // ---------------------------------------------------------------------------------
+    // We can handle an upgrade from REV 08 to 09 as the changes are not structural...
+    // ---------------------------------------------------------------------------------
+    if (GameDB.db_version == 0x08)
+    {
+        // -----------------------------------------------------------------------------------------------------------
+        // For rev 09 we put the RAM options in proper order and added 64K. So we cross-map to correct this...
+        // -----------------------------------------------------------------------------------------------------------
+        if      (GameDB.default_ram_type == 0) GameDB.default_ram_type = RAM_IDX_128K;
+        else if (GameDB.default_ram_type == 1) GameDB.default_ram_type = RAM_IDX_320K;
+        else if (GameDB.default_ram_type == 2) GameDB.default_ram_type = RAM_IDX_1088K;
+        else if (GameDB.default_ram_type == 3) GameDB.default_ram_type = RAM_IDX_576K;
+        else                                   GameDB.default_ram_type = RAM_IDX_48K;
+        
+        for (int i=0; i<MAX_GAME_SETTINGS; i++)
+        {
+            if      (GameDB.GameSettings[i].ram_type == 0) GameDB.GameSettings[i].ram_type = RAM_IDX_128K;
+            else if (GameDB.GameSettings[i].ram_type == 1) GameDB.GameSettings[i].ram_type = RAM_IDX_320K;
+            else if (GameDB.GameSettings[i].ram_type == 2) GameDB.GameSettings[i].ram_type = RAM_IDX_1088K;
+            else if (GameDB.GameSettings[i].ram_type == 3) GameDB.GameSettings[i].ram_type = RAM_IDX_576K;
+            else                                           GameDB.GameSettings[i].ram_type = RAM_IDX_48K;
+        }
+
+        // -----------------------------------------------------------------------------------------------------------
+        // For rev 09 we added Joystick 2 mapping so we need to add an index of 5 to the key maps to align things...
+        // -----------------------------------------------------------------------------------------------------------
+        for (int j=0; j<8; j++)
+        {
+            if ((GameDB.default_keyMap[j] >= 5) && (GameDB.default_keyMap[j] <= 7)) GameDB.default_keyMap[j] += 5;  // Make room for the new Joystick stuff...
+            else if (GameDB.default_keyMap[j] >= 8) GameDB.default_keyMap[j] += 6;  // Make room for the new Joystick stuff...
+        }
+        
+        for (int i=0; i<MAX_GAME_SETTINGS; i++)
+        {
+            for (int j=0; j<8; j++)
+            {
+                if ((GameDB.GameSettings[i].keyMap[j] >= 5) && (GameDB.GameSettings[i].keyMap[j] <= 7)) GameDB.GameSettings[i].keyMap[j] += 5;  // Make room for the new Joystick stuff...
+                else if (GameDB.GameSettings[i].keyMap[j] >= 8) GameDB.GameSettings[i].keyMap[j] += 6;  // Make room for the new Joystick stuff...
+            }
+        }
+        
+        GameDB.db_version = GAME_DATABASE_VERSION;
+        
+        bInitNeeded = false;    // We have patched up the config database to rev 09... carry on...
+    }
+    return bInitNeeded;
+}
 
 void InitGameSettings(void)
 {
@@ -84,15 +136,16 @@ void InitGameSettings(void)
     GameDB.default_skip_frames = (isDSiMode() ? 0:1);   // For older DS models, we skip frames to get full speed...
     GameDB.default_os_type = (bAtariOS ? OS_ATARI_XL : OS_ALTIRRA_XL);
     GameDB.default_blending = 6;
+    GameDB.default_ram_type = RAM_IDX_128K;
     GameDB.default_alphaBlend = 0;
     GameDB.default_keyMap[DB_KEY_A] = 0;
     GameDB.default_keyMap[DB_KEY_B] = 0;
-    GameDB.default_keyMap[DB_KEY_X] = 8;
-    GameDB.default_keyMap[DB_KEY_Y] = 9;
-    GameDB.default_keyMap[DB_KEY_L] = 64;
-    GameDB.default_keyMap[DB_KEY_R] = 63;
-    GameDB.default_keyMap[DB_KEY_STA] = 5;
-    GameDB.default_keyMap[DB_KEY_SEL] = 6;
+    GameDB.default_keyMap[DB_KEY_X] = 13;
+    GameDB.default_keyMap[DB_KEY_Y] = 14;
+    GameDB.default_keyMap[DB_KEY_L] = 69;
+    GameDB.default_keyMap[DB_KEY_R] = 68;
+    GameDB.default_keyMap[DB_KEY_STA] = 10;
+    GameDB.default_keyMap[DB_KEY_SEL] = 11;
     GameDB.db_version = GAME_DATABASE_VERSION;
 }
 
@@ -104,11 +157,28 @@ void SetRamSizeAndOS(void)
     // ----------------------------------------------------------------------
     // Map the  ram_type to actual ram_size for use by the emulator...
     // ----------------------------------------------------------------------
-    if      (myConfig.ram_type == 0) ram_size = RAM_128K;
-    else if (myConfig.ram_type == 1) ram_size = RAM_320_RAMBO;
-    else if (myConfig.ram_type == 2) ram_size = RAM_1088K;
-    else if (myConfig.ram_type == 3) ram_size = RAM_576_COMPY;
-    else                             ram_size = RAM_48K;
+    switch (myConfig.ram_type)
+    {
+        case RAM_IDX_48K:
+            ram_size = RAM_48K;
+            break;
+        case RAM_IDX_64K:
+            ram_size = RAM_64K;
+            break;
+        case RAM_IDX_128K:
+            ram_size = RAM_128K;
+            break;
+        case RAM_IDX_320K:
+            ram_size = RAM_320_RAMBO;
+            break;
+        case RAM_IDX_576K:
+            ram_size = RAM_576_COMPY;
+            break;
+        default:
+        case RAM_IDX_1088K:
+            ram_size = RAM_1088K;
+            break;
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Sanity check... make sure if the user chose some odd combo of RAM and OS we fix it up...
@@ -253,6 +323,7 @@ void WriteGlobalSettings(void)
 void ReadGameSettings(void)
 {
     FILE *fp;
+    u8 bInitNeeded = false;
 
     fp = fopen("/data/A8DS.DAT", "rb");
     if (fp != NULL)
@@ -266,7 +337,20 @@ void ReadGameSettings(void)
         {
                checksum += *ptr;
         }
-        if ((GameDB.db_version != GAME_DATABASE_VERSION) || (GameDB.checksum != checksum))
+        
+        // If checksum is bad, we must re-init. Can't trust the file...
+        if (GameDB.checksum != checksum)
+        {
+            bInitNeeded = true;
+        }
+        
+        // If the database version is old but checksum is good.... we might be able to update the config
+        if ((GameDB.db_version != GAME_DATABASE_VERSION) && (GameDB.checksum == checksum))
+        {
+            bInitNeeded = UpgradeConfig();  // See if we can upgrade the config database automatically
+        }
+        
+        if (bInitNeeded)
         {
             InitGameSettings();
         }
@@ -286,7 +370,6 @@ void ReadGameSettings(void)
     myConfig.keyboard_type      = GameDB.default_keyboard_type;
     myConfig.key_click_disable  = GameDB.default_key_click_disable;
     myConfig.blending           = GameDB.default_blending;
-    myConfig.ram_type           = GameDB.default_ram_type;
     myConfig.alphaBlend         = GameDB.default_alphaBlend;
     myConfig.emulatorText       = true;
     
@@ -417,7 +500,7 @@ void dsWriteGlobalConfig(void)
 struct options_t
 {
     char *label;
-    char *option[70];
+    char *option[72];
     UBYTE *option_val;
     UBYTE option_type;
     UBYTE option_max;
@@ -431,7 +514,8 @@ struct options_t
 #define OPT_KEYSEL  1
 #define OPT_NUMERIC 2
 
-#define KEY_MAP_TEXT {"JOY FIRE", "JOY UP", "JOY DOWN", "JOY LEFT", "JOY RIGHT", "CONSOLE START", "CONSOLE SEL", "CONSOLE OPT", "KEY SPACE", "KEY RETURN", "KEY ESC", "KEY BREAK",  \
+#define KEY_MAP_TEXT {"JOY 1 FIRE", "JOY 1 UP", "JOY 1 DOWN", "JOY 1 LEFT", "JOY 1 RIGHT", "JOY 2 FIRE", "JOY 2 UP", "JOY 2 DOWN", "JOY 2 LEFT", "JOY 2 RIGHT", \
+                      "CONSOLE START", "CONSOLE SEL", "CONSOLE OPT", "CONSOLE HELP", "KEY SPACE", "KEY RETURN", "KEY ESC", "KEY BREAK",  \
                       "KEY A", "KEY B", "KEY C", "KEY D", "KEY E", "KEY F", "KEY G", "KEY H", "KEY I", "KEY J", "KEY K", "KEY L", "KEY M", "KEY N", "KEY O",                        \
                       "KEY P", "KEY Q", "KEY R", "KEY S", "KEY T", "KEY U", "KEY V", "KEY W", "KEY X", "KEY Y", "KEY Z", "KEY 0", "KEY 1", "KEY 2", "KEY 3",                        \
                       "KEY 4", "KEY 5", "KEY 6", "KEY 7", "KEY 8", "KEY 9", "KEY UP", "KEY DOWN", "KEY LEFT", "KEY RIGHT", "KEY SPARE1", "KEY SPARE2",                              \
@@ -448,8 +532,8 @@ const struct options_t Option_Table[2][20] =
     // Page 1
     {
         {"TV TYPE",     {"NTSC",        "PAL"},                             &myConfig.tv_type,              OPT_NORMAL, 2,   "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
-        {"MACHINE TYPE",{"128K XL/XE",  "320K RAMBO", "1088K RAMBO", 
-                         "576K COMPY",  "48K ATARI800"},                    &myConfig.ram_type,             OPT_NORMAL, 5,   "128K STANDARD FOR ",   "MOST GAMES. 320K /",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
+        {"MACHINE TYPE",{"48K ATARI800", "64K XL/XE",  "128K XL/XE",
+                         "320K RAMBO",   "576K COMPY", "1088K RAMBO"},      &myConfig.ram_type,             OPT_NORMAL, 6,   "64K/128K FOR MOST ",   "GAMES. 320K/576K/ ",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
         {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",
                          "ALTIRRA 800", "ATARIOSB.ROM"},                    &myConfig.os_type,              OPT_NORMAL, 4,   "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
         {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &myConfig.basic_type,           OPT_NORMAL, 3,   "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
@@ -472,14 +556,14 @@ const struct options_t Option_Table[2][20] =
     },
     // Page 2
     {
-        {"A BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[0],            OPT_KEYSEL, 65,  "SET THE A KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"B BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[1],            OPT_KEYSEL, 65,  "SET THE B KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"X BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[2],            OPT_KEYSEL, 65,  "SET THE X KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"Y BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[3],            OPT_KEYSEL, 65,  "SET THE Y KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"L BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[4],            OPT_KEYSEL, 65,  "SET THE L KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"R BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[5],            OPT_KEYSEL, 65,  "SET THE R KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"START BTN",   KEY_MAP_TEXT,                                       &myConfig.keyMap[6],            OPT_KEYSEL, 65,  "SET START KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"SELECT BTN",  KEY_MAP_TEXT,                                       &myConfig.keyMap[7],            OPT_KEYSEL, 65,  "SET SELECT KEY TO ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"A BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[0],            OPT_KEYSEL, 71,  "SET THE A KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"B BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[1],            OPT_KEYSEL, 71,  "SET THE B KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"X BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[2],            OPT_KEYSEL, 71,  "SET THE X KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"Y BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[3],            OPT_KEYSEL, 71,  "SET THE Y KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"L BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[4],            OPT_KEYSEL, 71,  "SET THE L KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"R BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[5],            OPT_KEYSEL, 71,  "SET THE R KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"START BTN",   KEY_MAP_TEXT,                                       &myConfig.keyMap[6],            OPT_KEYSEL, 71,  "SET START KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"SELECT BTN",  KEY_MAP_TEXT,                                       &myConfig.keyMap[7],            OPT_KEYSEL, 71,  "SET SELECT KEY TO ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
         {"D-PAD",       {"JOY 1", "JOY 2", "DIAGONALS", "CURSORS"},         &myConfig.dpad_type,            OPT_NORMAL, 4,   "CHOOSE HOW THE    ",   "JOYSTICK OPERATES ",  "CAN SWAP JOY1 AND ",  "JOY2 OR MAP CURSOR"},    
         {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &myConfig.auto_fire,            OPT_NORMAL, 4,   "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC     ",  "FAST = 15x/SEC    "},
         {"X OFFSET",    {"XX"},                                     (UBYTE*)&myConfig.xOffset,              OPT_NUMERIC,0,   "SET SCREEN OFFSET ",   "                  ",  "                  ",  "                  "},

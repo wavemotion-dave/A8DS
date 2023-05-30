@@ -59,7 +59,7 @@ extern const UBYTE *antic_xe_ptr;
 extern UBYTE ROM_basic[];
 
 extern UBYTE memory[65536 + 2];
-extern UBYTE under_atarixl_os[16384];
+extern UBYTE *under_atarixl_os;
 extern UBYTE fast_page[0x1000];
 extern UBYTE *atarixe_memory;
 extern UBYTE cart809F_enabled;

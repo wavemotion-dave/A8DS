@@ -60,10 +60,12 @@ extern int disk_readonly[DISK_MAX];
 
 /* RAM size in kilobytes. */
 #define RAM_48K              48
+#define RAM_64K              64
 #define RAM_128K            128
 #define RAM_320_RAMBO       320
 #define RAM_576_COMPY       576
 #define RAM_1088K           1088
+
 
 /* Always call Atari800_InitialiseMachine() after changing machine_type
    or ram_size! */

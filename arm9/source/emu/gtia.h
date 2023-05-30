@@ -158,7 +158,6 @@ extern UBYTE TRIG_latch[4];
 extern UBYTE *hposp_ptr[4];
 extern UBYTE *hposm_ptr[4];
 extern ULONG hposp_mask[4];
-extern ULONG grafp_lookup[4][256];
 extern ULONG *grafp_ptr[4];
 extern int global_sizem[4];
 extern UBYTE PM_Width[4];

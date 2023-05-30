@@ -43,7 +43,7 @@
 
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
-#define SAVE_FILE_REV   0x0003
+#define SAVE_FILE_REV   0x0004
 
 char save_filename[300+4];
 
@@ -217,7 +217,7 @@ void SaveGame(void)
         // Memory
         memcpy(memory+0x2000, fast_page, 0x1000);
         fwrite(memory,                          sizeof(memory),                         1, fp);
-        fwrite(under_atarixl_os,                sizeof(under_atarixl_os),               1, fp);
+        fwrite(under_atarixl_os,                0x4000,                                 1, fp);
         fwrite(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
         fwrite(&cartA0BF_enabled,               sizeof(cartA0BF_enabled),               1, fp);
 
@@ -374,7 +374,6 @@ void SaveGame(void)
         fwrite(hposp_ptr,                       sizeof(hposp_ptr),                      1, fp);
         fwrite(hposm_ptr,                       sizeof(hposm_ptr),                      1, fp);
         fwrite(hposp_mask,                      sizeof(hposp_mask),                     1, fp);
-        fwrite(grafp_lookup,                    sizeof(grafp_lookup),                   1, fp);
         fwrite(grafp_ptr,                       sizeof(grafp_ptr),                      1, fp);
         fwrite(global_sizem,                    sizeof(global_sizem),                   1, fp);
         fwrite(PM_Width,                        sizeof(PM_Width),                       1, fp);       
@@ -490,7 +489,7 @@ void LoadGame(void)
             // Memory
             fread(memory,                          sizeof(memory),                         1, fp);
             memcpy(fast_page, memory+0x2000, 0x1000);
-            fread(under_atarixl_os,                sizeof(under_atarixl_os),               1, fp);
+            fread(under_atarixl_os,                0x4000,                                 1, fp);
             fread(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
             fread(&cartA0BF_enabled,               sizeof(cartA0BF_enabled),               1, fp);
             
@@ -650,7 +649,6 @@ void LoadGame(void)
             fread(hposp_ptr,                       sizeof(hposp_ptr),                      1, fp);
             fread(hposm_ptr,                       sizeof(hposm_ptr),                      1, fp);
             fread(hposp_mask,                      sizeof(hposp_mask),                     1, fp);
-            fread(grafp_lookup,                    sizeof(grafp_lookup),                   1, fp);
             fread(grafp_ptr,                       sizeof(grafp_ptr),                      1, fp);
             fread(global_sizem,                    sizeof(global_sizem),                   1, fp);
             fread(PM_Width,                        sizeof(PM_Width),                       1, fp);       

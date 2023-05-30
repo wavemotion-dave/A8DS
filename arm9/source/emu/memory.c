@@ -65,7 +65,7 @@
 #include "util.h"
 
 UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                  // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
-UBYTE under_atarixl_os[16384] __attribute__ ((aligned (4)));            // This is the 16K of OS memory that co-insides with some of the RAM in the upper bank when > 48K
+UBYTE *under_atarixl_os = (UBYTE *)0x06898000;
 
 UBYTE fast_page[0x1000] __attribute__((section(".dtcm")));              // Fast memory for the first 4K of main memory
 
@@ -100,14 +100,35 @@ static void SetAtari800Memory(void)
     atarixe_memory = NULL;
 }
 // ------------------------------------------------------------
-// XL/XE has three supported memories... 128K, 320K and 1088K
+// XL/XE has a number of supported memories from 48K to 1088K
 // ------------------------------------------------------------
 static void SetAtariXLXEMemory(void)
 {
-    if (myConfig.ram_type == 1) ram_size = RAM_320_RAMBO; 
-    else if (myConfig.ram_type == 2) ram_size = RAM_1088K; 
-    else if (myConfig.ram_type == 3) ram_size = RAM_576_COMPY; 
-    else ram_size = RAM_128K;
+    // ----------------------------------------------------------------------
+    // Map the  ram_type to actual ram_size for use by the emulator...
+    // ----------------------------------------------------------------------
+    switch (myConfig.ram_type)
+    {
+        case RAM_IDX_48K:
+            ram_size = RAM_48K;
+            break;
+        case RAM_IDX_64K:
+            ram_size = RAM_64K;
+            break;
+        case RAM_IDX_128K:
+            ram_size = RAM_128K;
+            break;
+        case RAM_IDX_320K:
+            ram_size = RAM_320_RAMBO;
+            break;
+        case RAM_IDX_576K:
+            ram_size = RAM_576_COMPY;
+            break;
+        default:
+        case RAM_IDX_1088K:
+            ram_size = RAM_1088K;
+            break;
+    }
 }
 
 // ----------------------------------------------------------------------------------------------

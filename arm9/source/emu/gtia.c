@@ -136,7 +136,8 @@ UBYTE *hposp_ptr[4] __attribute__((section(".dtcm")));
 UBYTE *hposm_ptr[4] __attribute__((section(".dtcm")));
 ULONG hposp_mask[4] __attribute__((section(".dtcm")));
 
-ULONG grafp_lookup[4][256];
+ULONG *grafp_lookup = (ULONG*)0x068A0000;   // Using 4K here for lookup table... ULONG[4][256]
+
 ULONG *grafp_ptr[4] __attribute__((section(".dtcm")));
 int global_sizem[4] __attribute__((section(".dtcm")));
 
@@ -222,9 +223,9 @@ void GTIA_Initialise(void) {
             }
             tmp >>= 1;
         } while (tmp != 1);
-        grafp_lookup[2][i] = grafp_lookup[0][i] = grafp1;
-        grafp_lookup[1][i] = grafp2;
-        grafp_lookup[3][i] = grafp4;
+        grafp_lookup[2*256+i] = grafp_lookup[0*256+i] = grafp1;
+        grafp_lookup[1*256+i] = grafp2;
+        grafp_lookup[3*256+i] = grafp4;
     }
     memset(cl_lookup, COLOUR_BLACK, sizeof(cl_lookup));
     for (i = 0; i < 32; i++)
@@ -696,22 +697,22 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
         break;
     case _SIZEP0:
         SIZEP0 = byte;
-        grafp_ptr[0] = grafp_lookup[byte & 3];
+        grafp_ptr[0] = &grafp_lookup[(byte & 3)*256];
         UPDATE_PM_CYCLE_EXACT
         break;
     case _SIZEP1:
         SIZEP1 = byte;
-        grafp_ptr[1] = grafp_lookup[byte & 3];
+        grafp_ptr[1] = &grafp_lookup[(byte & 3)*256];
         UPDATE_PM_CYCLE_EXACT
         break;
     case _SIZEP2:
         SIZEP2 = byte;
-        grafp_ptr[2] = grafp_lookup[byte & 3];
+        grafp_ptr[2] = &grafp_lookup[(byte & 3)*256];
         UPDATE_PM_CYCLE_EXACT
         break;
     case _SIZEP3:
         SIZEP3 = byte;
-        grafp_ptr[3] = grafp_lookup[byte & 3];
+        grafp_ptr[3] = &grafp_lookup[(byte & 3)*256];
         UPDATE_PM_CYCLE_EXACT
         break;
     case _PRIOR:
