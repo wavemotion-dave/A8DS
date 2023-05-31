@@ -29,9 +29,9 @@ Features :
 *  Full configuration of DS keys to any Atari 8-bit joystick/key/button
 *  Save and Restore state so you can snap out the memory/CPU and restore it to pick back up exactly where you left off
 
-Optional BIOS Roms
+Optional BIOS ROMs
 ----------------------------------------------------------------------------------
-There is a built-in Altirra BIOS (thanks to Avery Lee) which is reasonably compatibile
+There is a built-in Altirra BIOS (thanks to Avery Lee) which is reasonably compatible
 with many games. However, a few games will require the original ATARI BIOS - and,
 unfortunately, there were many variations of those BIOS over the years to support
 various Atari computer models released over a span of a decade.
@@ -54,7 +54,7 @@ which is released as open-source software.  Also optional is ataribas.rom for th
 program. If not supplied, the built-in Altirra BASIC 1.58 is used.
 
 I've not done exhaustive testing, but in many cases I find the Altirra BIOS does a
-great job as a replacement for the Atari OS/BASIC roms. However, for maximum compaitibility,
+great job as a replacement for the Atari OS/BASIC roms. However, for maximum compatibility,
 it is recommended you find the above OS/BASIC roms.
 
 Do not ask me about rom files, you will be promptly ignored. A search with Google will certainly 
@@ -111,7 +111,7 @@ If you load a game and it doesn't load properly or you get a message at the bott
 it usually means that the game requires some other hardware configuration to run. Often this is simply 
 the need for the built-in BASIC to be installed - you can toggle that when loading a game (or using the GEAR 
 icon to set the option for the game). Not every game runs with this emulator - but 90% will. See the Troubleshooting
-guide further below for more tips to try and get a game running. I'll try to improve compatibilty as time permits.
+guide further below for more tips to try and get a game running. I'll try to improve compatibility as time permits.
 
 The emulator supports multi-disk games. When you need to load a subsequent disk for
 a game, just use the Y button to disable Boot-Load which will simply insert the new
@@ -163,8 +163,8 @@ get proper speed on the older DS-LITE and DS-PHAT hardware, there is a Frame Ski
 defaults to ON for the older hardware (and OFF for the DSi or above). This is not perfect - some 
 games will not be happy to have frames skipped as collisions are skipped in those frames. 
 Notably: Caverns of Mars, Jumpman and Buried Bucks will not run right with Frame Skip ON. But 
-this does render most games playable on older hardware. If a game is particularlly struggling 
-to keep up on older hardawre, there is an experimental 'Agressive' frameskip which should help... but use with caution. 
+this does render most games playable on older hardware. If a game is particularly struggling 
+to keep up on older hardware, there is an experimental 'Aggressive' frameskip which should help... but use with caution. 
 
 Remember, emulation is rarely perfect. Further, this is a portable implementation of an Atari 8-bit 
 emulator on a limited resource system (67MHz CPU and 4MB of memory) so it won't match the amazing output 
@@ -207,14 +207,14 @@ With those tips, you should be able to get most games running. There are still a
 
 Installation :
 ----------------------------------------------------------------------------------
-* To run this on your DS or DSi (or 2DS/3DS) requires that you have the ability to launch homebrews. For the older DS units, this is usually accomplished via a FlashCart such as the R4 or one of the many clones. These tend to run about US$25. If you have a DSi or above, you can skip the R4 and instead soft-mod your unit and run something like Twilight Menu++ or Unlaunch which will run homebrew software on the DS. The DSi has a convienent SD card slot on the side that saw very little use back in the day but is a great way to enjoy homebrews. See https://dsi.cfw.guide/ to get started on how to soft-mod your unit.
+* To run this on your DS or DSi (or 2DS/3DS) requires that you have the ability to launch homebrews. For the older DS units, this is usually accomplished via a FlashCart such as the R4 or one of the many clones. These tend to run about US$25. If you have a DSi or above, you can skip the R4 and instead soft-mod your unit and run something like Twilight Menu++ or Unlaunch which will run homebrew software on the DS. The DSi has a convenient SD card slot on the side that saw very little use back in the day but is a great way to enjoy homebrews. See https://dsi.cfw.guide/ to get started on how to soft-mod your unit.
 * You will want the optional BIOS Files for maximum compatibility. See BIOS section above.
 * You will also need the emulator itself. You can get this from the GitHub page - the only file you need here is A8DS.nds (the .nds is a Nintendo executable file). You can put this anywhere - most people put the .nds file into the root of the SD card.
 * You will need games or applications in .XEX .ATR .ATX .CAR or .ROM format. Don't ask me for such files - you will be ignored.
 
 DS vs DSi vs DSi XL/LL :
 ----------------------------------------------------------------------------------
-The original DS-Lite or DS-Phat require an R4 card to run homebrews. With this setup you will be running in DS compatibility mode and emulator will default to a moderate level of frameskip. For the DSi or DSi XL/LL we can run just about everything full speed without frameskip. The XL/LL has a slightly slower decay on the LCD and it more closely mimics the phosphor fade of a TV. This helps with games that use small bullets - something like Centipede can be a little harder to see on the original DSi as the thin pixel shot fades quickly as it moves. You can somewhat compensate for this by increasing your screen brightness. For the DSi, I find a screen brightness of 4 to offer reasonably good visibility. The XL/LL will generally operate just as well with a brigtness of 2 or 3. 
+The original DS-Lite or DS-Phat require an R4 card to run homebrews. With this setup you will be running in DS compatibility mode and emulator will default to a moderate level of frameskip. For the DSi or DSi XL/LL we can run just about everything full speed without frameskip. The XL/LL has a slightly slower decay on the LCD and it more closely mimics the phosphor fade of a TV. This helps with games that use small bullets - something like Centipede can be a little harder to see on the original DSi as the thin pixel shot fades quickly as it moves. You can somewhat compensate for this by increasing your screen brightness. For the DSi, I find a screen brightness of 4 to offer reasonably good visibility. The XL/LL will generally operate just as well with a brightness of 2 or 3. 
 
 Screen resolution on a DS/DSi/XL/LL is always fixed at 256x192 pixels. The Atari 8-bit resolution tends to be larger - usually 320 horizontally and they often utilize a few more pixels vertically depending on the game. Use the Left/Right shoulder buttons along with the D-Pad to shift/scale the screen to your liking. Once you get the screen where you want - go into the GEAR icon and press START to save the options (including the screen position/scaling) on a per-game basis.
 
@@ -226,12 +226,12 @@ Global Options can now be set - *before* you load a game, use the GEAR icon to s
 * MACHINE TYPE - select XL/XE 128K, 320K RAMBO, 576K COMPY, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
 * OS Type - Select the built in Altirra OS or, if you have the OS ROMs available, the Atari OS.
 * BASIC - Select if BASIC is enabled and what flavor of BASIC to run.
-* PALETTE - Set to NTSC or PAL to suit your preferences (yes, you can run an NTSC palette on a PAL configurd system and vice-versa).
+* PALETTE - Set to NTSC or PAL to suit your preferences (yes, you can run an NTSC palette on a PAL configured system and vice-versa).
 * SKIP FRAMES - On the DSi you can keep this OFF for most games, but for the DS you may need a moderate-to-agressive frameskip.
 * FPS SETTING - Normally OFF but you might want to see the frames-per-second counter and you can set 'TURBO' mode to run full-speed (unthrottled) to check performance.
 * ARTIFACTING - Normally OFF but a few games utilize this high-rez mode trick that brings in a new set of colors to the output.
 * SCREEN BLUR - Since the DS screen is 256x192 and the Atari A8 output is 320x192 (and often more than 192 pixels utilizing overscan area), the blur will help show fractional pixels. Set to the value that looks most pleasing (and it will likely be a different value for different games).
-* ALPHA BLEND - The DSi non-XL handhelds tend to have a fast LCD fade and that can make it hard to see small objects. Turn this ON to blend two successive frames. This has the effect of making the screen a bit lighter/brigher and small details tend to show more clearly.
+* ALPHA BLEND - The DSi non-XL handhelds tend to have a fast LCD fade and that can make it hard to see small objects. Turn this ON to blend two successive frames. This has the effect of making the screen a bit lighter/brighter and small details tend to show more clearly.
 * DISK SPEEDUP - the SIO access is normally sped-up but a few games on disk (ATR/ATX) won't run properly with disk-speedup so you can disable on a per-game basis.
 * KEY CLICK - if you want the mechanical key-click when using the virtual 800 keyboards.
 * EMULATOR TEXT - if you want a clean main screen with just the disk-drives shown, you can disable text.
@@ -266,7 +266,7 @@ Buttons can be re-configured in the Options (GEAR icon... press X for the keyboa
  * A      : Fire button
  * B      : Alternate Fire button
  * X      : Space Bar -  useful to start a few games
- * Y      : Return key (Carrige Return)
+ * Y      : Return key (Carriage Return)
  * R+Dpad : Shift Screen UP or DOWN (necessary to center screen)
  * L+Dpad : Scale Screen UP or DOWN (generally try not to shrink the screen too much as pixel rows disappear)
  * L+R+A  : Swap Screens (swap the upper and lower screens... touch screen is still always the bottom)
