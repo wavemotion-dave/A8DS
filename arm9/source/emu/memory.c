@@ -65,7 +65,7 @@
 #include "util.h"
 
 UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                  // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
-UBYTE *under_atarixl_os = (UBYTE *)0x06898000;
+UBYTE *under_atarixl_os = (UBYTE *)(0x06898000+0x0000);                 // We use 16K of VRAM here as it's a little faster but also to free up normal RAM resources
 
 UBYTE fast_page[0x1000] __attribute__((section(".dtcm")));              // Fast memory for the first 4K of main memory
 
@@ -137,7 +137,7 @@ static void SetAtariXLXEMemory(void)
 // ----------------------------------------------------------------------------------------------
 static void AllocXEMemory(void)
 {
-    if (ram_size > 64) 
+    if (ram_size > RAM_64K) 
     {
         /* don't count 64 KB of base memory */
         /* count number of 16 KB banks, add 1 for saving base memory 0x4000-0x7fff */
@@ -254,7 +254,7 @@ void MEMORY_InitialiseMachine(void)
 static int basic_disabled(UBYTE portb)
 {
     return (portb & 0x02) != 0
-     || ((portb & 0x10) == 0 && (ram_size == 576 || ram_size == 1088));
+     || ((portb & 0x10) == 0 && (ram_size == RAM_576_COMPY || ram_size == RAM_1088K));
 }
 
 
@@ -275,7 +275,7 @@ static int basic_disabled(UBYTE portb)
 void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 {
     /* Switch XE memory bank in 0x4000-0x7fff */
-    if (ram_size > 64) 
+    if (ram_size > RAM_64K) 
     {
         int bank = 0;
         /* bank = 0 : base RAM */
@@ -432,7 +432,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
     {
         /* We can enable Self Test only if the OS ROM is enabled and we are not 576K or 1088K */
         if (!selftest_enabled && (byte & 0x01) && 
-               !((byte & 0x30) != 0x30 && ram_size == 576) &&
+               !((byte & 0x30) != 0x30 && ram_size == RAM_576_COMPY) &&
                !((byte & 0x10) == 0 && ram_size == RAM_1088K)) 
         {
             /* Enable Self Test ROM */
@@ -513,7 +513,7 @@ void CartA0BF_Enable(void)
     {
         /* No BASIC if not XL/XE or bit 1 of PORTB set */
         /* or accessing extended 576K or 1088K memory */
-        if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02) || ((PORTB & 0x10) == 0 && (ram_size == 576 || ram_size == 1088)))) 
+        if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02) || ((PORTB & 0x10) == 0 && (ram_size == RAM_576_COMPY || ram_size == RAM_1088K)))) 
         {
             /* Back-up 0xa000-0xbfff RAM */
             mem_map[UNDER_0xA] = mem_map[0xA];

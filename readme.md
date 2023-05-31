@@ -7,10 +7,10 @@ XL/XE machine with 128KB of RAM which will run most of the 8-bit library.
 Other memory configurations are available from 48K up to 1088K which is enough
 to run nearly the entire 8-bit line up of games on their Nintendo DS/DSi handhelds.
 
-The emulator comes "equipped" with the ability to run executable images (XEX) or disk 
-images (ATR) which are the two most popular types. Recent versions add support for 
-cart types (CAR or ROM files). The goal here is to make this as simple as 
-possible - point to the executable 8-bit Atari image you want to run and off it goes!
+The emulator comes "equipped" with the ability to run cart dumps (ROM or CAR types),
+executable images (XEX) or disk images (ATR or ATX) which are the most popular "ROM"
+types for emulators. The goal here is to make this as simple as possible - point to 
+the 8-bit Atari game/program you want to run and off it goes!
 
 ![A8DS](https://github.com/wavemotion-dave/A8DS/blob/main/arm9/gfx/bgTop.png)
 
@@ -91,25 +91,25 @@ Credits:
 
 Features :
 ----------------------------------------------------------------------------------
-*  Memory configurations including 48K, 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
+*  Memory configurations including 48K (base ATARI400/800), 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
 *  Cart based games up to 1MB in size (.CAR and .ROM)
-*  XEX Atari 8-bit Executable images 
-*  ATR and ATX disk-based games (two emulated drives supported)
+*  XEX Atari 8-bit Executable images of any size provided they fit into the Memory Configuration configured
+*  ATR and ATX disk-based games (two emulated drives supported as D1 and D2)
 *  NTSC and PAL support
 *  Virtual keyboard in various Atari 800/XL/XE stylings
 *  R-Time8 Real-Time Clock support (mostly for SpartaDOS X)
-*  Built in Altirra OS (3.33) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware.
+*  Built in Altirra OS (3.33) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware
 *  High Score support for 10 scores per game
 *  Full configuration of DS keys to any Atari 8-bit joystick/key/button
-*  Save and Restore state so you can snap out the memory/CPU and restore it to pick back up exactly where you left off.
+*  Save and Restore state so you can snap out the memory/CPU and restore it to pick back up exactly where you left off
 
-Most things you should expect from an emulator. Games generally run full-speed
-with just a handful of exceptions. If you load a game and it doesn't load properly,
-just load it again or hit the RESET button which will re-initialize the A8DS machine.
-If a game crashes, you will get a message at the bottom of the screen after loading - 
-a crash usually means that the game requires the BASIC cart to be inserted and you can
-toggle that when loading a game (or using the GEAR icon). Not every game runs with this 
-emulator - but 90% will.  I'll try to improve compatibilty as time permits.
+Games generally run full-speed with just a handful of exceptions - most notably on the older DS hardware 
+or when running from a flash cart (R4 or similar) which won't give you access to a DSi 2X CPU mode. 
+If you load a game and it doesn't load properly or you get a message at the bottom of the screen after loading - 
+it usually means that the game requires some other hardware configuration to run. Often this is simply 
+the need for the built-in BASIC to be installed - you can toggle that when loading a game (or using the GEAR 
+icon to set the option for the game). Not every game runs with this emulator - but 90% will. I'll try to improve
+compatibilty as time permits.
 
 The emulator supports multi-disk games. When you need to load a subsequent disk for
 a game, just use the Y button to disable Boot-Load which will simply insert the new
@@ -263,11 +263,11 @@ Buttons can be re-configured in the Options (GEAR icon... press X for the keyboa
  * D-pad  : the joystick ... can be set to be Joystick 1 or Joystick 2
  * A      : Fire button
  * B      : Alternate Fire button
- * X      : Space Bar (R+X for RETURN and L+X for ESCAPE) - useful to start a few games
+ * X      : Space Bar -  useful to start a few games
+ * Y      : Return key (Carrige Return)
  * R+Dpad : Shift Screen UP or DOWN (necessary to center screen)
  * L+Dpad : Scale Screen UP or DOWN (generally try not to shrink the screen too much as pixel rows disappear)
  * L+R+A  : Swap Screens (swap the upper and lower screens... touch screen is still always the bottom)
- * Y      : OPTION console button
  * START  : START console button
  * SELECT : SELECT console button
  

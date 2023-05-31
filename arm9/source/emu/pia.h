@@ -21,10 +21,7 @@ extern int selftest_enabled;
 #define PIA_PORTA PORTA
 #define PIA_PORTB PORTB
 
-
-extern UBYTE atari_os[16384];
-
-#define MEMORY_os atari_os
+extern UBYTE *atari_os;
 
 extern void PIA_Initialise(void);
 extern void PIA_Reset(void);
