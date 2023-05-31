@@ -15,6 +15,20 @@ the 8-bit Atari game/program you want to run and off it goes!
 ![A8DS](https://github.com/wavemotion-dave/A8DS/blob/main/arm9/gfx/bgTop.png)
 
 
+Features :
+----------------------------------------------------------------------------------
+*  Memory configurations including 48K (base ATARI400/800), 64K XL/XE, 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
+*  Cart based games up to 1MB in size (.CAR and .ROM)
+*  XEX Atari 8-bit Executable images of any size provided they fit into the Memory Configuration configured
+*  ATR and ATX disk-based games (two emulated drives supported as D1 and D2)
+*  NTSC and PAL support
+*  Virtual keyboard in various Atari 800/XL/XE stylings
+*  R-Time8 Real-Time Clock support (mostly for SpartaDOS X)
+*  Built in Altirra OS (3.33) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware
+*  High Score support for 10 scores per game
+*  Full configuration of DS keys to any Atari 8-bit joystick/key/button
+*  Save and Restore state so you can snap out the memory/CPU and restore it to pick back up exactly where you left off
+
 Optional BIOS Roms
 ----------------------------------------------------------------------------------
 There is a built-in Altirra BIOS (thanks to Avery Lee) which is reasonably compatibile
@@ -89,20 +103,8 @@ Credits:
 * The good folks over on GBATemp and AtariAge for their support.
 
 
-Features :
+Additional Details :
 ----------------------------------------------------------------------------------
-*  Memory configurations including 48K (base ATARI400/800), 64K XL/XE, 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
-*  Cart based games up to 1MB in size (.CAR and .ROM)
-*  XEX Atari 8-bit Executable images of any size provided they fit into the Memory Configuration configured
-*  ATR and ATX disk-based games (two emulated drives supported as D1 and D2)
-*  NTSC and PAL support
-*  Virtual keyboard in various Atari 800/XL/XE stylings
-*  R-Time8 Real-Time Clock support (mostly for SpartaDOS X)
-*  Built in Altirra OS (3.33) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware
-*  High Score support for 10 scores per game
-*  Full configuration of DS keys to any Atari 8-bit joystick/key/button
-*  Save and Restore state so you can snap out the memory/CPU and restore it to pick back up exactly where you left off
-
 Games generally run full-speed with just a handful of exceptions - most notably on the older DS hardware 
 or when running from a flash cart (R4 or similar) which won't give you access to a DSi 2X CPU mode. 
 If you load a game and it doesn't load properly or you get a message at the bottom of the screen after loading - 
