@@ -110,8 +110,8 @@ or when running from a flash cart (R4 or similar) which won't give you access to
 If you load a game and it doesn't load properly or you get a message at the bottom of the screen after loading - 
 it usually means that the game requires some other hardware configuration to run. Often this is simply 
 the need for the built-in BASIC to be installed - you can toggle that when loading a game (or using the GEAR 
-icon to set the option for the game). Not every game runs with this emulator - but 90% will. I'll try to improve
-compatibilty as time permits.
+icon to set the option for the game). Not every game runs with this emulator - but 90% will. See the Troubleshooting
+guide further below for more tips to try and get a game running. I'll try to improve compatibilty as time permits.
 
 The emulator supports multi-disk games. When you need to load a subsequent disk for
 a game, just use the Y button to disable Boot-Load which will simply insert the new
