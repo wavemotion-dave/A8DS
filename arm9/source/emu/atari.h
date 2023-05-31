@@ -63,7 +63,7 @@ extern int disk_readonly[DISK_MAX];
 #define RAM_64K              64
 #define RAM_128K            128
 #define RAM_320_RAMBO       320
-#define RAM_320_COMPY       321
+#define RAM_576_COMPY       576
 #define RAM_1088K           1088
 
 

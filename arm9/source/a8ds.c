@@ -781,7 +781,7 @@ void dsShowRomInfo(void)
         dsPrintValue(10,13,0, line2);
     }
 
-    siprintf(ramSizeBuf, "%4dK", (ram_size == 321 ? 320:ram_size));
+    siprintf(ramSizeBuf, "%4dK", ram_size);
     if ((myConfig.os_type == OS_ATARI_OSB) || (myConfig.os_type==OS_ALTIRRA_800))
         siprintf(machineBuf, "%-5s A800", (myConfig.basic_type ? "BASIC": " "));
     else

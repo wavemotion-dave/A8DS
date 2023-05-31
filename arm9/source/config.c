@@ -83,7 +83,7 @@ u8 UpgradeConfig(void)
         if      (GameDB.default_ram_type == 0) GameDB.default_ram_type = RAM_IDX_128K;
         else if (GameDB.default_ram_type == 1) GameDB.default_ram_type = RAM_IDX_320K;
         else if (GameDB.default_ram_type == 2) GameDB.default_ram_type = RAM_IDX_1088K;
-        else if (GameDB.default_ram_type == 3) GameDB.default_ram_type = RAM_IDX_320K_COMPY;
+        else if (GameDB.default_ram_type == 3) GameDB.default_ram_type = RAM_IDX_576K;
         else                                   GameDB.default_ram_type = RAM_IDX_48K;
         
         for (int i=0; i<MAX_GAME_SETTINGS; i++)
@@ -91,7 +91,7 @@ u8 UpgradeConfig(void)
             if      (GameDB.GameSettings[i].ram_type == 0) GameDB.GameSettings[i].ram_type = RAM_IDX_128K;
             else if (GameDB.GameSettings[i].ram_type == 1) GameDB.GameSettings[i].ram_type = RAM_IDX_320K;
             else if (GameDB.GameSettings[i].ram_type == 2) GameDB.GameSettings[i].ram_type = RAM_IDX_1088K;
-            else if (GameDB.GameSettings[i].ram_type == 3) GameDB.GameSettings[i].ram_type = RAM_IDX_320K_COMPY;
+            else if (GameDB.GameSettings[i].ram_type == 3) GameDB.GameSettings[i].ram_type = RAM_IDX_576K;
             else                                           GameDB.GameSettings[i].ram_type = RAM_IDX_48K;
         }
 
@@ -171,8 +171,8 @@ void SetRamSizeAndOS(void)
         case RAM_IDX_320K:
             ram_size = RAM_320_RAMBO;
             break;
-        case RAM_IDX_320K_COMPY:
-            ram_size = RAM_320_COMPY;
+        case RAM_IDX_576K:
+            ram_size = RAM_576_COMPY;
             break;
         default:
         case RAM_IDX_1088K:
@@ -534,7 +534,7 @@ const struct options_t Option_Table[2][20] =
     {
         {"TV TYPE",     {"NTSC",        "PAL"},                             &myConfig.tv_type,              OPT_NORMAL, 2,   "NTSC=60 FPS       ",   "WITH 262 SCANLINES",  "PAL=50 FPS        ",  "WITH 312 SCANLINES"},
         {"MACHINE TYPE",{"48K ATARI800", "64K XL/XE",  "128K XL/XE",
-                         "320K RAMBO",   "320K COMPY", "1088K RAMBO"},      &myConfig.ram_type,             OPT_NORMAL, 6,   "64K/128K FOR MOST ",   "GAMES. USE 320K OR",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
+                         "320K RAMBO",   "576K COMPY", "1088K RAMBO"},      &myConfig.ram_type,             OPT_NORMAL, 6,   "64K/128K FOR MOST ",   "GAMES. 320K/576K/ ",  "1088 FOR BIG GAMES",  "48K COMPATIBILITY "},
         {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",
                          "ALTIRRA 800", "ATARIOSB.ROM"},                    &myConfig.os_type,              OPT_NORMAL, 4,   "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
         {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &myConfig.basic_type,           OPT_NORMAL, 3,   "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},

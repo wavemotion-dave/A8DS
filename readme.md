@@ -221,7 +221,7 @@ Configuration :
 Global Options can now be set - *before* you load a game, use the GEAR icon to set and save your options that will be applied to new games going forward (you can still override on a per-game basis).
 
 * TV TYPE - Select PAL vs NTSC for 50/60Hz operation.
-* MACHINE TYPE - select XL/XE 128K, 320K RAMBO, 320K COMPY, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
+* MACHINE TYPE - select XL/XE 128K, 320K RAMBO, 576K COMPY, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
 * OS Type - Select the built in Altirra OS or, if you have the OS ROMs available, the Atari OS.
 * BASIC - Select if BASIC is enabled and what flavor of BASIC to run.
 * PALETTE - Set to NTSC or PAL to suit your preferences (yes, you can run an NTSC palette on a PAL configurd system and vice-versa).
@@ -309,7 +309,7 @@ V3.6 : 29-May-2023 by wavemotion-dave
   * Minor memory optimization to squeeze out another frame or two of performance.
 
 V3.5 : 22-May-2023 by wavemotion-dave
-  * Added 320K COMPY SHOP RAM type (with separate ANTIC access just like the 128K XE).
+  * Added 576K COMPY SHOP RAM type (with separate ANTIC access just like the 128K XE).
   * More cleanup and minor bug fixes across the board.
 
 V3.4 : 16-May-2023 by wavemotion-dave

@@ -121,8 +121,8 @@ static void SetAtariXLXEMemory(void)
         case RAM_IDX_320K:
             ram_size = RAM_320_RAMBO;
             break;
-        case RAM_IDX_320K_COMPY:
-            ram_size = RAM_320_COMPY;
+        case RAM_IDX_576K:
+            ram_size = RAM_576_COMPY;
             break;
         default:
         case RAM_IDX_1088K:
@@ -133,7 +133,7 @@ static void SetAtariXLXEMemory(void)
 
 // ----------------------------------------------------------------------------------------------
 // Note: We support several memory configurations for XE... Standard 130XE compatible 128K and
-// the RAMBO 320K, COMPY 320K or RAMBO 1088K.  There is also a backwards compatible 48K option.
+// the RAMBO 320K, COMPY 576K or RAMBO 1088K.  There is also a backwards compatible 48K option.
 // ----------------------------------------------------------------------------------------------
 static void AllocXEMemory(void)
 {
@@ -286,14 +286,14 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
                 bank = ((byte & 0x0c) >> 2) + 1;
             else if (ram_size == RAM_320_RAMBO)
                 bank = (((byte & 0x0c) + ((byte & 0x60) >> 1)) >> 2) + 1;
-            else if (ram_size == RAM_320_COMPY)
-                bank = (((byte & 0x0c) + ((byte & 0xc0) >> 2)) >> 2) + 1;
+            else if (ram_size == RAM_576_COMPY)
+                bank = (((byte & 0x0e) + ((byte & 0xc0) >> 2)) >> 1) + 1;
             else // Assume RAM_1088K
                 bank = (((byte & 0x0e) + ((byte & 0xe0) >> 1)) >> 1) + 1;
         }
         
         /* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
-        if (selftest_enabled && ((bank != xe_bank) || (ram_size == RAM_320_COMPY && (byte & 0x20) == 0)))
+        if (selftest_enabled && ((bank != xe_bank) || (ram_size == RAM_576_COMPY && (byte & 0x20) == 0)))
         {
             /* Disable Self Test ROM */
             memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
@@ -328,10 +328,10 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         }
         
         // -------------------------------------------------------
-        // The 128k XE RAM and the COMPY 320k RAM allow the Antic 
+        // The 128k XE RAM and the COMPY 576K RAM allow the Antic 
         // to index into the RAM independently ... tricky stuff!
         // -------------------------------------------------------
-        if ((ram_size == RAM_128K) || (ram_size == RAM_320_COMPY))
+        if ((ram_size == RAM_128K) || (ram_size == RAM_576_COMPY))
         {
             switch (byte & 0x30)
             {
@@ -341,8 +341,8 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
             case 0x10:  /* ANTIC: extended, CPU: base */
                 if (ram_size == RAM_128K)
                     antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) >> 2)) << 14);
-                else // Assume 320K COMPY
-                    antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) + ((byte & 0xc0) >> 2)) >> 2) << 14);
+                else // Assume RAM_576_COMPY
+                    antic_xe_ptr = atarixe_memory + ((((byte & 0x0e) + ((byte & 0xc0) >> 2)) >> 1) << 14);
                 break;
             default:    /* ANTIC same as CPU */
                 antic_xe_ptr = NULL;
@@ -418,7 +418,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 
     /* Enable/disable Self Test ROM in 0x5000-0x57ff */
     /* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
-    if ((byte & 0x80) || ((ram_size == RAM_320_COMPY) && (byte & 0x20) == 0))
+    if ((byte & 0x80) || ((ram_size == RAM_576_COMPY) && (byte & 0x20) == 0))
     {
         if (selftest_enabled)
         {
