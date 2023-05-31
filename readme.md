@@ -91,7 +91,7 @@ Credits:
 
 Features :
 ----------------------------------------------------------------------------------
-*  Memory configurations including 48K (base ATARI400/800), 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
+*  Memory configurations including 48K (base ATARI400/800), 64K XL/XE, 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
 *  Cart based games up to 1MB in size (.CAR and .ROM)
 *  XEX Atari 8-bit Executable images of any size provided they fit into the Memory Configuration configured
 *  ATR and ATX disk-based games (two emulated drives supported as D1 and D2)
