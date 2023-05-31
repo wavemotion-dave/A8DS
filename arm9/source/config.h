@@ -119,7 +119,7 @@ extern UWORD  ram_size;
 #define RAM_IDX_64K         1
 #define RAM_IDX_128K        2
 #define RAM_IDX_320K        3
-#define RAM_IDX_576K        4
+#define RAM_IDX_320K_COMPY  4
 #define RAM_IDX_1088K       5
 
 extern UBYTE force_tv_type;

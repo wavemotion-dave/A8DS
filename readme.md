@@ -1,18 +1,14 @@
 A8DS
 --------------------------------------------------------------------------------
-A8DS is an Atari 8-bit computer emulator for the Nintendo DS/DSi.  Specifically, it targets the 
+A8DS is an Atari 8-bit computer emulator for the Nintendo DS/DSi.  It targets the 
 800XL / 130XE systems and various hardware extensions to increase the memory. 
 The stock 800XL had 64KB of RAM. The default A8DS configuration is an
 XL/XE machine with 128KB of RAM which will run most of the 8-bit library.
-A8DS goes beyond the normal XL/XE 128K machine and provides three alternative 
-configurations: the 320K (RAMBO), 576K (COMPY) and 1088K for a few large games and demos 
-plus an Atari 800 (non-XL) 48K machine for backwards compatibility with some older 
-games that don't play nice with a more "modern" XL/XE setup. As such, it's 
-really grown to be a full-featured 8-bit emulator to run nearly the entire 
-8-bit line up of games on their Nintendo DS/DSi handhelds.
+Other memory configurations are available from 48K up to 1088K which is enough
+to run nearly the entire 8-bit line up of games on their Nintendo DS/DSi handhelds.
 
-The emulator comes "equipped" with the ability to run executable images or disk 
-images which are the two most popular types. Recent versions add support for 
+The emulator comes "equipped" with the ability to run executable images (XEX) or disk 
+images (ATR) which are the two most popular types. Recent versions add support for 
 cart types (CAR or ROM files). The goal here is to make this as simple as 
 possible - point to the executable 8-bit Atari image you want to run and off it goes!
 
@@ -225,7 +221,7 @@ Configuration :
 Global Options can now be set - *before* you load a game, use the GEAR icon to set and save your options that will be applied to new games going forward (you can still override on a per-game basis).
 
 * TV TYPE - Select PAL vs NTSC for 50/60Hz operation.
-* MACHINE TYPE - select XL/XE 128K, 320K, 576K, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
+* MACHINE TYPE - select XL/XE 128K, 320K RAMBO, 320K COMPY, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
 * OS Type - Select the built in Altirra OS or, if you have the OS ROMs available, the Atari OS.
 * BASIC - Select if BASIC is enabled and what flavor of BASIC to run.
 * PALETTE - Set to NTSC or PAL to suit your preferences (yes, you can run an NTSC palette on a PAL configurd system and vice-versa).
@@ -313,7 +309,7 @@ V3.6 : 29-May-2023 by wavemotion-dave
   * Minor memory optimization to squeeze out another frame or two of performance.
 
 V3.5 : 22-May-2023 by wavemotion-dave
-  * Added 576K COMPY SHOP RAM type (with separate ANTIC access just like the 128K XE).
+  * Added 320K COMPY SHOP RAM type (with separate ANTIC access just like the 128K XE).
   * More cleanup and minor bug fixes across the board.
 
 V3.4 : 16-May-2023 by wavemotion-dave
