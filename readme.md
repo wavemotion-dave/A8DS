@@ -18,8 +18,8 @@ the 8-bit Atari game/program you want to run and off it goes!
 Features :
 ----------------------------------------------------------------------------------
 *  Memory configurations including 48K (base ATARI400/800), 64K XL/XE, 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
-*  Cart based games up to 1MB in size (.CAR and .ROM)
-*  XEX Atari 8-bit Executable images of any size provided they fit into the Memory Configuration configured
+*  CAR and ROM cartridge-based games up to 1MB in size
+*  XEX Atari 8-bit Executable images of any size provided they fit into the Memory Configuration
 *  ATR and ATX disk-based games (two emulated drives supported as D1 and D2)
 *  NTSC and PAL support
 *  Virtual keyboard in various Atari 800/XL/XE stylings
@@ -108,10 +108,9 @@ Additional Details :
 Games generally run full-speed with just a handful of exceptions - most notably on the older DS hardware 
 or when running from a flash cart (R4 or similar) which won't give you access to a DSi 2X CPU mode. 
 If you load a game and it doesn't load properly or you get a message at the bottom of the screen after loading - 
-it usually means that the game requires some other hardware configuration to run. Often this is simply 
-the need for the built-in BASIC to be installed - you can toggle that when loading a game (or using the GEAR 
-icon to set the option for the game). Not every game runs with this emulator - but 90% will. See the Troubleshooting
+it usually means that the game requires some other hardware configuration to run. See the Troubleshooting
 guide further below for more tips to try and get a game running. I'll try to improve compatibility as time permits.
+Not every game runs with this emulator - but 90% will given a little elbow-grease to configure things right.
 
 The emulator supports multi-disk games. When you need to load a subsequent disk for
 a game, just use the Y button to disable Boot-Load which will simply insert the new
@@ -123,16 +122,12 @@ The .ATR disk support handles up to 360K disks (it will probably work with large
 been extensively tested beyond 360K). 
 
 The emulator has the built-in Altirra BASIC 1.58 which is a drop-in replacement for the
-Atari Basic Rev C (only more full-featured). Normally you can leave this disabled but
-a few games require the BASIC cart to be present and you can toggle this with the START button
-when you load a game. If you try to load a game and it crashes, most likely you need
-to have BASIC enabled. Most games don't want it enabled so that's the default. 
-If you want to play around with BASIC, enable the BASIC cart and pick a DOS 
-disk of some kind to get drive support and you can have fun writing programs. Be aware
-that the Altirra BASIC is faster than normal ATARI BASIC and so games might run at the
-wrong speed unless you're using the actual ATARI REV C rom.
+Atari Basic Rev C. Normally you can leave this disabled but a few games do require the 
+BASIC cart to be present and you can toggle this with the START button when you load
+a game. Be aware that the Altirra BASIC is faster than normal ATARI BASIC and so games 
+might run at the wrong speed unless you're using the actual ATARI REV C rom.
 
-A8DS will emulate the Real-Time clock mostly used for SpartaDOS X.
+A8DS emulates a Real-Time clock mostly used for SpartaDOS X.
 
 Cartridge support was added with A8DS 3.1 and later. You can load .CAR and .ROM 
 files (using the XEX button).
