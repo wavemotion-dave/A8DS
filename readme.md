@@ -264,6 +264,7 @@ Buttons can be re-configured in the Options (GEAR icon... press X for the keyboa
  * Y      : Return key (Carriage Return)
  * R+Dpad : Shift Screen UP or DOWN (necessary to center screen)
  * L+Dpad : Scale Screen UP or DOWN (generally try not to shrink the screen too much as pixel rows disappear)
+ * L+R    : Hold for 1 second to snapshot upper screen to .bmp file on the SD card
  * L+R+A  : Swap Screens (swap the upper and lower screens... touch screen is still always the bottom)
  * START  : START console button
  * SELECT : SELECT console button
