@@ -229,6 +229,7 @@ void MEMORY_InitialiseMachine(void)
     readmap[0xd5] = CART_GetByte;
     readmap[0xd6] = PBIM1_GetByte;
     readmap[0xd7] = PBIM2_GetByte;
+    
     writemap[0xd0] = GTIA_PutByte;
     writemap[0xd1] = PBI_PutByte;
     writemap[0xd2] = POKEY_PutByte;

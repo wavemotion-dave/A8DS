@@ -76,8 +76,8 @@ u8 myPokeyBufIdx            __attribute__((section(".dtcm"))) = 0;
 u8 bMute                    __attribute__((section(".dtcm"))) = 0;
 u16 sampleExtender[256]     __attribute__((section(".dtcm"))) = {0};
 
-int screen_slide_x __attribute__((section(".dtcm"))) = 0;
-int screen_slide_y __attribute__((section(".dtcm"))) = 0;
+short int screen_slide_x __attribute__((section(".dtcm"))) = 0;
+short int screen_slide_y __attribute__((section(".dtcm"))) = 0;
 
 #define  cxBG (myConfig.xOffset<<8)
 #define  cyBG (myConfig.yOffset<<8)
@@ -706,9 +706,9 @@ void install_os(void)
 void dsShowRomInfo(void)
 {
     extern char disk_filename[DISK_MAX][256];
-    char line1[25];
-    char ramSizeBuf[8];
-    char machineBuf[20];
+    static char line1[25];
+    static char ramSizeBuf[8];
+    static char machineBuf[20];
     static char line2[200];
 
     if (!bShowKeyboard)
@@ -2139,7 +2139,6 @@ void a8FindFiles(void)
   if (bFirstTime)
   {
     bFirstTime = false;
-    //TODO: Not sure on this yet...    chdir("/");
   }
   pdir = opendir(".");
 
