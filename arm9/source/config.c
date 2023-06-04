@@ -135,7 +135,7 @@ void InitGameSettings(void)
     }
     GameDB.default_skip_frames = (isDSiMode() ? 0:1);   // For older DS models, we skip frames to get full speed...
     GameDB.default_os_type = (bAtariOS ? OS_ATARI_XL : OS_ALTIRRA_XL);
-    GameDB.default_blending = 6;
+    GameDB.default_blending = 1;
     GameDB.default_ram_type = RAM_IDX_128K;
     GameDB.default_alphaBlend = 0;
     GameDB.default_keyMap[DB_KEY_A] = 0;
@@ -190,7 +190,7 @@ void SetRamSizeAndOS(void)
             myConfig.os_type = OS_ALTIRRA_800;
         }
     }
-    else    // Must be 128K or 320K so make sure we aren't using older Atari 800 BIOS
+    else    // Must be 64K XL/XE or bette... so make sure we aren't using older Atari 800 BIOS
     {
         if ((myConfig.os_type == OS_ALTIRRA_800) || (myConfig.os_type == OS_ATARI_OSB))
         {
@@ -348,6 +348,13 @@ void ReadGameSettings(void)
         if ((GameDB.db_version != GAME_DATABASE_VERSION) && (GameDB.checksum == checksum))
         {
             bInitNeeded = UpgradeConfig();  // See if we can upgrade the config database automatically
+        }
+        
+        // We've reduced to just 2 levels of blending... 
+        if (GameDB.default_blending > 2) GameDB.default_blending = 1;
+        for (int i=0; i<MAX_GAME_SETTINGS; i++)
+        {
+            if      (GameDB.GameSettings[i].blending > 2) GameDB.GameSettings[i].blending = 1;
         }
         
         if (bInitNeeded)
@@ -544,8 +551,7 @@ const struct options_t Option_Table[2][20] =
         {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &myConfig.fps_setting,          OPT_NORMAL, 3,   "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
         {"ARTIFACTING", {"OFF",         "1:BROWN/BLUE", "2:BLUE/BROWN",
                                         "3:RED/GREEN","4:GREEN/RED"},       &myConfig.artifacting,          OPT_NORMAL, 5,   "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
-        {"SCREEN BLUR", {"NORMAL",      "BLUR1", "BLUR2", "BLUR3", 
-                         "BLUR4","BLUR5","BLUR6","BLUR7"},                  &myConfig.blending,             OPT_NORMAL, 8,   "NORMALLY BLUR6    ",   "AND VARIOUS BLUR  ",  "LEVELS WILL HELP  ",  "SCREEN SCALING.   "},
+        {"SCREEN BLUR", {"NONE",        "LIGHT", "HEAVY"},                  &myConfig.blending,             OPT_NORMAL, 3,   "NORMALLY LIGHT    ",   "BLUR TO HELP WITH ",  "SCREEN SCALING    ",  "                  "},
         {"ALPHA BLEND", {"OFF",         "ON"},                              &myConfig.alphaBlend,           OPT_NORMAL, 2,   "TURN THIS ON TO   ",   "BLEND FRAMES. THIS",  "MAKES THE SCREEN  ",  "BRIGHTER ON NON-XL"},
         {"DISK SPEEDUP",{"OFF",         "ON"},                              &myConfig.disk_speedup,         OPT_NORMAL, 2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
         {"KEY CLICK",   {"ON",          "OFF"},                             &myConfig.key_click_disable,    OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},

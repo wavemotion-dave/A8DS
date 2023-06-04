@@ -88,7 +88,7 @@ short int screen_slide_y __attribute__((section(".dtcm"))) = 0;
 bool bAtariCrash = false;                   // We use this to track any crashes that might occur and give the user a message on screen
 char last_boot_file[300] = {0};             // The last filename (.ATR or .XEX) we booted (and will be re-booted if RESET pressed)
 
-#define MAX_DEBUG 10
+#define MAX_DEBUG 16
 int debug[MAX_DEBUG]={0};                   // Turn on DEBUG_DUMP to output some data to the lower screen... useful for emulator debug: just drop values into debug[] array.
 u8 DEBUG_DUMP = 0;
 
@@ -386,25 +386,10 @@ static u8 jitter[][4] __attribute__((section(".dtcm"))) =
      0x00, 0x00},
     
     {0x00, 0x00,
-     0x11, 0x11},
-
+     0x40, 0x00},
+    
     {0x00, 0x00,
-     0x22, 0x22},
-
-    {0x00, 0x00,
-     0x33, 0x33},
-
-    {0x00, 0x00,
-     0x44, 0x44},
-
-    {0x00, 0x00,
-     0x55, 0x55},
-
-    {0x00, 0x00,
-     0x88, 0x88},
-
-    {0x00, 0x00,
-     0x99, 0x99},
+     0x80, 0x00},
 };
 
 UBYTE dampen_slide_y __attribute__((section(".dtcm")))= 0;
