@@ -82,3 +82,26 @@ u32 getFileCrc(const char* filename)
 
     return ~crc;
 }
+
+u32 getFileCrcATR(const char* filename)
+{
+    u32 crc = 0xFFFFFFFF;
+    int bytesRead;
+
+    FILE* file = fopen(filename, "rb");
+    if (file)
+    {
+        // For ATR files we are using the first 8K only - good enough and many ATR disks get written so we can't rely on more...
+        for (int i=0; i<8; i++)
+        {
+            bytesRead = fread(file_crc_buffer, 1, sizeof(file_crc_buffer), file);
+            for (int i=0; i < bytesRead; i++)
+            {
+                crc = (crc >> 8) ^ crc32_table[(crc & 0xFF) ^ (u8)file_crc_buffer[i]]; 
+            }
+        }
+        fclose(file);
+    }
+
+    return ~crc;
+}

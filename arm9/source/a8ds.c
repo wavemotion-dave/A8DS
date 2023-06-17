@@ -775,6 +775,15 @@ void dsShowRomInfo(void)
     dsPrintValue(7,0,0, line2);
 }
 
+bool isDisk(char *filename)
+{
+    if (strcasecmp(strrchr(filename, '.'), ".atr") == 0) return TRUE;
+    if (strcasecmp(strrchr(filename, '.'), ".ATR") == 0) return TRUE;
+    if (strcasecmp(strrchr(filename, '.'), ".atx") == 0) return TRUE;
+    if (strcasecmp(strrchr(filename, '.'), ".ATX") == 0) return TRUE;
+    return FALSE;
+}
+
 // ----------------------------------------------------------------------------------------
 // The master routine to read in a XEX or ATR file. We check the A8DS.DAT configuration 
 // database to see if the hash is found so we can restore user settings for the game.
@@ -797,8 +806,11 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
              strcpy(last_boot_file, filename);
         }
 
-        // Get the hash of the file... up to 128k (good enough)
-        last_crc = getFileCrc(filename);
+        // Get the hash of the file
+        if (isDisk(filename))
+            last_crc = getFileCrcATR(filename);
+        else
+            last_crc = getFileCrc(filename);
 
         // -------------------------------------------------------------------
         // If we are cold starting, go see if we have settings we can read

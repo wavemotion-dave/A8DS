@@ -22,6 +22,7 @@
 #include <nds.h>
 
 u32 getFileCrc(const char* filename);
+u32 getFileCrcATR(const char* filename);
 
 #endif
 

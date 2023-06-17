@@ -296,6 +296,9 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.7a : 17-June-2023 by wavemotion-dave
+  * Improved CRC32 of ATR files so that disks that write new content (high scores, save states, etc.) will still bring back settings properly.
+
 V3.7 : 04-June-2023 by wavemotion-dave
   * Update to Screen Blur to have just 3 settings: NONE, LIGHT and HEAVY. Default is LIGHT.
   * Improvements to memory layout to gain back additional resources.
