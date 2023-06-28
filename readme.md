@@ -1,11 +1,11 @@
 A8DS
 --------------------------------------------------------------------------------
-A8DS is an Atari 8-bit computer emulator for the Nintendo DS/DSi.  It targets the 
+A8DS is an Atari 8-bit computer emulator for the DS/DSi.  It targets the 
 800XL / 130XE systems and various hardware extensions to increase the memory. 
 The stock 800XL had 64KB of RAM. The default A8DS configuration is an
 XL/XE machine with 128KB of RAM which will run most of the 8-bit library.
 Other memory configurations are available from 48K up to 1088K which is enough
-to run nearly the entire 8-bit line up of games on their Nintendo DS/DSi handhelds.
+to run nearly the entire 8-bit line up of games on their DS/DSi handhelds.
 
 The emulator comes "equipped" with the ability to run cart dumps (ROM or CAR types),
 executable images (XEX) or disk images (ATR or ATX) which are the most popular "ROM"
@@ -62,7 +62,7 @@ help you.
 
 Copyright:
 --------------------------------------------------------------------------------
-A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
+A8DS - Atari 8-bit Emulator designed to run on the DS/DSi is
 Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
 
 Copying and distribution of this emulator, its source code and associated 
@@ -204,7 +204,7 @@ Installation :
 ----------------------------------------------------------------------------------
 * To run this on your DS or DSi (or 2DS/3DS) requires that you have the ability to launch homebrews. For the older DS units, this is usually accomplished via a FlashCart such as the R4 or one of the many clones. These tend to run about US$25. If you have a DSi or above, you can skip the R4 and instead soft-mod your unit and run something like Twilight Menu++ or Unlaunch which will run homebrew software on the DS. The DSi has a convenient SD card slot on the side that saw very little use back in the day but is a great way to enjoy homebrews. See https://dsi.cfw.guide/ to get started on how to soft-mod your unit.
 * You will want the optional BIOS Files for maximum compatibility. See BIOS section above.
-* You will also need the emulator itself. You can get this from the GitHub page - the only file you need here is A8DS.nds (the .nds is a Nintendo executable file). You can put this anywhere - most people put the .nds file into the root of the SD card.
+* You will also need the emulator itself. You can get this from the GitHub page - the only file you need here is A8DS.nds (the .nds is a executable file). You can put this anywhere - most people put the .nds file into the root of the SD card.
 * You will need games or applications in .XEX .ATR .ATX .CAR or .ROM format. Don't ask me for such files - you will be ignored.
 
 DS vs DSi vs DSi XL/LL :
