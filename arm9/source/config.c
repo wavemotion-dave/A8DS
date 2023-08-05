@@ -557,7 +557,7 @@ const struct options_t Option_Table[2][20] =
         {"KEY CLICK",   {"ON",          "OFF"},                             &myConfig.key_click_disable,    OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
         {"EMULATOR TXT",{"OFF",         "ON"},                              &myConfig.emulatorText,         OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
         {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", 
-                         "400 STYLE",  "130XE STYLE"},                      &myConfig.keyboard_type,        OPT_NORMAL, 4,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
+                         "400 STYLE",  "130XE STYLE", "STAR RAIDER"},       &myConfig.keyboard_type,        OPT_NORMAL, 5,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
         {"CART TYPE",   CART_TYPES,                                         &myConfig.cart_type,            OPT_NORMAL, 59,  "ROM FILES DONT    ",   "ALWAYS AUTODETECT ",  "SO YOU CAN SET THE",  "CARTRIDGE TYPE    "},
         {NULL,          {"",            ""},                                NULL,                           OPT_NORMAL, 2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "}
     },

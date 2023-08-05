@@ -47,6 +47,7 @@
 #include "kbd_XL2.h"
 #include "kbd_XE.h"
 #include "kbd_400.h"
+#include "kbd_starraid.h"
 #include "altirra_os.h"
 #include "altirra_basic.h"
 #include "screenshot.h"
@@ -1283,7 +1284,15 @@ static u16 shift=0;
 static u16 ctrl=0;
 void dsShowKeyboard(void)
 {
-      if (myConfig.keyboard_type == 3) // XE style
+      if (myConfig.keyboard_type == 4) // Star Raiders
+      {
+          decompress(kbd_starraidTiles, bgGetGfxPtr(bg0b), LZ77Vram);
+          decompress(kbd_starraidMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+          dmaCopy((void *) kbd_starraidPal,(u16*) BG_PALETTE_SUB,256*2);
+          unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
+          dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+      }
+      else if (myConfig.keyboard_type == 3) // XE style
       {
           decompress(kbd_XETiles, bgGetGfxPtr(bg0b), LZ77Vram);
           decompress(kbd_XEMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
@@ -1549,6 +1558,57 @@ int dsHandleKeyboard(int Tx, int Ty)
     return keyPress;
 }
 
+int dsHandleStarRaidersKeyboard(int Tx, int Ty)
+{
+    int keyPress = AKEY_NONE;
+
+    if (Ty <= 12) return AKEY_NONE;
+
+    if (Ty < 59)       // Top Row
+    {
+        if      (Tx <  32) keyPress = (AKEY_f);
+        else if (Tx <  64) keyPress = (AKEY_f);
+        else if (Tx <  96) keyPress = (AKEY_l);
+        else if (Tx < 128) keyPress = (AKEY_l);
+        else if (Tx < 160) keyPress = (AKEY_t);
+        else if (Tx < 192) keyPress = (AKEY_t);
+        else if (Tx < 224) keyPress = (AKEY_c);
+        else if (Tx < 255) keyPress = (AKEY_c);
+    }
+    else if (Ty < 105)  // Second Row
+    {
+        if      (Tx <  32) keyPress = (AKEY_a);
+        else if (Tx <  64) keyPress = (AKEY_a);
+        else if (Tx <  96) keyPress = (AKEY_g);
+        else if (Tx < 128) keyPress = (AKEY_g);
+        else if (Tx < 160) keyPress = (AKEY_s);
+        else if (Tx < 192) keyPress = (AKEY_s);
+        else if (Tx < 224) keyPress = (AKEY_m);
+        else if (Tx < 255) keyPress = (AKEY_m);
+    }
+    else if (Ty < 146)  // Third Row
+    {
+        if      (Tx <  32) keyPress = (AKEY_1);
+        else if (Tx <  64) keyPress = (AKEY_2);
+        else if (Tx <  96) keyPress = (AKEY_3);
+        else if (Tx < 128) keyPress = (AKEY_4);
+        else if (Tx < 160) keyPress = (AKEY_5);
+        else if (Tx < 192) keyPress = (AKEY_6);
+        else if (Tx < 224) keyPress = (AKEY_7);
+        else if (Tx < 255) keyPress = (AKEY_8);
+    }
+    else if (Ty < 192)  // Fourth Row
+    {
+        if      (Tx <  40) keyPress = AKEY_EXIT;
+        else if (Tx <  95) keyPress = (AKEY_0);
+        else if (Tx < 160) keyPress = (AKEY_h);
+        else if (Tx < 215) keyPress = (AKEY_9);
+        else if (Tx < 255) keyPress = (AKEY_p);
+    }
+    
+    return keyPress;
+}
+
 // -----------------------------------------------------------------------
 // Install the sound emulation - sets up a FIFO with the ARM7 processor.
 // -----------------------------------------------------------------------
@@ -1646,6 +1706,13 @@ void dsMainLoop(void)
         irqEnable(IRQ_TIMER2);
         bMute = 0;            
         emu_state = A8_PLAYGAME;
+
+        if (myConfig.keyboard_type == 4) // Star Raiders
+        {
+            bShowKeyboard = true;
+            dsShowKeyboard();
+        }
+            
         break;
 
       case A8_PLAYGAME:
@@ -1762,7 +1829,11 @@ void dsMainLoop(void)
                 {
                       if (bShowKeyboard)
                       {
-                         key_code = dsHandleKeyboard(iTx, iTy);
+                         if (myConfig.keyboard_type == 4)
+                             key_code = dsHandleStarRaidersKeyboard(iTx, iTy);
+                         else 
+                             key_code = dsHandleKeyboard(iTx, iTy);
+                          
                          if (key_code == AKEY_EXIT)
                          {
                               bShowKeyboard = false;

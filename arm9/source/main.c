@@ -76,6 +76,7 @@ int main(int argc, char **argv)
     {
         chdir("/roms");    // Try to start in roms area... doesn't matter if it fails
         chdir("a800");     // And try to start in the subdir /a800... doesn't matter if it fails.
+        chdir("a8");       // if the above failed, try a8
     }
     
     // Main loop of emulation
