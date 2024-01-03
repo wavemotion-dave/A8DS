@@ -8,7 +8,7 @@
  * it is strongly ecommended that you seek out the latest Atari800 sources.
  *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
  *
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -89,6 +89,8 @@
 
 #define NO_V_FLAG_VARIABLE      // Very slight speedup... we will check the processor status directly in the rare case of needing this...
 
+#define CPU65C02                // Do not emulate the original 6502 bug on JMP
+
 /* 6502 stack handling */
 #define PL                  dGetByte(0x0100 + ++S)
 #define PH(x)               dPutByte(0x0100 + S--, x)
@@ -107,12 +109,12 @@
 
 /* 6502 registers. */
 UWORD regPC __attribute__((section(".dtcm"))); 
-UBYTE regA __attribute__((section(".dtcm")));
-UBYTE regX __attribute__((section(".dtcm")));
-UBYTE regY __attribute__((section(".dtcm")));
-UBYTE regP __attribute__((section(".dtcm")));                       /* Processor Status Byte (Partial) */
-UBYTE regS __attribute__((section(".dtcm")));
-UBYTE IRQ __attribute__((section(".dtcm")));
+UBYTE regA  __attribute__((section(".dtcm")));
+UBYTE regX  __attribute__((section(".dtcm")));
+UBYTE regY  __attribute__((section(".dtcm")));
+UBYTE regP  __attribute__((section(".dtcm")));                       /* Processor Status Byte (Partial) */
+UBYTE regS  __attribute__((section(".dtcm")));
+UBYTE IRQ   __attribute__((section(".dtcm")));
 
 /* Transfer 6502 registers between global variables and local variables inside GO() */
 #define UPDATE_GLOBAL_REGS  regS = S; 
@@ -128,7 +130,7 @@ UBYTE IRQ __attribute__((section(".dtcm")));
 /* 6502 flags local to this module */
 UBYTE N __attribute__((section(".dtcm")));                   /* bit7 set => N flag set */
 #ifndef NO_V_FLAG_VARIABLE
-UBYTE V __attribute__((section(".dtcm")));                 /* non-zero => V flag set */
+UBYTE V __attribute__((section(".dtcm")));                   /* non-zero => V flag set */
 #endif
 UBYTE Z __attribute__((section(".dtcm")));                   /* zero     => Z flag set */
 UBYTE C __attribute__((section(".dtcm")));                   /* must be 0 or 1 */
@@ -159,13 +161,6 @@ void (*rts_handler)(void) = NULL;
 UBYTE cim_encountered = FALSE;
 
 #define INC_RET_NESTING
-
-/* Addressing modes */
-#ifdef WRAP_ZPAGE
-#define zGetWord(x) (dGetByte(x) + (dGetByte((UBYTE) ((x) + 1)) << 8))
-#else
-#define zGetWord(x) dGetWord(x)
-#endif
 
 #define OP_BYTE     PEEK_CODE_BYTE()
 #define OP_WORD     PEEK_CODE_WORD()
@@ -200,19 +195,20 @@ UBYTE cim_encountered = FALSE;
 #define PHPB1       PHP(0x7c)  /* push flags with B flag set (PHP, BRK) */
 #define PLP         data = PL; N = data; Z = (data & 0x02) ^ 0x02; C = (data & 0x01); regP = (data & 0x4c) + 0x30
 #endif /* NO_V_FLAG_VARIABLE */
-/* 1 or 2 extra cycles for conditional jumps */
+
+/* 1 or 2 extra cycles for conditional jumps -- We factored in the assumption that the branch would be taken (80+% of the time it is) so an extra cycle was already counted - we compensate with xpos-- below */
 #define BRANCH(cond) \
     if (cond) { \
-        addr = (UWORD) (SBYTE) IMMEDIATE; \
+        int addr = (int) (SBYTE) IMMEDIATE; \
         addr += GET_PC(); \
-        if ((addr ^ GET_PC()) & 0xff00) \
-            xpos++; \
-        xpos++; \
+        if ((addr ^ GET_PC()) & 0xff00) xpos++; \
         SET_PC(addr); \
         DONE \
     } \
+    xpos--; \
     PC++; \
     DONE
+
 
 /* 1 extra cycle for X (or Y) index overflow */
 #define NCYCLES_X   if ((UBYTE) addr < X) xpos++
@@ -244,39 +240,29 @@ void NMI(void)
         INC_RET_NESTING; \
     }
 
-/* Enter monitor */
-#define ENTER_MONITOR  if (!Atari800_Exit(TRUE)) exit(0)
-
-#define DO_BREAK \
-    UPDATE_GLOBAL_REGS; \
-    CPU_GetStatus(); \
-    ENTER_MONITOR; \
-    CPU_PutStatus(); \
-    UPDATE_LOCAL_REGS;
-
 
 /*  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
 static UBYTE cycles[256] __attribute__((section(".dtcm"))) =
 {
     7, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6,     /* 0x */
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 1x */
+    3, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 1x */
     6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 4, 4, 6, 6,     /* 2x */
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 3x */
+    3, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 3x */
 
     6, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 3, 4, 6, 6,     /* 4x */
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 5x */
+    3, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 5x */
     6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 5, 4, 6, 6,     /* 6x */
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 7x */
+    3, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 7x */
 
     2, 6, 2, 6, 3, 3, 3, 3, 2, 2, 2, 2, 4, 4, 4, 4,     /* 8x */
-    2, 6, 2, 6, 4, 4, 4, 4, 2, 5, 2, 5, 5, 5, 5, 5,     /* 9x */
+    3, 6, 2, 6, 4, 4, 4, 4, 2, 5, 2, 5, 5, 5, 5, 5,     /* 9x */
     2, 6, 2, 6, 3, 3, 3, 3, 2, 2, 2, 2, 4, 4, 4, 4,     /* Ax */
-    2, 5, 2, 5, 4, 4, 4, 4, 2, 4, 2, 4, 4, 4, 4, 4,     /* Bx */
+    3, 5, 2, 5, 4, 4, 4, 4, 2, 4, 2, 4, 4, 4, 4, 4,     /* Bx */
 
     2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,     /* Cx */
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* Dx */
+    3, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* Dx */
     2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,     /* Ex */
-    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7      /* Fx */
+    3, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7      /* Fx */
 };
 
 int __attribute__((noinline))  CPU_Go_Startup(int limit)
@@ -400,7 +386,10 @@ ITCM_CODE void GO(int limit)
 
     CPUCHECKIRQ;
 
-    while (xpos < xpos_limit) 
+// A jump to the next instruction will land us here just before the test on xpos
+next:
+    
+    if (xpos < xpos_limit) 
     {
         insn = GET_CODE_BYTE();
         xpos += cycles[insn];
@@ -1913,13 +1902,6 @@ ITCM_CODE void GO(int limit)
             A = (ah << 4) + (al & 0x0f);    /* Compose result */
         }
         DONE
-
-    next:
-
-        /* This "continue" does nothing here.
-           But it is necessary because, if we're not using NO_GOTO nor MONITOR_BREAK,
-           gcc can complain: "error: label at end of compound statement". */
-        continue;
     }
 
     UPDATE_GLOBAL_REGS;

@@ -7,7 +7,7 @@
  * it is strongly ecommended that you seek out the latest Atari800 sources.
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -515,6 +515,7 @@ UBYTE missile_dma_enabled __attribute__((section(".dtcm")));
 UBYTE missile_gra_enabled __attribute__((section(".dtcm")));
 UBYTE player_flickering __attribute__((section(".dtcm")));
 UBYTE missile_flickering __attribute__((section(".dtcm")));
+UBYTE missile_or_player_dma_enabled __attribute__((section(".dtcm")));
 
 UWORD pmbase_s __attribute__((section(".dtcm")));
 UWORD pmbase_d __attribute__((section(".dtcm")));
@@ -628,6 +629,7 @@ static UBYTE hold_missiles_tab[16] __attribute__((section(".dtcm"))) = {
 
 static void pmg_dma(void) {
     /* VDELAY bit set == GTIA ignores PMG DMA in even lines */
+    
     if (player_dma_enabled) {
         if (player_gra_enabled) {
             const UBYTE *base;
@@ -806,7 +808,7 @@ void ANTIC_Reset(void) {
     }\
 }
 
-static void do_border(void)
+ITCM_CODE void do_border(void)
 {
     int kk;
     UWORD *ptr = &scrn_ptr[LBORDER_START];
@@ -865,7 +867,7 @@ static void do_border_gtia11(void)
     COLOUR_TO_WORD(cl_lookup[C_BAK],COLBK)
 }
 
-static void draw_antic_0(void)
+ITCM_CODE static void draw_antic_0(void)
 {
     UWORD *ptr = scrn_ptr + LBORDER_START;
     if (pm_dirty) {
@@ -1104,7 +1106,7 @@ static void draw_an_gtia11(const ULONG *t_pm_scanline_ptr)
     if (blank_lookup[screendata & blank_mask])\
         chdata ^= chptr[(screendata & 0x7f) << 3];
 
-ITCM_CODE static void draw_antic_2(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+static void draw_antic_2(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
     INIT_BACKGROUND_6
     INIT_ANTIC_2
@@ -1161,7 +1163,7 @@ static void draw_antic_2_artif(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr
 }
 
 
-ITCM_CODE static void prepare_an_antic_2(int nchars, const UBYTE *ANTIC_memptr, const ULONG *t_pm_scanline_ptr)
+static void prepare_an_antic_2(int nchars, const UBYTE *ANTIC_memptr, const ULONG *t_pm_scanline_ptr)
 {
     UBYTE *an_ptr = (UBYTE *) t_pm_scanline_ptr + (an_scanline - pm_scanline);
     const UBYTE *chptr;
@@ -1181,7 +1183,7 @@ ITCM_CODE static void prepare_an_antic_2(int nchars, const UBYTE *ANTIC_memptr, 
     CHAR_LOOP_END
 }
 
-ITCM_CODE static void draw_antic_2_gtia9(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+static void draw_antic_2_gtia9(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
     INIT_ANTIC_2
     if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
@@ -1274,7 +1276,7 @@ static void draw_antic_2_gtia10(int nchars, const UBYTE *ANTIC_memptr, UWORD *pt
     do_border_gtia10();
 }
 
-ITCM_CODE static void draw_antic_2_gtia11(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
+static void draw_antic_2_gtia11(int nchars, const UBYTE *ANTIC_memptr, UWORD *ptr, const ULONG *t_pm_scanline_ptr)
 {
     INIT_ANTIC_2
     if ((unsigned long) ptr & 2) { /* HSCROL & 1 */
@@ -2206,13 +2208,9 @@ void ANTIC_UpdateArtifacting(void)
 
 inline UBYTE ANTIC_GetDLByte(UWORD *paddr)
 {
-    int addr = *paddr;
-    UBYTE result;
-    result = dGetByte(addr);
-    addr++;
-    if ((addr & 0x3FF) == 0)
-        addr -= 0x400;
-    *paddr = (UWORD) addr;
+    UBYTE result = dGetByte(*paddr);
+    (*paddr)++;
+    if ((*paddr & 0x3FF) == 0) *paddr -= 0x400;
     return result;
 }
 
@@ -2300,7 +2298,10 @@ ITCM_CODE void ANTIC_Frame(int draw_display)
     
     do {
         POKEY_Scanline();       /* check and generate IRQ */
-        pmg_dma();
+        if (missile_or_player_dma_enabled) 
+        {
+            pmg_dma();
+        }
 
         need_load = FALSE;
         if (need_dl) {
@@ -2572,34 +2573,6 @@ void ANTIC_PutByte(UWORD addr, UBYTE byte)
         switch (byte & 0x03) {
         case 0x00:
             /* no ANTIC_load when screen off */
-            /* chars_read[NORMAL0] = 0;
-            chars_read[NORMAL1] = 0;
-            chars_read[NORMAL2] = 0;
-            chars_read[SCROLL0] = 0;
-            chars_read[SCROLL1] = 0;
-            chars_read[SCROLL2] = 0; */
-            /* no draw_antic_* when screen off */
-            /* chars_displayed[NORMAL0] = 0;
-            chars_displayed[NORMAL1] = 0;
-            chars_displayed[NORMAL2] = 0;
-            chars_displayed[SCROLL0] = 0;
-            chars_displayed[SCROLL1] = 0;
-            chars_displayed[SCROLL2] = 0;
-            x_min[NORMAL0] = 0;
-            x_min[NORMAL1] = 0;
-            x_min[NORMAL2] = 0;
-            x_min[SCROLL0] = 0;
-            x_min[SCROLL1] = 0;
-            x_min[SCROLL2] = 0;
-            ch_offset[NORMAL0] = 0;
-            ch_offset[NORMAL1] = 0;
-            ch_offset[NORMAL2] = 0;
-            ch_offset[SCROLL0] = 0;
-            ch_offset[SCROLL1] = 0;
-            ch_offset[SCROLL2] = 0; */
-            /* no borders when screen off, only background */
-            /* left_border_chars = 48 - LCHOP - RCHOP;
-            right_border_start = 0; */
             break;
         case 0x01:
             chars_read[NORMAL0] = 32;
@@ -2686,6 +2659,7 @@ void ANTIC_PutByte(UWORD addr, UBYTE byte)
         singleline = (byte & 0x10);
         player_flickering = ((player_dma_enabled | player_gra_enabled) == 0x02);
         missile_flickering = ((missile_dma_enabled | missile_gra_enabled) == 0x01);
+        missile_or_player_dma_enabled = (missile_dma_enabled | player_dma_enabled);
 
         byte = HSCROL;  /* update horizontal scroll data */
 /* ******* FALLTHROUGH ******* */

@@ -1,4 +1,30 @@
 /*
+ * pokeysnd.c - POKEY sound chip emulation
+ * 
+ * The baseline for this file is the Atari800 2.0.x source and has
+ * been heavily modified for optimization on the Nintendo DS/DSi.
+ * Atari800 has undergone numerous improvements and enhancements
+ * since the time this file was used as a baseline for A8DS and 
+ * it is strongly recommended you seek out the latest Atari800 sources.
+ * 
+ * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
+ * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+
+ * Copying and distribution of this emulator, its source code and associated 
+ * readme files, with or without modification, are permitted in any medium without 
+ * royalty provided this full copyright notice (including the Atari800 one below) 
+ * is used and wavemotion-dave, alekmaul (original port), Atari800 team (for the
+ * original source) and Avery Lee (Altirra OS) are credited and thanked profusely.
+ * 
+ * The A8DS emulator is offered as-is, without any warranty.
+ * 
+ * Since much of the original codebase came from the Atari800 project, and since
+ * that project is released under the GPL V2, this program and source must also
+ * be distributed using that same licensing model. See COPYING for the full license
+ * but the original Atari800 copyright notice retained below:
+ */
+
+/*
  * pokeysnd.c - POKEY sound chip emulation, v2.4
  *
  * Copyright (C) 1996-1998 Ron Fries
@@ -198,7 +224,7 @@ static void Update_pokey_sound_rf(uint16 addr, uint8 val, uint8 chip, uint8 gain
     uint32 new_val = 0;
     uint8 chan;
     uint8 chan_mask;
-
+    
     /* determine which address was changed */
     switch (addr & 0x0f) {
     case _AUDF1:
@@ -364,7 +390,7 @@ static void Update_pokey_sound_rf(uint16 addr, uint8 val, uint8 chip, uint8 gain
 /* Outputs: the buffer will be filled with n bytes of audio - no return val  */
 /*                                                                           */
 /*****************************************************************************/
-void Pokey_process(void *sndbuffer, unsigned sndn)
+ITCM_CODE void Pokey_process(void *sndbuffer, unsigned sndn)
 {
     register char *buffer = (char  *) sndbuffer;
     register uint16 n = sndn;

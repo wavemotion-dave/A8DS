@@ -2,7 +2,7 @@
  * MEMORY.H Various macros to access main and extended memory...
  *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -58,7 +58,7 @@
 extern const UBYTE *antic_xe_ptr;
 extern UBYTE ROM_basic[];
 
-extern UBYTE memory[65536 + 2];
+extern UBYTE memory[0x10000];
 extern UBYTE *under_atarixl_os;
 extern UBYTE fast_page[0x1000];
 extern UBYTE *atarixe_memory;
@@ -83,6 +83,11 @@ extern UBYTE xe_mem_buffer[1024 * 1024];
 inline UBYTE dGetByte(UWORD addr)
 {
     return *(const UBYTE *)(mem_map[addr >> 12] + addr);
+}
+
+inline UWORD zGetWord(UWORD addr)
+{
+    return (fast_page[addr] | (fast_page[addr+1]<<8));
 }
 
 inline void dPutByte(UWORD addr, UBYTE data)
@@ -113,6 +118,7 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
 
 #define GetByte(addr)       (readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
 #define PutByte(addr,byte)  (writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
+
 #define SetRAM(addr1, addr2) do { \
         int i; \
         for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
@@ -121,23 +127,6 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
         } \
     } while (0)
 #define SetROM(addr1, addr2) do { \
-        int i; \
-        for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
-            readmap[i] = NULL; \
-            writemap[i] = ROM_PutByte; \
-        } \
-    } while (0)
-
-#define MEMORY_GetByte(addr)        (readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
-#define MEMORY_PutByte(addr,byte)   (writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
-#define MEMORY_SetRAM(addr1, addr2) do { \
-        int i; \
-        for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
-            readmap[i] = NULL; \
-            writemap[i] = NULL; \
-        } \
-    } while (0)
-#define MEMORY_SetROM(addr1, addr2) do { \
         int i; \
         for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
             readmap[i] = NULL; \

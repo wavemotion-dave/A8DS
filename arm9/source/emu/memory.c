@@ -8,7 +8,7 @@
  * it is strongly recommended you seek out the latest Atari800 sources.
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -64,10 +64,10 @@
 #include "pokeysnd.h"
 #include "util.h"
 
-UBYTE memory[65536 + 2] __attribute__ ((aligned (4)));                  // This is the main Atari 8-bit memory which is 64K in length plus a small buffer for safety
+UBYTE memory[0x10000] __attribute__ ((aligned (0x1000)));               // This is the main Atari 8-bit memory which is 64K in length and we align to a 4K boundary
 UBYTE *under_atarixl_os = (UBYTE *)(0x06898000+0x0000);                 // We use 16K of VRAM here as it's a little faster but also to free up normal RAM resources
 
-UBYTE fast_page[0x1000] __attribute__((section(".dtcm")));              // Fast memory for the first 4K of main memory
+UBYTE fast_page[0x1000] __attribute__((section(".dtcm")));              // Fast memory which we will map to a common 4K of main memory (zero page)
 
 rdfunc readmap[256] __attribute__((section(".dtcm")));                  // The readmap tells the memory fetcher if we should do direct memory read or call a device function instead
 wrfunc writemap[256] __attribute__((section(".dtcm")));                 // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
@@ -83,7 +83,7 @@ UBYTE *mem_map[20] __attribute__((section(".dtcm")));                   // This 
 // which only a few games can even access...  The DS has 4MB of 
 // general RAM available and that must hold all our data plus the 
 // A8DS.NDS executable itself. So this takes up a full 25% of our
-// available RAM. Stil... there isn't much else to do with the NDS
+// available RAM. Still... there isn't much else to do with the NDS
 // RAM so we may as well get the most out of it!  
 // ------------------------------------------------------------------
 UBYTE xe_mem_buffer[1024 * 1024]; // Expanded banks are 1..64 but we subtract one when indexing to give us 0..63 and 1024K of expanded memory (+64K base = 1088K)
@@ -181,7 +181,7 @@ void MEMORY_InitialiseMachine(void)
     }
     
     // We have 4K of fast DTCM memory that we will map to a common 4K RAM space on the Atari
-    mem_map[0x02]=fast_page-0x2000;
+    mem_map[0x00]=fast_page-0x0000;
     
     mem_map[UNDER_0x8] = mem_map[0x8];
     mem_map[UNDER_0x9] = mem_map[0x9];

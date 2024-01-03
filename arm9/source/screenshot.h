@@ -29,3 +29,4 @@ typedef struct {
 } PACKED INFOHEADER;
 
 #endif // SCREENSHOT_H
+

@@ -5,12 +5,12 @@ A8DS is an Atari 8-bit computer emulator for the DS/DSi.  It targets the
 The stock 800XL had 64KB of RAM. The default A8DS configuration is an
 XL/XE machine with 128KB of RAM which will run most of the 8-bit library.
 Other memory configurations are available from 48K up to 1088K which is enough
-to run nearly the entire 8-bit line up of games on their DS/DSi handhelds.
+to run nearly the entire 8-bit line up of games on the DS/DSi.
 
-The emulator comes "equipped" with the ability to run cart dumps (ROM or CAR types),
-executable images (XEX) or disk images (ATR or ATX) which are the most popular "ROM"
-types for emulators. The goal here is to make this as simple as possible - point to 
-the 8-bit Atari game/program you want to run and off it goes!
+The emulator runs cart dumps (ROM or CAR types), executable images (XEX) or disk 
+images (ATR or ATX) which are the most popular "ROM" types for emulators. The goal 
+here is to make this as simple as possible - point to the 8-bit Atari game/program 
+you want to run and off it goes!
 
 ![A8DS](https://github.com/wavemotion-dave/A8DS/blob/main/arm9/gfx/bgTop.png)
 
@@ -19,7 +19,7 @@ Features :
 ----------------------------------------------------------------------------------
 *  Memory configurations including 48K (base ATARI400/800), 64K XL/XE, 128K XE, 320K RAMBO, 576K COMPY and 1088K RAMBO
 *  CAR and ROM cartridge-based games up to 1MB in size
-*  XEX Atari 8-bit Executable images of any size provided they fit into the Memory Configuration
+*  XEX Atari 8-bit Executable images of any size provided they fit into the chosen Memory Configuration
 *  ATR and ATX disk-based games (two emulated drives supported as D1 and D2)
 *  NTSC and PAL support
 *  Virtual keyboard in various Atari 800/XL/XE stylings
@@ -63,7 +63,7 @@ help you.
 Copyright:
 --------------------------------------------------------------------------------
 A8DS - Atari 8-bit Emulator designed to run on the DS/DSi is
-Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
+Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
 
 Copying and distribution of this emulator, its source code and associated 
 readme files, with or without modification, are permitted in any medium without 
@@ -296,6 +296,11 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.8 : 03-Jan-2024 by wavemotion-dave
+  * Optmization of CPU core for a 3% speedup across the board.
+  * New Star Raiders keypad overlay integrated into the emulator.
+  * Minor tweaks, fixes and cleanup as time permitted.
+  
 V3.7a : 17-June-2023 by wavemotion-dave
   * Improved CRC32 of ATR files so that disks that write new content (high scores, save states, etc.) will still bring back settings properly.
 

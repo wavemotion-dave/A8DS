@@ -2,7 +2,7 @@
  * loadsave.c contains routines for saving state and loading state
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -43,7 +43,7 @@
 
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
-#define SAVE_FILE_REV   0x0004
+#define SAVE_FILE_REV   0x0005
 
 char save_filename[300+4];
 
@@ -215,7 +215,7 @@ void SaveGame(void)
         fwrite(&rev,                            sizeof(rev),                            1, fp);
         
         // Memory
-        memcpy(memory+0x2000, fast_page, 0x1000);
+        memcpy(memory+0x0000, fast_page, 0x1000);
         fwrite(memory,                          sizeof(memory),                         1, fp);
         fwrite(under_atarixl_os,                0x4000,                                 1, fp);
         fwrite(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
@@ -488,7 +488,7 @@ void LoadGame(void)
             dsPrintValue(0,0,0, "LOAD");
             // Memory
             fread(memory,                          sizeof(memory),                         1, fp);
-            memcpy(fast_page, memory+0x2000, 0x1000);
+            memcpy(fast_page, memory+0x0000, 0x1000);
             fread(under_atarixl_os,                0x4000,                                 1, fp);
             fread(&cart809F_enabled,               sizeof(cart809F_enabled),               1, fp);
             fread(&cartA0BF_enabled,               sizeof(cartA0BF_enabled),               1, fp);

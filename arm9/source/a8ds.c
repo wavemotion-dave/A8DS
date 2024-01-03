@@ -4,7 +4,7 @@
  * TV frequency (60Hz or 50Hz depending on NTSC or PAL).
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -18,6 +18,7 @@
  * that project is released under the GPL V2, this program and source must also
  * be distributed using that same licensing model. See COPYING for the full license.
  */
+
 #include <nds.h>
 #include <nds/fifomessages.h>
 
@@ -659,6 +660,8 @@ void load_os(void)
 // ----------------------------------------------------------------------------
 void install_os(void)
 {
+    memset(debug, 0x00, sizeof(debug));
+    
     // Otherwise we either use the Atari OS or the Altirra based on user choice...
     if (myConfig.os_type == OS_ALTIRRA_XL)
     {
@@ -1757,7 +1760,11 @@ void dsMainLoop(void)
             if (gTotalAtariFrames == (myConfig.tv_type == TV_NTSC ? 61:51)) gTotalAtariFrames = (myConfig.tv_type == TV_NTSC ? 60:50);
             if (myConfig.fps_setting) 
             { 
-                siprintf(fpsbuf,"%03d",gTotalAtariFrames); dsPrintValue(0,0,0, fpsbuf); // Show FPS
+                fpsbuf[0] = '0' + gTotalAtariFrames / 100;
+                fpsbuf[1] = '0' + (gTotalAtariFrames % 100) / 10;
+                fpsbuf[2] = '0' + (gTotalAtariFrames % 100) % 10;
+                fpsbuf[3] = 0;
+                dsPrintValue(0,0,0, fpsbuf); // Show FPS
                 if (myConfig.fps_setting==2) dsPrintValue(30,0,0,"FS");
             }
             gTotalAtariFrames = 0;

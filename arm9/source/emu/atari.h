@@ -1,3 +1,51 @@
+/*
+ * ATARI.C contains the basic machine settings for the emulator. 
+ * This defines how much RAM and whether the machine is compatible
+ * with the older stock Atari 800 or the newer XL/XE series (possibly
+ * with extended RAM banks).  This routine also sorts out the various
+ * supported ROM file types - right now, ATR, ATX and XEX are the only
+ * files supported (which will run 99% of everything 8-bit).
+ * 
+ * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
+ * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+
+ * Copying and distribution of this emulator, its source code and associated 
+ * readme files, with or without modification, are permitted in any medium without 
+ * royalty provided this full copyright notice (including the Atari800 one below) 
+ * is used and wavemotion-dave, alekmaul (original port), Atari800 team (for the
+ * original source) and Avery Lee (Altirra OS) are credited and thanked profusely.
+ * 
+ * The A8DS emulator is offered as-is, without any warranty.
+ * 
+ * Since much of the original codebase came from the Atari800 project, and since
+ * that project is released under the GPL V2, this program and source must also
+ * be distributed using that same licensing model. See COPYING for the full license
+ * but the original Atari800 copyright notice retained below:
+ */
+
+/*
+ * atari.c - main high-level routines
+ *
+ * Copyright (c) 1995-1998 David Firth
+ * Copyright (c) 1998-2006 Atari800 development team (see DOC/CREDITS)
+ *
+ * This file is part of the Atari800 emulator project which emulates
+ * the Atari 400, 800, 800XL, 130XE, and 5200 8-bit computers.
+ *
+ * Atari800 is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Atari800 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Atari800; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 #ifndef _ATARI_H_
 #define _ATARI_H_
 

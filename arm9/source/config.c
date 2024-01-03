@@ -2,7 +2,7 @@
  * config.c contains configurion handling to map all sorts of options into the emulator.
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2023 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -222,6 +222,7 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].game_crc           = last_crc;
         GameDB.GameSettings[idx].slot_used          = 1;
         GameDB.GameSettings[idx].tv_type            = myConfig.tv_type;
+        GameDB.GameSettings[idx].fps_setting        = myConfig.fps_setting;        
         GameDB.GameSettings[idx].palette_type       = myConfig.palette_type;
         GameDB.GameSettings[idx].os_type            = myConfig.os_type;
         GameDB.GameSettings[idx].basic_type         = myConfig.basic_type;
@@ -394,6 +395,7 @@ void SetMyConfigDefaults(void)
     myConfig.artifacting        = 0;
     myConfig.cart_type          = CART_NONE;
     myConfig.emulatorText       = true;
+    myConfig.fps_setting        = 0;
     myConfig.dpad_type          = 0;
     myConfig.blending           = GameDB.default_blending;
     myConfig.alphaBlend         = GameDB.default_alphaBlend;
@@ -430,6 +432,7 @@ void ApplyGameSpecificSettings(void)
         myConfig.yScale             = GameDB.GameSettings[idx].yScale;
         myConfig.artifacting        = GameDB.GameSettings[idx].artifacting;
         myConfig.palette_type       = GameDB.GameSettings[idx].palette_type;
+        myConfig.fps_setting        = GameDB.GameSettings[idx].fps_setting;            
         myConfig.os_type            = GameDB.GameSettings[idx].os_type;
         myConfig.basic_type         = GameDB.GameSettings[idx].basic_type;
         myConfig.tv_type            = GameDB.GameSettings[idx].tv_type;
