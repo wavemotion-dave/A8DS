@@ -296,6 +296,9 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.8a : 12-Jan-2024 by wavemotion-dave
+  * Optmization of the sound core to help reduce scratchy sounds.
+
 V3.8 : 03-Jan-2024 by wavemotion-dave
   * Optmization of CPU core for a 3% speedup across the board.
   * New Star Raiders keypad overlay integrated into the emulator.
