@@ -70,7 +70,7 @@ bool bShowKeyboard = false;                 // set to true when the virtual keyb
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
 // This buffer cannot be in .dtcm fast memory because the ARM7 core wouldn't see it.
 // ----------------------------------------------------------------------------------
-u8 sound_buffer[SNDLENGTH]  __attribute__((aligned (4))) = {0};
+u8 sound_buffer[32]         __attribute__((aligned (2))) = {0};
 u16* aptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
 u16* bptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
 u16 sound_idx               __attribute__((section(".dtcm"))) = 0;
@@ -101,7 +101,7 @@ u8 bFirstLoad = true;
 // Useful to help debug the emulator - this goes out approximately once
 // per second. Caller just needs to stuff values into the debug[] array.
 // ---------------------------------------------------------------------------
-static void DumpDebugData(void)
+ITCM_CODE static void DumpDebugData(void)
 {
     if (DEBUG_DUMP)
     {
@@ -838,7 +838,7 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
       // In case we switched PAL/NTSC
       dsInstallSoundEmuFIFO();
 
-      TIMER2_DATA = TIMER_FREQ(SOUND_FREQ+5);   // Very slightly faster to ensure we always swallow all samples produced by the Pokey
+      TIMER2_DATA = TIMER_FREQ(SOUND_FREQ+10);   // Very slightly faster to ensure we always swallow all samples produced by the Pokey
       TIMER2_CR = TIMER_DIV_1 | TIMER_IRQ_REQ | TIMER_ENABLE;
       irqSet(IRQ_TIMER2, VsoundHandler);
 

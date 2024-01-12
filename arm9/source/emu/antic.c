@@ -2133,8 +2133,8 @@ void ANTIC_UpdateArtifacting(void)
         return;
     }
 
-  draw_antic_table[0][2] = draw_antic_table[0][3] = draw_antic_2_artif;
-  draw_antic_table[0][0xf] = draw_antic_f_artif;
+    draw_antic_table[0][2] = draw_antic_table[0][3] = draw_antic_2_artif;
+    draw_antic_table[0][0xf] = draw_antic_f_artif;
 
     art_colours = (myConfig.artifacting <= 4 ? art_colour_table[myConfig.artifacting - 1] : art_colour_table[2]);
 
