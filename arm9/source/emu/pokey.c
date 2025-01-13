@@ -240,7 +240,7 @@ ITCM_CODE void POKEY_PutByte(UWORD addr, UBYTE byte)
             if (delay > 0)
                 DELAYED_SERIN_IRQ = delay;
         }
-        if ((~IRQST & IRQEN) == 0)
+        if (((~IRQST & IRQEN) == 0) && (PIA_IRQ == 0))
             IRQ = 0;
         break;
     case _SKRES:

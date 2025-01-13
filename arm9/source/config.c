@@ -190,7 +190,7 @@ void SetRamSizeAndOS(void)
             myConfig.os_type = OS_ALTIRRA_800;
         }
     }
-    else    // Must be 64K XL/XE or bette... so make sure we aren't using older Atari 800 BIOS
+    else    // Must be 64K XL/XE or better... so make sure we aren't using older Atari 800 BIOS
     {
         if ((myConfig.os_type == OS_ALTIRRA_800) || (myConfig.os_type == OS_ATARI_OSB))
         {

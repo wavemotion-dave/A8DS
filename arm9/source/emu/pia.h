@@ -64,9 +64,17 @@ extern UBYTE PORTA;
 extern UBYTE PORTB;
 extern UBYTE PORTA_mask;
 extern UBYTE PORTB_mask;
+extern UBYTE PIA_IRQ;
 extern UBYTE PORT_input[2];
 extern int xe_bank;
 extern int selftest_enabled;
+extern UBYTE PIA_CA2;
+extern UBYTE PIA_CA2_negpending;
+extern UBYTE PIA_CA2_pospending;
+extern UBYTE PIA_CB2;
+extern UBYTE PIA_CB2_negpending;
+extern UBYTE PIA_CB2_pospending;
+extern UBYTE PIA_IRQ;
 
 #define PIA_PORTA PORTA
 #define PIA_PORTB PORTB

@@ -389,7 +389,14 @@ void SaveGame(void)
         fwrite(PORT_input,                      sizeof(PORT_input),                     1, fp);
         fwrite(&xe_bank,                        sizeof(xe_bank),                        1, fp);
         fwrite(&selftest_enabled,               sizeof(selftest_enabled),               1, fp);
-        fwrite(spare_bytes,                     32,                                     1, fp);
+        fwrite(&PIA_CA2,                        sizeof(PIA_CA2),                        1, fp);
+        fwrite(&PIA_CA2_negpending,             sizeof(PIA_CA2_negpending),             1, fp);
+        fwrite(&PIA_CA2_pospending,             sizeof(PIA_CA2_pospending),             1, fp);
+        fwrite(&PIA_CB2,                        sizeof(PIA_CB2),                        1, fp);
+        fwrite(&PIA_CB2_negpending,             sizeof(PIA_CB2_negpending),             1, fp);
+        fwrite(&PIA_CB2_pospending,             sizeof(PIA_CB2_pospending),             1, fp);
+        fwrite(&PIA_IRQ,                        sizeof(PIA_IRQ),                        1, fp);        
+        fwrite(spare_bytes,                     25,                                     1, fp);
         
         
         // SIO
@@ -664,7 +671,14 @@ void LoadGame(void)
             fread(PORT_input,                      sizeof(PORT_input),                     1, fp);
             fread(&xe_bank,                        sizeof(xe_bank),                        1, fp);
             fread(&selftest_enabled,               sizeof(selftest_enabled),               1, fp);
-            fread(spare_bytes,                     32,                                     1, fp);
+            fread(&PIA_CA2,                        sizeof(PIA_CA2),                        1, fp);
+            fread(&PIA_CA2_negpending,             sizeof(PIA_CA2_negpending),             1, fp);
+            fread(&PIA_CA2_pospending,             sizeof(PIA_CA2_pospending),             1, fp);
+            fread(&PIA_CB2,                        sizeof(PIA_CB2),                        1, fp);
+            fread(&PIA_CB2_negpending,             sizeof(PIA_CB2_negpending),             1, fp);
+            fread(&PIA_CB2_pospending,             sizeof(PIA_CB2_pospending),             1, fp);
+            fread(&PIA_IRQ,                        sizeof(PIA_IRQ),                        1, fp);        
+            fread(spare_bytes,                     25,                                     1, fp);
 
             // SIO
             fread(SIO_drive_status,                sizeof(SIO_drive_status),               1, fp);

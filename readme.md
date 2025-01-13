@@ -24,7 +24,7 @@ Features :
 *  NTSC and PAL support
 *  Virtual keyboard in various Atari 800/XL/XE stylings
 *  R-Time8 Real-Time Clock support (mostly for SpartaDOS X)
-*  Built in Altirra OS (3.33) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware
+*  Built in Altirra OS (3.41) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware
 *  High Score support for 10 scores per game
 *  Full configuration of DS keys to any Atari 8-bit joystick/key/button
 *  Save and Restore state so you can snap out the memory/CPU and restore it to pick back up exactly where you left off
@@ -296,6 +296,12 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V3.9  : 13-Jan-2025 by wavemotion-dave
+  * Altirra OS updated to 3.41 (Altirra BASIC still at 1.58)
+  * Touch-up on the keyboard graphics to make the smaller font bolder / more readable on DS screen
+  * Fixed on Acid800 test - we now comply with the JMP indirect bug on the 6502.
+  * PIA emulation improvements to match latest Atari800 core.
+
 V3.8a : 12-Jan-2024 by wavemotion-dave
   * Optmization of the sound core to help reduce scratchy sounds.
 

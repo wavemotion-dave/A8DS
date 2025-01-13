@@ -89,7 +89,7 @@
 
 #define NO_V_FLAG_VARIABLE      // Very slight speedup... we will check the processor status directly in the rare case of needing this...
 
-#define CPU65C02                // Do not emulate the original 6502 bug on JMP
+//#define CPU65C02                // Do not emulate the original 6502 bug on JMP
 
 /* 6502 stack handling */
 #define PL                  dGetByte(0x0100 + ++S)
