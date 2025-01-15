@@ -530,7 +530,7 @@ struct options_t
                       "KEY A", "KEY B", "KEY C", "KEY D", "KEY E", "KEY F", "KEY G", "KEY H", "KEY I", "KEY J", "KEY K", "KEY L", "KEY M", "KEY N", "KEY O",                        \
                       "KEY P", "KEY Q", "KEY R", "KEY S", "KEY T", "KEY U", "KEY V", "KEY W", "KEY X", "KEY Y", "KEY Z", "KEY 0", "KEY 1", "KEY 2", "KEY 3",                        \
                       "KEY 4", "KEY 5", "KEY 6", "KEY 7", "KEY 8", "KEY 9", "KEY UP", "KEY DOWN", "KEY LEFT", "KEY RIGHT", "KEY SPARE1", "KEY SPARE2",                              \
-                      "KEY SPARE3", "VERTICAL+", "VERTICAL++", "VERTICAL-", "VERTICAL--", "HORIZONTAL+", "HORIZONTAL++", "HORIZONTAL-", "HORIZONTAL--", "OFFSET DPAD", "SCALE DPAD"}
+                      "KEY SPARE3", "VERTICAL+", "VERTICAL++", "VERTICAL-", "VERTICAL--", "HORIZONTAL+", "HORIZONTAL++", "HORIZONTAL-", "HORIZONTAL--", "OFFSET DPAD", "SCALE DPAD", "ZOOM SCREEN"}
 
 #define CART_TYPES {"00-NONE", "01-STD8", "02-STD16", "03-OSS16-034M", "04-NO SUPPORT", "05-DB32", "06-NO SUPPORT", "07-NO SUPPORT", "08-WILLIAMS64", "09-EXP64", "10-DIAMOND64", "11-SDX64", "12-XEGS32",       \
                     "13-XEGS64", "14-XEGS128", "15-OSS16", "16-NO SUPPORT", "17-ATRAX128", "18-BOUNTY BOB", "19-NO SUPPORT", "20-NO SUPPORT", "21-NO SUPPORT", "22-WILLIAMS32", "23-XEGS256", "24-XEGS512",      \
@@ -556,8 +556,8 @@ const struct options_t Option_Table[2][20] =
                                         "3:RED/GREEN","4:GREEN/RED"},       &myConfig.artifacting,          OPT_NORMAL, 5,   "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
         {"SCREEN BLUR", {"NONE",        "LIGHT", "HEAVY"},                  &myConfig.blending,             OPT_NORMAL, 3,   "NORMALLY LIGHT    ",   "BLUR TO HELP WITH ",  "SCREEN SCALING    ",  "                  "},
         {"ALPHA BLEND", {"OFF",         "ON"},                              &myConfig.alphaBlend,           OPT_NORMAL, 2,   "TURN THIS ON TO   ",   "BLEND FRAMES. THIS",  "MAKES THE SCREEN  ",  "BRIGHTER ON NON-XL"},
-        {"DISK SPEEDUP",{"OFF",         "ON"},                              &myConfig.disk_speedup,         OPT_NORMAL, 2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
         {"KEY CLICK",   {"ON",          "OFF"},                             &myConfig.key_click_disable,    OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
+        {"DISK SPEED",  {"ACCURATE",    "FAST"},                            &myConfig.disk_speedup,         OPT_NORMAL, 2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
         {"EMULATOR TXT",{"OFF",         "ON"},                              &myConfig.emulatorText,         OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
         {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", 
                          "400 STYLE",  "130XE STYLE", "STAR RAIDER"},       &myConfig.keyboard_type,        OPT_NORMAL, 5,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
@@ -566,14 +566,14 @@ const struct options_t Option_Table[2][20] =
     },
     // Page 2
     {
-        {"A BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[0],            OPT_KEYSEL, 71,  "SET THE A KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"B BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[1],            OPT_KEYSEL, 71,  "SET THE B KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"X BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[2],            OPT_KEYSEL, 71,  "SET THE X KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"Y BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[3],            OPT_KEYSEL, 71,  "SET THE Y KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"L BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[4],            OPT_KEYSEL, 71,  "SET THE L KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"R BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[5],            OPT_KEYSEL, 71,  "SET THE R KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"START BTN",   KEY_MAP_TEXT,                                       &myConfig.keyMap[6],            OPT_KEYSEL, 71,  "SET START KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
-        {"SELECT BTN",  KEY_MAP_TEXT,                                       &myConfig.keyMap[7],            OPT_KEYSEL, 71,  "SET SELECT KEY TO ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"A BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[0],            OPT_KEYSEL, 72,  "SET THE A KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"B BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[1],            OPT_KEYSEL, 72,  "SET THE B KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"X BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[2],            OPT_KEYSEL, 72,  "SET THE X KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"Y BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[3],            OPT_KEYSEL, 72,  "SET THE Y KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"L BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[4],            OPT_KEYSEL, 72,  "SET THE L KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"R BUTTON",    KEY_MAP_TEXT,                                       &myConfig.keyMap[5],            OPT_KEYSEL, 72,  "SET THE R KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"START BTN",   KEY_MAP_TEXT,                                       &myConfig.keyMap[6],            OPT_KEYSEL, 72,  "SET START KEY TO  ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
+        {"SELECT BTN",  KEY_MAP_TEXT,                                       &myConfig.keyMap[7],            OPT_KEYSEL, 72,  "SET SELECT KEY TO ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
         {"D-PAD",       {"JOY 1", "JOY 2", "DIAGONALS", "CURSORS"},         &myConfig.dpad_type,            OPT_NORMAL, 4,   "CHOOSE HOW THE    ",   "JOYSTICK OPERATES ",  "CAN SWAP JOY1 AND ",  "JOY2 OR MAP CURSOR"},    
         {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &myConfig.auto_fire,            OPT_NORMAL, 4,   "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC     ",  "FAST = 15x/SEC    "},
         {"X OFFSET",    {"XX"},                                     (UBYTE*)&myConfig.xOffset,              OPT_NUMERIC,0,   "SET SCREEN OFFSET ",   "                  ",  "                  ",  "                  "},

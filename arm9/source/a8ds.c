@@ -4,7 +4,7 @@
  * TV frequency (60Hz or 50Hz depending on NTSC or PAL).
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -36,11 +36,13 @@
 #include "cartridge.h"
 #include "input.h"
 #include "esc.h"
+#include "memory.h"
 #include "rtime.h"
 #include "emu/pia.h"
 
 #include "clickNoQuit_wav.h"
 #include "keyclick_wav.h"
+#include "sio_wav.h"
 #include "bgBottom.h"
 #include "bgTop.h"
 #include "bgFileSel.h"
@@ -81,6 +83,8 @@ u16 sampleExtender[256]     __attribute__((section(".dtcm"))) = {0};
 short int screen_slide_x __attribute__((section(".dtcm"))) = 0;
 short int screen_slide_y __attribute__((section(".dtcm"))) = 0;
 
+u16 play_sio_sound = 0;
+
 #define  cxBG (myConfig.xOffset<<8)
 #define  cyBG (myConfig.yOffset<<8)
 #define  xdxBG (((320 / myConfig.xScale) << 8) | (320 % myConfig.xScale))
@@ -119,32 +123,31 @@ ITCM_CODE static void DumpDebugData(void)
 // Called when the SIO driver indicates disk activity so we can show a small
 // pattern on the top line of the bottom display - the user waits while loading.
 // ---------------------------------------------------------------------------
+static u8 actidx=0;
 void dsShowDiskActivity(int drive)
 {
-    static char activity[7] = {'*','+','*','*','+','+','+'};
+    static char activity[8] = {'*','+','*','*','+','+','+','*'};
     char buf[5];
-    static u8 actidx=0;
+
+    // ----------------------------------------------------------------
+    // If we are using normal disk speed access, we disable the SOUNDR
+    // register so that the OS ROM will not make chirp noise. We'll do 
+    // the sound effects ourselves and it will sound cleaner...
+    // ----------------------------------------------------------------
+    if (myConfig.disk_speedup == 0)
+    {
+        dPutByte(0x0041, 0x00);  // SOUNDR ... disable I/O Sound in the OS ROM
+    }
 
     buf[0] = 'D';
     buf[1] = '1'+drive;
     buf[2] = activity[++actidx & 0x7];
     buf[3] = 0;
     dsPrintValue(3,0,0, buf);
+    
+    if (play_sio_sound < 75) play_sio_sound += 25;
 }
 
-// ---------------------------------------------------------------------------
-// Called to clear the disk activity display information on the screen.
-// ---------------------------------------------------------------------------
-void dsClearDiskActivity(void)
-{
-    char buf[5];
-
-    buf[0] = ' ';
-    buf[1] = ' ';
-    buf[2] = ' ';
-    buf[3] = 0;
-    dsPrintValue(3,0,0, buf);
-}
 
 // ---------------------------------------------------------------------------
 // This is called very frequently (about 16,000 times per second) to fill the
@@ -397,32 +400,43 @@ static u8 jitter[][4] __attribute__((section(".dtcm"))) =
 UBYTE dampen_slide_y __attribute__((section(".dtcm")))= 0;
 UBYTE dampen_slide_x __attribute__((section(".dtcm")))= 0;
 
+u8 bScreenZoom       __attribute__((section(".dtcm")))= 0;
+s16 bZoomX           __attribute__((section(".dtcm")))= 0;
+s16 bZoomY           __attribute__((section(".dtcm")))= 0;
 ITCM_CODE void vblankIntr()
 {
-    REG_BG2PA = xdxBG;
-    REG_BG2PD = ydyBG;
-
-    REG_BG3PA = xdxBG;
-    REG_BG3PD = ydyBG;
-    
-    REG_BG3X = REG_BG2X = cxBG+jitter[myConfig.blending][sIndex++]+(screen_slide_x<<8);
-    REG_BG3Y = REG_BG2Y = cyBG+jitter[myConfig.blending][sIndex++]+(screen_slide_y<<8);
-
-    sIndex = sIndex & 0x03;
-    
-    if (sIndex == 0)
+    if (bScreenZoom)
     {
-        if (dampen_slide_y == 0)
-        {
-            if (screen_slide_y < 0) screen_slide_y++;
-            else if (screen_slide_y > 0) screen_slide_y--;
-        } else dampen_slide_y--;
+        REG_BG2PA = REG_BG3PA = 0x0100; // Zoom is 1:1 (320x256)
+        REG_BG2PD = REG_BG3PD = 0x0100; // Zoom is 1:1 (320x256)
+
+        REG_BG3X = REG_BG2X = cxBG + (bZoomX << 8);
+        REG_BG3Y = REG_BG2Y = cyBG + (bZoomY << 8);
+    }
+    else
+    {
+        REG_BG2PA = REG_BG3PA = xdxBG;
+        REG_BG2PD = REG_BG3PD = ydyBG;
         
-        if (dampen_slide_x == 0)
+        REG_BG3X = REG_BG2X = cxBG+jitter[myConfig.blending][sIndex++]+(screen_slide_x<<8);
+        REG_BG3Y = REG_BG2Y = cyBG+jitter[myConfig.blending][sIndex++]+(screen_slide_y<<8);
+
+        sIndex = sIndex & 0x03;
+        
+        if (sIndex == 0)
         {
-            if (screen_slide_x < 0) screen_slide_x++;
-            else if (screen_slide_x > 0) screen_slide_x--;
-        } else dampen_slide_x--;
+            if (dampen_slide_y == 0)
+            {
+                if (screen_slide_y < 0) screen_slide_y++;
+                else if (screen_slide_y > 0) screen_slide_y--;
+            } else dampen_slide_y--;
+            
+            if (dampen_slide_x == 0)
+            {
+                if (screen_slide_x < 0) screen_slide_x++;
+                else if (screen_slide_x > 0) screen_slide_x--;
+            } else dampen_slide_x--;
+        }
     }
 }
 
@@ -1550,6 +1564,8 @@ int dsHandleKeyboard(int Tx, int Ty)
     else if (ctrl)
     {
         keyPress |= AKEY_CTRL;
+        ctrl = 0;
+        dsPrintValue(0,0,0, "   ");
     }
     else if (keyPress != AKEY_NONE)
     {
@@ -1657,7 +1673,67 @@ void dsInstallSoundEmuFIFO(void)
         swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to start chugging...
         irqEnable(IRQ_TIMER2);
     }
-    
+}
+
+// Called roughly every 1/60th of a second... 
+void dsHandleDiskSounds(void)
+{
+    if (myConfig.disk_speedup == 0) // Accurate/Slow mode?
+    {
+        static int soundID=0;
+        static u8 play_sio_sound_dampen = 0;
+        if (play_sio_sound)
+        {
+            if (--play_sio_sound)
+            {
+                if (play_sio_sound_dampen == 0)
+                {
+                    soundID = soundPlaySample(sio_wav, SoundFormat_16Bit, sio_wav_size, 22050, 101, 64, true, 0);
+                    play_sio_sound_dampen = 1;
+                }
+            }
+            else
+            {
+                soundKill(soundID);
+                dsPrintValue(3,0,0, "   ");
+                play_sio_sound_dampen = 0;
+            }
+        }
+    }
+    else if (play_sio_sound)
+    {
+        if (--play_sio_sound == 0)
+        {
+            dsPrintValue(3,0,0, "   ");
+        }
+    }
+}
+
+void dsZoomScreen(void)
+{
+    u32 savedTimer0 = TIMER0_DATA;
+    bMute = 1;
+    bScreenZoom = 1;    // vblankIntr() will zoom screen now
+    while (keysCurrent() & (KEY_LEFT | KEY_RIGHT | KEY_DOWN | KEY_UP | KEY_A | KEY_B | KEY_Y | KEY_X | KEY_L | KEY_R | KEY_START | KEY_SELECT)) {WAITVBL;}   // Wait for release
+    dsPrintValue(0,0,0, "ZOOM MODE");
+    while (true)
+    {
+        u16 keys = keysCurrent();
+        
+        if (keys & (KEY_A | KEY_B | KEY_Y | KEY_X | KEY_L | KEY_R | KEY_START | KEY_SELECT)) break;
+        if (keys & KEY_RIGHT)  {if (bZoomX < 64)  bZoomX++; swiWaitForVBlank();}
+        if (keys & KEY_LEFT)   {if (bZoomX > 0)   bZoomX--; swiWaitForVBlank();}
+        if (keys & KEY_DOWN)   {if (bZoomY < 32)  bZoomY++; swiWaitForVBlank();}
+        if (keys & KEY_UP)     {if (bZoomY > -16) bZoomY--; swiWaitForVBlank();}
+    }
+
+    bScreenZoom = 0; // Back to normal screen handling
+    while (keysCurrent() & (KEY_LEFT | KEY_RIGHT | KEY_DOWN | KEY_UP | KEY_A | KEY_B | KEY_Y | KEY_X | KEY_L | KEY_R | KEY_START | KEY_SELECT)) {WAITVBL;}   // Wait for release
+    dsPrintValue(0,0,0, "         ");
+    bMute = 0;
+    TIMER0_CR=0;
+    TIMER0_DATA=savedTimer0;
+    TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
 }
 
 // -------------------------------------------------------------------------------
@@ -1769,9 +1845,10 @@ void dsMainLoop(void)
             }
             gTotalAtariFrames = 0;
             DumpDebugData();
-            dsClearDiskActivity();
             if(bAtariCrash) dsPrintValue(1,23,0, "GAME CRASH - PICK ANOTHER GAME");
         }
+        
+        dsHandleDiskSounds();
 
         // --------------------------------------------
         // Read DS/DSi keys and process them below...
@@ -2076,6 +2153,9 @@ void dsMainLoop(void)
                             if ((keys_pressed & KEY_RIGHT))  if (myConfig.xScale < 320)  myConfig.xScale++;
                             if ((keys_pressed & KEY_LEFT))   if (myConfig.xScale >= 192) myConfig.xScale--;
                         }
+                        break;                        
+                    case 71:
+                        dsZoomScreen();
                         break;                        
                 }
             }
