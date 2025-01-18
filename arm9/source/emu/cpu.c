@@ -269,7 +269,7 @@ int __attribute__((noinline))  CPU_Go_Startup(int limit)
 {
     if (wsync_halt) {
 #ifdef NEW_CYCLE_EXACT
-		if (DRAWING_SCREEN) {
+        if (DRAWING_SCREEN) {
 /* if ANTIC_WSYNC_C is a stolen cycle, ANTIC_antic2cpu_ptr will convert that to the nearest
    cpu cycle before that cycle.  The CPU will see this cycle, if WSYNC is not
    delayed. (Actually this cycle is the first cycle of the instruction after
@@ -277,16 +277,16 @@ int __attribute__((noinline))  CPU_Go_Startup(int limit)
    of an internal antic delay ).   ANTIC_delayed_wsync is added to this cycle to form
    the limit in the case that WSYNC is not early (does not allow this extra cycle) */
 
-			if (limit < antic2cpu_ptr[WSYNC_C] + delayed_wsync)
-				return 1;
-			xpos = antic2cpu_ptr[WSYNC_C] + delayed_wsync;
-		}
-		else {
-			if (limit < (WSYNC_C + delayed_wsync))
-				return 1;
-			xpos = WSYNC_C;
-		}
-		delayed_wsync = 0;
+            if (limit < antic2cpu_ptr[WSYNC_C] + delayed_wsync)
+                return 1;
+            xpos = antic2cpu_ptr[WSYNC_C] + delayed_wsync;
+        }
+        else {
+            if (limit < (WSYNC_C + delayed_wsync))
+                return 1;
+            xpos = WSYNC_C;
+        }
+        delayed_wsync = 0;
 
 #else /* NEW_CYCLE_EXACT */
         
@@ -1899,14 +1899,14 @@ next:
         }
         else {
             /* Decimal mode */
-			unsigned int tmp;
-			tmp = (A & 0x0f) - (data & 0x0f) - 1 + C;
-			if (tmp & 0x10)
-				tmp = ((tmp - 0x06) & 0x0f) - 0x10;
-			tmp += (A & 0xf0) - (data & 0xf0);
-			if (tmp & 0x100)
-				tmp -= 0x60;
-			Z = N = A - data - 1 + C;
+            unsigned int tmp;
+            tmp = (A & 0x0f) - (data & 0x0f) - 1 + C;
+            if (tmp & 0x10)
+                tmp = ((tmp - 0x06) & 0x0f) - 0x10;
+            tmp += (A & 0xf0) - (data & 0xf0);
+            if (tmp & 0x100)
+                tmp -= 0x60;
+            Z = N = A - data - 1 + C;
 #ifndef NO_V_FLAG_VARIABLE
             V = ((A ^ data) & 0x80) && ((A ^ Z) & 0x80);
 #else

@@ -1,23 +1,23 @@
 /*
  * input.c - keyboard, joysticks and mouse emulation
- * 
+ *
  * The baseline for this file is the Atari800 2.0.x source and has
  * been heavily modified for optimization on the Nintendo DS/DSi.
  * Atari800 has undergone numerous improvements and enhancements
- * since the time this file was used as a baseline for A8DS and 
+ * since the time this file was used as a baseline for A8DS and
  * it is strongly ecommended that you seek out the latest Atari800 sources.
  *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
  * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
  *
- * Copying and distribution of this emulator, its source code and associated 
- * readme files, with or without modification, are permitted in any medium without 
- * royalty provided this full copyright notice (including the Atari800 one below) 
+ * Copying and distribution of this emulator, its source code and associated
+ * readme files, with or without modification, are permitted in any medium without
+ * royalty provided this full copyright notice (including the Atari800 one below)
  * is used and wavemotion-dave, alekmaul (original port), Atari800 team (for the
  * original source) and Avery Lee (Altirra OS) are credited and thanked profusely.
- * 
+ *
  * The A8DS emulator is offered as-is, without any warranty.
- * 
+ *
  * Since much of the original codebase came from the Atari800 project, and since
  * that project is released under the GPL V2, this program and source must also
  * be distributed using that same licensing model. See COPYING for the full license
@@ -72,7 +72,7 @@ static UBYTE TRIG_input[4];
 
 void INPUT_Initialise(void) {}
 
-void INPUT_Frame(void) 
+void INPUT_Frame(void)
 {
     int i;
     static int last_key_code = AKEY_NONE;
@@ -81,7 +81,7 @@ void INPUT_Frame(void)
 
     /* handle keyboard */
     i = (key_code == AKEY_BREAK);
-  
+
     if (i && !last_key_break) {
         if (IRQEN & 0x80) {
             IRQST &= ~0x80;
@@ -94,22 +94,22 @@ void INPUT_Frame(void)
     if (key_shift)
         SKSTAT &= ~8;
 
-    if (key_code < 0) 
+    if (key_code < 0)
     {
-        if (CASSETTE_press_space) 
+        if (CASSETTE_press_space)
         {
             key_code = AKEY_SPACE;
             CASSETTE_press_space = 0;
         }
-        else 
+        else
         {
             last_key_code = AKEY_NONE;
         }
     }
-    if (key_code >= 0) 
+    if (key_code >= 0)
     {
         SKSTAT &= ~4;
-        if ((key_code ^ last_key_code) & ~AKEY_SHFTCTRL) 
+        if ((key_code ^ last_key_code) & ~AKEY_SHFTCTRL)
         {
             /* ignore if only shift or control has changed its state */
             last_key_code = key_code;
@@ -134,7 +134,7 @@ void INPUT_Frame(void)
     STICK[0] = i & 0x0f;
     STICK[1] = (i >> 4) & 0x0f;
 
-    for (i = 0; i < 2; i++) 
+    for (i = 0; i < 2; i++)
     {
         if ((STICK[i] & 0x0c) == 0) {   /* right and left simultaneously */
             if (last_stick[i] & 0x04)   /* if wasn't left before, move left */
@@ -156,9 +156,9 @@ void INPUT_Frame(void)
             last_stick[i] &= 0x0c;
             last_stick[i] |= STICK[i] & 0x03;
         }
-        
+
         TRIG_input[i] = (i==0 ? trig0:trig1);
-        
+
         switch(myConfig.auto_fire)
         {
             case 1:
@@ -177,7 +177,7 @@ void INPUT_Frame(void)
     {
         POT_input[i] = Atari_POT(i);
     }
-    
+
     TRIG[0] = TRIG_input[0];
     TRIG[1] = TRIG_input[1];
     PORT_input[0] = (STICK[1] << 4) | STICK[0];

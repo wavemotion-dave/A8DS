@@ -2,18 +2,18 @@
  * A8DS.C contains the main loop and related file selection utilities.
  * This is where the main state machine is located and executes at the
  * TV frequency (60Hz or 50Hz depending on NTSC or PAL).
- * 
+ *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
  * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
 
- * Copying and distribution of this emulator, its source code and associated 
- * readme files, with or without modification, are permitted in any medium without 
- * royalty provided this full copyright notice (including the Atari800 one below) 
+ * Copying and distribution of this emulator, its source code and associated
+ * readme files, with or without modification, are permitted in any medium without
+ * royalty provided this full copyright notice (including the Atari800 one below)
  * is used and wavemotion-dave, alekmaul (original port), Atari800 team (for the
  * original source) and Avery Lee (Altirra OS) are credited and thanked profusely.
- * 
+ *
  * The A8DS emulator is offered as-is, without any warranty.
- * 
+ *
  * Since much of the original codebase came from the Atari800 project, and since
  * that project is released under the GPL V2, this program and source must also
  * be distributed using that same licensing model. See COPYING for the full license.
@@ -59,22 +59,22 @@
 #include "highscore.h"
 #include "loadsave.h"
 
-#define MAX_FILES 1024                       // No more than this many files can be processed per directory
+#define MAX_FILES 1024                      // No more than this many files can be processed per directory
 
 FICA_A8 *a8romlist;                         // For reading all the .ATR .XEX .CAR and .ROM files from the SD card
 u16 count8bit=0, countfiles=0, ucFicAct=0;  // Counters for all the 8-bit files found on the SD card
 u16 gTotalAtariFrames = 0;                  // For FPS counting
-int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background "pointers"
-u16 emu_state;                              // Emulate State
+int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background screen "pointers"
+u16 emu_state;                              // Emulator State
 u16 atari_frames = 0;                       // Number of frames per second (60 for NTSC and 50 for PAL)
-bool bShowKeyboard = false;                 // set to true when the virtual keyboard is showing
+int bShowKeyboard = false;                  // set to true when the virtual keyboard is showing
 
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
 // This buffer cannot be in .dtcm fast memory because the ARM7 core wouldn't see it.
 // ----------------------------------------------------------------------------------
 u8 sound_buffer[32]         __attribute__((aligned (2))) = {0};
-u16* aptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
+u16* aptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000);
 u16* bptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
 u16 sound_idx               __attribute__((section(".dtcm"))) = 0;
 u8 myPokeyBufIdx            __attribute__((section(".dtcm"))) = 0;
@@ -133,12 +133,12 @@ ITCM_CODE static void DumpDebugData(void)
             siprintf(dbgbuf, "%02d: %10d  %08X", i, debug[i], debug[i]);
             dsPrintValue(0,3+i,0, dbgbuf);
         }
-        
+
         struct mallinfo mi = mallinfo();
         siprintf(dbgbuf, "DYNAMIC MEM USED: %d ", mi.uordblks);
         dsPrintValue(0,22,0, dbgbuf);
         siprintf(dbgbuf, "FREE HEAP MEMORY: %d ", getMemFree());
-        dsPrintValue(0,23,0, dbgbuf);        
+        dsPrintValue(0,23,0, dbgbuf);
     }
 }
 
@@ -155,7 +155,7 @@ void dsShowDiskActivity(int drive)
 
     // ----------------------------------------------------------------
     // If we are using normal disk speed access, we disable the SOUNDR
-    // register so that the OS ROM will not make chirp noise. We'll do 
+    // register so that the OS ROM will not make chirp noise. We'll do
     // the sound effects ourselves and it will sound cleaner...
     // ----------------------------------------------------------------
     if (myConfig.disk_speedup == 0)
@@ -168,8 +168,8 @@ void dsShowDiskActivity(int drive)
     buf[2] = activity[++actidx & 0x7];
     buf[3] = 0;
     dsPrintValue(3,0,0, buf);
-    
-    if (play_sio_sound < 75) play_sio_sound += 25;
+
+    if (play_sio_sound < (myConfig.disk_speedup ? 25 : 75)) play_sio_sound += 25;
 }
 
 
@@ -182,10 +182,10 @@ ITCM_CODE void VsoundHandler(void)
 {
     extern unsigned char pokey_buffer[];
     extern u16 pokeyBufIdx;
-    
+
     if (bMute) *bptr = *aptr;
 
-    // If there is a fresh sample... 
+    // If there is a fresh sample...
     else if (myPokeyBufIdx != pokeyBufIdx)
     {
         u16 sample = sampleExtender[pokey_buffer[myPokeyBufIdx++]];
@@ -374,25 +374,25 @@ void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr,
     // Fade-out to black...
     if (ucScr & 0x01) REG_BLDCNT=ucBG;
     if (ucScr & 0x02) REG_BLDCNT_SUB=ucBG;
-    if (ucSens == 1) 
+    if (ucSens == 1)
     {
-        for(ucFade=0;ucFade<valEnd;ucFade++) 
+        for(ucFade=0;ucFade<valEnd;ucFade++)
         {
             if (ucScr & 0x01) REG_BLDY=ucFade;
             if (ucScr & 0x02) REG_BLDY_SUB=ucFade;
-            for (ucBcl=0;ucBcl<uWait;ucBcl++) 
+            for (ucBcl=0;ucBcl<uWait;ucBcl++)
             {
                 swiWaitForVBlank();
             }
         }
     }
-    else 
+    else
     {
-        for(ucFade=16;ucFade>valEnd;ucFade--) 
+        for(ucFade=16;ucFade>valEnd;ucFade--)
         {
             if (ucScr & 0x01) REG_BLDY=ucFade;
             if (ucScr & 0x02) REG_BLDY_SUB=ucFade;
-            for (ucBcl=0;ucBcl<uWait;ucBcl++) 
+            for (ucBcl=0;ucBcl<uWait;ucBcl++)
             {
                 swiWaitForVBlank();
             }
@@ -403,8 +403,8 @@ void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr,
 // -----------------------------------------------------------------------
 // We use the jitter arrays to dither the pixel output slighty
 // on screen so that the eye is tricked into seeing full resolution.
-// This is needed because the Atari horizontal resolution can be 
-// up to 320 pixels but the DS only has 256. By doing this, we 
+// This is needed because the Atari horizontal resolution can be
+// up to 320 pixels but the DS only has 256. By doing this, we
 // see a better rendition of letters and numbers which othewise
 // will have pixels not showing. It's far from perfect - but workable.
 // -----------------------------------------------------------------------
@@ -413,10 +413,10 @@ static u8 jitter[][4] __attribute__((section(".dtcm"))) =
 {
     {0x00, 0x00,
      0x00, 0x00},
-    
+
     {0x00, 0x00,
      0x40, 0x00},
-    
+
     {0x00, 0x00,
      0x80, 0x00},
 };
@@ -441,12 +441,12 @@ ITCM_CODE void vblankIntr()
     {
         REG_BG2PA = REG_BG3PA = xdxBG;
         REG_BG2PD = REG_BG3PD = ydyBG;
-        
+
         REG_BG3X = REG_BG2X = cxBG+jitter[myConfig.blending][sIndex++]+(screen_slide_x<<8);
         REG_BG3Y = REG_BG2Y = cyBG+jitter[myConfig.blending][sIndex++]+(screen_slide_y<<8);
 
         sIndex = sIndex & 0x03;
-        
+
         if (sIndex == 0)
         {
             if (dampen_slide_y == 0)
@@ -454,7 +454,7 @@ ITCM_CODE void vblankIntr()
                 if (screen_slide_y < 0) screen_slide_y++;
                 else if (screen_slide_y > 0) screen_slide_y--;
             } else dampen_slide_y--;
-            
+
             if (dampen_slide_x == 0)
             {
                 if (screen_slide_x < 0) screen_slide_x++;
@@ -511,7 +511,7 @@ void dsInitTimer(void)
 // pixel. This is sufficient for any Atari rendering.
 // The actual DS display is 256x192 and so there must
 // be some scaling/offset handling which is handled
-// below as well. 
+// below as well.
 // --------------------------------------------------
 void dsShowScreenEmu(void)
 {
@@ -520,13 +520,13 @@ void dsShowScreenEmu(void)
     {
         videoSetMode(MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
         bg2 = bgInit(2, BgType_Bmp8, BgSize_B8_512x512, 0,0);
-        bg3 = bgInit(3, BgType_Bmp8, BgSize_B8_512x512, 0,0);    
+        bg3 = bgInit(3, BgType_Bmp8, BgSize_B8_512x512, 0,0);
 
         REG_BLDY=0;
 
         // Trying a 25/75 Alpha Blend...
         REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
-        REG_BLDALPHA = (0x9 << 8) | 0xF; // 25% / 75% 
+        REG_BLDALPHA = (0x9 << 8) | 0xF; // 25% / 75%
 
         REG_BG3PB = 0;
         REG_BG3PC = 0;
@@ -543,7 +543,7 @@ void dsShowScreenEmu(void)
 
         REG_BLDY=0;
         REG_BLDCNT = 0;
-        REG_BLDALPHA = 0; 
+        REG_BLDALPHA = 0;
 
         REG_BG3PB = 0;
         REG_BG3PC = 0;
@@ -556,18 +556,18 @@ void dsShowScreenEmu(void)
 
     REG_BG2PB = 0;
     REG_BG2PC = 0;
-    
+
     REG_BG2X = cxBG;
     REG_BG2Y = cyBG;
     REG_BG2PA = xdxBG;
     REG_BG2PD = ydyBG;
-    
+
 }
 
 // --------------------------------------------------------------------
 // The main screen is the bottom display (under the emulator screen).
 // We use a smaller 256x256 buffer and some of the off-screen is used
-// to store some sprites for the A-Z,0-9 alphabet so we can display 
+// to store some sprites for the A-Z,0-9 alphabet so we can display
 // lots of text superimposed over the background image.
 // --------------------------------------------------------------------
 void dsShowScreenMain(void)
@@ -595,7 +595,7 @@ void dsShowScreenMain(void)
     REG_BLDCNT_SUB=0; REG_BLDY_SUB=0;
 
     swiWaitForVBlank();
-    
+
     dsShowRomInfo();
 }
 
@@ -617,7 +617,7 @@ void dsFreeEmu(void)
 //      - 12k Atari 800 ROM BIOS (either Altirra-800 or AtariOSB.rom)
 //      - 8k  BASIC Cart (either Altirra BASIC or AtariBAS.rom)
 // If the Atari external ROMs are not found, the built-in Altirra
-// ones are used instead. 
+// ones are used instead.
 // -------------------------------------------------------------------
 UBYTE ROM_atarios_xl[0x4000];
 UBYTE ROM_atarios_b[0x2800];
@@ -690,7 +690,7 @@ void load_os(void)
 
 
 // ----------------------------------------------------------------------------
-// Called on every reset/cold start to load in the proper OS into the 
+// Called on every reset/cold start to load in the proper OS into the
 // right area of memory (upper 16K bank). The XL/XE has some cool handling
 // that allows writes to PortB to turn off the OS to expose "RAM under the OS"
 // so we need to be able to shift the OS in and out of memory. See the PortB
@@ -699,7 +699,7 @@ void load_os(void)
 void install_os(void)
 {
     memset(debug, 0x00, sizeof(debug));
-    
+
     // Otherwise we either use the Atari OS or the Altirra based on user choice...
     if (myConfig.os_type == OS_ALTIRRA_XL)
     {
@@ -726,7 +726,7 @@ void install_os(void)
 // -----------------------------------------------------------
 // This routine shows all of the relevant ROM info on
 // the lower screen. This includes the name of the ROM
-// loaded (XEX or ATR) as well as some relevant info 
+// loaded (XEX or ATR) as well as some relevant info
 // on how the emulator is configured - how much memory,
 // if BASIC is loaded, etc.
 // -----------------------------------------------------------
@@ -744,7 +744,7 @@ void dsShowRomInfo(void)
             dsPrintValue(10,2,0, (file_type == AFILE_CART) ? "CAR:  " : ((file_type == AFILE_ROM) ? "ROM:  " : "XEX:  "));
         else
             dsPrintValue(10,2,0, "      ");
-        
+
         strncpy(line1, disk_filename[DISK_XEX], 22);
         line1[22] = 0;
         siprintf(line2,"%-22s", line1);
@@ -788,7 +788,7 @@ void dsShowRomInfo(void)
         {
             dsPrintValue(10,11,0, "        ");
         }
-        
+
         strncpy(line1, disk_filename[DISK_2], 22);
         line1[22] = 0;
         siprintf(line2,"%-22s", line1);
@@ -827,7 +827,7 @@ bool isDisk(char *filename)
 }
 
 // ----------------------------------------------------------------------------------------
-// The master routine to read in a XEX or ATR file. We check the A8DS.DAT configuration 
+// The master routine to read in a XEX or ATR file. We check the A8DS.DAT configuration
 // database to see if the hash is found so we can restore user settings for the game.
 // ----------------------------------------------------------------------------------------
 unsigned int last_crc = 0x55AABEEF;
@@ -893,22 +893,22 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
 // --------------------------------------------------------------
 // Read the DS keys to see if we have any relevant presses...
 // --------------------------------------------------------------
-unsigned int dsReadPad(void) 
+unsigned int dsReadPad(void)
 {
     unsigned int keys_pressed, ret_keys_pressed;
 
-    do 
+    do
     {
         keys_pressed = keysCurrent();
     } while ((keys_pressed & (KEY_LEFT | KEY_RIGHT | KEY_DOWN | KEY_UP | KEY_A | KEY_B | KEY_L | KEY_R))!=0);
 
-    do 
+    do
     {
         keys_pressed = keysCurrent();
     } while ((keys_pressed & (KEY_LEFT | KEY_RIGHT | KEY_DOWN | KEY_UP | KEY_A | KEY_B | KEY_L | KEY_R))==0);
     ret_keys_pressed = keys_pressed;
 
-    do 
+    do
     {
         keys_pressed = keysCurrent();
     } while ((keys_pressed & (KEY_LEFT | KEY_RIGHT | KEY_DOWN | KEY_UP | KEY_A | KEY_B | KEY_L | KEY_R))!=0);
@@ -926,7 +926,7 @@ unsigned int dsReadPad(void)
 // ---------------------------------------------------------------
 // Called when the user clicks to load or save state
 // ---------------------------------------------------------------
-bool dsQuery(char *str) 
+bool dsQuery(char *str)
 {
     bool bRet=false, bDone=false;
     short unsigned int keys_pressed;
@@ -944,7 +944,7 @@ bool dsQuery(char *str)
     siprintf(szName,"%s","A TO CONFIRM, B TO GO BACK");
     dsPrintValue(16-strlen(szName)/2,23,0,szName);
 
-    while(!bDone) 
+    while(!bDone)
     {
         strcpy(szName,"          YES          ");
         dsPrintValue(5,12+0,(posdeb == 0 ? 1 :  0),szName);
@@ -954,20 +954,20 @@ bool dsQuery(char *str)
 
         // Check keypad
         keys_pressed=dsReadPad();
-        if (keys_pressed & KEY_UP) 
+        if (keys_pressed & KEY_UP)
         {
             if (posdeb) posdeb-=2;
         }
-        if (keys_pressed & KEY_DOWN) 
+        if (keys_pressed & KEY_DOWN)
         {
             if (posdeb<1) posdeb+=2;
         }
-        if (keys_pressed & KEY_A) 
+        if (keys_pressed & KEY_A)
         {
             bRet = (posdeb ? false : true);
             bDone = true;
         }
-        if (keys_pressed & KEY_B) 
+        if (keys_pressed & KEY_B)
         {
             bDone = true;
         }
@@ -1089,7 +1089,7 @@ unsigned int dsWaitForRom(void)
 
   force_tv_type = 99;
   force_basic_type = 99;
-    
+
   dsDisplayFiles(firstRomDisplay,romSelected);
   while (!bDone) {
     if (keysCurrent() & KEY_UP) {
@@ -1180,7 +1180,7 @@ unsigned int dsWaitForRom(void)
     else {
       ucSHaut = 0;
     }
-    if ( keysCurrent() & KEY_B ) 
+    if ( keysCurrent() & KEY_B )
     {
       bDone=true;
       while (keysCurrent() & KEY_B);
@@ -1204,7 +1204,7 @@ unsigned int dsWaitForRom(void)
             last_sel_key = KEY_SELECT;
         }
     } else last_sel_key=0;
-      
+
     static int last_sta_key = 0;
     if (keysCurrent() & KEY_START)
     {
@@ -1224,17 +1224,17 @@ unsigned int dsWaitForRom(void)
             last_sta_key = KEY_START;
         }
     } else last_sta_key=0;
-      
 
-    if (keysCurrent() & KEY_A) 
+
+    if (keysCurrent() & KEY_A)
     {
-      if (!a8romlist[ucFicAct].directory) 
+      if (!a8romlist[ucFicAct].directory)
       {
         bRet=true;
         bDone=true;
         DEBUG_DUMP = (keysCurrent() & KEY_X) ? 1:0;
       }
-      else 
+      else
       {
         chdir(a8romlist[ucFicAct].filename);
         a8FindFiles();
@@ -1372,7 +1372,7 @@ void dsShowKeyboard(void)
           dmaCopy((void *) kbd_XLPal,(u16*) BG_PALETTE_SUB,256*2);
           unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
           dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
-      }    
+      }
       swiWaitForVBlank();
       dsShowRomInfo();
 }
@@ -1380,7 +1380,7 @@ void dsShowKeyboard(void)
 
 // ----------------------------------------------------------------------------------
 // After showing the help screen or one of the soft keyboard screens, we can call
-// this routine to restore the normal lower screen which shows the emulator and 
+// this routine to restore the normal lower screen which shows the emulator and
 // various bits of information about what ROM is loaded and running...
 // ----------------------------------------------------------------------------------
 void dsRestoreBottomScreen(void)
@@ -1405,7 +1405,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
   bool bDone=false, romSel;
   short int iTx,iTy;
 
-  while (!bDone) 
+  while (!bDone)
   {
     // wait for stylus
     keys_pressed = keysCurrent();
@@ -1449,7 +1449,7 @@ unsigned int dsWaitOnMenu(unsigned int actState)
 // the lower display at the desired X/Y position. The display is broken down to
 // 32 horizontal characters and 24 vertical ones (so don't think of X/Y as pixels).
 // Since we use two independent backgrounds on the lower display, this text is nicely
-// overlaid on top of the background graphic without disturbing those pixels. 
+// overlaid on top of the background graphic without disturbing those pixels.
 // ---------------------------------------------------------------------------------------
 void dsPrintValue(int x, int y, unsigned int isSelect, char *pchStr)
 {
@@ -1492,7 +1492,7 @@ int dsHandleKeyboard(int Tx, int Ty)
 
     if (Ty > 14 && Ty < 49)       // Top Row 0-9
     {
-        if (Tx < 3) keyPress = AKEY_NONE; 
+        if (Tx < 3) keyPress = AKEY_NONE;
         else if (Tx <  23) keyPress = (shift ? AKEY_EXCLAMATION : AKEY_1);
         else if (Tx <  41) keyPress = (shift ? AKEY_DBLQUOTE    : AKEY_2);
         else if (Tx <  60) keyPress = (shift ? AKEY_HASH        : AKEY_3);
@@ -1509,7 +1509,7 @@ int dsHandleKeyboard(int Tx, int Ty)
     }
     else if (Ty < 85)  // Row QWERTY
     {
-        if (Tx < 14) keyPress = AKEY_NONE; 
+        if (Tx < 14) keyPress = AKEY_NONE;
         else if (Tx <  33) keyPress = (shift ? AKEY_Q : AKEY_q);
         else if (Tx <  52) keyPress = (shift ? AKEY_W : AKEY_w);
         else if (Tx <  71) keyPress = (shift ? AKEY_E : AKEY_e);
@@ -1525,7 +1525,7 @@ int dsHandleKeyboard(int Tx, int Ty)
     }
     else if (Ty < 121)  // Home Row ASDF-JKL;
     {
-        if (Tx < 19)       keyPress = AKEY_TAB; 
+        if (Tx < 19)       keyPress = AKEY_TAB;
         else if (Tx <  38) keyPress = (shift ? AKEY_A : AKEY_a);
         else if (Tx <  57) keyPress = (shift ? AKEY_S : AKEY_s);
         else if (Tx <  76) keyPress = (shift ? AKEY_D : AKEY_d);
@@ -1541,7 +1541,7 @@ int dsHandleKeyboard(int Tx, int Ty)
     }
     else if (Ty < 157)  // ZXCV Row
     {
-        if (Tx < 30)       keyPress = AKEY_CTRL; 
+        if (Tx < 30)       keyPress = AKEY_CTRL;
         else if (Tx <  49) keyPress = (shift ? AKEY_Z : AKEY_z);
         else if (Tx <  68) keyPress = (shift ? AKEY_X : AKEY_x);
         else if (Tx <  87) keyPress = (shift ? AKEY_C : AKEY_c);
@@ -1589,7 +1589,7 @@ int dsHandleKeyboard(int Tx, int Ty)
         {
             keyboard_debounce=15;
             ctrl ^= 1;
-            dsPrintValue(0,0,0, (ctrl ? "CTR":"   "));
+            dsPrintValue(0,0,0, (ctrl ? "CTL":"   "));
         }
         keyPress = AKEY_NONE;
     }
@@ -1611,7 +1611,10 @@ int dsHandleKeyboard(int Tx, int Ty)
 
 
 
-int push_key_codes[12];
+// -----------------------------------------------------------------------------------------------
+// A small buffer to allow keys to be buffered for the Alpha-numeric keyboard and the macro keys
+// -----------------------------------------------------------------------------------------------
+short int push_key_codes[12];
 u8 push_key_idx = 0;
 
 void PushKey(u8 key)
@@ -1640,7 +1643,7 @@ int PullKey(void)
             }
         }
     }
-    
+
     return key;
 }
 
@@ -1731,7 +1734,7 @@ int dsHandleKeyboardAlpha(int Tx, int Ty)
         {
             keyboard_debounce=15;
             ctrl ^= 1;
-            dsPrintValue(0,0,0, (ctrl ? "CTR":"   "));
+            dsPrintValue(0,0,0, (ctrl ? "CTL":"   "));
         }
         keyPress = AKEY_NONE;
     }
@@ -1798,7 +1801,7 @@ int dsHandleStarRaidersKeyboard(int Tx, int Ty)
         else if (Tx < 215) keyPress = (AKEY_9);
         else if (Tx < 255) keyPress = (AKEY_p);
     }
-    
+
     return keyPress;
 }
 
@@ -1821,7 +1824,7 @@ void dsInstallSoundEmuFIFO(void)
 
         if (isDSiMode())
         {
-            aptr = (u16*) ((u32)&sound_buffer[0] + 0xA000000); 
+            aptr = (u16*) ((u32)&sound_buffer[0] + 0xA000000);
             bptr = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
         }
         else
@@ -1847,35 +1850,23 @@ void dsInstallSoundEmuFIFO(void)
     }
 }
 
-// Called roughly every 1/60th of a second... 
+// Called roughly every 1/60th of a second...
 void dsHandleDiskSounds(void)
 {
     static int soundID=0;
     static u8 play_sio_sound_dampen = 0;
-    
-    if (myConfig.disk_speedup == 0) // Accurate/Slow mode?
+
+    if (play_sio_sound)
     {
-        if (play_sio_sound)
+        if (--play_sio_sound)
         {
-            if (--play_sio_sound)
+            if (play_sio_sound_dampen == 0)
             {
-                if (play_sio_sound_dampen == 0)
-                {
-                    soundID = soundPlaySample(sio_wav, SoundFormat_16Bit, sio_wav_size, 11025, 101, 64, true, 0);
-                    play_sio_sound_dampen = 1;
-                }
-            }
-            else
-            {
-                soundKill(soundID);
-                dsPrintValue(3,0,0, "   ");
-                play_sio_sound_dampen = 0;
+                soundID = soundPlaySample(sio_wav, SoundFormat_16Bit, sio_wav_size, 11025, 101, 64, true, 0);
+                play_sio_sound_dampen = 1;
             }
         }
-    }
-    else if (play_sio_sound)
-    {
-        if (--play_sio_sound == 0)
+        else
         {
             soundKill(soundID);
             dsPrintValue(3,0,0, "   ");
@@ -1894,7 +1885,7 @@ void dsZoomScreen(void)
     while (true)
     {
         u16 keys = keysCurrent();
-        
+
         if (keys & (KEY_A | KEY_B | KEY_Y | KEY_X | KEY_L | KEY_R | KEY_START | KEY_SELECT)) break;
         if (keys & KEY_RIGHT)  {if (bZoomX < 64)  bZoomX++; swiWaitForVBlank();}
         if (keys & KEY_LEFT)   {if (bZoomX > 0)   bZoomX--; swiWaitForVBlank();}
@@ -1913,11 +1904,11 @@ void dsZoomScreen(void)
 
 // -------------------------------------------------------------------------------
 // And finally the main loop! This sits in a forever loop and calls into the
-// emulator routines every frame to process 1 frames worth of emulation. If 
+// emulator routines every frame to process 1 frames worth of emulation. If
 // we are running in NTSC TV mode, we run the loop 60 times per second and if
 // we are in PAL TV mode, we run the loop 50 times per second.  On every frame
 // we check for keys to be pressed on the DS and the touch screen and process
-// those as appopriate. 
+// those as appopriate.
 // -------------------------------------------------------------------------------
 char fpsbuf[32];
 u16 nds_keys[8] = {KEY_A, KEY_B, KEY_X, KEY_Y, KEY_L, KEY_R, KEY_START, KEY_SELECT};
@@ -1928,7 +1919,7 @@ void dsMainLoop(void)
   unsigned short int keys_pressed,keys_touch=0, romSel=0;
   short int iTx,iTy;
 
-  // Timers are fed with 33.513982 MHz clock.
+  // Timers are fed with 33.513982 MHz clock on the NDS.
   // With DIV_1024 the clock is 32,728.5 ticks per sec...
   TIMER0_DATA=0;
   TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
@@ -1956,7 +1947,7 @@ void dsMainLoop(void)
 
       case A8_PLAYINIT:
         dsShowScreenEmu();
-        bMute = 0;            
+        bMute = 0;
         emu_state = A8_PLAYGAME;
 
         if (myConfig.keyboard_type == 4) // Star Raiders
@@ -1964,7 +1955,7 @@ void dsMainLoop(void)
             bShowKeyboard = true;
             dsShowKeyboard();
         }
-            
+
         break;
 
       case A8_PLAYGAME:
@@ -1980,9 +1971,9 @@ void dsMainLoop(void)
         // ------------------------------------------------------------------------
         // Execute one Atari frame... this is where all of the emulation stuff
         // comes into play. Many thousands of CPU calls and GTIA/Antic accesses
-        // are all kicked off via this call to handle just a single Atari 800 
+        // are all kicked off via this call to handle just a single Atari 800
         // frame. All of the NTSC and PAL scanlines are done here - and this is
-        // where the Nitnendo DS is spending most of its CPU time. 
+        // where the Nitnendo DS is spending most of its CPU time.
         // ------------------------------------------------------------------------
         Atari800_Frame();
 
@@ -2007,8 +1998,8 @@ void dsMainLoop(void)
             TIMER1_CR=TIMER_ENABLE | TIMER_DIV_1024;
 
             if (gTotalAtariFrames == (myConfig.tv_type == TV_NTSC ? 61:51)) gTotalAtariFrames = (myConfig.tv_type == TV_NTSC ? 60:50);
-            if (myConfig.fps_setting) 
-            { 
+            if (myConfig.fps_setting)
+            {
                 fpsbuf[0] = '0' + gTotalAtariFrames / 100;
                 fpsbuf[1] = '0' + (gTotalAtariFrames % 100) / 10;
                 fpsbuf[2] = '0' + (gTotalAtariFrames % 100) % 10;
@@ -2020,7 +2011,7 @@ void dsMainLoop(void)
             DumpDebugData();
             if(bAtariCrash) dsPrintValue(1,23,0, "GAME CRASH - PICK ANOTHER GAME");
         }
-        
+
         dsHandleDiskSounds();
 
         // --------------------------------------------
@@ -2032,7 +2023,7 @@ void dsMainLoop(void)
         key_code = AKEY_NONE;
         stick0 = STICK_CENTRE;
         stick1 = STICK_CENTRE;
-            
+
         if (keyboard_debounce > 0) keyboard_debounce--;
 
         // ------------------------------------------------------
@@ -2046,7 +2037,7 @@ void dsMainLoop(void)
             touchRead(&touch);
             iTx = touch.px;
             iTy = touch.py;
-            
+
             // ---------------------------------------------------------------------------------------
             // START, SELECT and OPTION respond immediately - that is, we keep the buttons pressed
             // as long as the user is continuing to hold down the button on the touch screen...
@@ -2092,9 +2083,9 @@ void dsMainLoop(void)
                              key_code = dsHandleStarRaidersKeyboard(iTx, iTy);
                          else if (myConfig.keyboard_type == 4)
                              key_code = dsHandleKeyboardAlpha(iTx, iTy);
-                         else 
+                         else
                              key_code = dsHandleKeyboard(iTx, iTy);
-                          
+
                          if (key_code == AKEY_EXIT)
                          {
                               bShowKeyboard = false;
@@ -2136,7 +2127,7 @@ void dsMainLoop(void)
                         keys_touch = 1;
                         dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
                         bMute = 0;
-                        swiWaitForVBlank();                        
+                        swiWaitForVBlank();
                     }
                     else if ((iTx>35) && (iTx<55) && (iTy>145) && (iTy<185))  // HighScore
                     {
@@ -2145,7 +2136,7 @@ void dsMainLoop(void)
                             soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                         }
                         highscore_display();
-                        swiWaitForVBlank();                        
+                        swiWaitForVBlank();
                         dsRestoreBottomScreen();
                         keys_touch = 1;
                     }
@@ -2161,40 +2152,63 @@ void dsMainLoop(void)
                     }
                     else if ((iTx>230) && (iTx<256) && (iTy>8) && (iTy<30))  // POWER / QUIT
                     {
+                      u16 savedTimer0 = TIMER0_DATA;
                       bMute = 1;
                       swiWaitForVBlank();
                       soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                       if (dsQuery("QUIT A8DS?")) emu_state=A8_QUITSTDS;
-                      else { bMute = 0; }
-                      swiWaitForVBlank();
+                      else
+                      {
+                           TIMER0_CR=0;
+                           TIMER0_DATA=savedTimer0;
+                           TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
+                           bMute = 0;
+                      }
                     }
                     else if ((iTx>230) && (iTx<256) && (iTy>46) && (iTy<75))  // SAVE GAME
                     {
-                      if (dsQuery("SAVE GAME STATE?"))
-                      {
-                        SaveGame();
-                      }
-                      swiWaitForVBlank();
+                        u16 savedTimer0 = TIMER0_DATA;
+                        bMute = 1;
+                        if (dsQuery("SAVE GAME STATE?"))
+                        {
+                          SaveGame();
+                        }
+                        swiWaitForVBlank();
+                        TIMER0_CR=0;
+                        TIMER0_DATA=savedTimer0;
+                        TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
+                        bMute = 0;
                     }
                     else if ((iTx>230) && (iTx<256) && (iTy>85) && (iTy<111))  // LOAD GAME
                     {
-                      if (dsQuery("LOAD GAME STATE?"))
-                      {
-                        LoadGame();
-                      }
-                      swiWaitForVBlank();
+                        u16 savedTimer0 = TIMER0_DATA;
+                        bMute = 1;
+                        if (dsQuery("LOAD GAME STATE?"))
+                        {
+                          LoadGame();
+                        }
+                        swiWaitForVBlank();
+                        TIMER0_CR=0;
+                        TIMER0_DATA=savedTimer0;
+                        TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
+                        bMute = 0;
                     }
                     else if ((iTx>204) && (iTx<235) && (iTy>150) && (iTy<180))  // Gear Icon = Settings
                     {
+                      u16 savedTimer0 = TIMER0_DATA;
                       bMute = 1;
                       swiWaitForVBlank();
                       keys_touch=1;
                       dsChooseOptions(TRUE);
-                      bMute = 0;
                       swiWaitForVBlank();
+                      TIMER0_CR=0;
+                      TIMER0_DATA=savedTimer0;
+                      TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
+                      bMute = 0;
                     }
                     else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75))      // XEX and D1 Disk Drive
                     {
+                      u16 savedTimer0 = TIMER0_DATA;
                       bMute = 1;
                       swiWaitForVBlank();
                       // Find files in current directory and show it
@@ -2203,11 +2217,16 @@ void dsMainLoop(void)
                       a8FindFiles();
                       romSel=dsWaitForRom();
                       if (romSel) { emu_state=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
-                      else { bMute = 0; }
-                      swiWaitForVBlank();
+                      else {
+                          TIMER0_CR=0;
+                          TIMER0_DATA=savedTimer0;
+                          TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
+                          bMute = 0;
+                      }
                     }
                     else if ((iTx>5) && (iTx<80) && (iTy>77) && (iTy<114))      // D2 Disk Drive
                     {
+                      u16 savedTimer0 = TIMER0_DATA;
                       bMute = 1;
                       swiWaitForVBlank();
                       // Find files in current directory and show it
@@ -2216,8 +2235,12 @@ void dsMainLoop(void)
                       a8FindFiles();
                       romSel=dsWaitForRom();
                       if (romSel) { emu_state=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_2, false, bLoadReadOnly); }
-                      else { bMute = 0; }
-                      swiWaitForVBlank();
+                      else {
+                           TIMER0_CR=0;
+                           TIMER0_DATA=savedTimer0;
+                           TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
+                           bMute = 0;
+                        }
                     }
                  }
             }
@@ -2227,7 +2250,7 @@ void dsMainLoop(void)
             last_key_code = -1;
             keys_touch=0;
         }
-         
+
         // ---------------------------------------------------------------------------
         // Handle any of the 8 possible keys... ABXYLR and START, SELECT
         // ---------------------------------------------------------------------------
@@ -2250,14 +2273,14 @@ void dsMainLoop(void)
                     case 7: joy2_moved[1] = true;           break;
                     case 8: joy2_moved[2] = true;           break;
                     case 9: joy2_moved[3] = true;           break;
-                        
+
                     case 10: key_consol &= ~CONSOL_START;   break;
                     case 11: key_consol &= ~CONSOL_SELECT;  break;
                     case 12: key_consol &= ~CONSOL_OPTION;  break;
                     case 13: key_code = AKEY_HELP;          break;
-                        
+
                     case 14:  key_code = AKEY_SPACE;        break;
-                    case 15:  key_code = AKEY_RETURN;       break;                        
+                    case 15:  key_code = AKEY_RETURN;       break;
                     case 16: key_code = AKEY_ESCAPE;        break;
                     case 17: key_code = AKEY_BREAK;         break;
                     case 18: key_code = AKEY_A;             break;
@@ -2303,7 +2326,7 @@ void dsMainLoop(void)
                     case 58: key_code = AKEY_NONE;          break;
                     case 59: key_code = AKEY_NONE;          break;
                     case 60: key_code = AKEY_NONE;          break;
-                        
+
                     case 61: screen_slide_y = 12;  dampen_slide_y = 6;     break;
                     case 62: screen_slide_y = 24;  dampen_slide_y = 6;     break;
                     case 63: screen_slide_y = -12; dampen_slide_y = 6;     break;
@@ -2329,14 +2352,14 @@ void dsMainLoop(void)
                             if ((keys_pressed & KEY_RIGHT))  if (myConfig.xScale < 320)  myConfig.xScale++;
                             if ((keys_pressed & KEY_LEFT))   if (myConfig.xScale >= 192) myConfig.xScale--;
                         }
-                        break;                        
+                        break;
                     case 71:
                         dsZoomScreen();
-                        break;                        
+                        break;
                 }
             }
         }
-        
+
         // ---------------------------------------------------------------------------------------------
         // Handle the NDS D-Pad which usually just controlls a joystick connected to the Player 1 PORT.
         // Only handle UP/DOWN/LEFT/RIGHT if shoulder buttons are not pressed (those are handled below)
@@ -2369,13 +2392,13 @@ void dsMainLoop(void)
             if (keys_pressed & KEY_LEFT)    {joy1_moved[2] = true;}
             if (keys_pressed & KEY_RIGHT)   {joy1_moved[3] = true;}
         }
-           
+
         // --------------------------------------------------------------------------
         // If any DS key resulted in the fire button being pressed, handle that here
         // --------------------------------------------------------------------------
         trig0 = (joy1_fired ? 0 : 1);
         trig1 = (joy2_fired ? 0 : 1);
-            
+
         // -----------------------------------------------------------------------
         // If any DS key resulted in a joystick being moved, handle that here
         // joy_moved[] array is: Up, Down, Left, Right
@@ -2388,7 +2411,7 @@ void dsMainLoop(void)
         else if (joy1_moved[1])                    stick0 = STICK_BACK;
         else if (joy1_moved[2])                    stick0 = STICK_LEFT;
         else if (joy1_moved[3])                    stick0 = STICK_RIGHT;
-            
+
         if      (joy2_moved[0] && joy2_moved[2])   stick1 = STICK_UL;
         else if (joy2_moved[0] && joy2_moved[3])   stick1 = STICK_UR;
         else if (joy2_moved[1] && joy2_moved[2])   stick1 = STICK_LL;
@@ -2397,7 +2420,7 @@ void dsMainLoop(void)
         else if (joy2_moved[1])                    stick1 = STICK_BACK;
         else if (joy2_moved[2])                    stick1 = STICK_LEFT;
         else if (joy2_moved[3])                    stick1 = STICK_RIGHT;
-            
+
         // ----------------------------------------------------------------------
         // This is stuff that happens more rarely... like once per frame or two.
         // ----------------------------------------------------------------------
@@ -2463,7 +2486,7 @@ void a8FindFiles(void)
   DIR *pdir;
   struct dirent *pent;
   static char filenametmp[300];
-  
+
   if (a8romlist == NULL) a8romlist = malloc(MAX_FILES * sizeof(FICA_A8));
 
   count8bit = countfiles= 0;
@@ -2535,5 +2558,6 @@ void a8FindFiles(void)
   }
 }
 
+void _putchar(char character) {};   // Not used but needed to link printf()
 
 // End of file

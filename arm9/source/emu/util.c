@@ -51,6 +51,7 @@
 #include <sys/stat.h>
 #endif
 
+#include "../printf.h"
 #include "atari.h"
 #include "util.h"
 

@@ -1,23 +1,23 @@
 /*
- * GTIA.C contains the emulation of the Core GTIA graphics chip on the Atari 800. 
- * 
+ * GTIA.C contains the emulation of the Core GTIA graphics chip on the Atari 800.
+ *
  * The baseline for this file is the Atari800 2.0.x source and has
  * been heavily modified for optimization on the Nintendo DS/DSi.
  * Atari800 has undergone numerous improvements and enhancements
- * since the time this file was used as a baseline for A8DS and 
+ * since the time this file was used as a baseline for A8DS and
  * it is strongly recommended you seek out the latest Atari800 sources.
- * 
+ *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
  * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
 
- * Copying and distribution of this emulator, its source code and associated 
- * readme files, with or without modification, are permitted in any medium without 
- * royalty provided this full copyright notice (including the Atari800 one below) 
+ * Copying and distribution of this emulator, its source code and associated
+ * readme files, with or without modification, are permitted in any medium without
+ * royalty provided this full copyright notice (including the Atari800 one below)
  * is used and wavemotion-dave, alekmaul (original port), Atari800 team (for the
  * original source) and Avery Lee (Altirra OS) are credited and thanked profusely.
- * 
+ *
  * The A8DS emulator is offered as-is, without any warranty.
- * 
+ *
  * Since much of the original codebase came from the Atari800 project, and since
  * that project is released under the GPL V2, this program and source must also
  * be distributed using that same licensing model. See COPYING for the full license
@@ -260,67 +260,67 @@ void GTIA_Initialise(void) {
 /* slow, but should be called rarely */
 void generate_partial_pmpl_colls(int l, int r)
 {
-	int i;
-	if (r < 0 || l >= (int) sizeof(pm_scanline) / (int) sizeof(pm_scanline[0]))
-		return;
-	if (r >= (int) sizeof(pm_scanline) / (int) sizeof(pm_scanline[0])) {
-		r = (int) sizeof(pm_scanline) / (int) sizeof(pm_scanline[0]);
-	}
-	if (l < 0)
-		l = 0;
+    int i;
+    if (r < 0 || l >= (int) sizeof(pm_scanline) / (int) sizeof(pm_scanline[0]))
+        return;
+    if (r >= (int) sizeof(pm_scanline) / (int) sizeof(pm_scanline[0])) {
+        r = (int) sizeof(pm_scanline) / (int) sizeof(pm_scanline[0]);
+    }
+    if (l < 0)
+        l = 0;
 
-	for (i = l; i <= r; i++) {
-		UBYTE p = pm_scanline[i];
+    for (i = l; i <= r; i++) {
+        UBYTE p = pm_scanline[i];
 /* It is possible that some bits are set in PxPL/MxPL here, which would
  * not otherwise be set ever in new_pm_scanline.  This is because the
  * player collisions are always generated in order in new_pm_scanline.
  * However this does not cause any problem because we never use those bits
  * of PxPL/MxPL in the collision reading code.
  */
-		P1PL |= (p & (1 << 1)) ?  p : 0;
-		P2PL |= (p & (1 << 2)) ?  p : 0;
-		P3PL |= (p & (1 << 3)) ?  p : 0;
-		M0PL |= (p & (0x10 << 0)) ?  p : 0;
-		M1PL |= (p & (0x10 << 1)) ?  p : 0;
-		M2PL |= (p & (0x10 << 2)) ?  p : 0;
-		M3PL |= (p & (0x10 << 3)) ?  p : 0;
-	}
+        P1PL |= (p & (1 << 1)) ?  p : 0;
+        P2PL |= (p & (1 << 2)) ?  p : 0;
+        P3PL |= (p & (1 << 3)) ?  p : 0;
+        M0PL |= (p & (0x10 << 0)) ?  p : 0;
+        M1PL |= (p & (0x10 << 1)) ?  p : 0;
+        M2PL |= (p & (0x10 << 2)) ?  p : 0;
+        M3PL |= (p & (0x10 << 3)) ?  p : 0;
+    }
 
 }
 
 /* update pm->pl collisions for a partial scanline */
 void update_partial_pmpl_colls(void)
 {
-	int l = collision_curpos;
-	int r = XPOS * 2 - 37;
-	generate_partial_pmpl_colls(l, r);
-	collision_curpos = r;
+    int l = collision_curpos;
+    int r = XPOS * 2 - 37;
+    generate_partial_pmpl_colls(l, r);
+    collision_curpos = r;
 }
 
 /* update pm-> pl collisions at the end of a scanline */
 void update_pmpl_colls(void)
 {
-	if (hitclr_pos != 0){
-		generate_partial_pmpl_colls(hitclr_pos,
-				sizeof(pm_scanline) / sizeof(pm_scanline[0]) - 1);
+    if (hitclr_pos != 0){
+        generate_partial_pmpl_colls(hitclr_pos,
+                sizeof(pm_scanline) / sizeof(pm_scanline[0]) - 1);
 /* If hitclr was written to, then only part of pm_scanline should be used
  * for collisions */
 
-	}
-	else {
+    }
+    else {
 /* otherwise the whole of pm_scaline can be used for collisions.  This will
  * update the collision registers based on the generated collisions for the
  * current line */
-		P1PL |= P1PL_T;
-		P2PL |= P2PL_T;
-		P3PL |= P3PL_T;
-		M0PL |= M0PL_T;
-		M1PL |= M1PL_T;
-		M2PL |= M2PL_T;
-		M3PL |= M3PL_T;
-	}
-	collision_curpos = 0;
-	hitclr_pos = 0;
+        P1PL |= P1PL_T;
+        P2PL |= P2PL_T;
+        P3PL |= P3PL_T;
+        M0PL |= M0PL_T;
+        M1PL |= M1PL_T;
+        M2PL |= M2PL_T;
+        M3PL |= M3PL_T;
+    }
+    collision_curpos = 0;
+    hitclr_pos = 0;
 }
 
 #else
@@ -334,8 +334,8 @@ ITCM_CODE void new_pm_scanline(void)
 {
 #ifdef NEW_CYCLE_EXACT
 /* reset temporary pm->pl collisions */
-	P1PL_T = P2PL_T = P3PL_T = 0;
-	M0PL_T = M1PL_T = M2PL_T = M3PL_T = 0;
+    P1PL_T = P2PL_T = P3PL_T = 0;
+    M0PL_T = M1PL_T = M2PL_T = M3PL_T = 0;
 #endif /* NEW_CYCLE_EXACT */
 /* Clear if necessary */
     if (pm_dirty) {
@@ -432,7 +432,7 @@ UBYTE GTIA_GetByte(UWORD addr)
     case _M0PF:
 #ifdef NEW_CYCLE_EXACT
         if (DRAWING_SCREEN) {update_scanline();}
-#endif    
+#endif
         return (((PF0PM & 0x10) >> 4)
               + ((PF1PM & 0x10) >> 3)
               + ((PF2PM & 0x10) >> 2)
@@ -440,7 +440,7 @@ UBYTE GTIA_GetByte(UWORD addr)
     case _M1PF:
 #ifdef NEW_CYCLE_EXACT
         if (DRAWING_SCREEN) {update_scanline();}
-#endif    
+#endif
         return (((PF0PM & 0x20) >> 5)
               + ((PF1PM & 0x20) >> 4)
               + ((PF2PM & 0x20) >> 3)
@@ -448,7 +448,7 @@ UBYTE GTIA_GetByte(UWORD addr)
     case _M2PF:
 #ifdef NEW_CYCLE_EXACT
         if (DRAWING_SCREEN) {update_scanline();}
-#endif    
+#endif
         return (((PF0PM & 0x40) >> 6)
               + ((PF1PM & 0x40) >> 5)
               + ((PF2PM & 0x40) >> 4)
@@ -456,7 +456,7 @@ UBYTE GTIA_GetByte(UWORD addr)
     case _M3PF:
 #ifdef NEW_CYCLE_EXACT
         if (DRAWING_SCREEN) {update_scanline();}
-#endif    
+#endif
         return (((PF0PM & 0x80) >> 7)
               + ((PF1PM & 0x80) >> 6)
               + ((PF2PM & 0x80) >> 5)
@@ -464,7 +464,7 @@ UBYTE GTIA_GetByte(UWORD addr)
     case _P0PF:
 #ifdef NEW_CYCLE_EXACT
         if (DRAWING_SCREEN) {update_scanline();}
-#endif    
+#endif
         return ((PF0PM & 0x01)
               + ((PF1PM & 0x01) << 1)
               + ((PF2PM & 0x01) << 2)
@@ -472,7 +472,7 @@ UBYTE GTIA_GetByte(UWORD addr)
     case _P1PF:
 #ifdef NEW_CYCLE_EXACT
         if (DRAWING_SCREEN) {update_scanline();}
-#endif    
+#endif
         return (((PF0PM & 0x02) >> 1)
               + (PF1PM & 0x02)
               + ((PF2PM & 0x02) << 1)
@@ -480,7 +480,7 @@ UBYTE GTIA_GetByte(UWORD addr)
     case _P2PF:
 #ifdef NEW_CYCLE_EXACT
         if (DRAWING_SCREEN) {update_scanline();}
-#endif    
+#endif
         return (((PF0PM & 0x04) >> 2)
               + ((PF1PM & 0x04) >> 1)
               + (PF2PM & 0x04)
@@ -488,7 +488,7 @@ UBYTE GTIA_GetByte(UWORD addr)
     case _P3PF:
 #ifdef NEW_CYCLE_EXACT
         if (DRAWING_SCREEN) {update_scanline();}
-#endif    
+#endif
         return (((PF0PM & 0x08) >> 3)
               + ((PF1PM & 0x08) >> 2)
               + ((PF2PM & 0x08) >> 1)
@@ -568,14 +568,14 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
     UWORD cword;
     UWORD cword2;
 #ifdef NEW_CYCLE_EXACT
-	int x; /* the cycle-exact update position in pm_scanline */
-	if (DRAWING_SCREEN) {
-		if ((addr & 0x1f) != _PRIOR) {
-			update_scanline();
-		} else {
-			update_scanline_prior(byte);
-		}
-	}
+    int x; /* the cycle-exact update position in pm_scanline */
+    if (DRAWING_SCREEN) {
+        if ((addr & 0x1f) != _PRIOR) {
+            update_scanline();
+        } else {
+            update_scanline_prior(byte);
+        }
+    }
 #endif
     switch (addr & 0x1f) {
     case _CONSOL:
@@ -758,11 +758,11 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
 
 #ifdef NEW_CYCLE_EXACT
 #define CYCLE_EXACT_GRAFP(n) x = XPOS * 2 - 3;\
-	if (HPOSP##n >= x) {\
-	/* hpos right of x */\
-		/* redraw */  \
-		UPDATE_PM_CYCLE_EXACT\
-	}
+    if (HPOSP##n >= x) {\
+    /* hpos right of x */\
+        /* redraw */  \
+        UPDATE_PM_CYCLE_EXACT\
+    }
 #else
 #define CYCLE_EXACT_GRAFP(n)
 #endif /* NEW_CYCLE_EXACT */
@@ -783,8 +783,8 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
         P0PL = P1PL = P2PL = P3PL = 0;
         PF0PM = PF1PM = PF2PM = PF3PM = 0;
 #ifdef NEW_CYCLE_EXACT
-		hitclr_pos = XPOS * 2 - 37;
-		collision_curpos = hitclr_pos;
+        hitclr_pos = XPOS * 2 - 37;
+        collision_curpos = hitclr_pos;
 #endif
         break;
 /* TODO: cycle-exact missile HPOS, GRAF, SIZE */
@@ -812,33 +812,33 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
 
 #ifdef NEW_CYCLE_EXACT
 #define CYCLE_EXACT_HPOSP(n) x = XPOS * 2 - 1;\
-	if (HPOSP##n < x && byte < x) {\
-	/* case 1: both left of x */\
-		/* do nothing */\
-	}\
-	else if (HPOSP##n >= x && byte >= x ) {\
-	/* case 2: both right of x */\
-		/* redraw, clearing first */\
-		UPDATE_PM_CYCLE_EXACT\
-	}\
-	else if (HPOSP##n <x && byte >= x) {\
-	/* case 3: new value is right, old value is left */\
-		/* redraw without clearning first */\
-		/* note: a hack, we can get away with it unless another change occurs */\
-		/* before the original copy that wasn't erased due to changing */\
-		/* pm_dirty is drawn */\
-		pm_dirty = FALSE;\
-		UPDATE_PM_CYCLE_EXACT\
-		pm_dirty = TRUE; /* can't trust that it was reset correctly */\
-	}\
-	else {\
-	/* case 4: new value is left, old value is right */\
-		/* remove old player and don't draw the new one */\
-		UBYTE save_graf = GRAFP##n;\
-		GRAFP##n = 0;\
-		UPDATE_PM_CYCLE_EXACT\
-		GRAFP##n = save_graf;\
-	}
+    if (HPOSP##n < x && byte < x) {\
+    /* case 1: both left of x */\
+        /* do nothing */\
+    }\
+    else if (HPOSP##n >= x && byte >= x ) {\
+    /* case 2: both right of x */\
+        /* redraw, clearing first */\
+        UPDATE_PM_CYCLE_EXACT\
+    }\
+    else if (HPOSP##n <x && byte >= x) {\
+    /* case 3: new value is right, old value is left */\
+        /* redraw without clearning first */\
+        /* note: a hack, we can get away with it unless another change occurs */\
+        /* before the original copy that wasn't erased due to changing */\
+        /* pm_dirty is drawn */\
+        pm_dirty = FALSE;\
+        UPDATE_PM_CYCLE_EXACT\
+        pm_dirty = TRUE; /* can't trust that it was reset correctly */\
+    }\
+    else {\
+    /* case 4: new value is left, old value is right */\
+        /* remove old player and don't draw the new one */\
+        UBYTE save_graf = GRAFP##n;\
+        GRAFP##n = 0;\
+        UPDATE_PM_CYCLE_EXACT\
+        GRAFP##n = save_graf;\
+    }
 #else
 #define CYCLE_EXACT_HPOSP(n)
 #endif /* NEW_CYCLE_EXACT */
@@ -901,10 +901,10 @@ void GTIA_PutByte(UWORD addr, UBYTE byte)
     case _PRIOR:
 #ifdef NEW_CYCLE_EXACT
 #ifndef NO_GTIA11_DELAY
-		/* update prior change ring buffer */
-  		prior_curpos = (prior_curpos + 1) % PRIOR_BUF_SIZE;
-		prior_pos_buf[prior_curpos] = XPOS * 2 - 37 + 2;
-		prior_val_buf[prior_curpos] = byte;
+        /* update prior change ring buffer */
+        prior_curpos = (prior_curpos + 1) % PRIOR_BUF_SIZE;
+        prior_pos_buf[prior_curpos] = XPOS * 2 - 37 + 2;
+        prior_val_buf[prior_curpos] = byte;
 #endif
 #endif
         set_prior(byte);

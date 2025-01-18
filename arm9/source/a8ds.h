@@ -19,6 +19,8 @@
 #ifndef _A8DS_H
 #define _A8DS_H
 
+#include "printf.h"
+
 #define A8_MENUINIT 0x01
 #define A8_MENUSHOW 0x02
 #define A8_PLAYINIT 0x03 
