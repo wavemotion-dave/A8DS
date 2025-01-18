@@ -2,7 +2,7 @@
  * config.c contains configurion handling to map all sorts of options into the emulator.
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -72,51 +72,6 @@ u8 UpgradeConfig(void)
 {
     u8 bInitNeeded = true;  // We only handle some upgrades.. default to requiring a full config re-init unless we prove otherwise
     
-    // ---------------------------------------------------------------------------------
-    // We can handle an upgrade from REV 08 to 09 as the changes are not structural...
-    // ---------------------------------------------------------------------------------
-    if (GameDB.db_version == 0x08)
-    {
-        // -----------------------------------------------------------------------------------------------------------
-        // For rev 09 we put the RAM options in proper order and added 64K. So we cross-map to correct this...
-        // -----------------------------------------------------------------------------------------------------------
-        if      (GameDB.default_ram_type == 0) GameDB.default_ram_type = RAM_IDX_128K;
-        else if (GameDB.default_ram_type == 1) GameDB.default_ram_type = RAM_IDX_320K;
-        else if (GameDB.default_ram_type == 2) GameDB.default_ram_type = RAM_IDX_1088K;
-        else if (GameDB.default_ram_type == 3) GameDB.default_ram_type = RAM_IDX_576K;
-        else                                   GameDB.default_ram_type = RAM_IDX_48K;
-        
-        for (int i=0; i<MAX_GAME_SETTINGS; i++)
-        {
-            if      (GameDB.GameSettings[i].ram_type == 0) GameDB.GameSettings[i].ram_type = RAM_IDX_128K;
-            else if (GameDB.GameSettings[i].ram_type == 1) GameDB.GameSettings[i].ram_type = RAM_IDX_320K;
-            else if (GameDB.GameSettings[i].ram_type == 2) GameDB.GameSettings[i].ram_type = RAM_IDX_1088K;
-            else if (GameDB.GameSettings[i].ram_type == 3) GameDB.GameSettings[i].ram_type = RAM_IDX_576K;
-            else                                           GameDB.GameSettings[i].ram_type = RAM_IDX_48K;
-        }
-
-        // -----------------------------------------------------------------------------------------------------------
-        // For rev 09 we added Joystick 2 mapping so we need to add an index of 5 to the key maps to align things...
-        // -----------------------------------------------------------------------------------------------------------
-        for (int j=0; j<8; j++)
-        {
-            if ((GameDB.default_keyMap[j] >= 5) && (GameDB.default_keyMap[j] <= 7)) GameDB.default_keyMap[j] += 5;  // Make room for the new Joystick stuff...
-            else if (GameDB.default_keyMap[j] >= 8) GameDB.default_keyMap[j] += 6;  // Make room for the new Joystick stuff...
-        }
-        
-        for (int i=0; i<MAX_GAME_SETTINGS; i++)
-        {
-            for (int j=0; j<8; j++)
-            {
-                if ((GameDB.GameSettings[i].keyMap[j] >= 5) && (GameDB.GameSettings[i].keyMap[j] <= 7)) GameDB.GameSettings[i].keyMap[j] += 5;  // Make room for the new Joystick stuff...
-                else if (GameDB.GameSettings[i].keyMap[j] >= 8) GameDB.GameSettings[i].keyMap[j] += 6;  // Make room for the new Joystick stuff...
-            }
-        }
-        
-        GameDB.db_version = GAME_DATABASE_VERSION;
-        
-        bInitNeeded = false;    // We have patched up the config database to rev 09... carry on...
-    }
     return bInitNeeded;
 }
 
@@ -138,14 +93,14 @@ void InitGameSettings(void)
     GameDB.default_blending = 1;
     GameDB.default_ram_type = RAM_IDX_128K;
     GameDB.default_alphaBlend = 0;
-    GameDB.default_keyMap[DB_KEY_A] = 0;
-    GameDB.default_keyMap[DB_KEY_B] = 0;
-    GameDB.default_keyMap[DB_KEY_X] = 13;
-    GameDB.default_keyMap[DB_KEY_Y] = 14;
-    GameDB.default_keyMap[DB_KEY_L] = 69;
-    GameDB.default_keyMap[DB_KEY_R] = 68;
-    GameDB.default_keyMap[DB_KEY_STA] = 10;
-    GameDB.default_keyMap[DB_KEY_SEL] = 11;
+    GameDB.default_keyMap[DB_KEY_A] = 0;    // Fire button
+    GameDB.default_keyMap[DB_KEY_B] = 0;    // Fire button
+    GameDB.default_keyMap[DB_KEY_X] = 63;   // VERTICAL-
+    GameDB.default_keyMap[DB_KEY_Y] = 14;   // SPACE BAR
+    GameDB.default_keyMap[DB_KEY_L] = 70;   // Scale X,Y
+    GameDB.default_keyMap[DB_KEY_R] = 69;   // Offset X,Y
+    GameDB.default_keyMap[DB_KEY_STA] = 10; // START
+    GameDB.default_keyMap[DB_KEY_SEL] = 11; // SELECT
     GameDB.db_version = GAME_DATABASE_VERSION;
 }
 
@@ -559,8 +514,8 @@ const struct options_t Option_Table[2][20] =
         {"KEY CLICK",   {"ON",          "OFF"},                             &myConfig.key_click_disable,    OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
         {"DISK SPEED",  {"ACCURATE",    "FAST"},                            &myConfig.disk_speedup,         OPT_NORMAL, 2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
         {"EMULATOR TXT",{"OFF",         "ON"},                              &myConfig.emulatorText,         OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
-        {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", 
-                         "400 STYLE",  "130XE STYLE", "STAR RAIDER"},       &myConfig.keyboard_type,        OPT_NORMAL, 5,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
+        {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", "400 STYLE", 
+                         "130XE STYLE", "ALPHANUMERIC", "STAR RAIDER"},     &myConfig.keyboard_type,        OPT_NORMAL, 6,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
         {"CART TYPE",   CART_TYPES,                                         &myConfig.cart_type,            OPT_NORMAL, 59,  "ROM FILES DONT    ",   "ALWAYS AUTODETECT ",  "SO YOU CAN SET THE",  "CARTRIDGE TYPE    "},
         {NULL,          {"",            ""},                                NULL,                           OPT_NORMAL, 2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "}
     },

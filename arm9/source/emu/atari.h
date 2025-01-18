@@ -49,6 +49,10 @@
 #ifndef _ATARI_H_
 #define _ATARI_H_
 
+// For the improved ANTIC drawing... comes at a emulation speed penalty...
+#define NEW_CYCLE_EXACT
+
+
 /* SBYTE and UBYTE must be exactly 1 byte long. */
 /* SWORD and UWORD must be exactly 2 bytes long. */
 /* SLONG and ULONG must be exactly 4 bytes long. */

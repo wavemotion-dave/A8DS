@@ -17,7 +17,7 @@ include $(DEVKITARM)/ds_rules
 BUILD		:=	build
 SOURCES		:=	source/emu source  
 INCLUDES	:=	source/emu source
-DATA		:= data
+DATA		:=  data
 GRAPHICS	:=	gfx
 
 #---------------------------------------------------------------------------------
@@ -31,10 +31,8 @@ CFLAGS	:= -Wall -Warray-bounds=0 -O2 -march=armv5te -mtune=arm946e-s -fomit-fram
 CFLAGS	+=	$(INCLUDE) -DARM9
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
 
-#ASFLAGS	:=	-g $(ARCH) -march=armv5te -mtune=arm946e-s
 ASFLAGS	:=	$(ARCH) -march=armv5te -mtune=arm946e-s
 
-#LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 LDFLAGS	=	-specs=ds_arm9.specs $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 #---------------------------------------------------------------------------------
@@ -125,10 +123,6 @@ $(ARM9ELF)	:	$(OFILES)
 #	grit $< -fts -W3 -gT! -gzl -gB16 -gb -o$*
 	grit $^ -o $@  -gt -mrt -mR8 -mLs -gzl -mzl
   
-#%.gif.o	:	%.gif
-#	@echo $(notdir $<)
-#	@$(bin2o)
-
 %.wav.o	:	%.wav
 	@echo $(notdir $<)
 	@$(bin2o)

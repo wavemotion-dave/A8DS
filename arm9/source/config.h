@@ -30,7 +30,7 @@
 // on the SD card. A reasonable compropmise... 
 // ---------------------------------------------------------------------------
 #define MAX_GAME_SETTINGS       2500
-#define GAME_DATABASE_VERSION   0x09
+#define GAME_DATABASE_VERSION   0x0A
 
 struct GameSettings_t
 {

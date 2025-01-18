@@ -72,7 +72,7 @@ static int bank __attribute__((section(".dtcm")));
 
 /* DB_32, XEGS_32, XEGS_64, XEGS_128, XEGS_256, XEGS_512, XEGS_1024 */
 /* SWXEGS_32, SWXEGS_64, SWXEGS_128, SWXEGS_256, SWXEGS_512, SWXEGS_1024 */
-ITCM_CODE static void set_bank_809F(int b, int main)
+static void set_bank_809F(int b, int main)
 {
     if (b != bank) 
     {
@@ -216,7 +216,7 @@ static void set_bank_A0BF_ATMAX128(int b)
 
 
 /* CART_ATMAX_1024 */
-ITCM_CODE void set_bank_A0BF_ATMAX1024(int b)
+void set_bank_A0BF_ATMAX1024(int b)
 {
     if (b != bank) 
     {

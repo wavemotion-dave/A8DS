@@ -8,7 +8,7 @@
  * it is strongly ecommended that you seek out the latest Atari800 sources.
  *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
  *
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -148,6 +148,18 @@ extern UBYTE PRIOR;
 extern UBYTE VDELAY;
 extern UBYTE POTENA;
 
+#ifdef NEW_CYCLE_EXACT
+extern UBYTE P1PL_T;
+extern UBYTE P2PL_T;
+extern UBYTE P3PL_T;
+extern UBYTE M0PL_T;
+extern UBYTE M1PL_T;
+extern UBYTE M2PL_T;
+extern UBYTE M3PL_T;
+extern short int collision_curpos;
+extern short int hitclr_pos;
+#endif
+
 extern int atari_speaker;
 extern int consol_index;
 extern UBYTE consol_table[3];
@@ -162,6 +174,9 @@ extern ULONG *grafp_ptr[4];
 extern int global_sizem[4];
 extern UBYTE PM_Width[4];
 
+extern UBYTE pm_scanline[ATARI_WIDTH / 2 + 8];
+extern UBYTE pm_dirty;
+
 #define COLOUR_BLACK 0
 #define COLOUR_TO_WORD(dest,src) dest = (((UWORD) (src)) << 8) | (src);
 
@@ -170,5 +185,9 @@ void GTIA_Frame(void);
 void new_pm_scanline(void);
 UBYTE GTIA_GetByte(UWORD addr);
 void GTIA_PutByte(UWORD addr, UBYTE byte);
+
+#ifdef NEW_CYCLE_EXACT
+void update_pmpl_colls(void);
+#endif
 
 #endif /* _GTIA_H_ */

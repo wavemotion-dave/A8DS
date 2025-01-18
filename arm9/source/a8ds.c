@@ -50,6 +50,7 @@
 #include "kbd_XL2.h"
 #include "kbd_XE.h"
 #include "kbd_400.h"
+#include "kbd_alpha.h"
 #include "kbd_starraid.h"
 #include "altirra_os.h"
 #include "altirra_basic.h"
@@ -58,9 +59,9 @@
 #include "highscore.h"
 #include "loadsave.h"
 
-#define MAX_FILES 1024                      // No more than this many files can be processed per directory
+#define MAX_FILES 1024                       // No more than this many files can be processed per directory
 
-FICA_A8 a8romlist[MAX_FILES];               // For reading all the .ATR .XEX .CAR and .ROM files from the SD card
+FICA_A8 *a8romlist;                         // For reading all the .ATR .XEX .CAR and .ROM files from the SD card
 u16 count8bit=0, countfiles=0, ucFicAct=0;  // Counters for all the 8-bit files found on the SD card
 u16 gTotalAtariFrames = 0;                  // For FPS counting
 int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background "pointers"
@@ -100,6 +101,23 @@ u8 DEBUG_DUMP = 0;
 
 u8 bFirstLoad = true;
 
+extern u8 *fake_heap_end;     // current heap start
+extern u8 *fake_heap_start;   // current heap end
+
+u8* getHeapStart() {return fake_heap_start;}
+u8* getHeapEnd()   {return (u8*)sbrk(0);}
+u8* getHeapLimit() {return fake_heap_end;}
+
+int getMemUsed() { // returns the amount of used memory in bytes
+   struct mallinfo mi = mallinfo();
+   return mi.uordblks;
+}
+
+int getMemFree() { // returns the amount of free memory in bytes
+   struct mallinfo mi = mallinfo();
+   return mi.fordblks + (getHeapLimit() - getHeapEnd());
+}
+
 // ---------------------------------------------------------------------------
 // Dump Debug Data - write out up to MAX_DEBUG values to the lower screen.
 // Useful to help debug the emulator - this goes out approximately once
@@ -115,6 +133,12 @@ ITCM_CODE static void DumpDebugData(void)
             siprintf(dbgbuf, "%02d: %10d  %08X", i, debug[i], debug[i]);
             dsPrintValue(0,3+i,0, dbgbuf);
         }
+        
+        struct mallinfo mi = mallinfo();
+        siprintf(dbgbuf, "DYNAMIC MEM USED: %d ", mi.uordblks);
+        dsPrintValue(0,22,0, dbgbuf);
+        siprintf(dbgbuf, "FREE HEAP MEMORY: %d ", getMemFree());
+        dsPrintValue(0,23,0, dbgbuf);        
     }
 }
 
@@ -126,7 +150,7 @@ ITCM_CODE static void DumpDebugData(void)
 static u8 actidx=0;
 void dsShowDiskActivity(int drive)
 {
-    static char activity[8] = {'*','+','*','*','+','+','+','*'};
+    static char activity[8] = {'*','+','*','*','+','+','+',' '};
     char buf[5];
 
     // ----------------------------------------------------------------
@@ -1008,7 +1032,7 @@ void dsDisplayFiles(unsigned int NoDebGame,u32 ucSel)
     ucGame= ucBcl+NoDebGame;
     if (ucGame < count8bit)
     {
-      char szName2[300];
+      static char szName2[300];
       maxLen=strlen(a8romlist[ucGame].filename);
       strcpy(szName,a8romlist[ucGame].filename);
       if (maxLen>29) szName[29]='\0';
@@ -1301,11 +1325,19 @@ static u16 shift=0;
 static u16 ctrl=0;
 void dsShowKeyboard(void)
 {
-      if (myConfig.keyboard_type == 4) // Star Raiders
+      if (myConfig.keyboard_type == 5) // Star Raiders
       {
           decompress(kbd_starraidTiles, bgGetGfxPtr(bg0b), LZ77Vram);
           decompress(kbd_starraidMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
           dmaCopy((void *) kbd_starraidPal,(u16*) BG_PALETTE_SUB,256*2);
+          unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
+          dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
+      }
+      else if (myConfig.keyboard_type == 4) // Alphanumeric
+      {
+          decompress(kbd_alphaTiles, bgGetGfxPtr(bg0b), LZ77Vram);
+          decompress(kbd_alphaMap, (void*) bgGetMapPtr(bg0b), LZ77Vram);
+          dmaCopy((void *) kbd_alphaPal,(u16*) BG_PALETTE_SUB,256*2);
           unsigned short dmaVal = *(bgGetMapPtr(bg1b) +31*32);
           dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b),32*24*2);
       }
@@ -1577,6 +1609,148 @@ int dsHandleKeyboard(int Tx, int Ty)
     return keyPress;
 }
 
+
+
+int push_key_codes[12];
+u8 push_key_idx = 0;
+
+void PushKey(u8 key)
+{
+    if (push_key_idx < 12) push_key_codes[push_key_idx++] = key;
+}
+
+static short int last_key_code = -1;
+
+int PullKey(void)
+{
+    int key = AKEY_NONE;
+    if (push_key_idx)
+    {
+        static u8 dampen = 0;
+        key = push_key_codes[push_key_idx-1];
+        if (dampen == 0) soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
+        if (++dampen > 5)
+        {
+            key = AKEY_NONE;
+            last_key_code = AKEY_NONE;
+            if (++dampen > 9)
+            {
+                push_key_idx--;
+                dampen = 0;
+            }
+        }
+    }
+    
+    return key;
+}
+
+int dsHandleKeyboardAlpha(int Tx, int Ty)
+{
+    int keyPress = AKEY_NONE;
+
+    if (Ty < 12) return AKEY_NONE;
+    if (Ty < 41)       // MACRO ROW
+    {
+             if (Tx <  52) {PushKey(AKEY_SPACE);PushKey(AKEY_E);PushKey(AKEY_K);PushKey(AKEY_A);PushKey(AKEY_T);} // TAKE
+        else if (Tx < 102) {PushKey(AKEY_SPACE);PushKey(AKEY_P);PushKey(AKEY_O);PushKey(AKEY_R);PushKey(AKEY_D);} // DROP
+        else if (Tx < 153) {PushKey(AKEY_SPACE);PushKey(AKEY_K);PushKey(AKEY_O);PushKey(AKEY_O);PushKey(AKEY_L);} // LOOK
+        else if (Tx < 203) {PushKey(AKEY_SPACE);PushKey(AKEY_E);PushKey(AKEY_N);PushKey(AKEY_I);PushKey(AKEY_M);PushKey(AKEY_A);PushKey(AKEY_X);PushKey(AKEY_E);} // EXAMINE
+        else if (Tx < 256) {PushKey(AKEY_SPACE);PushKey(AKEY_N);PushKey(AKEY_E);PushKey(AKEY_P);PushKey(AKEY_O);} // OPEN
+    }
+    else if (Ty < 81)   // Top Row QWERTY
+    {
+             if (Tx <  28) keyPress = (shift ? AKEY_Q : AKEY_q);
+        else if (Tx <  53) keyPress = (shift ? AKEY_W : AKEY_w);
+        else if (Tx <  78) keyPress = (shift ? AKEY_E : AKEY_e);
+        else if (Tx < 103) keyPress = (shift ? AKEY_R : AKEY_r);
+        else if (Tx < 128) keyPress = (shift ? AKEY_T : AKEY_t);
+        else if (Tx < 153) keyPress = (shift ? AKEY_Y : AKEY_y);
+        else if (Tx < 178) keyPress = (shift ? AKEY_U : AKEY_u);
+        else if (Tx < 203) keyPress = (shift ? AKEY_I : AKEY_i);
+        else if (Tx < 228) keyPress = (shift ? AKEY_O : AKEY_o);
+        else if (Tx < 256) keyPress = (shift ? AKEY_P : AKEY_p);
+    }
+    else if (Ty < 120)  // Home Row ASDF
+    {
+             if (Tx <  28) keyPress = (shift ? AKEY_A : AKEY_a);
+        else if (Tx <  53) keyPress = (shift ? AKEY_S : AKEY_s);
+        else if (Tx <  78) keyPress = (shift ? AKEY_D : AKEY_d);
+        else if (Tx < 103) keyPress = (shift ? AKEY_F : AKEY_f);
+        else if (Tx < 128) keyPress = (shift ? AKEY_G : AKEY_g);
+        else if (Tx < 153) keyPress = (shift ? AKEY_H : AKEY_h);
+        else if (Tx < 178) keyPress = (shift ? AKEY_J : AKEY_j);
+        else if (Tx < 203) keyPress = (shift ? AKEY_K : AKEY_k);
+        else if (Tx < 228) keyPress = (shift ? AKEY_L : AKEY_l);
+        else if (Tx < 256) keyPress = AKEY_BACKSPACE;
+    }
+    else if (Ty < 160)  // Bottom Row ZXCV
+    {
+             if (Tx <  28) keyPress = (shift ? AKEY_Z : AKEY_z);
+        else if (Tx <  53) keyPress = (shift ? AKEY_X : AKEY_x);
+        else if (Tx <  78) keyPress = (shift ? AKEY_C : AKEY_c);
+        else if (Tx < 103) keyPress = (shift ? AKEY_V : AKEY_v);
+        else if (Tx < 128) keyPress = (shift ? AKEY_B : AKEY_b);
+        else if (Tx < 153) keyPress = (shift ? AKEY_N : AKEY_n);
+        else if (Tx < 178) keyPress = (shift ? AKEY_M : AKEY_m);
+        else if (Tx < 203) keyPress = AKEY_FULLSTOP;
+        else if (Tx < 228) keyPress = AKEY_RETURN;
+        else if (Tx < 256) keyPress = AKEY_RETURN;
+    }
+    else if (Ty < 192)  // Space Bar - Menu Row
+    {
+             if (Tx <  21) keyPress = AKEY_1;
+        else if (Tx <  40) keyPress = AKEY_2;
+        else if (Tx <  59) keyPress = AKEY_3;
+        else if (Tx <  78) keyPress = AKEY_4;
+        else if (Tx < 197) keyPress = AKEY_SPACE;
+        else if (Tx < 222) keyPress = AKEY_CAPSTOGGLE;
+        else keyPress = AKEY_EXIT;
+    }
+
+    if (keyPress == AKEY_SHFT)
+    {
+        if ( !keyboard_debounce )   // To prevent from toggling so quickly...
+        {
+            keyboard_debounce=15;
+            if (shift == 0)
+            {
+                shift = 1;
+                dsPrintValue(0,0,0, "SHF");
+            }
+            else
+            {
+                shift = 0;
+                dsPrintValue(0,0,0, "   ");
+            }
+        }
+        keyPress = AKEY_NONE;
+    }
+    else if (keyPress == AKEY_CTRL)
+    {
+        if ( !keyboard_debounce )   // To prevent from toggling so quickly...
+        {
+            keyboard_debounce=15;
+            ctrl ^= 1;
+            dsPrintValue(0,0,0, (ctrl ? "CTR":"   "));
+        }
+        keyPress = AKEY_NONE;
+    }
+    else if (ctrl)
+    {
+        keyPress |= AKEY_CTRL;
+        ctrl = 0;
+        dsPrintValue(0,0,0, "   ");
+    }
+    else if (keyPress != AKEY_NONE)
+    {
+        ctrl=0;
+        shift=0;
+        dsPrintValue(0,0,0, "   ");
+    }
+
+    return keyPress;
+}
+
 int dsHandleStarRaidersKeyboard(int Tx, int Ty)
 {
     int keyPress = AKEY_NONE;
@@ -1637,7 +1811,6 @@ void dsInstallSoundEmuFIFO(void)
     if (last_sound_fifo == -1)
     {
         last_sound_fifo = 1;
-        irqDisable(IRQ_TIMER2);    
         fifoSendValue32(FIFO_USER_01,(1<<16) | SOUND_KILL);
         *aptr = 0; *bptr=0;
         // We are going to use the 16-bit sound engine so we need to scale up our 8-bit values...
@@ -1671,24 +1844,24 @@ void dsInstallSoundEmuFIFO(void)
         fifoSendDatamsg(FIFO_USER_01, sizeof(msg), (u8*)&msg);
 
         swiWaitForVBlank();swiWaitForVBlank();    // Wait 2 vertical blanks... that's enough for the ARM7 to start chugging...
-        irqEnable(IRQ_TIMER2);
     }
 }
 
 // Called roughly every 1/60th of a second... 
 void dsHandleDiskSounds(void)
 {
+    static int soundID=0;
+    static u8 play_sio_sound_dampen = 0;
+    
     if (myConfig.disk_speedup == 0) // Accurate/Slow mode?
     {
-        static int soundID=0;
-        static u8 play_sio_sound_dampen = 0;
         if (play_sio_sound)
         {
             if (--play_sio_sound)
             {
                 if (play_sio_sound_dampen == 0)
                 {
-                    soundID = soundPlaySample(sio_wav, SoundFormat_16Bit, sio_wav_size, 22050, 101, 64, true, 0);
+                    soundID = soundPlaySample(sio_wav, SoundFormat_16Bit, sio_wav_size, 11025, 101, 64, true, 0);
                     play_sio_sound_dampen = 1;
                 }
             }
@@ -1704,7 +1877,9 @@ void dsHandleDiskSounds(void)
     {
         if (--play_sio_sound == 0)
         {
+            soundKill(soundID);
             dsPrintValue(3,0,0, "   ");
+            play_sio_sound_dampen = 0;
         }
     }
 }
@@ -1750,7 +1925,6 @@ u16 nds_keys[8] = {KEY_A, KEY_B, KEY_X, KEY_Y, KEY_L, KEY_R, KEY_START, KEY_SELE
 void dsMainLoop(void)
 {
   static unsigned short int config_snap_counter=0;
-  static short int last_key_code = -1;
   unsigned short int keys_pressed,keys_touch=0, romSel=0;
   short int iTx,iTy;
 
@@ -1782,7 +1956,6 @@ void dsMainLoop(void)
 
       case A8_PLAYINIT:
         dsShowScreenEmu();
-        irqEnable(IRQ_TIMER2);
         bMute = 0;            
         emu_state = A8_PLAYGAME;
 
@@ -1865,6 +2038,8 @@ void dsMainLoop(void)
         // ------------------------------------------------------
         // Check if the touch screen pressed and handle it...
         // ------------------------------------------------------
+        if (push_key_idx) key_code = PullKey();
+        else
         if (keys_pressed & KEY_TOUCH)
         {
             touchPosition touch;
@@ -1913,8 +2088,10 @@ void dsMainLoop(void)
                 {
                       if (bShowKeyboard)
                       {
-                         if (myConfig.keyboard_type == 4)
+                         if (myConfig.keyboard_type == 5)
                              key_code = dsHandleStarRaidersKeyboard(iTx, iTy);
+                         else if (myConfig.keyboard_type == 4)
+                             key_code = dsHandleKeyboardAlpha(iTx, iTy);
                          else 
                              key_code = dsHandleKeyboard(iTx, iTy);
                           
@@ -1958,7 +2135,6 @@ void dsMainLoop(void)
                         }
                         keys_touch = 1;
                         dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
-                        irqEnable(IRQ_TIMER2);
                         bMute = 0;
                         swiWaitForVBlank();                        
                     }
@@ -2250,8 +2426,8 @@ void dsMainLoop(void)
         {
             dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
             bFirstLoad = false;
-            irqEnable(IRQ_TIMER2);
             bMute = 0;
+            irqEnable(IRQ_TIMER2);
         }
 
         break;
@@ -2287,6 +2463,8 @@ void a8FindFiles(void)
   DIR *pdir;
   struct dirent *pent;
   static char filenametmp[300];
+  
+  if (a8romlist == NULL) a8romlist = malloc(MAX_FILES * sizeof(FICA_A8));
 
   count8bit = countfiles= 0;
 

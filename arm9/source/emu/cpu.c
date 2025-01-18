@@ -268,9 +268,32 @@ static UBYTE cycles[256] __attribute__((section(".dtcm"))) =
 int __attribute__((noinline))  CPU_Go_Startup(int limit)
 {
     if (wsync_halt) {
+#ifdef NEW_CYCLE_EXACT
+		if (DRAWING_SCREEN) {
+/* if ANTIC_WSYNC_C is a stolen cycle, ANTIC_antic2cpu_ptr will convert that to the nearest
+   cpu cycle before that cycle.  The CPU will see this cycle, if WSYNC is not
+   delayed. (Actually this cycle is the first cycle of the instruction after
+   STA WSYNC, which was really executed one cycle after STA WSYNC because
+   of an internal antic delay ).   ANTIC_delayed_wsync is added to this cycle to form
+   the limit in the case that WSYNC is not early (does not allow this extra cycle) */
+
+			if (limit < antic2cpu_ptr[WSYNC_C] + delayed_wsync)
+				return 1;
+			xpos = antic2cpu_ptr[WSYNC_C] + delayed_wsync;
+		}
+		else {
+			if (limit < (WSYNC_C + delayed_wsync))
+				return 1;
+			xpos = WSYNC_C;
+		}
+		delayed_wsync = 0;
+
+#else /* NEW_CYCLE_EXACT */
+        
         if (limit < WSYNC_C)
             return 1;
         xpos = WSYNC_C;
+#endif /* NEW_CYCLE_EXACT */
         wsync_halt = 0;
     }
     xpos_limit = limit;         /* needed for WSYNC store inside ANTIC */
@@ -1163,7 +1186,7 @@ next:
 
     OPCODE(8b)              /* ANE #ab [unofficial - A AND X AND (Mem OR $EF) to Acc] (Fox) */
         data = IMMEDIATE;
-        N = Z = A & X & data;
+        Z = N = A & X & data;
         A &= X & (data | 0xef);
         DONE
 
@@ -1837,8 +1860,8 @@ next:
             /* Decimal mode */
             unsigned int tmp;
             tmp = (A & 0x0f) + (data & 0x0f) + C;
-            if (tmp >= 10)
-                tmp = (tmp - 10) | 0x10;
+            if (tmp >= 0x0a)
+                tmp = ((tmp + 0x06) & 0x0f) + 0x10;            
             tmp += (A & 0xf0) + (data & 0xf0);
 
             Z = A + data + C;
@@ -1851,7 +1874,7 @@ next:
                 SetV;
 #endif
 
-            if (tmp > 0x9f)
+            if (tmp >= 0xa0)
                 tmp += 0x60;
             C = tmp > 0xff;
             A = (UBYTE) tmp;
@@ -1866,40 +1889,33 @@ next:
             tmp = A - data - 1 + C;
             C = tmp < 0x100;
 #ifndef NO_V_FLAG_VARIABLE
-            V = ((A ^ tmp) & 0x80) && ((A ^ data) & 0x80);
+            V = ((A ^ data) & 0x80) && ((A ^ tmp) & 0x80);
 #else
             ClrV;
-            if (((A ^ tmp) & 0x80) && ((A ^ data) & 0x80))
+            if (((A ^ data) & 0x80) && ((A ^ tmp) & 0x80))
                 SetV;
 #endif
             Z = N = A = (UBYTE) tmp;
         }
         else {
             /* Decimal mode */
-            unsigned int al, ah, tmp;
-            /* tmp = A - data - !C; */
-            tmp = A - data - 1 + C;
-            /* al = (A & 0x0f) - (data & 0x0f) - !C; */
-            al = (A & 0x0f) - (data & 0x0f) - 1 + C;    /* Calculate lower nybble */
-            ah = (A >> 4) - (data >> 4);        /* Calculate upper nybble */
-            if (al & 0x10) {
-                al -= 6;    /* BCD fixup for lower nybble */
-                ah--;
-            }
-            if (ah & 0x10)
-                ah -= 6;    /* BCD fixup for upper nybble */
-
-            C = tmp < 0x100;            /* Set flags */
+			unsigned int tmp;
+			tmp = (A & 0x0f) - (data & 0x0f) - 1 + C;
+			if (tmp & 0x10)
+				tmp = ((tmp - 0x06) & 0x0f) - 0x10;
+			tmp += (A & 0xf0) - (data & 0xf0);
+			if (tmp & 0x100)
+				tmp -= 0x60;
+			Z = N = A - data - 1 + C;
 #ifndef NO_V_FLAG_VARIABLE
-            V = ((A ^ tmp) & 0x80) && ((A ^ data) & 0x80);
+            V = ((A ^ data) & 0x80) && ((A ^ Z) & 0x80);
 #else
             ClrV;
-            if (((A ^ tmp) & 0x80) && ((A ^ data) & 0x80))
+            if (((A ^ data) & 0x80) && ((A ^ Z) & 0x80))
                 SetV;
 #endif
-            Z = N = (UBYTE) tmp;
-
-            A = (ah << 4) + (al & 0x0f);    /* Compose result */
+            C = ((unsigned int) (A - data - 1 + C)) <= 0xff;
+            A = tmp;
         }
         DONE
     }

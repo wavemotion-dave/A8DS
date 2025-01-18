@@ -2,7 +2,7 @@
  * loadsave.c contains routines for saving state and loading state
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -43,7 +43,7 @@
 
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
-#define SAVE_FILE_REV   0x0005
+#define SAVE_FILE_REV   0x0006
 
 char save_filename[300+4];
 
@@ -284,6 +284,24 @@ void SaveGame(void)
         fwrite(before_cycles,                   sizeof(before_cycles),                  1, fp);
         fwrite(extra_cycles,                    sizeof(extra_cycles),                   1, fp);
 
+#ifdef NEW_CYCLE_EXACT            
+        //TODO: these two pointers need to save index only...
+        fwrite(cpu2antic_ptr,                   sizeof(cpu2antic_ptr),                  1, fp);
+        fwrite(antic2cpu_ptr,                   sizeof(antic2cpu_ptr),                  1, fp);
+        fwrite(&delayed_wsync,                  sizeof(delayed_wsync),                  1, fp);
+        fwrite(&dmactl_changed,                 sizeof(dmactl_changed),                 1, fp);
+        fwrite(&DELAYED_DMACTL,                 sizeof(DELAYED_DMACTL),                 1, fp);
+        fwrite(&draw_antic_ptr_changed,         sizeof(draw_antic_ptr_changed),         1, fp);
+        fwrite(&need_load,                      sizeof(need_load),                      1, fp);
+        fwrite(&dmactl_bug_chdata,              sizeof(dmactl_bug_chdata),              1, fp);
+        fwrite(&prevline_prior_pos,             sizeof(prevline_prior_pos),             1, fp);
+        fwrite(&prevline_prior_pos,             sizeof(prevline_prior_pos),             1, fp);
+        fwrite(&curline_prior_pos,              sizeof(curline_prior_pos),              1, fp);
+        fwrite(&prior_curpos,                   sizeof(prior_curpos),                   1, fp);
+        fwrite(&prior_val_buf,                  sizeof(prior_val_buf),                  1, fp);
+        fwrite(&prior_pos_buf,                  sizeof(prior_pos_buf),                  1, fp);
+#endif         
+
         fwrite(&left_border_chars,              sizeof(left_border_chars),              1, fp);
         fwrite(&right_border_start,             sizeof(right_border_start),             1, fp);
 
@@ -358,6 +376,18 @@ void SaveGame(void)
         fwrite(&P1PL,                           sizeof(P1PL),                           1, fp);
         fwrite(&P2PL,                           sizeof(P2PL),                           1, fp);
         fwrite(&P3PL,                           sizeof(P3PL),                           1, fp);
+
+#ifdef NEW_CYCLE_EXACT
+        fwrite(&P1PL_T,                         sizeof(P1PL_T),                         1, fp);
+        fwrite(&P2PL_T,                         sizeof(P2PL_T),                         1, fp);
+        fwrite(&P3PL_T,                         sizeof(P3PL_T),                         1, fp);
+        fwrite(&M0PL_T,                         sizeof(M0PL_T),                         1, fp);
+        fwrite(&M1PL_T,                         sizeof(M1PL_T),                         1, fp);
+        fwrite(&M2PL_T,                         sizeof(M2PL_T),                         1, fp);
+        fwrite(&M3PL_T,                         sizeof(M3PL_T),                         1, fp);
+        fwrite(&collision_curpos,               sizeof(collision_curpos),               1, fp);
+        fwrite(&hitclr_pos,                     sizeof(hitclr_pos),                     1, fp);
+#endif       
                 
         fwrite(&PRIOR,                          sizeof(PRIOR),                          1, fp);
         fwrite(&VDELAY,                         sizeof(VDELAY),                         1, fp);
@@ -564,6 +594,23 @@ void LoadGame(void)
             fread(before_cycles,                   sizeof(before_cycles),                  1, fp);
             fread(extra_cycles,                    sizeof(extra_cycles),                   1, fp);
 
+#ifdef NEW_CYCLE_EXACT            
+            fread(cpu2antic_ptr,                   sizeof(cpu2antic_ptr),                  1, fp);
+            fread(antic2cpu_ptr,                   sizeof(antic2cpu_ptr),                  1, fp);
+            fread(&delayed_wsync,                  sizeof(delayed_wsync),                  1, fp);
+            fread(&dmactl_changed,                 sizeof(dmactl_changed),                 1, fp);
+            fread(&DELAYED_DMACTL,                 sizeof(DELAYED_DMACTL),                 1, fp);
+            fread(&draw_antic_ptr_changed,         sizeof(draw_antic_ptr_changed),         1, fp);
+            fread(&need_load,                      sizeof(need_load),                      1, fp);
+            fread(&dmactl_bug_chdata,              sizeof(dmactl_bug_chdata),              1, fp);
+            fread(&prevline_prior_pos,             sizeof(prevline_prior_pos),             1, fp);
+            fread(&prevline_prior_pos,             sizeof(prevline_prior_pos),             1, fp);
+            fread(&curline_prior_pos,              sizeof(curline_prior_pos),              1, fp);
+            fread(&prior_curpos,                   sizeof(prior_curpos),                   1, fp);
+            fread(&prior_val_buf,                  sizeof(prior_val_buf),                  1, fp);
+            fread(&prior_pos_buf,                  sizeof(prior_pos_buf),                  1, fp);            
+#endif            
+
             fread(&left_border_chars,              sizeof(left_border_chars),              1, fp);
             fread(&right_border_start,             sizeof(right_border_start),             1, fp);
 
@@ -640,6 +687,18 @@ void LoadGame(void)
             fread(&P1PL,                           sizeof(P1PL),                           1, fp);
             fread(&P2PL,                           sizeof(P2PL),                           1, fp);
             fread(&P3PL,                           sizeof(P3PL),                           1, fp);
+
+#ifdef NEW_CYCLE_EXACT
+            fread(&P1PL_T,                         sizeof(P1PL_T),                         1, fp);
+            fread(&P2PL_T,                         sizeof(P2PL_T),                         1, fp);
+            fread(&P3PL_T,                         sizeof(P3PL_T),                         1, fp);
+            fread(&M0PL_T,                         sizeof(M0PL_T),                         1, fp);
+            fread(&M1PL_T,                         sizeof(M1PL_T),                         1, fp);
+            fread(&M2PL_T,                         sizeof(M2PL_T),                         1, fp);
+            fread(&M3PL_T,                         sizeof(M3PL_T),                         1, fp);
+            fread(&collision_curpos,               sizeof(collision_curpos),               1, fp);
+            fread(&hitclr_pos,                     sizeof(hitclr_pos),                     1, fp);
+#endif       
 
             fread(&PRIOR,                          sizeof(PRIOR),                          1, fp);
             fread(&VDELAY,                         sizeof(VDELAY),                         1, fp);

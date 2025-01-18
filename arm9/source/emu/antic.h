@@ -107,7 +107,34 @@ extern UBYTE PENV_input;
 #define NMIST_C 6
 #define NMI_C   12
 
+
+#ifdef NEW_CYCLE_EXACT
+#define NOT_DRAWING -999
+#define DRAWING_SCREEN (cur_screen_pos!=NOT_DRAWING)
+extern int *cpu2antic_ptr;
+extern int *antic2cpu_ptr;
+extern UBYTE delayed_wsync;
+extern UBYTE dmactl_changed;
+extern UBYTE DELAYED_DMACTL;
+extern UBYTE draw_antic_ptr_changed;
+extern UBYTE need_load;
+extern int dmactl_bug_chdata;
+extern int cur_screen_pos;
+void update_scanline(void);
+void update_scanline_prior(UBYTE byte);
+#ifndef NO_GTIA11_DELAY
+extern int prevline_prior_pos;
+extern int curline_prior_pos;
+extern int prior_curpos;
+#define PRIOR_BUF_SIZE 40
+extern UBYTE prior_val_buf[PRIOR_BUF_SIZE];
+extern short int prior_pos_buf[PRIOR_BUF_SIZE];
+#endif /* NO_GTIA11_DELAY */
+
+#define XPOS ( DRAWING_SCREEN ? cpu2antic_ptr[xpos] : xpos )
+#else
 #define XPOS xpos
+#endif /* NEW_CYCLE_EXACT */
 
 extern UBYTE PENH;
 extern UBYTE PENV;
@@ -131,7 +158,7 @@ extern int left_border_chars;
 extern int right_border_start;
 extern UWORD chbase_20;
 extern UBYTE invert_mask;
-extern int blank_mask;
+extern UBYTE blank_mask;
 extern UBYTE an_scanline[ATARI_WIDTH / 2 + 8];
 extern UBYTE blank_lookup[256];
 extern UWORD lookup2[256];

@@ -2,7 +2,7 @@
  * INTRO.C contains the splash screen which shows briefly as the emulator loads.
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -69,7 +69,7 @@ void intro_logo(void)
 
     FadeToColor(0,BLEND_FADE_BLACK | BLEND_SRC_BG0 | BLEND_DST_BG0,3,0,3);
 
-    soundId = soundPlaySample((const void *) mus_intro_wav, SoundFormat_ADPCM, mus_intro_wav_size, 22050, 127, 64, false, 0);
+    soundId = soundPlaySample((const void *) mus_intro_wav, SoundFormat_16Bit, mus_intro_wav_size, 11025, 127, 64, false, 0);
 
     bOK=false;
     while (!bOK) { if ( !(keysCurrent() & 0x1FFF) ) bOK=true; } // 0x1FFF = key or pen
