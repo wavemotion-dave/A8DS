@@ -248,8 +248,8 @@ One other trick is the use of Smooth Scroll. You can assign to any DS key (I usu
 
 This really helps games where there might be some score other infrequently referenced information at the top/bottom of the screen. Witness here Caverns of Mars which I've mapped to show the entire screen minus the bottom row of text... using VERTICAL+ I can press the X button to quickly glance at the bottom line and let it scroll back up during gameplay. 
 
-![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/caverns_02.bmp)
-![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/caverns_01.bmp)
+![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/bmp/caverns_02.bmp)
+![Caverns of Mars](https://github.com/wavemotion-dave/A8DS/blob/main/bmp/caverns_01.bmp)
 
 Lastly - if a game was released for both NTSC and PAL and does not utilize the same number of visible scanlines, you're usually better off with the NTSC versions on the DS handheld. The reason is simple: you are less likely to have to scale and drop pixel rows with an NTSC output.  However, with the use of scaling and smooth scrolling, you should be able to get workable versions of games in either TV standard.
 

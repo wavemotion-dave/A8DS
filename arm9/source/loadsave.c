@@ -37,6 +37,7 @@
 #include "sio.h"
 #include "pokey.h"
 #include "pokeysnd.h"
+#include "cycle_map.h"
 #include "memory.h"
 #include "config.h"
 #include "loadsave.h"
@@ -284,10 +285,12 @@ void SaveGame(void)
         fwrite(before_cycles,                   sizeof(before_cycles),                  1, fp);
         fwrite(extra_cycles,                    sizeof(extra_cycles),                   1, fp);
 
-#ifdef NEW_CYCLE_EXACT            
-        //TODO: these two pointers need to save index only...
-        fwrite(cpu2antic_ptr,                   sizeof(cpu2antic_ptr),                  1, fp);
-        fwrite(antic2cpu_ptr,                   sizeof(antic2cpu_ptr),                  1, fp);
+#ifdef NEW_CYCLE_EXACT
+        offset = (u32)cpu2antic_ptr - (u32)(&cpu2antic[0]);
+        fwrite(&offset,                         sizeof(offset),                         1, fp);
+        offset = (u32)antic2cpu_ptr - (u32)(&antic2cpu[0]);
+        fwrite(&offset,                         sizeof(offset),                         1, fp);
+        
         fwrite(&delayed_wsync,                  sizeof(delayed_wsync),                  1, fp);
         fwrite(&dmactl_changed,                 sizeof(dmactl_changed),                 1, fp);
         fwrite(&DELAYED_DMACTL,                 sizeof(DELAYED_DMACTL),                 1, fp);
@@ -595,8 +598,11 @@ void LoadGame(void)
             fread(extra_cycles,                    sizeof(extra_cycles),                   1, fp);
 
 #ifdef NEW_CYCLE_EXACT            
-            fread(cpu2antic_ptr,                   sizeof(cpu2antic_ptr),                  1, fp);
-            fread(antic2cpu_ptr,                   sizeof(antic2cpu_ptr),                  1, fp);
+            fread(&offset,                         sizeof(offset),                         1, fp);
+            cpu2antic_ptr = &cpu2antic[0] + offset;
+            fread(&offset,                         sizeof(offset),                         1, fp);
+            antic2cpu_ptr = &antic2cpu[0] + offset;
+
             fread(&delayed_wsync,                  sizeof(delayed_wsync),                  1, fp);
             fread(&dmactl_changed,                 sizeof(dmactl_changed),                 1, fp);
             fread(&DELAYED_DMACTL,                 sizeof(DELAYED_DMACTL),                 1, fp);
