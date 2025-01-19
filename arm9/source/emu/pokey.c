@@ -90,17 +90,6 @@ ULONG random_scanline_counter;
 UBYTE poly9_lookup[511];
 UBYTE poly17_lookup[16385];
 
-
-ULONG POKEY_GetRandomCounter(void)
-{
-    return random_scanline_counter;
-}
-
-void POKEY_SetRandomCounter(ULONG value)
-{
-    random_scanline_counter = value;
-}
-
 ITCM_CODE UBYTE POKEY_GetByte(UWORD addr)
 {
     UBYTE byte = 0xff;
@@ -122,7 +111,6 @@ ITCM_CODE UBYTE POKEY_GetByte(UWORD addr)
                 if (POT_input[i] <= pot_scanline)
                     byte &= ~(1 << i);      // reset bit if pot value known
         }
-        return byte;
         break;
     case _KBCODE:
         byte = KBCODE;
@@ -235,7 +223,7 @@ ITCM_CODE void POKEY_PutByte(UWORD addr, UBYTE byte)
         if (((~IRQST & IRQEN) == 0) && (PIA_IRQ == 0))
             IRQ = 0;
         else
-            IRQ = 1;
+            GenerateIRQ();
         break;
     case _SKRES:
         SKSTAT |= 0xe0;
@@ -346,7 +334,7 @@ void POKEY_Initialise(void)
         poly17_lookup[i] = (UBYTE) (reg >> 1);
     }
 
-    random_scanline_counter = 0;
+    random_scanline_counter = rand();
 }
 
 void POKEY_Frame(void)

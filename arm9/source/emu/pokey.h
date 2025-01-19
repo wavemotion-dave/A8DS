@@ -51,63 +51,52 @@
 #ifndef _POKEY_H_
 #define _POKEY_H_
 
-#ifdef ASAP /* external project, see http://asap.sf.net */
-#include "asap_internal.h"
-#else
 #include "atari.h"
-#endif
 
-#define _AUDF1 0x00
-#define _AUDC1 0x01
-#define _AUDF2 0x02
-#define _AUDC2 0x03
-#define _AUDF3 0x04
-#define _AUDC3 0x05
-#define _AUDF4 0x06
-#define _AUDC4 0x07
-#define _AUDCTL 0x08
-#define _STIMER 0x09
-#define _SKRES 0x0a
-#define _POTGO 0x0b
-#define _SEROUT 0x0d
-#define _IRQEN 0x0e
-#define _SKCTLS 0x0f
+#define _AUDF1      0x00
+#define _AUDC1      0x01
+#define _AUDF2      0x02
+#define _AUDC2      0x03
+#define _AUDF3      0x04
+#define _AUDC3      0x05
+#define _AUDF4      0x06
+#define _AUDC4      0x07
+#define _AUDCTL     0x08
+#define _STIMER     0x09
+#define _SKRES      0x0a
+#define _POTGO      0x0b
+#define _SEROUT     0x0d
+#define _IRQEN      0x0e
+#define _SKCTLS     0x0f
 
-#define _POT0 0x00
-#define _POT1 0x01
-#define _POT2 0x02
-#define _POT3 0x03
-#define _POT4 0x04
-#define _POT5 0x05
-#define _POT6 0x06
-#define _POT7 0x07
-#define _ALLPOT 0x08
-#define _KBCODE 0x09
-#define _RANDOM 0x0a
-#define _SERIN 0x0d
-#define _IRQST 0x0e
-#define _SKSTAT 0x0f
+#define _POT0       0x00
+#define _POT1       0x01
+#define _POT2       0x02
+#define _POT3       0x03
+#define _POT4       0x04
+#define _POT5       0x05
+#define _POT6       0x06
+#define _POT7       0x07
+#define _ALLPOT     0x08
+#define _KBCODE     0x09
+#define _RANDOM     0x0a
+#define _SERIN      0x0d
+#define _IRQST      0x0e
+#define _SKSTAT     0x0f
 
-#define _POKEY2 0x10            /* offset to second pokey chip (STEREO expansion) */
+#define _POKEY2     0x10            /* offset to second pokey chip (STEREO expansion) */
 
-#ifndef ASAP
+#define POKEY_DELAYED_SERIN_IRQ     DELAYED_SERIN_IRQ
+#define POKEY_AUDF                  AUDF
+#define POKEY_AUDC                  AUDC
+#define POKEY_CHAN3                 CHAN3
+#define POKEY_CHAN4                 CHAN4
 
-
-#define POKEY_DELAYED_SERIN_IRQ  DELAYED_SERIN_IRQ
-#define POKEY_AUDF AUDF
-#define POKEY_AUDC AUDC
-#define POKEY_CHAN3 CHAN3
-#define POKEY_CHAN4 CHAN4
-
-ULONG POKEY_GetRandomCounter(void);
-void POKEY_SetRandomCounter(ULONG value);
 UBYTE POKEY_GetByte(UWORD addr);
 void POKEY_PutByte(UWORD addr, UBYTE byte);
 void POKEY_Initialise(void);
 void POKEY_Frame(void);
 void POKEY_Scanline(void);
-
-#endif
 
 /* CONSTANT DEFINITIONS */
 

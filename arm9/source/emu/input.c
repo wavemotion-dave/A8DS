@@ -180,6 +180,18 @@ void INPUT_Frame(void)
 
     TRIG[0] = TRIG_input[0];
     TRIG[1] = TRIG_input[1];
+    
+    if (machine_type == MACHINE_XLXE)
+    {
+        TRIG[2] = 1;
+        TRIG[3] = cartA0BF_enabled;
+    }
+    else // Atari 800
+    {
+        TRIG[2] = TRIG_input[2];
+        TRIG[3] = TRIG_input[3];
+    }
+    
     PORT_input[0] = (STICK[1] << 4) | STICK[0];
 }
 

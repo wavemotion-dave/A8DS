@@ -2,7 +2,7 @@
  * A8DS.H contains externs and defines related to A8DS emulator.
  *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
@@ -26,6 +26,8 @@
 #define A8_PLAYINIT 0x03 
 #define A8_PLAYGAME 0x04 
 #define A8_QUITSTDS 0x05
+
+#define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
 extern unsigned short emu_state; 
 

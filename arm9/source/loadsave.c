@@ -42,8 +42,6 @@
 #include "config.h"
 #include "loadsave.h"
 
-#define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
-
 #define SAVE_FILE_REV   0x0006
 
 char save_filename[300+4];

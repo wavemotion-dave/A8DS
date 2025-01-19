@@ -67,7 +67,7 @@ u16 gTotalAtariFrames = 0;                  // For FPS counting
 int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background screen "pointers"
 u16 emu_state;                              // Emulator State
 u16 atari_frames = 0;                       // Number of frames per second (60 for NTSC and 50 for PAL)
-int bShowKeyboard = false;                  // set to true when the virtual keyboard is showing
+u8  bShowKeyboard = false;                  // set to true when the virtual keyboard is showing
 
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
@@ -90,7 +90,6 @@ u16 play_sio_sound = 0;
 #define  cyBG (myConfig.yOffset<<8)
 #define  xdxBG (((320 / myConfig.xScale) << 8) | (320 % myConfig.xScale))
 #define  ydyBG (((256 / myConfig.yScale) << 8) | (256 % myConfig.yScale))
-#define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
 bool bAtariCrash = false;                   // We use this to track any crashes that might occur and give the user a message on screen
 char last_boot_file[300] = {0};             // The last filename (.ATR or .XEX) we booted (and will be re-booted if RESET pressed)

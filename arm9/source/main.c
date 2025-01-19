@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <fat.h>
 #include <nds.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "main.h"
@@ -98,6 +99,8 @@ int main(int argc, char **argv)
         chdir("a800");     // And try to start in the subdir /a800... doesn't matter if it fails.
         chdir("a8");       // if the above failed, try a8
     }
+    
+    srand(time(NULL));
     
     // Main loop of emulation
     dsMainLoop();

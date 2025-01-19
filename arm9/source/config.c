@@ -46,8 +46,6 @@
 #include "altirra_basic.h"
 #include "config.h"
 
-#define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
-
 struct GameDatabase_t GameDB;
 struct GameSettings_t myConfig __attribute__((section(".dtcm")));
 

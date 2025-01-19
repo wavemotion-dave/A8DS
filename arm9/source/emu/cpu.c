@@ -1,23 +1,23 @@
 /*
- * CPU.C contains the emulation of the Core 6502 CPU on the Atari 800. 
- * 
+ * CPU.C contains the emulation of the Core 6502 CPU on the Atari 800.
+ *
  * The baseline for this file is the Atari800 2.0.x source and has
  * been heavily modified for optimization on the Nintendo DS/DSi.
  * Atari800 has undergone numerous improvements and enhancements
- * since the time this file was used as a baseline for A8DS and 
+ * since the time this file was used as a baseline for A8DS and
  * it is strongly ecommended that you seek out the latest Atari800 sources.
  *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
  *
- * Copying and distribution of this emulator, its source code and associated 
- * readme files, with or without modification, are permitted in any medium without 
- * royalty provided this full copyright notice (including the Atari800 one below) 
+ * Copying and distribution of this emulator, its source code and associated
+ * readme files, with or without modification, are permitted in any medium without
+ * royalty provided this full copyright notice (including the Atari800 one below)
  * is used and wavemotion-dave, alekmaul (original port), Atari800 team (for the
  * original source) and Avery Lee (Altirra OS) are credited and thanked profusely.
- * 
+ *
  * The A8DS emulator is offered as-is, without any warranty.
- * 
+ *
  * Since much of the original codebase came from the Atari800 project, and since
  * that project is released under the GPL V2, this program and source must also
  * be distributed using that same licensing model. See COPYING for the full license
@@ -108,7 +108,7 @@
 #define RMW_GetByte(x, addr) x = GetByte(addr);
 
 /* 6502 registers. */
-UWORD regPC __attribute__((section(".dtcm"))); 
+UWORD regPC __attribute__((section(".dtcm")));
 UBYTE regA  __attribute__((section(".dtcm")));
 UBYTE regX  __attribute__((section(".dtcm")));
 UBYTE regY  __attribute__((section(".dtcm")));
@@ -117,7 +117,7 @@ UBYTE regS  __attribute__((section(".dtcm")));
 UBYTE IRQ   __attribute__((section(".dtcm")));
 
 /* Transfer 6502 registers between global variables and local variables inside GO() */
-#define UPDATE_GLOBAL_REGS  regS = S; 
+#define UPDATE_GLOBAL_REGS  regS = S;
 #define UPDATE_LOCAL_REGS   S = regS;
 
 // Since we have our global CPU registers in fast memory, no need to transfer them in/out
@@ -242,7 +242,7 @@ void NMI(void)
 
 
 /*  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
-static UBYTE cycles[256] __attribute__((section(".dtcm"))) =
+static const int cycles[256] =
 {
     7, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6,     /* 0x */
     3, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 1x */
@@ -289,7 +289,7 @@ int __attribute__((noinline))  CPU_Go_Startup(int limit)
         delayed_wsync = 0;
 
 #else /* NEW_CYCLE_EXACT */
-        
+
         if (limit < WSYNC_C)
             return 1;
         xpos = WSYNC_C;
@@ -411,13 +411,13 @@ ITCM_CODE void GO(int limit)
 
 // A jump to the next instruction will land us here just before the test on xpos
 next:
-    
-    if (xpos < xpos_limit) 
+
+    if (xpos < xpos_limit)
     {
         insn = GET_CODE_BYTE();
         xpos += cycles[insn];
         goto *opcode[insn];
-        
+
     OPCODE(00)              /* BRK */
         {
             PC++;
@@ -1773,13 +1773,6 @@ next:
         ABSOLUTE_X;
         goto ins;
 
-#ifdef ASAP
-
-    OPCODE_ALIAS(d2)
-    OPCODE_ALIAS(f2)
-
-#else
-
     OPCODE(d2)              /* ESCRTS #ab (CIM) - on Atari is here instruction CIM [unofficial] !RS! */
         data = IMMEDIATE;
         UPDATE_GLOBAL_REGS;
@@ -1801,41 +1794,11 @@ next:
         UPDATE_LOCAL_REGS;
         DONE
 
-#endif /* ASAP */
-
-    OPCODE_ALIAS(02)        /* CIM [unofficial - crash intermediate] */
-    //OPCODE_ALIAS(12)
-    //OPCODE_ALIAS(22)
-    //OPCODE_ALIAS(32)
-    //OPCODE_ALIAS(42)
-    //OPCODE_ALIAS(52)
-    //OPCODE_ALIAS(62)
-    //OPCODE_ALIAS(72)
+    OPCODE_ALIAS(02)        /* CIM [unofficial - crash immediate] */
     OPCODE_ALIAS(92)
     OPCODE(b2)
-
-#ifdef ASAP
-        ASAP_CIM();
-        DONE
-
-#else
-
-    /* OPCODE(d2) Used for ESCRTS #ab (CIM) */
-    /* OPCODE(f2) Used for ESC #ab (CIM) */
-        //PC--;
-        //UPDATE_GLOBAL_REGS;
-        //CPU_GetStatus();
-
         cim_encountered = TRUE;
         DONE
-        //ENTER_MONITOR;
-        //exit(0);
-
-        //CPU_PutStatus();
-        //UPDATE_LOCAL_REGS;
-        //DONE
-
-#endif /* ASAP */
 
 /* ---------------------------------------------- */
 /* ADC and SBC routines */
@@ -1861,7 +1824,7 @@ next:
             unsigned int tmp;
             tmp = (A & 0x0f) + (data & 0x0f) + C;
             if (tmp >= 0x0a)
-                tmp = ((tmp + 0x06) & 0x0f) + 0x10;            
+                tmp = ((tmp + 0x06) & 0x0f) + 0x10;
             tmp += (A & 0xf0) + (data & 0xf0);
 
             Z = A + data + C;
