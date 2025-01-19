@@ -177,7 +177,6 @@ Known Issues :
 * Intellidiscs (no discs sounds in game) - cause unknown.
 * TL Cars has graphical glitches - likely separate ANTIC and CPU memory not working right.
 * AD:6502 (Arsantica 2) has graphical glitches - likely separate ANTIC and CPU memory not working right.
-* Scorch final has issues - cause unknown.
 * Rewind demo seems to be missing a sound channel. Cause unknown.
 * Bubbleshooter has title screen glitches and garbled graphics on map-side of gameplay. Cause unknown.
 * Alley Dog 1MB demo has screen cut-off (bottom) on final part of the demo. Cause unknown.
