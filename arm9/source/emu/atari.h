@@ -4,10 +4,10 @@
  * with the older stock Atari 800 or the newer XL/XE series (possibly
  * with extended RAM banks).  This routine also sorts out the various
  * supported ROM file types - right now, ATR, ATX and XEX are the only
- * files supported (which will run 99% of everything 8-bit).
+ * files supported (which will run 98% of everything 8-bit).
  * 
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
- * Copyright (c) 2021-2024 Dave Bernazzani (wavemotion-dave)
+ * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
 
  * Copying and distribution of this emulator, its source code and associated 
  * readme files, with or without modification, are permitted in any medium without 
