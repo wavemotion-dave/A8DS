@@ -125,6 +125,12 @@
 
 #define CART_MAX_SIZE   (1024 * 1024)
 
+extern int bank;
+extern UBYTE cart_sic_data;
+extern UWORD last_bb1_bank;
+extern UWORD last_bb2_bank;
+
+
 extern UBYTE *cart_mem_ptr;
 extern UBYTE cart_image[];
 

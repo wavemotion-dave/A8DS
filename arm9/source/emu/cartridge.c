@@ -68,7 +68,10 @@ extern UBYTE ROM_basic[];
 
 UBYTE cart_image[CART_MAX_SIZE];    // Big enough to hold the largest carts we support ... 1MB
 UBYTE cart_header[16];
-static int bank __attribute__((section(".dtcm")));
+int bank __attribute__((section(".dtcm")));
+UBYTE cart_sic_data __attribute__((section(".dtcm"))) = 0x00;
+UWORD last_bb1_bank __attribute__((section(".dtcm"))) = 1;
+UWORD last_bb2_bank __attribute__((section(".dtcm"))) = 5;
 
 /* DB_32, XEGS_32, XEGS_64, XEGS_128, XEGS_256, XEGS_512, XEGS_1024 */
 /* SWXEGS_32, SWXEGS_64, SWXEGS_128, SWXEGS_256, SWXEGS_512, SWXEGS_1024 */
@@ -311,7 +314,6 @@ static void set_bank_ultracart(UBYTE bank)
 }
 
 /* CART_SIC_128, CART_SIC_256, CART_SIC_512 */
-UBYTE cart_sic_data = 0x00;
 static void set_bank_SIC(UBYTE data, UBYTE bank_mask)
 {
     UBYTE b = data & bank_mask;
@@ -352,8 +354,6 @@ static void set_bank_SIC(UBYTE data, UBYTE bank_mask)
 //  The remaining 8 KB is mapped to $A000-$BFFF.
 
 #define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
-static UWORD last_bb1_bank = 1;
-static UWORD last_bb2_bank = 5;
 static void access_BountyBob1(UWORD addr)
 {
     UWORD base_addr = (addr & 0xf000);

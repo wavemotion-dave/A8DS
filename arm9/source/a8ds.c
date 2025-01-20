@@ -147,6 +147,9 @@ ITCM_CODE static void DumpDebugData(void)
 // pattern on the top line of the bottom display - the user waits while loading.
 // ---------------------------------------------------------------------------
 static u8 actidx=0;
+#ifndef NEW_CYCLE_EXACT
+ITCM_CODE
+#endif
 void dsShowDiskActivity(int drive)
 {
     static char activity[8] = {'*','+','*','*','+','+','+',' '};

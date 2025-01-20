@@ -42,7 +42,7 @@
 #include "config.h"
 #include "loadsave.h"
 
-#define SAVE_FILE_REV   0x0006
+#define SAVE_FILE_REV   0x0007
 
 char save_filename[300+4];
 
@@ -482,6 +482,13 @@ void SaveGame(void)
         fwrite(&Samp_n_max,                     sizeof(Samp_n_max),                     1, fp);
         fwrite(Samp_n_cnt,                      sizeof(Samp_n_cnt),                     1, fp);
         fwrite(spare_bytes,                     32,                                     1, fp);
+
+        //Cartridge
+        fwrite(&bank,                           sizeof(bank),                           1, fp);
+        fwrite(&cart_sic_data,                  sizeof(cart_sic_data),                  1, fp);
+        fwrite(&last_bb1_bank,                  sizeof(last_bb1_bank),                  1, fp);
+        fwrite(&last_bb2_bank,                  sizeof(last_bb2_bank),                  1, fp);
+        fwrite(spare_bytes,                     32,                                     1, fp);
         
         //A8DS
         fwrite(&gTotalAtariFrames,              sizeof(gTotalAtariFrames),              1, fp);
@@ -793,6 +800,13 @@ void LoadGame(void)
             fread(&P17,                            sizeof(P17),                            1, fp);
             fread(&Samp_n_max,                     sizeof(Samp_n_max),                     1, fp);
             fread(Samp_n_cnt,                      sizeof(Samp_n_cnt),                     1, fp);
+            fread(spare_bytes,                     32,                                     1, fp);
+
+            //Cartridge
+            fread(&bank,                           sizeof(bank),                           1, fp);
+            fread(&cart_sic_data,                  sizeof(cart_sic_data),                  1, fp);
+            fread(&last_bb1_bank,                  sizeof(last_bb1_bank),                  1, fp);
+            fread(&last_bb2_bank,                  sizeof(last_bb2_bank),                  1, fp);
             fread(spare_bytes,                     32,                                     1, fp);
 
             //A8DS
