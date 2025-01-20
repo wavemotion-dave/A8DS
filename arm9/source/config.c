@@ -46,6 +46,8 @@
 #include "altirra_basic.h"
 #include "config.h"
 
+#pragma pack(1)
+
 struct GameDatabase_t GameDB;
 struct GameSettings_t myConfig __attribute__((section(".dtcm")));
 
@@ -88,9 +90,10 @@ void InitGameSettings(void)
     }
     GameDB.default_skip_frames = (isDSiMode() ? 0:1);   // For older DS models, we skip frames to get full speed...
     GameDB.default_os_type = (bAtariOS ? OS_ATARI_XL : OS_ALTIRRA_XL);
-    GameDB.default_blending = 1;
-    GameDB.default_ram_type = RAM_IDX_128K;
-    GameDB.default_alphaBlend = 0;
+    GameDB.default_blending = 1;            // Light Blending
+    GameDB.default_ram_type = RAM_IDX_128K; // ATARI 130 XE
+    GameDB.default_alphaBlend = 0;          // No Alpha Blend
+    GameDB.default_disk_speedup = 1;        // Disk is Fast
     GameDB.default_keyMap[DB_KEY_A] = 0;    // Fire button
     GameDB.default_keyMap[DB_KEY_B] = 0;    // Fire button
     GameDB.default_keyMap[DB_KEY_X] = 63;   // VERTICAL-
@@ -176,7 +179,6 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].slot_used          = 1;
         GameDB.GameSettings[idx].tv_type            = myConfig.tv_type;
         GameDB.GameSettings[idx].fps_setting        = myConfig.fps_setting;        
-        GameDB.GameSettings[idx].palette_type       = myConfig.palette_type;
         GameDB.GameSettings[idx].os_type            = myConfig.os_type;
         GameDB.GameSettings[idx].basic_type         = myConfig.basic_type;
         GameDB.GameSettings[idx].auto_fire          = myConfig.auto_fire;
@@ -235,7 +237,6 @@ void WriteGlobalSettings(void)
 
     GameDB.default_tv_type            = myConfig.tv_type;
     GameDB.default_ram_type           = myConfig.ram_type;
-    GameDB.default_palette_type       = myConfig.palette_type;
     GameDB.default_os_type            = myConfig.os_type;
     GameDB.default_basic_type         = myConfig.basic_type;
     GameDB.default_skip_frames        = myConfig.skip_frames;
@@ -244,6 +245,7 @@ void WriteGlobalSettings(void)
     GameDB.default_auto_fire          = myConfig.auto_fire;
     GameDB.default_blending           = myConfig.blending;
     GameDB.default_alphaBlend         = myConfig.alphaBlend;
+    GameDB.default_disk_speedup       = myConfig.disk_speedup;
     for (int i=0; i<8; i++) GameDB.default_keyMap[i] = myConfig.keyMap[i];
     GameDB.checksum = 0;
     char *ptr = (char *)GameDB.GameSettings;
@@ -304,13 +306,6 @@ void ReadGameSettings(void)
             bInitNeeded = UpgradeConfig();  // See if we can upgrade the config database automatically
         }
         
-        // We've reduced to just 2 levels of blending... 
-        if (GameDB.default_blending > 2) GameDB.default_blending = 1;
-        for (int i=0; i<MAX_GAME_SETTINGS; i++)
-        {
-            if      (GameDB.GameSettings[i].blending > 2) GameDB.GameSettings[i].blending = 1;
-        }
-        
         if (bInitNeeded)
         {
             InitGameSettings();
@@ -322,7 +317,6 @@ void ReadGameSettings(void)
     }
 
     myConfig.tv_type            = GameDB.default_tv_type;
-    myConfig.palette_type       = GameDB.default_palette_type;
     myConfig.os_type            = GameDB.default_os_type;
     myConfig.basic_type         = GameDB.default_basic_type;
     myConfig.auto_fire          = GameDB.default_auto_fire;
@@ -332,6 +326,7 @@ void ReadGameSettings(void)
     myConfig.key_click_disable  = GameDB.default_key_click_disable;
     myConfig.blending           = GameDB.default_blending;
     myConfig.alphaBlend         = GameDB.default_alphaBlend;
+    myConfig.disk_speedup       = GameDB.default_disk_speedup;
     myConfig.emulatorText       = true;
     
     for (int i=0; i<8; i++) myConfig.keyMap[i] = GameDB.default_keyMap[i];
@@ -359,7 +354,7 @@ void SetMyConfigDefaults(void)
     myConfig.tv_type            = GameDB.default_tv_type;
     myConfig.auto_fire          = GameDB.default_auto_fire;
     myConfig.key_click_disable  = GameDB.default_key_click_disable;
-    myConfig.disk_speedup = 1;
+    myConfig.disk_speedup       = GameDB.default_disk_speedup;
     for (int i=0; i<8; i++)  myConfig.keyMap[i] = GameDB.default_keyMap[i];
 }
 
@@ -384,7 +379,6 @@ void ApplyGameSpecificSettings(void)
         myConfig.xScale             = GameDB.GameSettings[idx].xScale;
         myConfig.yScale             = GameDB.GameSettings[idx].yScale;
         myConfig.artifacting        = GameDB.GameSettings[idx].artifacting;
-        myConfig.palette_type       = GameDB.GameSettings[idx].palette_type;
         myConfig.fps_setting        = GameDB.GameSettings[idx].fps_setting;            
         myConfig.os_type            = GameDB.GameSettings[idx].os_type;
         myConfig.basic_type         = GameDB.GameSettings[idx].basic_type;
@@ -433,11 +427,11 @@ void ApplyGameSpecificSettings(void)
 // ---------------------------------------------------------------------------
 void dsWriteConfig(void)
 {
-    dsPrintValue(3,0,0, (char*)"CONFIG");
+    dsPrintValue(1,0,0, (char*)"CONFIG SAVE");
     WriteGameSettings();
 
-    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    dsPrintValue(3,0,0, (char*)"      ");
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
+    dsPrintValue(1,0,0, (char*)"           ");
 }
 
 // ---------------------------------------------------------------------------
@@ -446,11 +440,11 @@ void dsWriteConfig(void)
 // ---------------------------------------------------------------------------
 void dsWriteGlobalConfig(void)
 {
-    dsPrintValue(3,0,0, (char*)"GLOBAL");
+    dsPrintValue(1,0,0, (char*)"GLOBAL SAVE");
     WriteGlobalSettings();
 
-    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    dsPrintValue(3,0,0, (char*)"      ");
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
+    dsPrintValue(1,0,0, (char*)"           ");
 }
 
 // -----------------------------------------------------------------------------
@@ -485,11 +479,12 @@ struct options_t
                       "KEY 4", "KEY 5", "KEY 6", "KEY 7", "KEY 8", "KEY 9", "KEY UP", "KEY DOWN", "KEY LEFT", "KEY RIGHT", "KEY SPARE1", "KEY SPARE2",                              \
                       "KEY SPARE3", "VERTICAL+", "VERTICAL++", "VERTICAL-", "VERTICAL--", "HORIZONTAL+", "HORIZONTAL++", "HORIZONTAL-", "HORIZONTAL--", "OFFSET DPAD", "SCALE DPAD", "ZOOM SCREEN"}
 
-#define CART_TYPES {"00-NONE", "01-STD8", "02-STD16", "03-OSS16-034M", "04-NO SUPPORT", "05-DB32", "06-NO SUPPORT", "07-NO SUPPORT", "08-WILLIAMS64", "09-EXP64", "10-DIAMOND64", "11-SDX64", "12-XEGS32",       \
-                    "13-XEGS64", "14-XEGS128", "15-OSS16", "16-NO SUPPORT", "17-ATRAX128", "18-BOUNTY BOB", "19-NO SUPPORT", "20-NO SUPPORT", "21-NO SUPPORT", "22-WILLIAMS32", "23-XEGS256", "24-XEGS512",      \
-                    "25-XEGS1024", "26-MEGA16", "27-MEGA32", "28-MEGA64", "29-MEGA128", "30-MEGA256", "31-MEGA512", "32-MEGA1024", "33-SWXEGS32", "34-SWXEGS64", "35-SWXEGS128", "36-SWXEGS256", "37-SWXEGS512", \
-                    "38-SWXEGS1024", "39-PHOENIX8", "40-BLIZZARD16", "41-ATMAX128", "42-ATMAX1024", "43-SDX128", "44-OSS8", "45-OSS16-043M", "45-NO SUPPORT", "46-NO SUPPORT", "47-NO SUPPORT", "48-NO SUPPORT", \
-                    "49-NO SUPPORT", "50-TURBO64", "51-TURBO128", "52-NO SUPPORT", "53-NO SUPPORT", "54-SIC128", "55-SIC256", "56-SIC512", "57-NO SUPPORT", "58-STD4" }
+#define CART_TYPES {"00-NONE",      "01-STD8",      "02-STD16",     "03-OSS16-034M", "04-NO SUPPORT",  "05-DB32",      "06-NO SUPPORT", "07-NO SUPPORT", "08-WILLIAMS64", "09-EXP64", \
+                    "10-DIAMOND64", "11-SDX64",     "12-XEGS32",    "13-XEGS64",     "14-XEGS128",     "15-OSS16",     "16-NO SUPPORT", "17-ATRAX128",   "18-BOUNTY BOB", "19-NO SUPPORT", \
+                    "20-NO SUPPORT","21-NO SUPPORT","22-WILLIAMS32","23-XEGS256",    "24-XEGS512",     "25-XEGS1024",  "26-MEGA16",     "27-MEGA32",     "28-MEGA64",     "29-MEGA128", \
+                    "30-MEGA256",   "31-MEGA512",   "32-MEGA1024",  "33-SWXEGS32",   "34-SWXEGS64",    "35-SWXEGS128", "36-SWXEGS256",  "37-SWXEGS512",  "38-SWXEGS1024", "39-PHOENIX8", \
+                    "40-BLIZZARD16","41-ATMAX128",  "42-ATMAX1024", "43-SDX128",     "44-OSS8",        "45-OSS16-043M","46-BLIZZARD4",  "47-AST32",      "48-NO SUPPORT", "49-NO SUPPORT", \
+                    "50-TURBO64",   "51-TURBO128",  "52-ULTRACART", "53-LOWBANK_8",  "54-SIC128",      "55-SIC256",    "56-SIC512",     "57-STD2",       "58-STD4",       "59-NO SUPPORT", "60-BLIZZARD32"}
 
 const struct options_t Option_Table[2][20] =
 {
@@ -501,7 +496,6 @@ const struct options_t Option_Table[2][20] =
         {"OS TYPE",     {"ALTIRRA XL",  "ATARIXL.ROM",
                          "ALTIRRA 800", "ATARIOSB.ROM"},                    &myConfig.os_type,              OPT_NORMAL, 4,   "BUILT-IN ALTIRRA  ",   "USUALLY. FEW GAMES",  "REQUIRE ATARIXL OR",  "ATARIOSB TO WORK  "},
         {"BASIC",       {"DISABLED",    "ALTIRRA",      "ATARIBAS.ROM"},    &myConfig.basic_type,           OPT_NORMAL, 3,   "NORMALLY DISABLED ",   "EXCEPT FOR BASIC  ",  "GAMES THAT REQUIRE",  "THE CART INSERTED "},
-        {"PALETTE",     {"NTSC",        "PAL"},                             &myConfig.palette_type,         OPT_NORMAL, 2,   "CHOOSE PALETTE    ",   "THAT BEST SUITS   ",  "YOUR VIEWING      ",  "PREFERENCE        "},
         {"SKIP FRAMES", {"NO",          "MODERATE",     "AGGRESSIVE"},      &myConfig.skip_frames,          OPT_NORMAL, 3,   "OFF NORMALLY AS   ",   "SOME GAMES CAN    ",  "GLITCH WHEN SET   ",  "TO FRAMESKIP      "},
         
         {"FPS SETTING", {"OFF",         "ON", "ON-TURBO"},                  &myConfig.fps_setting,          OPT_NORMAL, 3,   "SHOW FPS ON MAIN  ",   "DISPLAY. OPTIONALY",  "RUN IN TURBO MODE ",  "FAST AS POSSIBLE  "},
@@ -510,11 +504,11 @@ const struct options_t Option_Table[2][20] =
         {"SCREEN BLUR", {"NONE",        "LIGHT", "HEAVY"},                  &myConfig.blending,             OPT_NORMAL, 3,   "NORMALLY LIGHT    ",   "BLUR TO HELP WITH ",  "SCREEN SCALING    ",  "                  "},
         {"ALPHA BLEND", {"OFF",         "ON"},                              &myConfig.alphaBlend,           OPT_NORMAL, 2,   "TURN THIS ON TO   ",   "BLEND FRAMES. THIS",  "MAKES THE SCREEN  ",  "BRIGHTER ON NON-XL"},
         {"KEY CLICK",   {"ON",          "OFF"},                             &myConfig.key_click_disable,    OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
-        {"DISK SPEED",  {"ACCURATE",    "FAST"},                            &myConfig.disk_speedup,         OPT_NORMAL, 2,   "NORMALLY ON IS    ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK    ",  "ACCESS. OFF=SLOW  "},
+        {"DISK SPEED",  {"ACCURATE",    "FAST"},                            &myConfig.disk_speedup,         OPT_NORMAL, 2,   "NORMALLY FAST IS  ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK.   ",  "ACCURATE FOR SOME "},
         {"EMULATOR TXT",{"OFF",         "ON"},                              &myConfig.emulatorText,         OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
         {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", "400 STYLE", 
                          "130XE STYLE", "ALPHANUMERIC", "STAR RAIDER"},     &myConfig.keyboard_type,        OPT_NORMAL, 6,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
-        {"CART TYPE",   CART_TYPES,                                         &myConfig.cart_type,            OPT_NORMAL, 59,  "ROM FILES DONT    ",   "ALWAYS AUTODETECT ",  "SO YOU CAN SET THE",  "CARTRIDGE TYPE    "},
+        {"CART TYPE",   CART_TYPES,                                         &myConfig.cart_type,            OPT_NORMAL, 61,  "ROM FILES DONT    ",   "ALWAYS AUTODETECT ",  "SO YOU CAN SET THE",  "CARTRIDGE TYPE    "},
         {NULL,          {"",            ""},                                NULL,                           OPT_NORMAL, 2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "}
     },
     // Page 2
@@ -556,18 +550,18 @@ u8 display_options_list(bool bFullDisplay)
             {
                 siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][len].label, Option_Table[option_table][len].option[*(Option_Table[option_table][len].option_val)]);
             }
-            dsPrintValue(1,5+len, (len==0 ? 1:0), strBuf); len++;
+            dsPrintValue(1,6+len, (len==0 ? 1:0), strBuf); len++;
             if (Option_Table[option_table][len].label == NULL) break;
         }
 
         // Blank out rest of the screen... option menus are of different lengths...
         for (int i=len; i<16; i++) 
         {
-            dsPrintValue(1,5+i, 0, (char *)"                               ");
+            dsPrintValue(1,6+i, 0, (char *)"                               ");
         }
     }
 
-    dsPrintValue(0,22, 0, (char *)"B=EXIT X=MORE START=SAVE SEL=DEF");
+    dsPrintValue(0,23, 0, (char *)"B=EXIT X=MORE START=SAVE SEL=DEF");
     return len;    
 }
 
@@ -613,7 +607,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 {
                     siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
-                dsPrintValue(1,5+optionHighlighted,0, strBuf);
+                dsPrintValue(1,6+optionHighlighted,0, strBuf);
                 if (optionHighlighted > 0) optionHighlighted--; else optionHighlighted=(idx-1);
                 if (Option_Table[option_table][optionHighlighted].option_type == OPT_NUMERIC)
                 {
@@ -623,7 +617,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 {
                     siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
-                dsPrintValue(1,5+optionHighlighted,1, strBuf);
+                dsPrintValue(1,6+optionHighlighted,1, strBuf);
             }
             if (keysCurrent() & KEY_DOWN) // Next option
             {
@@ -635,7 +629,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 {
                     siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
-                dsPrintValue(1,5+optionHighlighted,0, strBuf);
+                dsPrintValue(1,6+optionHighlighted,0, strBuf);
                 if (optionHighlighted < (idx-1)) optionHighlighted++;  else optionHighlighted=0;
                 if (Option_Table[option_table][optionHighlighted].option_type == OPT_NUMERIC)
                 {
@@ -645,7 +639,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                 {
                     siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
-                dsPrintValue(1,5+optionHighlighted,1, strBuf);
+                dsPrintValue(1,6+optionHighlighted,1, strBuf);
             }
 
             if (keysCurrent() & KEY_RIGHT)  // Next Choice 
@@ -661,7 +655,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                     *(Option_Table[option_table][optionHighlighted].option_val) = (*(Option_Table[option_table][optionHighlighted].option_val) + 1) % Option_Table[option_table][optionHighlighted].option_max;
                     siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
-                dsPrintValue(1,5+optionHighlighted,1, strBuf);
+                dsPrintValue(1,6+optionHighlighted,1, strBuf);
                 if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIXL.ROM")==0)
                 {
                     if (!bAtariOS) dsPrintValue(0,0,0,"ROM MISSING");
@@ -692,7 +686,7 @@ void dsChooseOptions(int bOkayToChangePalette)
                          *(Option_Table[option_table][optionHighlighted].option_val) = Option_Table[option_table][optionHighlighted].option_max - 1;
                     siprintf(strBuf, " %-12s : %-13s ", Option_Table[option_table][optionHighlighted].label, Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)]);
                 }
-                dsPrintValue(1,5+optionHighlighted,1, strBuf);
+                dsPrintValue(1,6+optionHighlighted,1, strBuf);
                 if (strcmp(Option_Table[option_table][optionHighlighted].option[*(Option_Table[option_table][optionHighlighted].option_val)], "ATARIXL.ROM")==0)
                 {
                     if (!bAtariOS) dsPrintValue(0,0,0,"ROM MISSING");
@@ -749,10 +743,10 @@ void dsChooseOptions(int bOkayToChangePalette)
                 ANTIC_UpdateArtifacting();
             }
             
-            // In case the Pllette global changed....
-            if (last_pal != myConfig.palette_type)
+            // In case the TV Type (NTSC vs PAL) global changed....
+            if (last_pal != myConfig.tv_type)
             {
-                last_pal = myConfig.palette_type;
+                last_pal = myConfig.tv_type;
                 if (bOkayToChangePalette) dsSetAtariPalette();
             }
 

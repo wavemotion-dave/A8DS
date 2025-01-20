@@ -346,7 +346,7 @@ void dsSetAtariPalette(void)
     // Init palette
     for(index = 0; index < 256; index++)
     {
-      if (myConfig.palette_type == 0)
+      if (myConfig.tv_type == TV_NTSC)
       {
         r = palette_NTSC[(index * 3) + 0];
         g = palette_NTSC[(index * 3) + 1];

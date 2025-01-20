@@ -30,19 +30,18 @@
 // on the SD card. A reasonable compropmise... 
 // ---------------------------------------------------------------------------
 #define MAX_GAME_SETTINGS       2500
-#define GAME_DATABASE_VERSION   0x0A
+#define GAME_DATABASE_VERSION   0x0C
 
 struct GameSettings_t
 {
     unsigned int game_crc;
     UBYTE slot_used;
     UBYTE tv_type;
-    UBYTE palette_type;
     UBYTE ram_type;
     UBYTE os_type;
+    UBYTE keyMap[8];
     UBYTE basic_type;
     UBYTE skip_frames;
-    UBYTE keyMap[8];
     UBYTE startButtonMap;
     UBYTE selectButtonMap;
     UBYTE auto_fire;
@@ -56,6 +55,8 @@ struct GameSettings_t
     UBYTE fps_setting;
     UBYTE emulatorText;
     UBYTE alphaBlend;
+    UBYTE spare0;
+    UBYTE spare0a;
     UBYTE spare1;
     UBYTE spare2;
     UBYTE spare3;
@@ -75,7 +76,6 @@ struct GameDatabase_t
     UBYTE                       db_version;
     UBYTE                       default_tv_type;
     UBYTE                       default_ram_type;
-    UBYTE                       default_palette_type;
     UBYTE                       default_os_type;
     UBYTE                       default_basic_type;
     UBYTE                       default_skip_frames;
@@ -83,12 +83,16 @@ struct GameDatabase_t
     UBYTE                       default_key_click_disable;
     UBYTE                       default_auto_fire;
     UBYTE                       default_blending;
-    UBYTE                       default_keyMap[8];
     UBYTE                       default_alphaBlend;
+    UBYTE                       default_disk_speedup;
+    UBYTE                       default_keyMap[8];
+    UBYTE                       default_spare0;
+    UBYTE                       default_spare1;
     UBYTE                       default_spare2;
     UBYTE                       default_spare3;
     UBYTE                       default_spare4;
     UBYTE                       default_spare5;
+    UBYTE                       default_spare_more[1024];   // Maybe... someday...
     struct GameSettings_t       GameSettings[MAX_GAME_SETTINGS];
     unsigned int                checksum;
 };

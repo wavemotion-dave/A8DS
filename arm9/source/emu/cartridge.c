@@ -2,30 +2,30 @@
  * CARTRIDGE.C contains a subset of Atari800 cart support. The A8DS emulator
  * is targeting XEX and ATR files... We are partially supporting the use of
  * CAR (with 16-byte headers) and ROM (headerless... these are flat binary files).
- * 
+ *
  * The baseline for this file is the Atari800 2.0.x source and has
  * been heavily modified for optimization on the Nintendo DS/DSi.
  * Atari800 has undergone numerous improvements and enhancements
- * since the time this file was used as a baseline for A8DS and 
+ * since the time this file was used as a baseline for A8DS and
  * it is strongly ecommended that you seek out the latest Atari800 sources.
  *
  * A8DS - Atari 8-bit Emulator designed to run on the Nintendo DS/DSi is
  * Copyright (c) 2021-2025 Dave Bernazzani (wavemotion-dave)
 
- * Copying and distribution of this emulator, its source code and associated 
- * readme files, with or without modification, are permitted in any medium without 
- * royalty provided this full copyright notice (including the Atari800 one below) 
+ * Copying and distribution of this emulator, its source code and associated
+ * readme files, with or without modification, are permitted in any medium without
+ * royalty provided this full copyright notice (including the Atari800 one below)
  * is used and wavemotion-dave, alekmaul (original port), Atari800 team (for the
  * original source) and Avery Lee (Altirra OS) are credited and thanked profusely.
- * 
+ *
  * The A8DS emulator is offered as-is, without any warranty.
- * 
+ *
  * Since much of the original codebase came from the Atari800 project, and since
  * that project is released under the GPL V2, this program and source must also
  * be distributed using that same licensing model. See COPYING for the full license
  * but the original Atari800 copyright notice retained below:
  */
- 
+
  /*
  * cartridge.c - cartridge emulation
  *
@@ -74,20 +74,20 @@ static int bank __attribute__((section(".dtcm")));
 /* SWXEGS_32, SWXEGS_64, SWXEGS_128, SWXEGS_256, SWXEGS_512, SWXEGS_1024 */
 static void set_bank_809F(int b, int main)
 {
-    if (b != bank) 
+    if (b != bank)
     {
-        if (b & 0x80) 
+        if (b & 0x80)
         {
             Cart809F_Disable();
             CartA0BF_Disable();
         }
-        else 
+        else
         {
             Cart809F_Enable();
             CartA0BF_Enable();
             mem_map[0x8] = (cart_image + b*0x2000) + 0x0000 - 0x8000;
             mem_map[0x9] = (cart_image + b*0x2000) + 0x1000 - 0x9000;
-            
+
             if (bank & 0x80)
             {
                 mem_map[0xA] = (cart_image + main) + 0x0000 - 0xA000;
@@ -101,11 +101,11 @@ static void set_bank_809F(int b, int main)
 /* OSS_16, OSS_16 */
 static void set_bank_A0AF(int b, int main)
 {
-    if (b != bank) 
+    if (b != bank)
     {
         if (b < 0)
             CartA0BF_Disable();
-        else 
+        else
         {
             CartA0BF_Enable();
             mem_map[0xA] = (cart_image + b*0x1000) - 0xA000;
@@ -121,13 +121,13 @@ static void set_bank_A0AF(int b, int main)
 /* EXP_64, DIAMOND_64, SDX_64 */
 static void set_bank_A0BF(int b)
 {
-    if (b != bank) 
+    if (b != bank)
     {
         if (b & 0x0008)
         {
             CartA0BF_Disable();
         }
-        else 
+        else
         {
             CartA0BF_Enable();
             mem_map[0xA] = (cart_image + (~b&7)*0x2000) + 0x0000 - 0xA000;
@@ -145,7 +145,7 @@ static void set_bank_A0BF_WILL64(int b)
         {
             CartA0BF_Disable();
         }
-        else 
+        else
         {
             CartA0BF_Enable();
             mem_map[0xA] = (cart_image + (b&7)*0x2000) + 0x0000 - 0xA000;
@@ -158,13 +158,13 @@ static void set_bank_A0BF_WILL64(int b)
 /* TURBOSOFT_64, TURBOSOFT_128 */
 static void set_bank_A0BF_TURBOSOFT(UBYTE b, UBYTE mask)
 {
-    if (b != bank) 
+    if (b != bank)
     {
         if (b & 0x08)
         {
             CartA0BF_Disable();
         }
-        else 
+        else
         {
             CartA0BF_Enable();
             mem_map[0xA] = (cart_image + (b&mask)*0x2000) + 0x0000 - 0xA000;
@@ -178,13 +178,13 @@ static void set_bank_A0BF_TURBOSOFT(UBYTE b, UBYTE mask)
 /* CART_WILL_32 */
 static void set_bank_A0BF_WILL32(int b)
 {
-    if (b != bank) 
+    if (b != bank)
     {
         if (b & 0x0008)
         {
             CartA0BF_Disable();
         }
-        else 
+        else
         {
             CartA0BF_Enable();
             mem_map[0xA] = (cart_image + (b&3)*0x2000) + 0x0000 - 0xA000;
@@ -197,7 +197,7 @@ static void set_bank_A0BF_WILL32(int b)
 /* CART_ATMAX_128 */
 static void set_bank_A0BF_ATMAX128(int b)
 {
-    if (b != bank) 
+    if (b != bank)
     {
         if (b >= 0x20)
             return;
@@ -218,13 +218,13 @@ static void set_bank_A0BF_ATMAX128(int b)
 /* CART_ATMAX_1024 */
 void set_bank_A0BF_ATMAX1024(int b)
 {
-    if (b != bank) 
+    if (b != bank)
     {
         if (b & 0x80)
         {
             CartA0BF_Disable();
         }
-        else 
+        else
         {
             CartA0BF_Enable();
             mem_map[0xA] = (cart_image + b*0x2000) + 0x0000 - 0xA000;
@@ -237,14 +237,14 @@ void set_bank_A0BF_ATMAX1024(int b)
 /* CART_MEGA_16 to CART_MEGA_1024 */
 static void set_bank_80BF(int b)
 {
-    if (b != bank) 
+    if (b != bank)
     {
-        if (b & 0x80) 
+        if (b & 0x80)
         {
             Cart809F_Disable();
             CartA0BF_Disable();
         }
-        else 
+        else
         {
             Cart809F_Enable();
             CartA0BF_Enable();
@@ -260,13 +260,13 @@ static void set_bank_80BF(int b)
 /* CART_SDX_128 */
 static void set_bank_SDX_128(UWORD addr)
 {
-    if ((addr & 0xe0) == 0xe0 && addr != bank) 
+    if ((addr & 0xe0) == 0xe0 && addr != bank)
     {
         if (addr & 8)
         {
             CartA0BF_Disable();
         }
-        else 
+        else
         {
             CartA0BF_Enable();
             mem_map[0xA] = (cart_image + ((((addr & 7) + ((addr & 0x10) >> 1)) ^ 0xf)*0x2000)) + 0x0000 - 0xA000;
@@ -276,33 +276,68 @@ static void set_bank_SDX_128(UWORD addr)
     }
 }
 
-UBYTE cart_sic_data = 0x00;
-static void set_bank_SIC(UBYTE data, UBYTE bank_mask)
+/* CART_BLIZZARD_32 */
+static void set_bank_blizzard32(UBYTE bank)
 {
-    UBYTE b = data & bank_mask;
-    
-    if (!(data & 0x20))
+    if (bank < 4)
     {
-        Cart809F_Disable();
+        mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
     }
-    else 
+    else
     {
-        Cart809F_Enable();
-        mem_map[0x8] = (cart_image + b*0x4000) + 0x0000 - 0x8000;
-        mem_map[0x9] = (cart_image + b*0x4000) + 0x1000 - 0x9000;        
+        CartA0BF_Disable();
     }
-    
-    if (data & 0x40)
+}
+
+/* CART_ULTRACART */
+static void set_bank_ultracart(UBYTE bank)
+{
+    if (bank < 4)
+    {
+        mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
+    }
+    else if (bank == 4)
     {
         CartA0BF_Disable();
     }
     else 
     {
+        bank = 0;
+        mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
+    }
+}
+
+/* CART_SIC_128, CART_SIC_256, CART_SIC_512 */
+UBYTE cart_sic_data = 0x00;
+static void set_bank_SIC(UBYTE data, UBYTE bank_mask)
+{
+    UBYTE b = data & bank_mask;
+
+    if (!(data & 0x20))
+    {
+        Cart809F_Disable();
+    }
+    else
+    {
+        Cart809F_Enable();
+        mem_map[0x8] = (cart_image + b*0x4000) + 0x0000 - 0x8000;
+        mem_map[0x9] = (cart_image + b*0x4000) + 0x1000 - 0x9000;
+    }
+
+    if (data & 0x40)
+    {
+        CartA0BF_Disable();
+    }
+    else
+    {
         CartA0BF_Enable();
         mem_map[0xA] = (cart_image + b*0x4000) + 0x2000 - 0xA000;
         mem_map[0xB] = (cart_image + b*0x4000) + 0x3000 - 0xB000;
     }
-    
+
     cart_sic_data = data;
     bank = b;
 }
@@ -315,7 +350,7 @@ static void set_bank_SIC(UBYTE data, UBYTE bank_mask)
 //  Four 4 KB banks (4,5,6,7) are mapped into $9000-$9FFF. An access to $9FF6
 //   selects bank 4, $9FF7 - bank 5, $9FF8 - bank 6, $9FF9 - bank 7.
 //  The remaining 8 KB is mapped to $A000-$BFFF.
-     
+
 #define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
 static UWORD last_bb1_bank = 1;
 static UWORD last_bb2_bank = 5;
@@ -323,13 +358,13 @@ static void access_BountyBob1(UWORD addr)
 {
     UWORD base_addr = (addr & 0xf000);
     addr &= 0x00ff;
-    if (addr >= 0xf6 && addr <= 0xf9) 
+    if (addr >= 0xf6 && addr <= 0xf9)
     {
         int new_state;
         addr -= 0xf6;
-        
+
         new_state = (last_bb1_bank & 0x0c) | addr;
-        if (new_state != last_bb1_bank) 
+        if (new_state != last_bb1_bank)
         {
             CopyROM(base_addr, base_addr + 0x0fff, cart_image + addr * 0x1000);
             last_bb1_bank = new_state;
@@ -341,12 +376,12 @@ static void access_BountyBob2(UWORD addr)
 {
     UWORD base_addr = (addr & 0xf000);
     addr &= 0x00ff;
-    if (addr >= 0xf6 && addr <= 0xf9) 
+    if (addr >= 0xf6 && addr <= 0xf9)
     {
         int new_state;
         addr -= 0xf6;
         new_state = (last_bb2_bank & 0x03) | (addr << 2);
-        if (new_state != last_bb2_bank) 
+        if (new_state != last_bb2_bank)
         {
             CopyROM(base_addr, base_addr + 0x0fff, cart_image + 0x4000 + addr * 0x1000);
             last_bb2_bank = new_state;
@@ -378,22 +413,18 @@ void BountyBob2PutByte(UWORD addr, UBYTE value)
 
 
 // ---------------------------------------------------------------------
-// We support both .CAR and .ROM files but the bankswapping on those
-// is really CPU intensive since we need to move chunks of memory to
-// and from the main memory[] RAM area. We can't easily pull the adjust
-// pointers trick since each banking scheme is a bit different and 
-// testing for that would make almost game slowdown and that's not
-// acceptable for this portable A8 emulator. So we do the best we can...
-// some games will run fine and some will be a little slow depending on
-// how much banking is going as the game runs.
+// We support both .CAR and .ROM files and instead of copying chunks
+// of memory around, we use the mem_map[] to point to various rom 
+// banks/segments/memory within the cartridge space. This saves us 
+// having to memcpy() and slowing down the emulation.
 // ---------------------------------------------------------------------
-int CART_Insert(int enabled, int file_type, const char *filename) 
+int CART_Insert(int enabled, int file_type, const char *filename)
 {
-    memset(cart_image, 0x00, sizeof(cart_image));
+    memset(cart_image, 0xFF, sizeof(cart_image));   // Fill with 0xFF until we read in the cart
     bank = 0;
 
     CART_Remove();
-    
+
     if (file_type == AFILE_CART)
     {
         FILE * fp = fopen(filename, "rb");
@@ -413,9 +444,10 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             int size = fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
             size = size / 1024;
-            // If configuration hasn't been set for a Cartridge Type, guess at the type...
+            // If configuration hasn't been set for a Cartridge Type, guess at the type based on ROM size
             if (myConfig.cart_type == CART_NONE)
             {
+                if (size == 2)      myConfig.cart_type = CART_STD_2;
                 if (size == 4)      myConfig.cart_type = CART_STD_4;
                 if (size == 8)      myConfig.cart_type = CART_STD_8;
                 if (size == 16)     myConfig.cart_type = CART_STD_16;
@@ -429,7 +461,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             }
         }
     }
-    
+
     if (enabled)
     {
         CART_Start();
@@ -440,7 +472,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
 // ------------------------------------------------------------------
 // Remove the "BASIC" cart and restore the RAM under this...
 // ------------------------------------------------------------------
-void CART_Remove(void) 
+void CART_Remove(void)
 {
     Cart809F_Disable();
     CartA0BF_Disable();
@@ -449,13 +481,25 @@ void CART_Remove(void)
     memset((UBYTE*)memory+0x8000, 0xFF, 0x4000);
 }
 
-void CART_Start(void) 
+// --------------------------------------------------------------
+// Setup the basic memory in the 0x8000 and 0xA000 region based
+// on the cartridge that has been 'inserted' into the emulation.
+// --------------------------------------------------------------
+void CART_Start(void)
 {
     last_bb1_bank = 1;
     last_bb2_bank = 5;
-    
-    switch (myConfig.cart_type) 
+
+    switch (myConfig.cart_type)
     {
+    case CART_STD_2:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        memcpy(cart_image+0x800, cart_image, 0x800);    // Move the 2K ROM out
+        memset(cart_image, 0xFF, 0x800);                // And back-fill 0xFF
+        mem_map[0xA] = cart_image + 0x1000 - 0xA000;    // There will just be 0xFF out here...
+        mem_map[0xB] = cart_image - 0x0000 - 0xB000;    // The 2K is mapped at the back end
+        break;
     case CART_STD_4:
         Cart809F_Disable();
         CartA0BF_Enable();
@@ -585,7 +629,7 @@ void CART_Start(void)
         readmap[0x9f] = BountyBob2GetByte;
         writemap[0x8f] = BountyBob1PutByte;
         writemap[0x9f] = BountyBob2PutByte;
-        break;            
+        break;
     case CART_ATRAX_128:
         Cart809F_Disable();
         CartA0BF_Enable();
@@ -637,7 +681,7 @@ void CART_Start(void)
         mem_map[0xA] = cart_image + 0xfe000 - 0xA000;
         mem_map[0xB] = cart_image + 0xff000 - 0xB000;
         bank = 0x00;
-        break;            
+        break;
     case CART_SIC_128:
         set_bank_SIC(0x00, 0x07);
         break;
@@ -647,7 +691,39 @@ void CART_Start(void)
     case CART_SIC_512:
         set_bank_SIC(0x00, 0x1f);
         break;
-            
+    case CART_ULTRACART:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        bank = 0;
+        set_bank_ultracart(bank);
+        break;
+    case CART_LOWBANK_8:
+        Cart809F_Enable();
+        CartA0BF_Disable();
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        break;
+    case CART_BLIZZARD_4:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        mem_map[0xA] = cart_image + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x0000 - 0xB000;    // 4K Cart image is duplicated here
+        break;
+    case CART_BLIZZARD_32:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        bank = 0;
+        set_bank_blizzard32(bank);
+        break;
+    case CART_AST_32:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        bank = 0;
+        for (u32 i=0; i<32; i++) memcpy(cart_image+0x10000+(256*i), cart_image, 256); // Copy initial 256 byte block into unused 8K area
+        mem_map[0xA] = cart_image + 0x10000 - 0xA000;   // First 256 bytes is repeated throughout the memory range
+        mem_map[0xB] = cart_image + 0x11000 - 0xB000;   // First 256 bytes is repeated throughout the memory range
+        break;
+
     default:
         // The only default cart we support is an 8K built-in BASIC cart
         if (myConfig.basic_type)
@@ -673,13 +749,13 @@ void CART_Start(void)
 void CART_Access(UWORD addr)
 {
     int b = bank;
-    switch (myConfig.cart_type) 
+    switch (myConfig.cart_type)
     {
     case CART_OSS_16_034M:
         if (addr & 0x08)
             b = -1;
         else
-            switch (addr & 0x07) 
+            switch (addr & 0x07)
             {
             case 0x00:
             case 0x01:
@@ -704,7 +780,7 @@ void CART_Access(UWORD addr)
         if (addr & 0x08)
             b = -1;
         else
-            switch (addr & 0x07) 
+            switch (addr & 0x07)
             {
             case 0x00:
             case 0x01:
@@ -726,7 +802,7 @@ void CART_Access(UWORD addr)
         set_bank_A0AF(b, 0x3000);
         break;
     case CART_OSS_16:
-        switch (addr & 0x09) 
+        switch (addr & 0x09)
         {
         case 0x00:
             b = 1;
@@ -742,9 +818,9 @@ void CART_Access(UWORD addr)
             break;
         }
         set_bank_A0AF(b, 0x0000);
-        break;            
+        break;
     case CART_OSS_8:
-        switch (addr & 0x09) 
+        switch (addr & 0x09)
         {
         case 0x00:
         case 0x01:
@@ -783,9 +859,18 @@ void CART_Access(UWORD addr)
     case CART_PHOENIX_8:
         CartA0BF_Disable();
         break;
+    case CART_BLIZZARD_4:
+        CartA0BF_Disable();
+        break;
     case CART_BLIZZARD_16:
         Cart809F_Disable();
         CartA0BF_Disable();
+        break;
+    case CART_BLIZZARD_32:
+        set_bank_blizzard32(++bank);
+        break;
+    case CART_ULTRACART:
+        set_bank_ultracart(++bank);
         break;
     case CART_ATMAX_128:
         set_bank_A0BF_ATMAX128(addr & 0xff);
@@ -796,15 +881,15 @@ void CART_Access(UWORD addr)
         break;
     case CART_SDX_128:
         set_bank_SDX_128(addr);
-        break;            
+        break;
     case CART_TURBOSOFT_64:
         set_bank_A0BF_TURBOSOFT(addr, 0x07);
         break;
     case CART_TURBOSOFT_128:
         set_bank_A0BF_TURBOSOFT(addr, 0x0f);
         break;
-            
-    default:
+
+    default:    // Do nothing... this cart doesn't react to any access
         break;
     }
 }
@@ -812,22 +897,35 @@ void CART_Access(UWORD addr)
 // -----------------------------------------------------------------
 // A read from D500-D5FF area triggers this call... mostly we only
 // need this to handle the R-Time 8 "cart" that is supported for
-// date/time mostly for Sparta-DOS.
+// date/time mostly for Sparta-DOS but a few special cart types
+// also see action here...
 // -----------------------------------------------------------------
 UBYTE CART_GetByte(UWORD addr)
 {
     if (addr == 0xd5b8 || addr == 0xd5b9)
     {
-        return RTIME_GetByte();
+        // Disable RTIME for a few special carts
+        if ((myConfig.cart_type != CART_AST_32)  && 
+            (myConfig.cart_type != CART_SIC_128) && 
+            (myConfig.cart_type != CART_SIC_256) && 
+            (myConfig.cart_type != CART_SIC_512))
+        {
+            return RTIME_GetByte();
+        }
     }
-    
-    switch (myConfig.cart_type) 
+
+    switch (myConfig.cart_type)
     {
     case CART_SIC_128:
     case CART_SIC_256:
     case CART_SIC_512:
         if ((addr & 0xe0) == 0x00) return cart_sic_data; else return 0xFF;
-        break;            
+        break;
+    case CART_AST_32:
+        debug[1]++;
+        return cart_image[(256 * bank) + (addr&0xff)];
+        break;
+        
     default:
         CART_Access(addr);
         break;
@@ -839,17 +937,25 @@ UBYTE CART_GetByte(UWORD addr)
 // -----------------------------------------------------------------
 // A write to D500-D5FF area triggrs this call... mostly we only
 // need this to handle the R-Time 8 "cart" that is supported for
-// date/time mostly for Sparta-DOS.
+// date/time mostly for Sparta-DOS and many of the other writes
+// will trigger various banking...
 // -----------------------------------------------------------------
 void CART_PutByte(UWORD addr, UBYTE byte)
 {
-    if (addr == 0xd5b8 || addr == 0xd5b9) 
+    if (addr == 0xd5b8 || addr == 0xd5b9)
     {
-        RTIME_PutByte(byte);
-        return;
+        // Disable RTIME for a few special carts
+        if ((myConfig.cart_type != CART_AST_32)  && 
+            (myConfig.cart_type != CART_SIC_128) && 
+            (myConfig.cart_type != CART_SIC_256) && 
+            (myConfig.cart_type != CART_SIC_512))
+        {
+            RTIME_PutByte(byte);
+            return;
+        }
     }
-    
-    switch (myConfig.cart_type) 
+
+    switch (myConfig.cart_type)
     {
     case CART_XEGS_32:
         set_bank_809F(byte & 0x03, 0x6000);
@@ -878,7 +984,7 @@ void CART_PutByte(UWORD addr, UBYTE byte)
         }
         else {
             int b = byte & 0xf;
-            if (b != bank) 
+            if (b != bank)
             {
                 CartA0BF_Enable();
                 mem_map[0xA] = (cart_image + b*0x2000) + 0x0000 - 0xA000;
@@ -934,7 +1040,21 @@ void CART_PutByte(UWORD addr, UBYTE byte)
         break;
     case CART_SIC_512:
         if ((addr & 0xe0) == 0x00) set_bank_SIC(byte, 0x1f);
-        break;            
+        break;
+    case CART_BLIZZARD_4:
+        CartA0BF_Disable();
+        break;
+    case CART_BLIZZARD_32:
+        set_bank_blizzard32(++bank);
+        break;
+    case CART_ULTRACART:
+        set_bank_ultracart(++bank);
+        break;
+    case CART_AST_32:
+        CartA0BF_Disable();
+        bank = (bank+1) & 0x7F;
+        break;
+
     default:
         CART_Access(addr);
         break;

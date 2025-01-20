@@ -102,12 +102,19 @@
 #define CART_SDX_128        43
 #define CART_OSS_8          44
 #define CART_OSS_16_043M    45
+#define CART_BLIZZARD_4     46
+#define CART_AST_32         47
 #define CART_TURBOSOFT_64   50
 #define CART_TURBOSOFT_128  51
+#define CART_ULTRACART      52
+#define CART_LOWBANK_8      53
 #define CART_SIC_128        54
 #define CART_SIC_256        55
 #define CART_SIC_512        56
+#define CART_STD_2          57
 #define CART_STD_4          58
+#define CART_BLIZZARD_32    60
+
 #define CART_ATMAX_NEW_1024 75
 
 #define CTRL_JOY        1

@@ -120,10 +120,10 @@ short int prior_pos_buf[PRIOR_BUF_SIZE] __attribute__((section(".dtcm")));
 
 #define WRITE_VIDEO_LONG_UNALIGNED(ptr, val)  UNALIGNED_PUT_LONG((ptr), (val))
 
-#define IS_ZERO_ULONG(x) (((ULONG)x & 0x01) ? (!((const UBYTE *)(x))[0] && !((const UBYTE *)(x))[1] && !((const UBYTE *)(x))[2] && !((const UBYTE *)(x))[3]) : (! UNALIGNED_GET_LONG(x)))
+#define IS_ZERO_ULONG(x) (((ULONG)x & 0x03) ? (!((const UBYTE *)(x))[0] && !((const UBYTE *)(x))[1] && !((const UBYTE *)(x))[2] && !((const UBYTE *)(x))[3]) : (! UNALIGNED_GET_LONG(x)))
 
 #define DO_GTIA_BYTE(p, l, x) { \
-        if (((ULONG)p & 0x01) == 0) { \
+        if (((ULONG)p & 0x03) == 0) { \
           UNALIGNED_PUT_LONG((ULONG *) (p),     (l)[(x) >> 4]); \
           UNALIGNED_PUT_LONG((ULONG *) (p) + 1, (l)[(x) & 0xf]); \
         } else { \

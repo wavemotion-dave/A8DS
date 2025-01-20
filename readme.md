@@ -130,12 +130,13 @@ might run at the wrong speed unless you're using the actual ATARI REV C rom.
 A8DS emulates a Real-Time clock mostly used for SpartaDOS X.
 
 Cartridge support was added with A8DS 3.1 and later. You can load .CAR and .ROM 
-files (using the XEX button).
+files (using the XEX/CAR button on the main screen).
 
 The following cartridge layouts are supported:
-* Standard 4K, 8K and 16K
+* Standard 2K, 4K, 8K and 16K
 * OSS two chip 16KB, OSS 8K
 * Williams 32K and 64K
+* Blizzard 4K, 16K and 32K
 * XEGS/SwXEGS 32K up to 1MB
 * MegaCart 16K up to 1MB
 * Atarimax 128K and 1MB
@@ -143,6 +144,9 @@ The following cartridge layouts are supported:
 * Atrax 128K
 * Diamond 64K
 * Express 64K
+* AST 32K
+* Ultracart 32K
+* Lowbank 8K
 * Bounty Bob Strikes Back 40K
 * SIC 128K, 256K and 512K
 * Turbosoft 128K and 256K
@@ -169,17 +173,11 @@ handheld - A8DS will work nicely.
 
 Known Issues :
 ----------------------------------------------------------------------------------
-* Jim Slide XL has some graphical glitching: horizontal lines on the intro screens. Cause unknown.
+* On the non-A8DSi build, the Antic and GTIA accuracy is lower (but emulation is faster) and this will cause graphical glitches on some complex games (Atari Blast, Jim Slide XL, Bubbleshooter, etc.)
 * Space Harrier cart audio sounds "chip-monkish". Likely cause is frame timing being used vs. cycle-accurate timing.
-* Atari Blast! has one column of letters missing on the main title screen. Cause unknown.
-* Cropky (music problems in game) - cause unknown.
-* Gun Fright (the game doesn't start when you press "3" key) - cause unknown.
+* Gun Fright requires that you press and hold the '3' button to start the game multiple times. Unknown cause but modern Atari800 emulator seems the same here.
 * Intellidiscs (no discs sounds in game) - cause unknown.
-* TL Cars has graphical glitches - likely separate ANTIC and CPU memory not working right.
-* AD:6502 (Arsantica 2) has graphical glitches - likely separate ANTIC and CPU memory not working right.
 * Rewind demo seems to be missing a sound channel. Cause unknown.
-* Bubbleshooter has title screen glitches and garbled graphics on map-side of gameplay. Cause unknown.
-* Alley Dog 1MB demo has screen cut-off (bottom) on final part of the demo. Cause unknown.
 
 Troubleshooting :
 ----------------------------------------------------------------------------------
@@ -295,6 +293,14 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V4.0  : 20-Jan-2025 by wavemotion-dave
+  * Major overhaul to add "Cycle Exact" Antic and GTIA which fixes many glitches and artifacts.
+  * Improved keyboard overlays - added alphanumeric keyboard with text-adventure macros.
+  * Improved memory handling - using more memory but in an efficient way for the new features.
+  * Improved sound handling - new SIO sounds, new opening jingle.
+  * Improved CPU handling to fix one more Acid800 test (25 pass now).
+  * Fixed keyboard handling so games like Scorch will register keypresses (broken as of V3.0)
+
 V3.9  : 13-Jan-2025 by wavemotion-dave
   * Altirra OS updated to 3.41 (Altirra BASIC still at 1.58)
   * Touch-up on the keyboard graphics to make the smaller font bolder / more readable on DS screen
