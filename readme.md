@@ -60,6 +60,16 @@ it is recommended you find the above OS/BASIC roms.
 Do not ask me about rom files, you will be promptly ignored. A search with Google will certainly 
 help you. 
 
+A Tale of Two Versions
+----------------------------------------------------------------------------------
+There are two different versions of A8DS. One is simply called A8DS.nds and this 
+version will run on older DS units (such as the DS-Phat or DS-Lite) and runs in 
+a faster mode without the more complex Antic and GTIA "Cycle Exact" handling. This
+means that on some games and demos, there may be graphical glitches and other 
+screen artifacts. The other file is called A8DSi.nds and brings in the cycle
+exact timing to clean up those glitches. Only the DSi running in 2X CPU mode can
+handle this extra complexity in emulation. 
+
 Copyright:
 --------------------------------------------------------------------------------
 A8DS - Atari 8-bit Emulator designed to run on the DS/DSi is
@@ -295,11 +305,14 @@ History :
 --------------------------------------------------------------------------------
 V4.0  : 20-Jan-2025 by wavemotion-dave
   * Major overhaul to add "Cycle Exact" Antic and GTIA which fixes many glitches and artifacts.
+  * There are now two builds... one for the older DS-Phat/Lite and one for the DSi (or XL/LL) which brings in a higher level of compatibility with the "Cycle Exact" timing.
   * Improved keyboard overlays - added alphanumeric keyboard with text-adventure macros.
   * Improved memory handling - using more memory but in an efficient way for the new features.
   * Improved sound handling - new SIO sounds, new opening jingle.
   * Improved CPU handling to fix one more Acid800 test (25 pass now).
-  * Fixed keyboard handling so games like Scorch will register keypresses (broken as of V3.0)
+  * Fixed keyboard handling so games like Scorch will register keypresses (broken as of V3.0).
+  * Added some of the more obscure missing .CAR cartridge types.  
+  * So much changed under the hood that old config files will be wiped and old save states will not work. Sorry!
 
 V3.9  : 13-Jan-2025 by wavemotion-dave
   * Altirra OS updated to 3.41 (Altirra BASIC still at 1.58)

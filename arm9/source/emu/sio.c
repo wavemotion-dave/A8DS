@@ -339,10 +339,8 @@ int SIO_Mount(int diskno, const char *filename, int b_open_readonly)
 
         info = (vapi_additional_info_t *)Util_malloc(sizeof(vapi_additional_info_t));
         additional_info[diskno-1] = info;
-        info->sectors = (vapi_sec_info_t *)Util_malloc(sectorcount[diskno - 1] * 
-                        sizeof(vapi_sec_info_t));
-        memset(info->sectors, 0, sectorcount[diskno - 1] * 
-                     sizeof(vapi_sec_info_t));
+        info->sectors = (vapi_sec_info_t *)Util_malloc(sectorcount[diskno - 1] * sizeof(vapi_sec_info_t));
+        memset(info->sectors, 0, sectorcount[diskno - 1] * sizeof(vapi_sec_info_t));
 
         /* Now read all the sector data */
         trackoffset = VAPI_32(fileheader.startdata);

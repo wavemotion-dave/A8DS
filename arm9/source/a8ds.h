@@ -38,7 +38,7 @@ typedef enum {
 } FifoMesType;
 
 typedef struct FICtoLoad {
-  char filename[299];
+  char filename[199];
   u8   directory;
 } FICA_A8;
 
