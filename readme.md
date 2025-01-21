@@ -129,7 +129,10 @@ available for those games that do. It's handy to have a few blank 90K single-sid
 available on your setup which you can find easily online - these can be used as save disks.
 
 The .ATR disk support handles up to 360K disks (it will probably work with larger disks, but has not 
-been extensively tested beyond 360K). 
+been extensively tested beyond 360K). Generally you should stick to more standard disk sizes on 
+this emulator - these are either 90K, 130K and sometimes 180K. Whenever possible, use a blank disk
+to save your game progress - by default, disks mount in the drives as READ-ONLY and you must 
+toggle this (via the X button on loading) if you want to write to a disk. Use caution!
 
 The emulator has the built-in Altirra BASIC 1.58 which is a drop-in replacement for the
 Atari Basic Rev C. Normally you can leave this disabled but a few games do require the 

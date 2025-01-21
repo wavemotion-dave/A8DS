@@ -3,7 +3,7 @@
 #DEVKITPPC=/opt/devkitpro/devkitPPC
 #DEVKITPRO=/opt/devkitpro
 
-VERSION=4.0
+VERSION=4.0a
 
 #---------------------------------------------------------------------------------
 .SUFFIXES:
@@ -14,7 +14,7 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
-export TARGET		:=	A8DS
+export TARGET		:=	A8DSi
 export TOPDIR		:=	$(CURDIR)
 
 ICON 		:= -b $(CURDIR)/logo.bmp "A8DS $(VERSION);wavemotion-dave;http://www.github.com/wavemotion-dave"

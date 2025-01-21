@@ -59,8 +59,6 @@
 #include "highscore.h"
 #include "loadsave.h"
 
-#define MAX_FILES 1024                      // No more than this many files can be processed per directory
-
 FICA_A8 *a8romlist;                         // For reading all the .ATR .XEX .CAR and .ROM files from the SD card
 u16 count8bit=0, countfiles=0, ucFicAct=0;  // Counters for all the 8-bit files found on the SD card
 u16 gTotalAtariFrames = 0;                  // For FPS counting
@@ -68,6 +66,7 @@ int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background screen "pointers"
 u16 emu_state;                              // Emulator State
 u16 atari_frames = 0;                       // Number of frames per second (60 for NTSC and 50 for PAL)
 u8  bShowKeyboard = false;                  // set to true when the virtual keyboard is showing
+u8 bFirstLoad = true;
 
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
@@ -92,13 +91,18 @@ u16 play_sio_sound = 0;
 #define  ydyBG (((256 / myConfig.yScale) << 8) | (256 % myConfig.yScale))
 
 bool bAtariCrash = false;                   // We use this to track any crashes that might occur and give the user a message on screen
-char last_boot_file[300] = {0};             // The last filename (.ATR or .XEX) we booted (and will be re-booted if RESET pressed)
+char last_boot_file[300] = {0};             // The last booted filename (needed for save states)
+char last_disk_filename[2][300] = {"",""};  // The last filename (.ATR or .XEX) we booted (and will be re-booted if RESET pressed) for DISK_1 and DISK_2
+char last_working_dir[2][300] = {"",""};    // The last working directory for selecting files 
+bool last_read_only[2] = {true, true};      // The last state of whether the user asked to load DISK_1 and DISK_2 as Read-Only or Read-Write
+int  last_file_index[2] = {-1, -1};         // The last index of the file chosen by the user on a per drive basis
+char file_load_id[12];                      // Some user text to indicate if we are picking a file for XEX/CAR/D1 or D2
+u8   file_load_idx = 0;                     // To help us know if we are loading disk 1 or disk 2
+bool bLoadAndBoot = true;                   // Force the system to reboot - only for XEX and DISK_1
 
 #define MAX_DEBUG 16
 int debug[MAX_DEBUG]={0};                   // Turn on DEBUG_DUMP to output some data to the lower screen... useful for emulator debug: just drop values into debug[] array.
-u8 DEBUG_DUMP = 0;
-
-u8 bFirstLoad = true;
+u8 DEBUG_DUMP = 0;                          // Pressing X and then A to select a game will enable the debugger output... it's not much but it's useful!
 
 extern u8 *fake_heap_end;     // current heap start
 extern u8 *fake_heap_start;   // current heap end
@@ -835,13 +839,14 @@ bool isDisk(char *filename)
 unsigned int last_crc = 0x55AABEEF;
 void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
 {
-    // Free buffer if needed
-    TIMER2_CR=0; bMute = 1;
-
-    if (disk_num == DISK_XEX)   // Force restart on XEX load...
+    if (disk_num == DISK_XEX)   // Force restart on XEX load
     {
         bRestart = true;
     }
+
+    if (disk_num == DISK_1)     strcpy(last_disk_filename[0], filename);
+    if (disk_num == DISK_2)     strcpy(last_disk_filename[1], filename);
+    if (disk_num == DISK_XEX)   {strcpy(last_disk_filename[0], "EMPTY"); strcpy(last_disk_filename[1], "EMPTY"); last_read_only[0] = 1; last_read_only[1] = 1;} // When loading XEX/CAR, clear out disks
 
     if (bRestart) // Only save last filename and hash if we are restarting...
     {
@@ -849,7 +854,7 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
         {
              strcpy(last_boot_file, filename);
         }
-
+        
         // Get the hash of the file
         if (isDisk(filename))
             last_crc = getFileCrcATR(filename);
@@ -864,31 +869,37 @@ void dsLoadGame(char *filename, int disk_num, bool bRestart, bool bReadOnly)
         Atari800_Initialise();
     }
 
-      // load game if ok
-    if (Atari800_OpenFile(filename, bRestart, disk_num, bReadOnly, myConfig.basic_type) != AFILE_ERROR)
+    if (strcmp(filename, "EMPTY") != 0) // If we aren't trying to load an EMPTY disk
     {
-      // Initialize the virtual console emulation
-      dsShowScreenEmu();
+        // load game if ok
+        if (Atari800_OpenFile(filename, bRestart, disk_num, bReadOnly, myConfig.basic_type) != AFILE_ERROR)
+        {
+          // Initialize the virtual console emulation
+          if (bRestart) dsShowScreenEmu();
 
-      bAtariCrash = false;
-      dsPrintValue(1,23,0, "                              ");
+          bAtariCrash = false;
+          dsPrintValue(1,23,0, "                              ");
 
-      dsSetAtariPalette();
+          dsSetAtariPalette();
 
-      // In case we switched PAL/NTSC
-      dsInstallSoundEmuFIFO();
+          if (bRestart)
+          {
+              // In case we switched PAL/NTSC
+              dsInstallSoundEmuFIFO();
 
-      TIMER2_DATA = TIMER_FREQ(SOUND_FREQ+10);   // Very slightly faster to ensure we always swallow all samples produced by the Pokey
-      TIMER2_CR = TIMER_DIV_1 | TIMER_IRQ_REQ | TIMER_ENABLE;
-      irqSet(IRQ_TIMER2, VsoundHandler);
+              TIMER2_DATA = TIMER_FREQ(SOUND_FREQ+10);   // Very slightly faster to ensure we always swallow all samples produced by the Pokey
+              TIMER2_CR = TIMER_DIV_1 | TIMER_IRQ_REQ | TIMER_ENABLE;
+              irqSet(IRQ_TIMER2, VsoundHandler);
 
-      atari_frames = 0;
-      TIMER0_CR=0;
-      TIMER0_DATA=0;
-      TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
-
-      dsShowRomInfo();
+              atari_frames = 0;
+              TIMER0_CR=0;
+              TIMER0_DATA=0;
+              TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
+          }
+      }
     }
+      
+    dsShowRomInfo();
 } // End of dsLoadGame()
 
 
@@ -986,10 +997,6 @@ bool dsQuery(char *str)
 }
 
 
-
-char file_load_id[10];
-bool bLoadReadOnly = true;
-bool bLoadAndBoot = true;
 void dsDisplayLoadOptions(void)
 {
     static char tmpBuf[32];
@@ -997,7 +1004,7 @@ void dsDisplayLoadOptions(void)
     dsPrintValue(0,0,0,file_load_id);
     siprintf(tmpBuf, "%-4s %s", (myConfig.tv_type == TV_NTSC ? "NTSC":"PAL "), (myConfig.basic_type ? "W BASIC":"       "));
     dsPrintValue(19,0,0,tmpBuf);
-    siprintf(tmpBuf, "[%c]  READ-ONLY", (bLoadReadOnly ? 'X':' '));
+    siprintf(tmpBuf, "[%c]  READ-ONLY", (last_read_only[file_load_idx] ? 'X':' '));
     dsPrintValue(14,1,0,tmpBuf);
     if (strcmp(file_load_id,"D2")!=0)      // For D2: we don't allow boot load
     {
@@ -1261,7 +1268,7 @@ unsigned int dsWaitForRom(void)
     {
         if (last_x_key != KEY_X)
         {
-            bLoadReadOnly = (bLoadReadOnly ? false:true);
+            last_read_only[file_load_idx] = (last_read_only[file_load_idx] ? false:true);
             dsDisplayLoadOptions();
             last_x_key = KEY_X;
         }
@@ -1404,21 +1411,21 @@ unsigned int dsWaitOnMenu(unsigned int actState)
 {
   unsigned int uState=A8_PLAYINIT;
   unsigned int keys_pressed;
-  bool bDone=false, romSel;
+  u8 bDone=false, romSel=false;
   short int iTx,iTy;
 
   while (!bDone)
   {
-    // wait for stylus
+    // wait for touch screen... user must select a game to load
     keys_pressed = keysCurrent();
     if (keys_pressed & KEY_TOUCH)
     {
-      touchPosition touch;
-      touchRead(&touch);
-      iTx = touch.px;
-      iTy = touch.py;
+        touchPosition touch;
+        touchRead(&touch);
+        iTx = touch.px;
+        iTy = touch.py;
 
-        if ((iTx>204) && (iTx<240) && (iTy>150) && (iTy<185))  // Gear Icon = Settings
+        if ((iTx>204) && (iTx<240) && (iTy>150) && (iTy<185))  // Gear Icon = Global Settings
         {
             dsChooseOptions(FALSE);
         }
@@ -1428,16 +1435,52 @@ unsigned int dsWaitOnMenu(unsigned int actState)
             bDone=dsQuery("QUIT A8DS?");
             if (bDone) uState=A8_QUITSTDS;
         }
-        else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<75)) // cartridge slot (wide range)
+        else if ((iTx>5) && (iTx<80) && (iTy>12) && (iTy<=75))  // XEX/CAR and D1 Disk Drive
         {
-            bDone=true;
             // Find files in current directory and show it
+            strcpy(file_load_id, "XEX/CAR/D1");
+            file_load_idx = 0;
+            chdir(last_working_dir[0]);
+            ucFicAct = last_file_index[0];
             a8FindFiles();
-            strcpy(file_load_id, "XEX/D1");
             romSel=dsWaitForRom();
-            if (romSel) { uState=A8_PLAYINIT;
-              dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
+            if (romSel) 
+            { 
+                last_file_index[0] = ucFicAct;
+                getcwd(last_working_dir[0], 299);
+                if (bLoadAndBoot) {uState=A8_PLAYINIT; bDone=true;} else uState=actState;
+                dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, last_read_only[0]); 
+            }
             else { uState=actState; }
+        }
+        else if ((iTx>5) && (iTx<80) && (iTy>75) && (iTy<114)) // D2 Disk Drive
+        {
+            // Find files in current directory and show it
+            strcpy(file_load_id, "D2");
+            file_load_idx = 1;
+            chdir(last_working_dir[1]);
+            ucFicAct = last_file_index[1];
+            a8FindFiles();
+            romSel=dsWaitForRom();
+            if (romSel) 
+            { 
+                last_file_index[1] = ucFicAct;
+                getcwd(last_working_dir[1], 299);
+                uState=actState;
+                dsLoadGame(a8romlist[ucFicAct].filename, DISK_2, false, last_read_only[1]); 
+            }
+            else { uState=actState; }
+        }
+        else if ((iTx>192) && (iTx<250) && (iTy>120) && (iTy<143))  // RESET (load the game... user might have been mounting disks)
+        {
+            if (romSel)
+            {
+                soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
+                dsLoadGame(last_disk_filename[0], DISK_1, true,  last_read_only[0]);  // Mount D1 and force restart
+                dsLoadGame(last_disk_filename[1], DISK_2, false, last_read_only[1]);  // Mount D2 if available (must be done after D1)
+                uState=A8_PLAYINIT; 
+                bDone=true;
+            }
         }
     }
     swiWaitForVBlank();
@@ -1932,6 +1975,9 @@ void dsMainLoop(void)
   myConfig.yOffset = 24;
   myConfig.xScale = 256;
   myConfig.yScale = 256;
+  
+  strcpy(last_disk_filename[0], "EMPTY");
+  strcpy(last_disk_filename[1], "EMPTY");
 
   while(emu_state != A8_QUITSTDS)
   {
@@ -1943,21 +1989,22 @@ void dsMainLoop(void)
         break;
 
       case A8_MENUSHOW:
-        emu_state =  dsWaitOnMenu(A8_MENUSHOW);
         Atari800_Initialise();
+        emu_state = dsWaitOnMenu(A8_MENUSHOW);
+        dsLoadGame(last_disk_filename[1], DISK_2, false, last_read_only[1]);  // Mount D2 if available
         break;
 
       case A8_PLAYINIT:
         dsShowScreenEmu();
+        irqEnable(IRQ_TIMER2);
         bMute = 0;
         emu_state = A8_PLAYGAME;
 
-        if (myConfig.keyboard_type == 4) // Star Raiders
+        if (myConfig.keyboard_type == 5) // Star Raiders
         {
             bShowKeyboard = true;
             dsShowKeyboard();
         }
-
         break;
 
       case A8_PLAYGAME:
@@ -2127,7 +2174,8 @@ void dsMainLoop(void)
                             soundPlaySample(clickNoQuit_wav, SoundFormat_16Bit, clickNoQuit_wav_size, 22050, 127, 64, false, 0);
                         }
                         keys_touch = 1;
-                        dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
+                        dsLoadGame(last_boot_file, (isDisk(last_boot_file)) ? DISK_1 : DISK_XEX, true, last_read_only[0]);   // Reload the last bootable game
+                        dsLoadGame(last_disk_filename[1], DISK_2,   false, last_read_only[1]);  // Mount D2 if available (must be done after XEX/CAR/D1)
                         bMute = 0;
                         swiWaitForVBlank();
                     }
@@ -2215,11 +2263,22 @@ void dsMainLoop(void)
                       swiWaitForVBlank();
                       // Find files in current directory and show it
                       keys_touch=1;
-                      strcpy(file_load_id, "XEX/D1");
+                      strcpy(file_load_id, "XEX/CAR/D1");
+                      file_load_idx = 0;
+                      chdir(last_working_dir[0]);
+                      ucFicAct = last_file_index[0];                      
                       a8FindFiles();
                       romSel=dsWaitForRom();
-                      if (romSel) { emu_state=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_1, bLoadAndBoot, bLoadReadOnly); }
-                      else {
+                      if (romSel) 
+                      { 
+                          last_file_index[0] = ucFicAct;
+                          getcwd(last_working_dir[0], 299);
+                          emu_state=A8_PLAYINIT; 
+                          dsLoadGame(a8romlist[ucFicAct].filename, (isDisk(a8romlist[ucFicAct].filename) ? DISK_1:DISK_XEX), bLoadAndBoot, last_read_only[0]); 
+                          dsLoadGame(last_disk_filename[1], DISK_2,   false, last_read_only[1]);  // Mount D2 if available (must be done after XEX/CAR/D1)
+                      }
+                      else
+                      {
                           TIMER0_CR=0;
                           TIMER0_DATA=savedTimer0;
                           TIMER0_CR=TIMER_ENABLE|TIMER_DIV_1024;
@@ -2234,9 +2293,18 @@ void dsMainLoop(void)
                       // Find files in current directory and show it
                       keys_touch=1;
                       strcpy(file_load_id, "D2");
+                      file_load_idx = 1;
+                      chdir(last_working_dir[1]);
+                      ucFicAct = last_file_index[1];
                       a8FindFiles();
                       romSel=dsWaitForRom();
-                      if (romSel) { emu_state=A8_PLAYINIT; dsLoadGame(a8romlist[ucFicAct].filename, DISK_2, false, bLoadReadOnly); }
+                      if (romSel)
+                      { 
+                          last_file_index[1] = ucFicAct;
+                          getcwd(last_working_dir[1], 299);
+                          emu_state=A8_PLAYINIT; 
+                          dsLoadGame(a8romlist[ucFicAct].filename, DISK_2, false, last_read_only[1]); 
+                      }
                       else {
                            TIMER0_CR=0;
                            TIMER0_DATA=savedTimer0;
@@ -2444,15 +2512,6 @@ void dsMainLoop(void)
                     }
                 }
             } else config_snap_counter=0;
-        }
-
-        // A bit of a hack... the first load requires a cold restart after the OS is running....
-        if (bFirstLoad)
-        {
-            dsLoadGame(last_boot_file, DISK_1, true, bLoadReadOnly);   // Force Restart
-            bFirstLoad = false;
-            bMute = 0;
-            irqEnable(IRQ_TIMER2);
         }
 
         break;
