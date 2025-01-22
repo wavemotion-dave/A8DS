@@ -458,7 +458,7 @@ void dsWriteGlobalConfig(void)
 struct options_t
 {
     char *label;
-    char *option[72];
+    char *option[120];
     UBYTE *option_val;
     UBYTE option_type;
     UBYTE option_max;
@@ -472,19 +472,26 @@ struct options_t
 #define OPT_KEYSEL  1
 #define OPT_NUMERIC 2
 
-#define KEY_MAP_TEXT {"JOY 1 FIRE", "JOY 1 UP", "JOY 1 DOWN", "JOY 1 LEFT", "JOY 1 RIGHT", "JOY 2 FIRE", "JOY 2 UP", "JOY 2 DOWN", "JOY 2 LEFT", "JOY 2 RIGHT", \
-                      "CONSOLE START", "CONSOLE SEL", "CONSOLE OPT", "CONSOLE HELP", "KEY SPACE", "KEY RETURN", "KEY ESC", "KEY BREAK",  \
-                      "KEY A", "KEY B", "KEY C", "KEY D", "KEY E", "KEY F", "KEY G", "KEY H", "KEY I", "KEY J", "KEY K", "KEY L", "KEY M", "KEY N", "KEY O",                        \
-                      "KEY P", "KEY Q", "KEY R", "KEY S", "KEY T", "KEY U", "KEY V", "KEY W", "KEY X", "KEY Y", "KEY Z", "KEY 0", "KEY 1", "KEY 2", "KEY 3",                        \
-                      "KEY 4", "KEY 5", "KEY 6", "KEY 7", "KEY 8", "KEY 9", "KEY UP", "KEY DOWN", "KEY LEFT", "KEY RIGHT", "KEY SPARE1", "KEY SPARE2",                              \
-                      "KEY SPARE3", "VERTICAL+", "VERTICAL++", "VERTICAL-", "VERTICAL--", "HORIZONTAL+", "HORIZONTAL++", "HORIZONTAL-", "HORIZONTAL--", "OFFSET DPAD", "SCALE DPAD", "ZOOM SCREEN"}
+#define KEY_MAP_TEXT {"JOY 1 FIRE", "JOY 1 UP", "JOY 1 DOWN", "JOY 1 LEFT", "JOY 1 RIGHT", "JOY 2 FIRE", "JOY 2 UP", "JOY 2 DOWN", "JOY 2 LEFT", "JOY 2 RIGHT",     \
+                      "CONSOLE START", "CONSOLE SEL", "CONSOLE OPT", "CONSOLE HELP", "KEY SPACE", "KEY RETURN", "KEY ESC", "KEY BREAK",                             \
+                      "KEY A", "KEY B", "KEY C", "KEY D", "KEY E", "KEY F", "KEY G", "KEY H", "KEY I", "KEY J", "KEY K", "KEY L", "KEY M", "KEY N", "KEY O",        \
+                      "KEY P", "KEY Q", "KEY R", "KEY S", "KEY T", "KEY U", "KEY V", "KEY W", "KEY X", "KEY Y", "KEY Z", "KEY 0", "KEY 1", "KEY 2", "KEY 3",        \
+                      "KEY 4", "KEY 5", "KEY 6", "KEY 7", "KEY 8", "KEY 9", "KEY UP", "KEY DOWN", "KEY LEFT", "KEY RIGHT", "KEY SPARE1", "KEY SPARE2",              \
+                      "KEY SPARE3", "VERTICAL+", "VERTICAL++", "VERTICAL-", "VERTICAL--", "HORIZONTAL+", "HORIZONTAL++", "HORIZONTAL-", "HORIZONTAL--",             \
+                      "OFFSET DPAD", "SCALE DPAD", "ZOOM SCREEN"}
 
-#define CART_TYPES {"00-NONE",      "01-STD8",      "02-STD16",     "03-OSS16-034M", "04-NO SUPPORT",  "05-DB32",      "06-NO SUPPORT", "07-NO SUPPORT", "08-WILLIAMS64", "09-EXP64", \
-                    "10-DIAMOND64", "11-SDX64",     "12-XEGS32",    "13-XEGS64",     "14-XEGS128",     "15-OSS16",     "16-NO SUPPORT", "17-ATRAX128",   "18-BOUNTY BOB", "19-NO SUPPORT", \
-                    "20-NO SUPPORT","21-NO SUPPORT","22-WILLIAMS32","23-XEGS256",    "24-XEGS512",     "25-XEGS1024",  "26-MEGA16",     "27-MEGA32",     "28-MEGA64",     "29-MEGA128", \
-                    "30-MEGA256",   "31-MEGA512",   "32-MEGA1024",  "33-SWXEGS32",   "34-SWXEGS64",    "35-SWXEGS128", "36-SWXEGS256",  "37-SWXEGS512",  "38-SWXEGS1024", "39-PHOENIX8", \
-                    "40-BLIZZARD16","41-ATMAX128",  "42-ATMAX1024", "43-SDX128",     "44-OSS8",        "45-OSS16-043M","46-BLIZZARD4",  "47-AST32",      "48-NO SUPPORT", "49-NO SUPPORT", \
-                    "50-TURBO64",   "51-TURBO128",  "52-ULTRACART", "53-LOWBANK_8",  "54-SIC128",      "55-SIC256",    "56-SIC512",     "57-STD2",       "58-STD4",       "59-NO SUPPORT", "60-BLIZZARD32"}
+#define CART_TYPES {"00-NONE",       "01-STD8",       "02-STD16",      "03-OSS16-034M", "04-NO SUPPORT", "05-DB32",       "06-NO SUPPORT", "07-NO SUPPORT", "08-WILLIAMS64", "09-EXP64",      \
+                    "10-DIAMOND64",  "11-SDX64",      "12-XEGS32",     "13-XEGS64",     "14-XEGS128",    "15-OSS16",      "16-NO SUPPORT", "17-ATRAX128",   "18-BOUNTY BOB", "19-NO SUPPORT", \
+                    "20-NO SUPPORT", "21-NO SUPPORT", "22-WILLIAMS32", "23-XEGS256",    "24-XEGS512",    "25-XEGS1024",   "26-MEGA16",     "27-MEGA32",     "28-MEGA64",     "29-MEGA128",    \
+                    "30-MEGA256",    "31-MEGA512",    "32-MEGA1024",   "33-SWXEGS32",   "34-SWXEGS64",   "35-SWXEGS128",  "36-SWXEGS256",  "37-SWXEGS512",  "38-SWXEGS1024", "39-PHOENIX8",   \
+                    "40-BLIZZARD16", "41-ATMAX128",   "42-ATMAX1024",  "43-SDX128",     "44-OSS8",       "45-OSS16-043M", "46-BLIZZARD4",  "47-AST32",      "48-NO SUPPORT", "49-NO SUPPORT", \
+                    "50-TURBO64",    "51-TURBO128",   "52-ULTRACART",  "53-LOWBANK_8",  "54-SIC128",     "55-SIC256",     "56-SIC512",     "57-STD2",       "58-STD4",       "59-NO SUPPORT", \
+                    "60-BLIZZARD32", "61-NO SUPPORT", "62-NO SUPPORT", "63-NO SUPPORT", "64-NO SUPPORT", "65-NO SUPPORT", "66-NO SUPPORT", "67-NO SUPPORT", "68-NO SUPPORT", "69-NO SUPPORT", \
+                    "70-NO SUPPORT", "71-NO SUPPORT", "72-NO SUPPORT", "73-NO SUPPORT", "74-NO SUPPORT", "75-ATMAX-NEW",  "76-NO SUPPORT", "77-NO SUPPORT", "78-NO SUPPORT", "79-NO SUPPORT", \
+                    "80-NO SUPPORT", "81-NO SUPPORT", "82-NO SUPPORT", "83-NO SUPPORT", "84-NO SUPPORT", "85-NO SUPPORT", "86-NO SUPPORT", "87-NO SUPPORT", "88-NO SUPPORT", "89-NO SUPPORT", \
+                    "90-NO SUPPORT", "91-NO SUPPORT", "92-NO SUPPORT", "93-NO SUPPORT", "94-NO SUPPORT", "95-NO SUPPORT", "96-NO SUPPORT", "97-NO SUPPORT", "98-NO SUPPORT", "99-NO SUPPORT", \
+                    "100-NO SUPPORT","101-NO SUPPORT","102-NO SUPPORT","103-NO SUPPORT","104-NO SUPPORT","105-NO SUPPORT","106-NO SUPPORT","107-NO SUPPORT","108-NO SUPPORT","109-NO SUPPORT",\
+                    "110-NO SUPPORT","111-NO SUPPORT","112-DCART",     "113-NO SUPPORT","114-NO SUPPORT","115-NO SUPPORT"}
 
 const struct options_t Option_Table[2][20] =
 {
@@ -508,7 +515,7 @@ const struct options_t Option_Table[2][20] =
         {"EMULATOR TXT",{"OFF",         "ON"},                              &myConfig.emulatorText,         OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
         {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", "400 STYLE", 
                          "130XE STYLE", "ALPHANUMERIC", "STAR RAIDER"},     &myConfig.keyboard_type,        OPT_NORMAL, 6,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
-        {"CART TYPE",   CART_TYPES,                                         &myConfig.cart_type,            OPT_NORMAL, 61,  "ROM FILES DONT    ",   "ALWAYS AUTODETECT ",  "SO YOU CAN SET THE",  "CARTRIDGE TYPE    "},
+        {"CART TYPE",   CART_TYPES,                                         &myConfig.cart_type,            OPT_NORMAL,116,  "ROM FILES DONT    ",   "ALWAYS AUTODETECT ",  "SO YOU CAN SET THE",  "CARTRIDGE TYPE    "},
         {NULL,          {"",            ""},                                NULL,                           OPT_NORMAL, 2,   "HELP1             ",   "HELP2             ",  "HELP3             ",  "HELP4             "}
     },
     // Page 2

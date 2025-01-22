@@ -49,12 +49,6 @@
 
 #include "atari.h"
 
-#define dGetWord(x)                     (dGetByte(x) | (dGetByte((x) + 1) << 8))
-#define dPutWord(x, y)                  (dPutByte(x,(UBYTE)y), dPutByte(x+1, (UBYTE) ((y) >> 8)))
-#define dGetWordAligned(x)              dGetWord(x)
-#define dPutWordAligned(x, y)           dPutWord(x, y)
-#define dFillMem(addr1, value, length)  memset(memory + (addr1), value, length)
-
 extern const UBYTE *antic_xe_ptr;
 extern UBYTE ROM_basic[];
 
@@ -67,12 +61,27 @@ extern UBYTE cartA0BF_enabled;
 extern UBYTE *mem_map[20];
 extern UBYTE xe_mem_buffer[1024 * 1024];
 
+typedef UBYTE (*rdfunc)(UWORD addr);
+typedef void (*wrfunc)(UWORD addr, UBYTE value);
+extern rdfunc readmap[256];
+extern wrfunc writemap[256];
+void ROM_PutByte(UWORD addr, UBYTE byte); 
 
 // We extend the mem_map[] by 4 entries to support some 'under' saving of memory blocks where the CART stuff goes...
 #define UNDER_0x8   16
 #define UNDER_0x9   17
 #define UNDER_0xA   18
 #define UNDER_0xB   19
+
+
+// These defines help provide a much faster memory fetch for when we know there isn't too much complications... the 'd' stands for 'Direct'
+#define dGetWord(x)                     (dGetByte(x) | (dGetByte((x) + 1) << 8))
+#define dGetWordFull(x)                 (dGetByteFull(x) | (dGetByteFull((x) + 1) << 8))
+#define dPutWord(x, y)                  (dPutByte(x,(UBYTE)y), dPutByte(x+1, (UBYTE) ((y) >> 8)))
+#define dGetWordAligned(x)              dGetWord(x)
+#define dPutWordAligned(x, y)           dPutWord(x, y)
+#define dFillMem(addr1, value, length)  memset(memory + (addr1), value, length)
+
 
 // ---------------------------------------------------------------------------------------
 // Handles bank switching - we use a memory map so we can easily swap in/out various
@@ -83,6 +92,11 @@ extern UBYTE xe_mem_buffer[1024 * 1024];
 inline UBYTE dGetByte(UWORD addr)
 {
     return *(const UBYTE *)(mem_map[addr >> 12] + addr);
+}
+
+inline UBYTE dGetByteFull(UWORD addr)
+{
+    return (readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr));
 }
 
 inline UWORD zGetWord(UWORD addr)
@@ -109,12 +123,6 @@ inline void dCopyToMem(void*from, unsigned int to, unsigned int size)
 {
     memcpy(AnticMainMemLookup((unsigned int)to), (UBYTE*)from, size);
 }
-
-typedef UBYTE (*rdfunc)(UWORD addr);
-typedef void (*wrfunc)(UWORD addr, UBYTE value);
-extern rdfunc readmap[256];
-extern wrfunc writemap[256];
-void ROM_PutByte(UWORD addr, UBYTE byte); 
 
 #define GetByte(addr)       (readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
 #define PutByte(addr,byte)  (writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))

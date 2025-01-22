@@ -116,6 +116,7 @@
 #define CART_BLIZZARD_32    60
 
 #define CART_ATMAX_NEW_1024 75
+#define CART_DCART          112
 
 #define CTRL_JOY        1
 #define CTRL_SWAP       2

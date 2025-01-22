@@ -268,7 +268,4 @@ UBYTE Atari800_GetByte(UWORD addr);
 /* Stores a byte at the specified special address (not RAM or ROM). */
 void Atari800_PutByte(UWORD addr, UBYTE byte);
 
-/* Installs SIO patch and disables ROM checksum test. */
-void Atari800_PatchOS(void);
-
 #endif /* _ATARI_H_ */

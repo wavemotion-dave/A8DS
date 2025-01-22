@@ -325,8 +325,8 @@ static void set_bank_SIC(UBYTE data, UBYTE bank_mask)
     else
     {
         Cart809F_Enable();
-        mem_map[0x8] = (cart_image + b*0x4000) + 0x0000 - 0x8000;
-        mem_map[0x9] = (cart_image + b*0x4000) + 0x1000 - 0x9000;
+        mem_map[0x8] = cart_image + (b*0x4000) + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + (b*0x4000) + 0x1000 - 0x9000;
     }
 
     if (data & 0x40)
@@ -336,12 +336,32 @@ static void set_bank_SIC(UBYTE data, UBYTE bank_mask)
     else
     {
         CartA0BF_Enable();
-        mem_map[0xA] = (cart_image + b*0x4000) + 0x2000 - 0xA000;
-        mem_map[0xB] = (cart_image + b*0x4000) + 0x3000 - 0xB000;
+        mem_map[0xA] = cart_image + (b*0x4000) + 0x2000 - 0xA000;
+        mem_map[0xB] = cart_image + (b*0x4000) + 0x3000 - 0xB000;
     }
 
     cart_sic_data = data;
     bank = b;
+}
+
+/* CART_DCART */
+static void set_bank_A0BF_DCART(UBYTE b)
+{
+    // We need to move the mini-memory window into place since the CPU emulation tends to do direct 
+    // memory access for emulation speed and we can't rely on the Cart_GetByte() being called always.
+    bank = b & 0x3f; // Even if cart becomes disabled, we need the bank number for the 'mini memory' window
+    memcpy(memory+0xD500, cart_image + (bank*0x2000) + 0x1500, 256);
+
+    if (b & 0x80)    // High bit disables cart
+    {
+        CartA0BF_Disable();
+    }
+    else  // Enable 8K bank in the A000-BFFF memory range
+    {
+        CartA0BF_Enable();
+        mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
+    }
 }
 
 
@@ -723,6 +743,10 @@ void CART_Start(void)
         mem_map[0xA] = cart_image + 0x10000 - 0xA000;   // First 256 bytes is repeated throughout the memory range
         mem_map[0xB] = cart_image + 0x11000 - 0xB000;   // First 256 bytes is repeated throughout the memory range
         break;
+    case CART_DCART:
+        Cart809F_Disable();
+        set_bank_A0BF_DCART(0); // Bank 0 on power up
+        break;
 
     default:
         // The only default cart we support is an 8K built-in BASIC cart
@@ -888,6 +912,9 @@ void CART_Access(UWORD addr)
     case CART_TURBOSOFT_128:
         set_bank_A0BF_TURBOSOFT(addr, 0x0f);
         break;
+    case CART_DCART:
+        set_bank_A0BF_DCART(addr & 0xff);
+        break;
 
     default:    // Do nothing... this cart doesn't react to any access
         break;
@@ -908,7 +935,8 @@ UBYTE CART_GetByte(UWORD addr)
         if ((myConfig.cart_type != CART_AST_32)  && 
             (myConfig.cart_type != CART_SIC_128) && 
             (myConfig.cart_type != CART_SIC_256) && 
-            (myConfig.cart_type != CART_SIC_512))
+            (myConfig.cart_type != CART_SIC_512) &&
+            (myConfig.cart_type != CART_DCART))
         {
             return RTIME_GetByte();
         }
@@ -922,10 +950,11 @@ UBYTE CART_GetByte(UWORD addr)
         if ((addr & 0xe0) == 0x00) return cart_sic_data; else return 0xFF;
         break;
     case CART_AST_32:
-        debug[1]++;
         return cart_image[(256 * bank) + (addr&0xff)];
         break;
-        
+    case CART_DCART:
+        return memory[addr]; // We've already moved in the 256 byte mini-window
+        break;
     default:
         CART_Access(addr);
         break;
@@ -948,7 +977,8 @@ void CART_PutByte(UWORD addr, UBYTE byte)
         if ((myConfig.cart_type != CART_AST_32)  && 
             (myConfig.cart_type != CART_SIC_128) && 
             (myConfig.cart_type != CART_SIC_256) && 
-            (myConfig.cart_type != CART_SIC_512))
+            (myConfig.cart_type != CART_SIC_512) &&
+            (myConfig.cart_type != CART_DCART))
         {
             RTIME_PutByte(byte);
             return;

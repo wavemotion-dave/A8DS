@@ -247,44 +247,6 @@ int Atari800_Exit(int run_monitor)
     return restart;
 }
 
-UBYTE Atari800_GetByte(UWORD addr) 
-{
-    switch (addr & 0xff00) 
-    {
-    case 0xd000:                /* GTIA */
-        return GTIA_GetByte(addr);
-        break;
-    case 0xd200:                /* POKEY */
-        return POKEY_GetByte(addr);
-        break;
-    case 0xd300:                /* PIA */
-        return PIA_GetByte(addr);
-        break;
-    case 0xd400:                /* ANTIC */
-        return ANTIC_GetByte(addr);
-        break;
-    }
-    return 0xFF;
-}
-
-void Atari800_PutByte(UWORD addr, UBYTE byte) 
-{
-    switch (addr & 0xff00) 
-    {
-    case 0xd000:                /* GTIA */
-      GTIA_PutByte(addr, byte);
-      break;
-    case 0xd200:                /* POKEY */
-      POKEY_PutByte(addr, byte);
-      break;
-    case 0xd300:                /* PIA */
-      PIA_PutByte(addr, byte);
-      break;
-    case 0xd400:                /* ANTIC */
-      ANTIC_PutByte(addr, byte);
-      break;
-    }
-}
 
 void Atari800_UpdatePatches(void) {
     switch (machine_type) {
@@ -322,6 +284,3 @@ void Atari800_Frame()
     
     gTotalAtariFrames++;
 }
-
-void MainStateSave(void) {}
-void MainStateRead(void) {}
