@@ -73,15 +73,12 @@ int CASSETTE_hold_start_on_reboot = 0;
 int CASSETTE_hold_start = 0;
 int CASSETTE_press_space = 0;
 
-void CASSETTE_LeaderLoad(void){}
-void CASSETTE_LeaderSave(void){}
 int CASSETTE_GetByte(void){return 0;}
 int CASSETTE_IOLineStatus(void){return 1;}
 int CASSETTE_GetInputIRQDelay(void){return 0;}
 int CASSETTE_IsSaveFile(void){return 0;}
 void CASSETTE_PutByte(int byte){}
 void CASSETTE_TapeMotor(int onoff){}
-
 
 void ESC_ClearAll(void)
 {
@@ -107,20 +104,6 @@ void ESC_AddEscRts(UWORD address, UBYTE esc_code, ESC_FunctionType function)
     dPutByte(address + 2, 0x60);        /* RTS */
 }
 
-/* 0xd2 is ESCRTS, which works same as pair of ESC and RTS (I think so...).
-   So this function does effectively the same as ESC_AddEscRts,
-   except that it modifies 2, not 3 bytes in Atari memory.
-   I don't know why it is done that way, so I simply leave it
-   unchanged (0xf2/0xd2 are used as in previous versions).
-*/
-void ESC_AddEscRts2(UWORD address, UBYTE esc_code, ESC_FunctionType function)
-{
-    esc_address[esc_code] = address;
-    esc_function[esc_code] = function;
-    dPutByte(address, 0xd2);            /* ESCRTS */
-    dPutByte(address + 1, esc_code);    /* ESC CODE */
-}
-
 void ESC_Remove(UBYTE esc_code)
 {
     esc_function[esc_code] = NULL;
@@ -138,71 +121,39 @@ void ESC_Run(UBYTE esc_code)
 
 void ESC_PatchOS(void)
 {
-    int patched = FALSE;
-    if (myConfig.disk_speedup) {
-        UWORD addr_l;
-        UWORD addr_s;
-        UBYTE check_s_0;
-        UBYTE check_s_1;
-        /* patch Open() of C: so we know when a leader is processed */
-        switch (Atari800_machine_type) 
+    UBYTE patched = FALSE;
+    
+    // -----------------------------------------------
+    // The only patch we handle is SIO disk access...
+    // -----------------------------------------------
+    if (myConfig.disk_speedup)
+    {
+        if (myConfig.os_type != OS_ALTIRRA_XL)
         {
-        case Atari800_MACHINE_OSA:
-        case Atari800_MACHINE_OSB:
-            if (myConfig.os_type == OS_ALTIRRA_800)
-                addr_l = 0xef91; /* Altirra Cassettle Handler*/
-            else
-                addr_l = 0xef74; /* Atari */                
-            addr_s = 0xefbc;
-            check_s_0 = 0xa0;
-            check_s_1 = 0x80;
-            break;
-        case Atari800_MACHINE_XLXE:
-            if (myConfig.os_type == OS_ALTIRRA_XL)
-            {
-                addr_l = 0xee4a;
-            }
-            else
-            {
-                addr_l = 0xfd13;
-            }
-            addr_s = 0xfd60;
-            check_s_0 = 0xa9;
-            check_s_1 = 0x03;
-            break;
-        default:
-            return;
+            ESC_AddEscRts(0xe459, ESC_SIOV, SIO_Handler);
+            patched = TRUE;
         }
-        /* don't hurt non-standard OSes that may not support cassette at all  */
-        if (dGetByte(addr_l)     == 0xa9 && dGetByte(addr_l + 1) == 0x03
-         && dGetByte(addr_l + 2) == 0x8d && dGetByte(addr_l + 3) == 0x2a
-         && dGetByte(addr_l + 4) == 0x02
-         && dGetByte(addr_s)     == check_s_0
-         && dGetByte(addr_s + 1) == check_s_1
-         && dGetByte(addr_s + 2) == 0x20 && dGetByte(addr_s + 3) == 0x5c
-         && dGetByte(addr_s + 4) == 0xe4) {
-            ESC_Add(addr_l, ESC_COPENLOAD, CASSETTE_LeaderLoad);
-            ESC_Add(addr_s, ESC_COPENSAVE, CASSETTE_LeaderSave);
-        }
-        ESC_AddEscRts(0xe459, ESC_SIOV, SIO_Handler);
-        patched = TRUE;
     }
-    else {
-        ESC_Remove(ESC_COPENLOAD);
-        ESC_Remove(ESC_COPENSAVE);
+    else 
+    {
         ESC_Remove(ESC_SIOV);
-    };
+    }
+    
     if (patched && Atari800_machine_type == Atari800_MACHINE_XLXE) 
     {
         /* Disable Checksum Test */
         if (myConfig.os_type != OS_ALTIRRA_XL)
         {
-          dPutByte(0xc31d, 0xea);
-          dPutByte(0xc31e, 0xea);
+            dPutByte(0xc31d, 0xea);
+            dPutByte(0xc31e, 0xea);
         }
-        //dPutByte(0xc319, 0x8e);
-        //dPutByte(0xc31a, 0xff);
     }
+}
+
+void ESC_UnpatchOS(void)
+{
+    ESC_ClearAll();
+    memcpy(atari_os, atari_os_pristine, 0x4000);
 }
 
 void ESC_UpdatePatches(void)
@@ -211,7 +162,7 @@ void ESC_UpdatePatches(void)
     case Atari800_MACHINE_OSA:
     case Atari800_MACHINE_OSB:
         /* Restore unpatched OS */
-        dCopyToMem(atari_os, 0xd800, 0x2800);
+        ESC_UnpatchOS();
         /* Set patches */
         ESC_PatchOS();
         break;
@@ -220,8 +171,7 @@ void ESC_UpdatePatches(void)
         if ((PIA_PORTB & 1) == 0)
             break;
         /* Restore unpatched OS */
-        dCopyToMem(atari_os, 0xc000, 0x1000);
-        dCopyToMem(atari_os + 0x1800, 0xd800, 0x2800);
+        ESC_UnpatchOS();
         /* Set patches */
         ESC_PatchOS();
         break;

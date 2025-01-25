@@ -94,6 +94,7 @@ void InitGameSettings(void)
     GameDB.default_ram_type = RAM_IDX_128K; // ATARI 130 XE
     GameDB.default_alphaBlend = 0;          // No Alpha Blend
     GameDB.default_disk_speedup = 1;        // Disk is Fast
+    GameDB.default_disk_sound = 0;          // No SIO sound
     GameDB.default_keyMap[DB_KEY_A] = 0;    // Fire button
     GameDB.default_keyMap[DB_KEY_B] = 0;    // Fire button
     GameDB.default_keyMap[DB_KEY_X] = 63;   // VERTICAL-
@@ -194,6 +195,7 @@ void WriteGameSettings(void)
         GameDB.GameSettings[idx].keyboard_type      = myConfig.keyboard_type;
         GameDB.GameSettings[idx].dpad_type          = myConfig.dpad_type;
         GameDB.GameSettings[idx].disk_speedup       = myConfig.disk_speedup;
+        GameDB.GameSettings[idx].disk_sound         = myConfig.disk_sound;
         GameDB.GameSettings[idx].cart_type          = myConfig.cart_type;
         GameDB.GameSettings[idx].emulatorText       = myConfig.emulatorText;
         GameDB.GameSettings[idx].alphaBlend         = myConfig.alphaBlend;
@@ -246,6 +248,7 @@ void WriteGlobalSettings(void)
     GameDB.default_blending           = myConfig.blending;
     GameDB.default_alphaBlend         = myConfig.alphaBlend;
     GameDB.default_disk_speedup       = myConfig.disk_speedup;
+    GameDB.default_disk_sound         = myConfig.disk_sound;
     for (int i=0; i<8; i++) GameDB.default_keyMap[i] = myConfig.keyMap[i];
     GameDB.checksum = 0;
     char *ptr = (char *)GameDB.GameSettings;
@@ -316,17 +319,18 @@ void ReadGameSettings(void)
         InitGameSettings();
     }
 
-    myConfig.tv_type            = GameDB.default_tv_type;
-    myConfig.os_type            = GameDB.default_os_type;
-    myConfig.basic_type         = GameDB.default_basic_type;
-    myConfig.auto_fire          = GameDB.default_auto_fire;
-    myConfig.ram_type           = GameDB.default_ram_type;
-    myConfig.skip_frames        = GameDB.default_skip_frames;
-    myConfig.keyboard_type      = GameDB.default_keyboard_type;
-    myConfig.key_click_disable  = GameDB.default_key_click_disable;
     myConfig.blending           = GameDB.default_blending;
     myConfig.alphaBlend         = GameDB.default_alphaBlend;
+    myConfig.skip_frames        = GameDB.default_skip_frames;
+    myConfig.keyboard_type      = GameDB.default_keyboard_type;
+    myConfig.os_type            = GameDB.default_os_type;
+    myConfig.ram_type           = GameDB.default_ram_type;
+    myConfig.basic_type         = GameDB.default_basic_type;
+    myConfig.tv_type            = GameDB.default_tv_type;
+    myConfig.auto_fire          = GameDB.default_auto_fire;
+    myConfig.key_click_disable  = GameDB.default_key_click_disable;
     myConfig.disk_speedup       = GameDB.default_disk_speedup;
+    myConfig.disk_sound         = GameDB.default_disk_sound;
     myConfig.emulatorText       = true;
     
     for (int i=0; i<8; i++) myConfig.keyMap[i] = GameDB.default_keyMap[i];
@@ -348,6 +352,7 @@ void SetMyConfigDefaults(void)
     myConfig.blending           = GameDB.default_blending;
     myConfig.alphaBlend         = GameDB.default_alphaBlend;
     myConfig.skip_frames        = GameDB.default_skip_frames;
+    myConfig.keyboard_type      = GameDB.default_keyboard_type;
     myConfig.os_type            = GameDB.default_os_type;
     myConfig.ram_type           = GameDB.default_ram_type;
     myConfig.basic_type         = GameDB.default_basic_type;
@@ -355,6 +360,8 @@ void SetMyConfigDefaults(void)
     myConfig.auto_fire          = GameDB.default_auto_fire;
     myConfig.key_click_disable  = GameDB.default_key_click_disable;
     myConfig.disk_speedup       = GameDB.default_disk_speedup;
+    myConfig.disk_sound         = GameDB.default_disk_sound;
+    
     for (int i=0; i<8; i++)  myConfig.keyMap[i] = GameDB.default_keyMap[i];
 }
 
@@ -391,6 +398,7 @@ void ApplyGameSpecificSettings(void)
         myConfig.keyboard_type      = GameDB.GameSettings[idx].keyboard_type;
         myConfig.dpad_type          = GameDB.GameSettings[idx].dpad_type;
         myConfig.disk_speedup       = GameDB.GameSettings[idx].disk_speedup;
+        myConfig.disk_sound         = GameDB.GameSettings[idx].disk_sound;
         myConfig.cart_type          = GameDB.GameSettings[idx].cart_type;
         myConfig.emulatorText       = GameDB.GameSettings[idx].emulatorText;
         myConfig.alphaBlend         = GameDB.GameSettings[idx].alphaBlend;
@@ -413,12 +421,11 @@ void ApplyGameSpecificSettings(void)
     {
         myConfig.basic_type = force_basic_type;
         if (!bFirstLoad) force_basic_type = 99;
-    }    
-    
+    }
+
     SetRamSizeAndOS();
-    
     install_os();
-}
+ }
 
 
 // ---------------------------------------------------------------------------
@@ -486,12 +493,12 @@ struct options_t
                     "30-MEGA256",    "31-MEGA512",    "32-MEGA1024",   "33-SWXEGS32",   "34-SWXEGS64",   "35-SWXEGS128",  "36-SWXEGS256",  "37-SWXEGS512",  "38-SWXEGS1024", "39-PHOENIX8",   \
                     "40-BLIZZARD16", "41-ATMAX128",   "42-ATMAX1024",  "43-SDX128",     "44-OSS8",       "45-OSS16-043M", "46-BLIZZARD4",  "47-AST32",      "48-NO SUPPORT", "49-NO SUPPORT", \
                     "50-TURBO64",    "51-TURBO128",   "52-ULTRACART",  "53-LOWBANK_8",  "54-SIC128",     "55-SIC256",     "56-SIC512",     "57-STD2",       "58-STD4",       "59-NO SUPPORT", \
-                    "60-BLIZZARD32", "61-NO SUPPORT", "62-NO SUPPORT", "63-NO SUPPORT", "64-NO SUPPORT", "65-NO SUPPORT", "66-NO SUPPORT", "67-NO SUPPORT", "68-NO SUPPORT", "69-NO SUPPORT", \
-                    "70-NO SUPPORT", "71-NO SUPPORT", "72-NO SUPPORT", "73-NO SUPPORT", "74-NO SUPPORT", "75-ATMAX-NEW",  "76-NO SUPPORT", "77-NO SUPPORT", "78-NO SUPPORT", "79-NO SUPPORT", \
-                    "80-NO SUPPORT", "81-NO SUPPORT", "82-NO SUPPORT", "83-NO SUPPORT", "84-NO SUPPORT", "85-NO SUPPORT", "86-NO SUPPORT", "87-NO SUPPORT", "88-NO SUPPORT", "89-NO SUPPORT", \
+                    "60-BLIZZARD32", "61-NO SUPPORT", "62-NO SUPPORT", "63-NO SUPPORT", "64-NO SUPPORT", "65-NO SUPPORT", "66-NO SUPPORT", "67-NO SUPPORT", "68-NO SUPPORT", "69-ADAWLIAH32", \
+                    "70-ADAWLIAH64", "71-NO SUPPORT", "72-NO SUPPORT", "73-NO SUPPORT", "74-NO SUPPORT", "75-ATMAX-NEW",  "76-WILLIAMS16", "77-NO SUPPORT", "78-NO SUPPORT", "79-NO SUPPORT", \
+                    "80-JRC64",      "81-NO SUPPORT", "82-NO SUPPORT", "83-NO SUPPORT", "84-NO SUPPORT", "85-NO SUPPORT", "86-NO SUPPORT", "87-NO SUPPORT", "88-NO SUPPORT", "89-NO SUPPORT", \
                     "90-NO SUPPORT", "91-NO SUPPORT", "92-NO SUPPORT", "93-NO SUPPORT", "94-NO SUPPORT", "95-NO SUPPORT", "96-NO SUPPORT", "97-NO SUPPORT", "98-NO SUPPORT", "99-NO SUPPORT", \
-                    "100-NO SUPPORT","101-NO SUPPORT","102-NO SUPPORT","103-NO SUPPORT","104-NO SUPPORT","105-NO SUPPORT","106-NO SUPPORT","107-NO SUPPORT","108-NO SUPPORT","109-NO SUPPORT",\
-                    "110-NO SUPPORT","111-NO SUPPORT","112-DCART",     "113-NO SUPPORT","114-NO SUPPORT","115-NO SUPPORT"}
+                    "100-NO SUPPORT","101-NO SUPPORT","102-NO SUPPORT","103-NO SUPPORT","104-JATARI8",   "105-JATARI16",  "106-JATARI32",  "107-JATARI64",  "108-JATARI128","109-JATARI256",\
+                    "110-JATARI512","111-JATARI1024","112-DCART",     "113-NO SUPPORT","114-NO SUPPORT","115-NO SUPPORT"}
 
 const struct options_t Option_Table[2][20] =
 {
@@ -512,6 +519,7 @@ const struct options_t Option_Table[2][20] =
         {"ALPHA BLEND", {"OFF",         "ON"},                              &myConfig.alphaBlend,           OPT_NORMAL, 2,   "TURN THIS ON TO   ",   "BLEND FRAMES. THIS",  "MAKES THE SCREEN  ",  "BRIGHTER ON NON-XL"},
         {"KEY CLICK",   {"ON",          "OFF"},                             &myConfig.key_click_disable,    OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
         {"DISK SPEED",  {"ACCURATE",    "FAST"},                            &myConfig.disk_speedup,         OPT_NORMAL, 2,   "NORMALLY FAST IS  ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK.   ",  "ACCURATE FOR SOME "},
+        {"DISK SFX",    {"DISABLED",    "ENABLED"},                         &myConfig.disk_sound,           OPT_NORMAL, 2,   "ENABLE FOR SOUND  ",   "EFFECTS ON SIO    ",  "ACCESS. OTHERWISE ",  "DISABLED.         "},
         {"EMULATOR TXT",{"OFF",         "ON"},                              &myConfig.emulatorText,         OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
         {"KEYBOARD",    {"800XL STYLE1","800XL STYLE2", "400 STYLE", 
                          "130XE STYLE", "ALPHANUMERIC", "STAR RAIDER"},     &myConfig.keyboard_type,        OPT_NORMAL, 6,   "CHOOSE THE STYLE  ",   "THAT BEST SUITS   ",  "YOUR TASTES.      ",  "                  "},
@@ -772,7 +780,6 @@ void dsChooseOptions(int bOkayToChangePalette)
     }
 
     SetRamSizeAndOS();
-
     install_os();
 
     // Restore original bottom graphic

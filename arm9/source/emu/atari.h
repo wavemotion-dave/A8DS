@@ -118,8 +118,7 @@ extern int disk_readonly[DISK_MAX];
 #define RAM_1088K           1088
 
 
-/* Always call Atari800_InitialiseMachine() after changing machine_type
-   or ram_size! */
+/* Always call Atari800_InitialiseMachine() after changing machine_type or ram_size! */
 
 /* Video system. */
 #define TV_NTSC_SCANLINES   262

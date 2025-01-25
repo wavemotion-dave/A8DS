@@ -508,11 +508,12 @@ void SaveGame(void)
         fwrite(spare_bytes,                     256,                                    1, fp); 
 
         fclose(fp);
+        dsPrintValue(0,0,0, "SAVE OK");
     }
     else dsPrintValue(0,0,0, "ERR ");
     
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    dsPrintValue(0,0,0, "    ");
+    dsPrintValue(0,0,0, "       ");
 }
 
 void LoadGame(void)
