@@ -114,9 +114,22 @@
 #define CART_STD_2          57
 #define CART_STD_4          58
 #define CART_BLIZZARD_32    60
-
+#define CART_ADAWLIAH32     69
+#define CART_ADAWLIAH64     70
 #define CART_ATMAX_NEW_1024 75
+#define CART_WILL_16        76
+#define CART_JRC_64         80
+#define CART_JATARI_8       104 
+#define CART_JATARI_16      105
+#define CART_JATARI_32      106 
+#define CART_JATARI_64      107 
+#define CART_JATARI_128     108 
+#define CART_JATARI_256     109
+#define CART_JATARI_512     110 
+#define CART_JATARI_1024    111 
 #define CART_DCART          112
+
+#define CART_JRC_64i        160
 
 #define CTRL_JOY        1
 #define CTRL_SWAP       2

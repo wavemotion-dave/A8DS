@@ -248,32 +248,6 @@ int Atari800_Exit(int run_monitor)
 }
 
 
-void Atari800_UpdatePatches(void) {
-    switch (machine_type) {
-    case MACHINE_OSA:
-    case MACHINE_OSB:
-        /* Restore unpatched OS */
-        dCopyToMem(atari_os, 0xd800, 0x2800);
-        /* Set patches */
-        ESC_PatchOS();
-        //Devices_UpdatePatches();
-        break;
-    case MACHINE_XLXE:
-        /* Don't patch if OS disabled */
-        if ((PORTB & 1) == 0)
-            break;
-        /* Restore unpatched OS */
-        dCopyToMem(atari_os, 0xc000, 0x1000);
-        dCopyToMem(atari_os + 0x1800, 0xd800, 0x2800);
-        /* Set patches */
-        ESC_PatchOS();
-        //Devices_UpdatePatches();
-        break;
-    default:
-        break;
-    }
-}
-
 void Atari800_Frame() 
 {
     //Devices_Frame();

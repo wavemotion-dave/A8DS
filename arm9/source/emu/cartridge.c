@@ -62,6 +62,7 @@
 #include "cartridge.h"
 #include "memory.h"
 #include "rtime.h"
+#include "esc.h"
 #include "altirra_basic.h"
 
 extern UBYTE ROM_basic[];
@@ -140,8 +141,8 @@ static void set_bank_A0BF(int b)
     }
 }
 
-/* CART_WILL_64 */
-static void set_bank_A0BF_WILL64(int b)
+/* CART_WILL_64, CART_WILL_32, CART_WILL_16 */
+static void set_bank_A0BF_WILLIAMS(int b, int mask)
 {
     if (b != bank) {
         if (b & 0x0008)
@@ -151,8 +152,8 @@ static void set_bank_A0BF_WILL64(int b)
         else
         {
             CartA0BF_Enable();
-            mem_map[0xA] = (cart_image + (b&7)*0x2000) + 0x0000 - 0xA000;
-            mem_map[0xB] = (cart_image + (b&7)*0x2000) + 0x1000 - 0xB000;
+            mem_map[0xA] = (cart_image + (b&mask)*0x2000) + 0x0000 - 0xA000;
+            mem_map[0xB] = (cart_image + (b&mask)*0x2000) + 0x1000 - 0xB000;
         }
         bank = b;
     }
@@ -177,25 +178,6 @@ static void set_bank_A0BF_TURBOSOFT(UBYTE b, UBYTE mask)
     }
 }
 
-
-/* CART_WILL_32 */
-static void set_bank_A0BF_WILL32(int b)
-{
-    if (b != bank)
-    {
-        if (b & 0x0008)
-        {
-            CartA0BF_Disable();
-        }
-        else
-        {
-            CartA0BF_Enable();
-            mem_map[0xA] = (cart_image + (b&3)*0x2000) + 0x0000 - 0xA000;
-            mem_map[0xB] = (cart_image + (b&3)*0x2000) + 0x1000 - 0xB000;
-        }
-        bank = b;
-    }
-}
 
 /* CART_ATMAX_128 */
 static void set_bank_A0BF_ATMAX128(int b)
@@ -234,6 +216,25 @@ void set_bank_A0BF_ATMAX1024(int b)
             mem_map[0xB] = (cart_image + b*0x2000) + 0x1000 - 0xB000;
         }
         bank = b;
+    }
+}
+
+/* CART_JATARI_8 thru CART_JATARI_1024 */
+void set_bank_A0BF_JATARI(int b, int mask)
+{
+    if (b != bank)
+    {
+        if (b & 0x80)
+        {
+            CartA0BF_Disable();
+        }
+        else
+        {
+            CartA0BF_Enable();
+            mem_map[0xA] = (cart_image + (b&mask)*0x2000) + 0x0000 - 0xA000;
+            mem_map[0xB] = (cart_image + (b&mask)*0x2000) + 0x1000 - 0xB000;
+        }
+        bank = (b&mask);
     }
 }
 
@@ -349,8 +350,11 @@ static void set_bank_A0BF_DCART(UBYTE b)
 {
     // We need to move the mini-memory window into place since the CPU emulation tends to do direct 
     // memory access for emulation speed and we can't rely on the Cart_GetByte() being called always.
-    bank = b & 0x3f; // Even if cart becomes disabled, we need the bank number for the 'mini memory' window
-    memcpy(memory+0xD500, cart_image + (bank*0x2000) + 0x1500, 256);
+    if (bank != (b & 0x3f))
+    {
+        bank = b & 0x3f; // Even if cart becomes disabled, we need the bank number for the 'mini memory' window
+        memcpy(memory+0xD500, cart_image + (bank*0x2000) + 0x1500, 256);
+    }
 
     if (b & 0x80)    // High bit disables cart
     {
@@ -362,6 +366,49 @@ static void set_bank_A0BF_DCART(UBYTE b)
         mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
         mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
     }
+}
+
+/* CART_JRC_64 */
+static void set_bank_A0BF_JRC(UBYTE data)
+{
+    bank = (data >> 4) & 0x7; // Bank is selected by the 3 bits in D6...D4
+    if (data & 0x80)    // High bit disables cart
+    {
+        CartA0BF_Disable();
+    }
+    else  // Enable 8K bank in the A000-BFFF memory range
+    {
+        CartA0BF_Enable();
+        mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
+    }
+}
+
+/* CART_JRC_64i */
+static void set_bank_A0BF_JRCi(UBYTE data)
+{
+    static u8 jrc_interleave[] = {7,3,5,1,6,2,4,0};
+    bank = (data >> 4) & 0x7; // Bank is selected by the 3 bits in D6...D4
+    if (data & 0x80)    // High bit disables cart
+    {
+        CartA0BF_Disable();
+    }
+    else  // Enable 8K bank in the A000-BFFF memory range
+    {
+        CartA0BF_Enable();
+        mem_map[0xA] = cart_image + (jrc_interleave[bank]*0x2000) + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + (jrc_interleave[bank]*0x2000) + 0x1000 - 0xB000;
+    }
+}
+
+
+/* CART_ADAWLIAH32, CART_ADAWLIAH64 */
+static void set_bank_ADAWLIAH(UBYTE b)
+{
+    bank = b;
+    CartA0BF_Enable();
+    mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
+    mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
 }
 
 
@@ -702,6 +749,14 @@ void CART_Start(void)
         mem_map[0xB] = cart_image + 0xff000 - 0xB000;
         bank = 0x00;
         break;
+    case CART_JRC_64:
+        Cart809F_Disable();
+        set_bank_A0BF_JRC(0);
+        break;
+    case CART_JRC_64i:
+        Cart809F_Disable();
+        set_bank_A0BF_JRCi(0);
+        break;
     case CART_SIC_128:
         set_bank_SIC(0x00, 0x07);
         break;
@@ -740,12 +795,37 @@ void CART_Start(void)
         CartA0BF_Enable();
         bank = 0;
         for (u32 i=0; i<32; i++) memcpy(cart_image+0x10000+(256*i), cart_image, 256); // Copy initial 256 byte block into unused 8K area
-        mem_map[0xA] = cart_image + 0x10000 - 0xA000;   // First 256 bytes is repeated throughout the memory range
-        mem_map[0xB] = cart_image + 0x11000 - 0xB000;   // First 256 bytes is repeated throughout the memory range
+        mem_map[0xA] = cart_image + 0x10000 - 0xA000;        // First 256 bytes is repeated throughout the memory range
+        mem_map[0xB] = cart_image + 0x11000 - 0xB000;        // First 256 bytes is repeated throughout the memory range
+        memcpy(memory+0xD500, cart_image + (bank*256), 256); // First 256 bytes in the visible window
         break;
+    case CART_ADAWLIAH32:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        bank = 0;
+        set_bank_ADAWLIAH(bank & 0x03);
+        break;
+    case CART_ADAWLIAH64:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        bank = 0;
+        set_bank_ADAWLIAH(bank & 0x07);
+        break;
+    case CART_JATARI_8:
+    case CART_JATARI_16:
+    case CART_JATARI_32:
+    case CART_JATARI_64:
+    case CART_JATARI_128:
+    case CART_JATARI_256:
+    case CART_JATARI_512:
+    case CART_JATARI_1024:
+        set_bank_A0BF_JATARI(0, 0x7f);
+        break;        
     case CART_DCART:
         Cart809F_Disable();
-        set_bank_A0BF_DCART(0); // Bank 0 on power up
+        set_bank_A0BF_DCART(0);     // Bank 0 on power up
+        ESC_UnpatchOS();            // DCART won't work with patched OS
+        myConfig.disk_speedup = 0;  // And Disk Speedup must be off
         break;
 
     default:
@@ -863,10 +943,13 @@ void CART_Access(UWORD addr)
         set_bank_809F(addr & 0x03, 0x6000);
         break;
     case CART_WILL_64:
-        set_bank_A0BF_WILL64(addr);
+        set_bank_A0BF_WILLIAMS(addr, 0x07);
         break;
     case CART_WILL_32:
-        set_bank_A0BF_WILL32(addr);
+        set_bank_A0BF_WILLIAMS(addr, 0x03);
+        break;
+    case CART_WILL_16:
+        set_bank_A0BF_WILLIAMS(addr, 0x01);
         break;
     case CART_EXP_64:
         if ((addr & 0xf0) == 0x70)
@@ -912,6 +995,36 @@ void CART_Access(UWORD addr)
     case CART_TURBOSOFT_128:
         set_bank_A0BF_TURBOSOFT(addr, 0x0f);
         break;
+    case CART_ADAWLIAH32:
+        set_bank_ADAWLIAH(++bank & 0x03);
+        break;
+    case CART_ADAWLIAH64:
+        set_bank_ADAWLIAH(++bank & 0x07);
+        break;
+    case CART_JATARI_8:
+        set_bank_A0BF_JATARI(addr, 0x00);
+        break;
+    case CART_JATARI_16:
+        set_bank_A0BF_JATARI(addr, 0x01);
+        break;
+    case CART_JATARI_32:
+        set_bank_A0BF_JATARI(addr, 0x03);
+        break;
+    case CART_JATARI_64:
+        set_bank_A0BF_JATARI(addr, 0x07);
+        break;
+    case CART_JATARI_128:
+        set_bank_A0BF_JATARI(addr, 0x0f);
+        break;
+    case CART_JATARI_256:
+        set_bank_A0BF_JATARI(addr, 0x1f);
+        break;
+    case CART_JATARI_512:
+        set_bank_A0BF_JATARI(addr, 0x3f);
+        break;
+    case CART_JATARI_1024:
+        set_bank_A0BF_JATARI(addr, 0x7f);
+        break;
     case CART_DCART:
         set_bank_A0BF_DCART(addr & 0xff);
         break;
@@ -950,7 +1063,7 @@ UBYTE CART_GetByte(UWORD addr)
         if ((addr & 0xe0) == 0x00) return cart_sic_data; else return 0xFF;
         break;
     case CART_AST_32:
-        return cart_image[(256 * bank) + (addr&0xff)];
+        return memory[addr]; // We've already moved in the 256 byte mini-window
         break;
     case CART_DCART:
         return memory[addr]; // We've already moved in the 256 byte mini-window
@@ -1083,8 +1196,14 @@ void CART_PutByte(UWORD addr, UBYTE byte)
     case CART_AST_32:
         CartA0BF_Disable();
         bank = (bank+1) & 0x7F;
+        memcpy(memory+0xD500, cart_image + (bank*256), 256);
         break;
-
+    case CART_JRC_64:
+        if ((addr & 0x80) == 0) set_bank_A0BF_JRC(byte);
+        break;        
+    case CART_JRC_64i:
+        if ((addr & 0x80) == 0) set_bank_A0BF_JRCi(byte);
+        break;        
     default:
         CART_Access(addr);
         break;

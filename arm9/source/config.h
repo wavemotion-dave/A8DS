@@ -55,8 +55,8 @@ struct GameSettings_t
     UBYTE fps_setting;
     UBYTE emulatorText;
     UBYTE alphaBlend;
+    UBYTE disk_sound;
     UBYTE spare0;
-    UBYTE spare0a;
     UBYTE spare1;
     UBYTE spare2;
     UBYTE spare3;
@@ -86,7 +86,7 @@ struct GameDatabase_t
     UBYTE                       default_alphaBlend;
     UBYTE                       default_disk_speedup;
     UBYTE                       default_keyMap[8];
-    UBYTE                       default_spare0;
+    UBYTE                       default_disk_sound;
     UBYTE                       default_spare1;
     UBYTE                       default_spare2;
     UBYTE                       default_spare3;

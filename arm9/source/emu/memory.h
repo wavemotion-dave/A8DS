@@ -142,6 +142,18 @@ inline void dCopyToMem(void*from, unsigned int to, unsigned int size)
         } \
     } while (0)
 
+#define SetRAM_Fast(addr1, addr2) do { \
+        int i; \
+        for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
+            writemap[i] = NULL; \
+        } \
+    } while (0)
+#define SetROM_Fast(addr1, addr2) do { \
+        int i; \
+        for (i = (addr1) >> 8; i <= (addr2) >> 8; i++) { \
+            writemap[i] = ROM_PutByte; \
+        } \
+    } while (0)
 
 void MEMORY_InitialiseMachine(void);
 void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval);

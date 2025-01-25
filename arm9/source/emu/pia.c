@@ -76,7 +76,8 @@ UBYTE PIA_IRQ = 0;
 int xe_bank __attribute__((section(".dtcm")))= 0;
 int selftest_enabled = 0;
 
-UBYTE *atari_os = (UBYTE *)(0x06898000+0x4000);
+UBYTE atari_os[0x4000];
+UBYTE *atari_os_pristine = (UBYTE *)(0x06898000+0x4000);    // Steal 16K here of VRAM for pristine (unpatched) OS copy which we can memcpy() back to atari_os[] if needed
 
 void PIA_Initialise(void) {
     PACTL = 0x3f;

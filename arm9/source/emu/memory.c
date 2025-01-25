@@ -64,18 +64,16 @@
 #include "pokeysnd.h"
 #include "util.h"
 
-UBYTE memory[0x10000] __attribute__ ((aligned (0x1000)));               // This is the main Atari 8-bit memory which is 64K in length and we align to a 4K boundary
+UBYTE memory[0x10000]    __attribute__ ((aligned (0x1000)));            // This is the main Atari 8-bit memory which is 64K in length and we align to a 4K boundary
+UBYTE fast_page[0x1000]  __attribute__((section(".dtcm")));             // Fast memory which we will map to a common 4K of main memory (zero page)
+rdfunc readmap[256]      __attribute__((section(".dtcm")));             // The readmap tells the memory fetcher if we should do direct memory read or call a device function instead
+wrfunc writemap[256]     __attribute__((section(".dtcm")));             // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
+UBYTE *atarixe_memory    __attribute__((section(".dtcm"))) = NULL;      // Pointer to XE memory (expanded RAM)
+UBYTE cart809F_enabled   __attribute__((section(".dtcm"))) = FALSE;     // By default, no CART memory mapped to 0x8000 - 0x9FFF
+UBYTE cartA0BF_enabled   __attribute__((section(".dtcm"))) = FALSE;     // By default, no CART memory mapped to 0xA000 - 0xBFFF
+UBYTE *mem_map[20]       __attribute__((section(".dtcm")));             // This is the magic that allows us to index into banks of memory quickly. 16 banks of 4K plus an additional 4 banks to handle the "under 0x8, 0x9, 0xA and 0xB" areas
+
 UBYTE *under_atarixl_os = (UBYTE *)(0x06898000+0x0000);                 // We use 16K of VRAM here as it's a little faster but also to free up normal RAM resources
-
-UBYTE fast_page[0x1000] __attribute__((section(".dtcm")));              // Fast memory which we will map to a common 4K of main memory (zero page)
-
-rdfunc readmap[256] __attribute__((section(".dtcm")));                  // The readmap tells the memory fetcher if we should do direct memory read or call a device function instead
-wrfunc writemap[256] __attribute__((section(".dtcm")));                 // The writemap tells the memory fetcher if we should do direct memory read or call a device function instead
-UBYTE *atarixe_memory __attribute__((section(".dtcm"))) = NULL;         // Pointer to XE memory (expanded RAM)
-
-UBYTE cart809F_enabled __attribute__((section(".dtcm"))) = FALSE;       // By default, no CART memory mapped to 0x8000 - 0x9FFF
-UBYTE cartA0BF_enabled __attribute__((section(".dtcm"))) = FALSE;       // By default, no CART memory mapped to 0xA000 - 0xBFFF
-UBYTE *mem_map[20] __attribute__((section(".dtcm")));                   // This is the magic that allows us to index into banks of memory quickly. 16 banks of 4K plus an additional 4 banks to handle the "under 0x8, 0x9, 0xA and 0xB" areas
 
 // ------------------------------------------------------------------
 // This is the huge 1MB+ buffer to support the maximum expanded RAM 
@@ -195,9 +193,6 @@ void MEMORY_InitialiseMachine(void)
     case MACHINE_OSA:
     case MACHINE_OSB:
         SetAtari800Memory();
-            
-        memcpy(memory + 0xd800, atari_os, 0x2800);
-        ESC_PatchOS();
         dFillMem(0x0000, 0x00, ram_size * 1024 - 1);
         SetRAM(0x0000, ram_size * 1024 - 1);
         if (ram_size < 52) 
@@ -206,13 +201,20 @@ void MEMORY_InitialiseMachine(void)
             SetROM(ram_size * 1024, 0xcfff);
         }
         SetROM(0xd800, 0xffff);
+        memcpy(memory + 0xd800, atari_os + 0x1800, 0x800);
+        mem_map[0xE] = atari_os - 0xc000;
+        mem_map[0xF] = atari_os - 0xc000;
+        ESC_PatchOS();
         break;
             
     case MACHINE_XLXE:
         SetAtariXLXEMemory();
         SetRAM(0x0000, 0xbfff);
         SetROM(0xc000, 0xffff);
-        memcpy(memory + 0xc000, atari_os, 0x4000);
+        mem_map[0xC] = atari_os - 0xc000;
+        memcpy(memory + 0xd800, atari_os + 0x1800, 0x800);
+        mem_map[0xE] = atari_os - 0xc000;
+        mem_map[0xF] = atari_os - 0xc000;
         ESC_PatchOS();
         break;
     }
@@ -353,17 +355,23 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
     } // End of >64K
 
     /* Enable/disable OS ROM in 0xc000-0xcfff and 0xd800-0xffff */
-    if ((oldval ^ byte) & 0x01) {
-        if (byte & 0x01) {
+    if ((oldval ^ byte) & 0x01) 
+    {
+        debug[1]++;
+        if (byte & 0x01) 
+        {
             /* Enable OS ROM */
-            if (ram_size > 48) {
-                memcpy(under_atarixl_os, memory + 0xc000, 0x1000);
-                memcpy(under_atarixl_os + 0x1800, memory + 0xd800, 0x2800);
-                SetROM(0xc000, 0xcfff);
-                SetROM(0xd800, 0xffff);
+            if (ram_size > 48) 
+            {
+                memcpy(under_atarixl_os + 0x1800, memory + 0xd800, 0x800);
+                SetROM_Fast(0xc000, 0xcfff);
+                SetROM_Fast(0xd800, 0xffff);
             }
-            memcpy(memory + 0xc000, atari_os, 0x1000);
-            memcpy(memory + 0xd800, atari_os + 0x1800, 0x2800);
+            
+            mem_map[0xC] = atari_os - 0xc000;
+            memcpy(memory + 0xd800, atari_os + 0x1800, 0x800);
+            mem_map[0xE] = atari_os - 0xc000;
+            mem_map[0xF] = atari_os - 0xc000;
             ESC_PatchOS();
         }
         else 
@@ -371,10 +379,13 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
             /* Disable OS ROM */
             if (ram_size > 48) 
             {
-                memcpy(memory + 0xc000, under_atarixl_os, 0x1000);
-                memcpy(memory + 0xd800, under_atarixl_os + 0x1800, 0x2800);
-                SetRAM(0xc000, 0xcfff);
-                SetRAM(0xd800, 0xffff);
+                mem_map[0xC] = memory;
+                memcpy(memory + 0xd800, under_atarixl_os + 0x1800, 0x800);
+                SetRAM_Fast(0xc000, 0xcfff);
+                SetRAM_Fast(0xd800, 0xffff);
+                mem_map[0xE] = memory;
+                mem_map[0xF] = memory;
+                
             } 
             else 
             {

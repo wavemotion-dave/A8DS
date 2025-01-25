@@ -79,7 +79,8 @@ extern UBYTE PIA_IRQ;
 #define PIA_PORTA PORTA
 #define PIA_PORTB PORTB
 
-extern UBYTE *atari_os;
+extern UBYTE atari_os[0x4000];
+extern UBYTE *atari_os_pristine;
 
 extern void PIA_Initialise(void);
 extern void PIA_Reset(void);

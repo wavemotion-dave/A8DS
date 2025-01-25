@@ -494,7 +494,7 @@ void dsInitScreenMain(void)
     vramSetBankE(VRAM_E_LCD );                // Not using this for video but  64K of faster RAM always useful!  Mapped at 0x06880000 (unused)
     vramSetBankF(VRAM_F_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06890000 (unused)
     vramSetBankG(VRAM_G_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06894000 (unused)
-    vramSetBankH(VRAM_H_LCD );                // Not using this for video but  32K of faster RAM always useful!  Mapped at 0x06898000 (used for Atari OS and shadow/under RAM copy)
+    vramSetBankH(VRAM_H_LCD );                // Not using this for video but  32K of faster RAM always useful!  Mapped at 0x06898000 (16K for Shadow RAM under XL OS and 16K for Pristine OS)
     vramSetBankI(VRAM_I_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x068A0000 (used for GTIA lookup table)
 
     ReadGameSettings();
@@ -714,12 +714,12 @@ void install_os(void)
     }
     else if (myConfig.os_type == OS_ALTIRRA_800)
     {
-        memcpy(atari_os, ROM_altirraos_800, 0x2800);
+        memcpy(atari_os+0x1800, ROM_altirraos_800, 0x2800);
         machine_type = MACHINE_OSB;
     }
     else if (myConfig.os_type == OS_ATARI_OSB)
     {
-        memcpy(atari_os, ROM_atarios_b, 0x2800);
+        memcpy(atari_os+0x1800, ROM_atarios_b, 0x2800);
         machine_type = MACHINE_OSB;
     }
     else // Must be OS_ATARI_XL
@@ -727,6 +727,9 @@ void install_os(void)
         memcpy(atari_os, ROM_atarios_xl, 0x4000);
         machine_type = MACHINE_XLXE;
     }
+    
+    // Keep a clean unpatched copy around in VRAM for restoring as needed...
+    memcpy(atari_os_pristine, atari_os, 0x4000);
 }
 
 // -----------------------------------------------------------
@@ -1858,15 +1861,15 @@ void dsInstallSoundEmuFIFO(void)
     static int last_sound_fifo = -1;
     if (last_sound_fifo == -1)
     {
+        bMute = 0;
         last_sound_fifo = 1;
-        fifoSendValue32(FIFO_USER_01,(1<<16) | SOUND_KILL);
-        *aptr = 0; *bptr=0;
         // We are going to use the 16-bit sound engine so we need to scale up our 8-bit values...
         for (int i=0; i<256; i++)
         {
             sampleExtender[i] = (i << 8);
         }
 
+        memset(sound_buffer, 0x00, sizeof(sound_buffer));
         if (isDSiMode())
         {
             aptr = (u16*) ((u32)&sound_buffer[0] + 0xA000000);
@@ -1907,7 +1910,10 @@ void dsHandleDiskSounds(void)
         {
             if (play_sio_sound_dampen == 0)
             {
-                soundID = soundPlaySample(sio_wav, SoundFormat_16Bit, sio_wav_size, 11025, 101, 64, true, 0);
+                if (myConfig.disk_sound) // Only if sound is enabled...
+                {
+                    soundID = soundPlaySample(sio_wav, SoundFormat_16Bit, sio_wav_size, 11025, 75, 64, true, 0);
+                }
                 play_sio_sound_dampen = 1;
             }
         }

@@ -148,7 +148,7 @@ files (using the XEX/CAR button on the main screen).
 The following cartridge layouts are supported:
 * Standard 2K, 4K, 8K and 16K
 * OSS two chip 16KB, OSS 8K
-* Williams 32K and 64K
+* Williams 16K, 32K and 64K
 * Blizzard 4K, 16K and 32K
 * XEGS/SwXEGS 32K up to 1MB
 * MegaCart 16K up to 1MB
@@ -163,6 +163,10 @@ The following cartridge layouts are supported:
 * Bounty Bob Strikes Back 40K
 * SIC 128K, 256K and 512K
 * Turbosoft 128K and 256K
+* J(Atari) 8K to 1024K
+* aDawliah 32K and 64K
+* JRC64
+* DCART
 
 If you're using cartridge files, it is suggested you use .CAR files which contain type information to properly load up the cartirdge. Bare .ROM files 
 have ambiguities that are not always auto-detected by the emulator and as such will not always load correctly. You can go into the GEAR/Options menu
@@ -306,6 +310,14 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V4.1  : 25-Jan-2025 by wavemotion-dave
+  * Refactor the OS Enable/Disable on XL/XE emulation to avoid moving large blocks of memory. Speeds up many games that swap the OS in/out.
+  * Improved SIO/Disk handling - sound effects reduced in volume and now configurable (default is OFF).
+  * Improved cart/disk loading and all disks are left mounted when RESET is pressed allowing you to load up a system the way you want.
+  * A dozen new .CAR cartridge types supported including DCART (Bubble Bobble homebrew).
+  * Tweak to the TWL++ icon for A8DS to make it look a bit more classic.
+  * Many small cleanups and improvements and a few bug fixes as well.
+
 V4.0  : 20-Jan-2025 by wavemotion-dave
   * Major overhaul to add "Cycle Exact" Antic and GTIA which fixes many glitches and artifacts.
   * There are now two builds... one for the older DS-Phat/Lite and one for the DSi (or XL/LL) which brings in a higher level of compatibility with the "Cycle Exact" timing.

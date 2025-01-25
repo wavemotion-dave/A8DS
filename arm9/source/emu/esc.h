@@ -132,9 +132,6 @@ void ESC_Add(UWORD address, UBYTE esc_code, ESC_FunctionType function);
 /* Puts an escape sequence followed by the RTS instruction. */
 void ESC_AddEscRts(UWORD address, UBYTE esc_code, ESC_FunctionType function);
 
-/* Puts an escape sequence with an integrated RTS. */
-void ESC_AddEscRts2(UWORD address, UBYTE esc_code, ESC_FunctionType function);
-
 /* Unregisters an escape sequence. You must cleanup the Atari memory yourself. */
 void ESC_Remove(UBYTE esc_code);
 
@@ -150,6 +147,8 @@ void ESC_ClearAll(void);
 /* Reinitializes patches after enable_*_patch change. */
 void ESC_UpdatePatches(void);
 
+/* Remove all patches from the OS */
+void ESC_UnpatchOS(void);
 
 extern int CASSETTE_hold_start_on_reboot;
 extern int CASSETTE_hold_start;
