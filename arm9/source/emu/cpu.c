@@ -126,7 +126,6 @@ UBYTE IRQ   __attribute__((section(".dtcm")));
 #define Y  regY
 #define X  regX
 
-
 /* 6502 flags local to this module */
 UBYTE N __attribute__((section(".dtcm")));                   /* bit7 set => N flag set */
 #ifndef NO_V_FLAG_VARIABLE
@@ -241,8 +240,14 @@ void NMI(void)
     }
 
 
+// -------------------------------------------------------------------------
+// The CPU cycles[] table below factors in that a branch will be taken most
+// of the time so the extra cycle is baked in... and if we don't perform the
+// jump, we will compensate by backing off 1 cycle... so don't expect this 
+// table to match 1:1 with a standard 6502 cycle count table.
+// -------------------------------------------------------------------------
 /*  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
-static const int cycles[256] =
+static UBYTE cycles[256] __attribute__((section(".dtcm"))) =
 {
     7, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6,     /* 0x */
     3, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,     /* 1x */
@@ -265,7 +270,7 @@ static const int cycles[256] =
     3, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7      /* Fx */
 };
 
-int __attribute__((noinline))  CPU_Go_Startup(int limit)
+int __attribute__((noinline)) CPU_Go_Startup(int limit)
 {
     if (wsync_halt) {
 #ifdef NEW_CYCLE_EXACT
@@ -305,7 +310,7 @@ ITCM_CODE void GO(int limit)
 {
 #define OPCODE_ALIAS(code)  opcode_##code:
 #define DONE                goto next;
-    static void *opcode[256] __attribute__((section(".dtcm"))) =
+    static const void *opcode[256] __attribute__((section(".dtcm"))) =
     {
         &&opcode_00, &&opcode_01, &&opcode_02, &&opcode_03,
         &&opcode_04, &&opcode_05, &&opcode_06, &&opcode_07,

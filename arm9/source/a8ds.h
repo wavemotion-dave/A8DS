@@ -30,7 +30,7 @@
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
 #define MAX_FILES       1024    // No more than this many files can be processed per directory
-#define MAX_FILENAME    299     // Filenames with full path no longer than this
+#define MAX_FILENAME    249     // Filenames with full path no longer than this
 
 extern unsigned short emu_state; 
 

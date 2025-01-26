@@ -211,9 +211,6 @@ void Warmstart(void);
    You should call Coldstart() after it. */
 int Atari800_InitialiseMachine(void);
 
-/* Reinitializes patches after enable_*_patch change. */
-void Atari800_UpdatePatches(void);
-
 /* Auto-detects file type and returns one of AFILE_* values. */
 int Atari800_DetectFileType(const char *filename);
 

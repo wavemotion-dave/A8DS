@@ -38,7 +38,7 @@ various Atari computer models released over a span of a decade.
 
 A8DS supports 3 optional (but highly recommended) Atari BIOS and BASIC files as follows (with their CRC32):
 
-*  atarixl.rom (0x1f9cd270)   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines (NTSC Rev 02)
+*  atarixl.rom (0x1f9cd270)   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines (NTSC Rev 02 - BB 01.02, 10.May.1983) 
 *  atariosb.rom (0x3e28a1fe)  - this is the 12k Atari 800 OS-B revision BIOS for older games  (NTSC OS-B version 2)
 *  ataribas.rom (0x7d684184)  - this is the 8k Atari BASIC cartridge (Rev C)
 

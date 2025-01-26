@@ -347,11 +347,10 @@ unsigned int screenline_cpu_clock __attribute__((section(".dtcm"))) = 0;
 
 #define OVERSCREEN_LINE xpos += DMAR; GOEOL
 
-int xpos __attribute__((section(".dtcm"))) = 0;
-int xpos_limit __attribute__((section(".dtcm")));
+int xpos         __attribute__((section(".dtcm"))) = 0;
+int xpos_limit   __attribute__((section(".dtcm"))) = 0;
 UBYTE wsync_halt __attribute__((section(".dtcm"))) = FALSE;
-
-int ypos __attribute__((section(".dtcm")));                     /* Line number - lines 8..247 are on screen */
+int ypos         __attribute__((section(".dtcm"))) = 0;         /* Line number - lines 8..247 are on screen */
 
 /* Timing in first line of modes 2-5
 In these modes ANTIC takes more bytes than cycles. Despite this, it would be
@@ -365,10 +364,10 @@ contains difference between bytes taken and cycles taken plus before_cycles. */
 
 /* Light pen support ------------------------------------------------------- */
 
-UBYTE PENH __attribute__((section(".dtcm")));
-UBYTE PENV __attribute__((section(".dtcm")));
-UBYTE PENH_input __attribute__((section(".dtcm")))= 0x00;
-UBYTE PENV_input __attribute__((section(".dtcm")))= 0xff;
+UBYTE PENH          __attribute__((section(".dtcm"))) = 0x00;
+UBYTE PENV          __attribute__((section(".dtcm"))) = 0x00;
+UBYTE PENH_input    __attribute__((section(".dtcm"))) = 0x00;
+UBYTE PENV_input    __attribute__((section(".dtcm"))) = 0xff;
 
 /* Internal ANTIC registers ------------------------------------------------ */
 
@@ -403,8 +402,8 @@ short int extra_cycles[6]   __attribute__((section(".dtcm")));
 short int left_border_chars   __attribute__((section(".dtcm")));
 short int right_border_start  __attribute__((section(".dtcm")));
 #ifdef NEW_CYCLE_EXACT
-static int left_border_start = LCHOP * 4;
-static int right_border_end = (48 - RCHOP) * 4;
+static short int left_border_start = LCHOP * 4;
+static short int right_border_end = (48 - RCHOP) * 4;
 #define LBORDER_START left_border_start
 #define RBORDER_END right_border_end
 #else

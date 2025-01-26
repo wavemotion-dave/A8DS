@@ -199,18 +199,12 @@ UBYTE pm_dirty  __attribute__((section(".dtcm"))) = TRUE;
 #define C_PF2   0x60
 #define C_PF3   0x70
 
-extern UWORD cl_lookup[128];
-
 #define PF0PM (*(UBYTE *) &cl_lookup[C_PF0 | C_COLLS])
 #define PF1PM (*(UBYTE *) &cl_lookup[C_PF1 | C_COLLS])
 #define PF2PM (*(UBYTE *) &cl_lookup[C_PF2 | C_COLLS])
 #define PF3PM (*(UBYTE *) &cl_lookup[C_PF3 | C_COLLS])
 
 /* Colours ----------------------------------------------------------------- */
-
-extern UWORD hires_lookup_l[128] __attribute__((section(".dtcm")));
-extern ULONG lookup_gtia9[16];
-extern ULONG lookup_gtia11[16];
 
 void setup_gtia9_11(void) {
     int i;

@@ -91,22 +91,22 @@ void ROM_PutByte(UWORD addr, UBYTE byte);
 // ---------------------------------------------------------------------------------------
 inline UBYTE dGetByte(UWORD addr)
 {
-    return *(const UBYTE *)(mem_map[addr >> 12] + addr);
-}
-
-inline UBYTE dGetByteFull(UWORD addr)
-{
-    return (readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr));
-}
-
-inline UWORD zGetWord(UWORD addr)
-{
-    return (fast_page[addr] | (fast_page[addr+1]<<8));
+    return mem_map[addr >> 12][addr];
 }
 
 inline void dPutByte(UWORD addr, UBYTE data)
 {
-    *((UBYTE *) mem_map[addr >> 12] + addr) = data;
+    mem_map[addr >> 12][addr] = data;
+}
+
+inline UBYTE dGetByteFull(UWORD addr)
+{
+    return (readmap[addr >> 8] ? (*readmap[addr >> 8])(addr) : dGetByte(addr));
+}
+
+inline UWORD zGetWord(UWORD addr)
+{
+    return (fast_page[addr] | (fast_page[(UBYTE)(addr+1)]<<8));
 }
 
 inline UBYTE *AnticMainMemLookup(unsigned int addr)
@@ -124,8 +124,8 @@ inline void dCopyToMem(void*from, unsigned int to, unsigned int size)
     memcpy(AnticMainMemLookup((unsigned int)to), (UBYTE*)from, size);
 }
 
-#define GetByte(addr)       (readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr) : dGetByte(addr))
-#define PutByte(addr,byte)  (writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : (dPutByte(addr, byte)))
+#define GetByte(addr)       (readmap[(addr) >> 8] ? (*readmap[(addr) >> 8])(addr)         : dGetByte(addr))
+#define PutByte(addr,byte)  (writemap[(addr) >> 8] ? (*writemap[(addr) >> 8])(addr, byte) : dPutByte(addr, byte))
 
 #define SetRAM(addr1, addr2) do { \
         int i; \
