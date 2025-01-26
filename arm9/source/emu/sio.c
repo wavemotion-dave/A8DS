@@ -53,8 +53,9 @@
 #include <string.h>
 #include <math.h>
 
-#include "antic.h"  /* ANTIC_ypos */
 #include "atari.h"
+#include "a8ds.h"
+#include "antic.h"  /* ANTIC_ypos */
 #include "binload.h"
 #include "cpu.h"
 #include "esc.h"
@@ -172,7 +173,7 @@ typedef struct tagvapi_sector_header_t {
 static void *additional_info[SIO_MAX_DRIVES];
 
 SIO_UnitStatus SIO_drive_status[SIO_MAX_DRIVES];
-char SIO_filename[SIO_MAX_DRIVES][FILENAME_MAX];
+char SIO_filename[SIO_MAX_DRIVES][MAX_FILENAME];
 int SIO_last_drive;
 UBYTE CommandFrame[6];
 int CommandIndex = 0;
@@ -212,7 +213,7 @@ int SIO_Mount(int diskno, const char *filename, int b_open_readonly)
     struct AFILE_ATR_Header header;
 
     /* avoid overruns in SIO_filename[] */
-    if (strlen(filename) >= FILENAME_MAX)
+    if (strlen(filename) >= MAX_FILENAME)
         return FALSE;
 
     /* release previous disk */
@@ -817,7 +818,7 @@ int SIO_WriteSector(int unit, int sector, const UBYTE *buffer)
 
 int SIO_FormatDisk(int unit, UBYTE *buffer, int sectsize, int sectcount)
 {
-    char fname[FILENAME_MAX];
+    char fname[MAX_FILENAME];
     int is_atr;
     int save_boot_sectors_type;
     int bootsectsize;
@@ -836,7 +837,7 @@ int SIO_FormatDisk(int unit, UBYTE *buffer, int sectsize, int sectcount)
        We have to close the "rb+" open file and open it in "wb" mode.
        First get the information about the disk image, because we are going
        to umount it. */
-    memcpy(fname, SIO_filename[unit], FILENAME_MAX);
+    memcpy(fname, SIO_filename[unit], MAX_FILENAME);
     is_atr = (image_type[unit] == IMAGE_TYPE_ATR);
     save_boot_sectors_type = boot_sectors_type[unit];
     bootsectsize = 128;
@@ -1573,7 +1574,7 @@ int SIO_GetByte(void)
 #if !defined(BASIC) && !defined(__PLUS)
 int SIO_RotateDisks(void)
 {
-    char tmp_filenames[SIO_MAX_DRIVES][FILENAME_MAX];
+    char tmp_filenames[SIO_MAX_DRIVES][MAX_FILENAME];
     int i;
     int bSuccess = TRUE;
 

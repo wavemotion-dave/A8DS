@@ -51,9 +51,8 @@
 #ifndef SIO_H_
 #define SIO_H_
 
-#include <stdio.h> /* FILENAME_MAX */
-
 #include "atari.h"
+#include "a8ds.h"
 
 #define SIO_MAX_DRIVES 4
 
@@ -76,7 +75,7 @@ typedef enum SIO_tagUnitStatus {
 } SIO_UnitStatus;
 
 extern SIO_UnitStatus SIO_drive_status[SIO_MAX_DRIVES];
-extern char SIO_filename[SIO_MAX_DRIVES][FILENAME_MAX];
+extern char SIO_filename[SIO_MAX_DRIVES][MAX_FILENAME];
 extern int SIO_last_drive;
 extern UBYTE CommandFrame[6];
 extern int CommandIndex;

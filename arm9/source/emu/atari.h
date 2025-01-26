@@ -49,6 +49,9 @@
 #ifndef _ATARI_H_
 #define _ATARI_H_
 
+#include <nds.h>
+#include "printf.h"
+
 // For the improved ANTIC drawing... comes at a emulation speed penalty...
 #define NEW_CYCLE_EXACT
 
@@ -62,7 +65,7 @@
 #define UWORD unsigned short
 #define ULONG unsigned int
 
-#include <stdio.h> /* FILENAME_MAX */
+#include <stdio.h>
 #include "../config.h"
 
 extern int debug[];

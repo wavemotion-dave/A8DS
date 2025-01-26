@@ -19,6 +19,7 @@
 #ifndef _A8DS_H
 #define _A8DS_H
 
+#include <nds.h>
 #include "printf.h"
 
 #define A8_MENUINIT 0x01

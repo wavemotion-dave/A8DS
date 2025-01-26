@@ -23,6 +23,7 @@
 */
 
 #include<stdio.h>
+#include "atari.h"
 #include "cycle_map.h"
 
 int cpu2antic[CPU2ANTIC_SIZE * (17 * 7 + 1)];

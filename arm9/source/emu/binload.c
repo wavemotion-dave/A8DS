@@ -48,9 +48,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include <nds.h>
 #include <stdio.h>
-
 #include "atari.h"
+#include "a8ds.h"
 #include "binload.h"
 #include "cpu.h"
 #include "esc.h"

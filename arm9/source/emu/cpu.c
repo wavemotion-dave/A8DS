@@ -417,7 +417,11 @@ ITCM_CODE void GO(int limit)
 // A jump to the next instruction will land us here just before the test on xpos
 next:
 
+#ifdef NEW_CYCLE_EXACT
     if (xpos < xpos_limit)
+#else    
+    if (xpos < limit)
+#endif
     {
         insn = GET_CODE_BYTE();
         xpos += cycles[insn];

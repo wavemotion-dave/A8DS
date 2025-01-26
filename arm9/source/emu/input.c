@@ -44,9 +44,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <stdio.h>
 #include <string.h>
-#include "antic.h"
 #include "atari.h"
+#include "a8ds.h"
+#include "antic.h"
 #include "esc.h"
 #include "cartridge.h"
 #include "cpu.h"
