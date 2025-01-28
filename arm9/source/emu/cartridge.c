@@ -935,6 +935,7 @@ void CART_Start(void)
         else 
         {
             CartA0BF_Disable();
+            memset(memory+0x8000, 0xFF, 0x2000);   // Just clear out anything in this slot...
         }
         break;
         

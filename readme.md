@@ -168,6 +168,8 @@ The following cartridge layouts are supported:
 * aDawliah 32K and 64K
 * JRC64
 * DCART
+* Right-side 4K and 8K
+* Atari 5200 Carts up to 32K
 
 If you're using cartridge files, it is suggested you use .CAR files which contain type information to properly load up the cartirdge. Bare .ROM files 
 have ambiguities that are not always auto-detected by the emulator and as such will not always load correctly. You can go into the GEAR/Options menu
@@ -316,6 +318,7 @@ V4.2  : ??-Feb-2025 by wavemotion-dave
   * Added Atari 5200 cart support for carts of 32K or less.
   * Added new key maps for SHIFT and CONTROL to NDS keys.
   * Massive simplification of the configuration handling for machine type.
+  * New NTSC and PAL color palettes from the awesome Trebor Pro Pack.
 
 V4.1  : 25-Jan-2025 by wavemotion-dave
   * Refactor the OS Enable/Disable on XL/XE emulation to avoid moving large blocks of memory. Speeds up many games that swap the OS in/out.
