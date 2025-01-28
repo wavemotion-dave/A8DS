@@ -91,10 +91,10 @@ void InitGameSettings(void)
     GameDB.default_disk_sound         = 0;                    // No SIO sound
     GameDB.default_keyMap[DB_KEY_A]   = 0;                    // Fire button
     GameDB.default_keyMap[DB_KEY_B]   = 0;                    // Fire button
-    GameDB.default_keyMap[DB_KEY_X]   = 63;                   // VERTICAL-
+    GameDB.default_keyMap[DB_KEY_X]   = 65;                   // VERTICAL-
     GameDB.default_keyMap[DB_KEY_Y]   = 14;                   // SPACE BAR
-    GameDB.default_keyMap[DB_KEY_L]   = 70;                   // Scale X,Y
-    GameDB.default_keyMap[DB_KEY_R]   = 69;                   // Offset X,Y
+    GameDB.default_keyMap[DB_KEY_L]   = 72;                   // Scale X,Y
+    GameDB.default_keyMap[DB_KEY_R]   = 71;                   // Offset X,Y
     GameDB.default_keyMap[DB_KEY_STA] = 10;                   // START
     GameDB.default_keyMap[DB_KEY_SEL] = 11;                   // SELECT
     GameDB.db_version = GAME_DATABASE_VERSION;
@@ -428,9 +428,9 @@ struct options_t
                       "CONSOLE START", "CONSOLE SEL", "CONSOLE OPT", "CONSOLE HELP", "KEY SPACE", "KEY RETURN", "KEY ESC", "KEY BREAK",                             \
                       "KEY A", "KEY B", "KEY C", "KEY D", "KEY E", "KEY F", "KEY G", "KEY H", "KEY I", "KEY J", "KEY K", "KEY L", "KEY M", "KEY N", "KEY O",        \
                       "KEY P", "KEY Q", "KEY R", "KEY S", "KEY T", "KEY U", "KEY V", "KEY W", "KEY X", "KEY Y", "KEY Z", "KEY 0", "KEY 1", "KEY 2", "KEY 3",        \
-                      "KEY 4", "KEY 5", "KEY 6", "KEY 7", "KEY 8", "KEY 9", "KEY UP", "KEY DOWN", "KEY LEFT", "KEY RIGHT", "KEY SPARE1", "KEY SPARE2",              \
-                      "KEY SPARE3", "VERTICAL+", "VERTICAL++", "VERTICAL-", "VERTICAL--", "HORIZONTAL+", "HORIZONTAL++", "HORIZONTAL-", "HORIZONTAL--",             \
-                      "OFFSET DPAD", "SCALE DPAD", "ZOOM SCREEN"}
+                      "KEY 4", "KEY 5", "KEY 6", "KEY 7", "KEY 8", "KEY 9", "KEY UP", "KEY DOWN", "KEY LEFT", "KEY RIGHT", "SHIFT", "CONTROL",                      \
+                      "KEY SPARE1", "KEY SPARE2", "KEY SPARE3", "VERTICAL+", "VERTICAL++", "VERTICAL-", "VERTICAL--", "HORIZONTAL+", "HORIZONTAL++", "HORIZONTAL-", \
+                       "HORIZONTAL--", "OFFSET DPAD", "SCALE DPAD", "ZOOM SCREEN"}
 
 #define CART_TYPES {"00-NONE",       "01-STD8",       "02-STD16",      "03-OSS16-034M", "04-5200 32K",   "05-DB32",       "06-5200 16-EE", "07-NO SUPPORT", "08-WILLIAMS64", "09-EXP64",      \
                     "10-DIAMOND64",  "11-SDX64",      "12-XEGS32",     "13-XEGS64",     "14-XEGS128",    "15-OSS16",      "16-5200 16-NS", "17-ATRAX128",   "18-BOUNTY BOB", "19-5200 8K",    \

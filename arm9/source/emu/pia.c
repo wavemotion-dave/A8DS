@@ -79,7 +79,8 @@ int selftest_enabled = 0;
 UBYTE atari_os[0x4000];
 UBYTE *atari_os_pristine = (UBYTE *)(0x06898000+0x4000);    // Steal 16K here of VRAM for pristine (unpatched) OS copy which we can memcpy() back to atari_os[] if needed
 
-void PIA_Initialise(void) {
+void PIA_Initialise(void) 
+{
     PACTL = 0x3f;
     PBCTL = 0x3f;
     PORTA = 0xff;
@@ -97,7 +98,8 @@ void PIA_Initialise(void) {
     PIA_CB2_pospending = 0;
 }
 
-void PIA_Reset(void) {
+void PIA_Reset(void) 
+{
     PORTA = 0xff;
     if (myConfig.machine_type >= MACHINE_XLXE_64K) 
     {

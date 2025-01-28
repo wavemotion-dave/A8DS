@@ -88,30 +88,6 @@ UBYTE xe_mem_buffer[1024 * 1024]; // Expanded banks are 1..64 but we subtract on
 
 void ROM_PutByte(UWORD addr, UBYTE value) {}
 
-// -----------------------------------------------------------
-// Force 48k and remove any XE memory buffers...
-// This is stock Atari 800 for base compatibility of games...
-// -----------------------------------------------------------
-static void SetAtari800Memory(void)
-{
-    atarixe_memory = NULL;
-}
-
-// -----------------------------------------------------------
-// Force 16k and remove any XE memory buffers...
-// -----------------------------------------------------------
-static void SetAtari5200Memory(void)
-{
-    atarixe_memory = NULL;
-}
-
-// ------------------------------------------------------------
-// XL/XE has a number of supported memories from 48K to 1088K
-// ------------------------------------------------------------
-static void SetAtariXLXEMemory(void)
-{
-}
-
 // ----------------------------------------------------------------------------------------------
 // Note: We support several memory configurations for XE... Standard 130XE compatible 128K and
 // the RAMBO 320K, COMPY 576K or RAMBO 1088K.  There is also a backwards compatible 48K option.
@@ -174,30 +150,21 @@ void MEMORY_InitialiseMachine(void)
     switch (myConfig.machine_type) 
     {
     case MACHINE_800_48K:
-        SetAtari800Memory();
-        dFillMem(0x0000, 0x00, RAM_SIZES[myConfig.machine_type] * 1024 - 1);
-        SetRAM(0x0000, RAM_SIZES[myConfig.machine_type] * 1024 - 1);
-        if (RAM_SIZES[myConfig.machine_type] < 52) 
-        {
-            dFillMem(RAM_SIZES[myConfig.machine_type] * 1024, 0xff, 0xd000 - RAM_SIZES[myConfig.machine_type] * 1024);
-            SetROM(RAM_SIZES[myConfig.machine_type] * 1024, 0xcfff);
-        }
-        SetROM(0xd800, 0xffff);
-        memcpy(memory + 0xd800, atari_os + 0x1800, 0x800);
-        mem_map[0xE] = atari_os - 0xc000;
-        mem_map[0xF] = atari_os - 0xc000;
+        atarixe_memory = NULL;
+        SetRAM(0x0000, 0xbfff);
+        SetROM(0xc000, 0xffff);
+        memcpy(memory + 0xc000, atari_os, 0x4000); // Only the upper 10K of this has OS... the rest is 0xFF
         ESC_PatchOS();
         break;
             
     case MACHINE_5200:
-        SetAtari5200Memory();
+        atarixe_memory = NULL;
         SetRAM(0x0000, 0x3fff);
         SetROM(0x4000, 0xffff);
         memcpy(memory+0xf800, atari_os + 0x3800, 0x800);
         break;
 
     default: // All of the XL/XE machine types
-        SetAtariXLXEMemory();
         SetRAM(0x0000, 0xbfff);
         SetROM(0xc000, 0xffff);
         mem_map[0xC] = atari_os - 0xc000;
@@ -231,10 +198,16 @@ void MEMORY_InitialiseMachine(void)
         readmap[0xce] = GTIA_GetByte;
         readmap[0xcf] = GTIA_GetByte;
         
-        readmap[0xd1] = PBI_GetByte;
         readmap[0xd4] = ANTIC_GetByte;
-        readmap[0xd5] = CART_GetByte;
+        
         readmap[0xe8] = POKEY_GetByte;
+        readmap[0xe9] = POKEY_GetByte;
+        readmap[0xea] = POKEY_GetByte;
+        readmap[0xeb] = POKEY_GetByte;
+        readmap[0xec] = POKEY_GetByte;
+        readmap[0xed] = POKEY_GetByte;
+        readmap[0xee] = POKEY_GetByte;
+        readmap[0xef] = POKEY_GetByte;
         
         writemap[0xc0] = GTIA_PutByte;
         writemap[0xc1] = GTIA_PutByte;
@@ -253,10 +226,17 @@ void MEMORY_InitialiseMachine(void)
         writemap[0xce] = GTIA_PutByte;
         writemap[0xcf] = GTIA_PutByte;
         
-        writemap[0xd1] = PBI_PutByte;
         writemap[0xd4] = ANTIC_PutByte;
-        writemap[0xd5] = CART_PutByte;
+        
         writemap[0xe8] = POKEY_PutByte;
+        writemap[0xe9] = POKEY_PutByte;
+        writemap[0xea] = POKEY_PutByte;
+        writemap[0xeb] = POKEY_PutByte;
+        writemap[0xec] = POKEY_PutByte;
+        writemap[0xed] = POKEY_PutByte;
+        writemap[0xee] = POKEY_PutByte;
+        writemap[0xef] = POKEY_PutByte;
+        
     }
     else
     {

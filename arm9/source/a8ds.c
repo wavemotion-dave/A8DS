@@ -100,6 +100,11 @@ char file_load_id[12];                      // Some user text to indicate if we 
 u8   file_load_idx = 0;                     // To help us know if we are loading disk 1 or disk 2
 bool bLoadAndBoot = true;                   // Force the system to reboot - only for XEX and DISK_1
 
+u8 manual_shift = 0;
+u8 manual_shift_now = 0;
+u8 manual_ctrl  = 0;
+u8 manual_ctrl_now = 0;
+
 #define MAX_DEBUG 16
 int debug[MAX_DEBUG]={0};                   // Turn on DEBUG_DUMP to output some data to the lower screen... useful for emulator debug: just drop values into debug[] array.
 u8 DEBUG_DUMP = 0;                          // Pressing X and then A to select a game will enable the debugger output... it's not much but it's useful!
@@ -1460,76 +1465,78 @@ static u8 keyboard_debounce=0;
 int dsHandleKeyboard(int Tx, int Ty)
 {
     int keyPress = AKEY_NONE;
+    
+    u8  local_shift = (shift | manual_shift);
 
     if (Ty <= 8) return AKEY_NONE;
 
     if (Ty > 14 && Ty < 49)       // Top Row 0-9
     {
         if (Tx < 3) keyPress = AKEY_NONE;
-        else if (Tx <  23) keyPress = (shift ? AKEY_EXCLAMATION : AKEY_1);
-        else if (Tx <  41) keyPress = (shift ? AKEY_DBLQUOTE    : AKEY_2);
-        else if (Tx <  60) keyPress = (shift ? AKEY_HASH        : AKEY_3);
-        else if (Tx <  77) keyPress = (shift ? AKEY_DOLLAR      : AKEY_4);
-        else if (Tx <  98) keyPress = (shift ? AKEY_PERCENT     : AKEY_5);
-        else if (Tx < 117) keyPress = (shift ? AKEY_AMPERSAND   : AKEY_6);
-        else if (Tx < 136) keyPress = (shift ? AKEY_QUOTE       : AKEY_7);
-        else if (Tx < 155) keyPress = (shift ? AKEY_AT          : AKEY_8);
-        else if (Tx < 174) keyPress = (shift ? AKEY_PARENLEFT   : AKEY_9);
-        else if (Tx < 193) keyPress = (shift ? AKEY_PARENRIGHT  : AKEY_0);
-        else if (Tx < 212) keyPress = (shift ? AKEY_CLEAR       : AKEY_LESS);
-        else if (Tx < 231) keyPress = (shift ? AKEY_INSERT_CHAR : AKEY_GREATER);
-        else if (Tx < 250) keyPress = (shift ? AKEY_DELETE_CHAR : AKEY_BACKSPACE);
+        else if (Tx <  23) keyPress = (local_shift ? AKEY_EXCLAMATION : AKEY_1);
+        else if (Tx <  41) keyPress = (local_shift ? AKEY_DBLQUOTE    : AKEY_2);
+        else if (Tx <  60) keyPress = (local_shift ? AKEY_HASH        : AKEY_3);
+        else if (Tx <  77) keyPress = (local_shift ? AKEY_DOLLAR      : AKEY_4);
+        else if (Tx <  98) keyPress = (local_shift ? AKEY_PERCENT     : AKEY_5);
+        else if (Tx < 117) keyPress = (local_shift ? AKEY_AMPERSAND   : AKEY_6);
+        else if (Tx < 136) keyPress = (local_shift ? AKEY_QUOTE       : AKEY_7);
+        else if (Tx < 155) keyPress = (local_shift ? AKEY_AT          : AKEY_8);
+        else if (Tx < 174) keyPress = (local_shift ? AKEY_PARENLEFT   : AKEY_9);
+        else if (Tx < 193) keyPress = (local_shift ? AKEY_PARENRIGHT  : AKEY_0);
+        else if (Tx < 212) keyPress = (local_shift ? AKEY_CLEAR       : AKEY_LESS);
+        else if (Tx < 231) keyPress = (local_shift ? AKEY_INSERT_CHAR : AKEY_GREATER);
+        else if (Tx < 250) keyPress = (local_shift ? AKEY_DELETE_CHAR : AKEY_BACKSPACE);
     }
     else if (Ty < 85)  // Row QWERTY
     {
         if (Tx < 14) keyPress = AKEY_NONE;
-        else if (Tx <  33) keyPress = (shift ? AKEY_Q : AKEY_q);
-        else if (Tx <  52) keyPress = (shift ? AKEY_W : AKEY_w);
-        else if (Tx <  71) keyPress = (shift ? AKEY_E : AKEY_e);
-        else if (Tx <  90) keyPress = (shift ? AKEY_R : AKEY_r);
-        else if (Tx < 109) keyPress = (shift ? AKEY_T : AKEY_t);
-        else if (Tx < 128) keyPress = (shift ? AKEY_Y : AKEY_y);
-        else if (Tx < 147) keyPress = (shift ? AKEY_U : AKEY_u);
-        else if (Tx < 166) keyPress = (shift ? AKEY_I : AKEY_i);
-        else if (Tx < 185) keyPress = (shift ? AKEY_O : AKEY_o);
-        else if (Tx < 204) keyPress = (shift ? AKEY_P : AKEY_p);
-        else if (Tx < 223) keyPress = (shift ? AKEY_UNDERSCORE : AKEY_MINUS);
-        else if (Tx < 242) keyPress = (shift ? AKEY_BAR : AKEY_EQUAL);
+        else if (Tx <  33) keyPress = (local_shift ? AKEY_Q : AKEY_q);
+        else if (Tx <  52) keyPress = (local_shift ? AKEY_W : AKEY_w);
+        else if (Tx <  71) keyPress = (local_shift ? AKEY_E : AKEY_e);
+        else if (Tx <  90) keyPress = (local_shift ? AKEY_R : AKEY_r);
+        else if (Tx < 109) keyPress = (local_shift ? AKEY_T : AKEY_t);
+        else if (Tx < 128) keyPress = (local_shift ? AKEY_Y : AKEY_y);
+        else if (Tx < 147) keyPress = (local_shift ? AKEY_U : AKEY_u);
+        else if (Tx < 166) keyPress = (local_shift ? AKEY_I : AKEY_i);
+        else if (Tx < 185) keyPress = (local_shift ? AKEY_O : AKEY_o);
+        else if (Tx < 204) keyPress = (local_shift ? AKEY_P : AKEY_p);
+        else if (Tx < 223) keyPress = (local_shift ? AKEY_UNDERSCORE : AKEY_MINUS);
+        else if (Tx < 242) keyPress = (local_shift ? AKEY_BAR : AKEY_EQUAL);
     }
     else if (Ty < 121)  // Home Row ASDF-JKL;
     {
         if (Tx < 19)       keyPress = AKEY_TAB;
-        else if (Tx <  38) keyPress = (shift ? AKEY_A : AKEY_a);
-        else if (Tx <  57) keyPress = (shift ? AKEY_S : AKEY_s);
-        else if (Tx <  76) keyPress = (shift ? AKEY_D : AKEY_d);
-        else if (Tx <  95) keyPress = (shift ? AKEY_F : AKEY_f);
-        else if (Tx < 114) keyPress = (shift ? AKEY_G : AKEY_g);
-        else if (Tx < 133) keyPress = (shift ? AKEY_H : AKEY_h);
-        else if (Tx < 152) keyPress = (shift ? AKEY_J : AKEY_j);
-        else if (Tx < 171) keyPress = (shift ? AKEY_K : AKEY_k);
-        else if (Tx < 190) keyPress = (shift ? AKEY_L : AKEY_l);
-        else if (Tx < 209) keyPress = (shift ? AKEY_COLON : AKEY_SEMICOLON);
-        else if (Tx < 228) keyPress = (shift ? AKEY_BACKSLASH : AKEY_PLUS);
-        else if (Tx < 247) keyPress = (shift ? AKEY_CARET : AKEY_ASTERISK);
+        else if (Tx <  38) keyPress = (local_shift ? AKEY_A : AKEY_a);
+        else if (Tx <  57) keyPress = (local_shift ? AKEY_S : AKEY_s);
+        else if (Tx <  76) keyPress = (local_shift ? AKEY_D : AKEY_d);
+        else if (Tx <  95) keyPress = (local_shift ? AKEY_F : AKEY_f);
+        else if (Tx < 114) keyPress = (local_shift ? AKEY_G : AKEY_g);
+        else if (Tx < 133) keyPress = (local_shift ? AKEY_H : AKEY_h);
+        else if (Tx < 152) keyPress = (local_shift ? AKEY_J : AKEY_j);
+        else if (Tx < 171) keyPress = (local_shift ? AKEY_K : AKEY_k);
+        else if (Tx < 190) keyPress = (local_shift ? AKEY_L : AKEY_l);
+        else if (Tx < 209) keyPress = (local_shift ? AKEY_COLON : AKEY_SEMICOLON);
+        else if (Tx < 228) keyPress = (local_shift ? AKEY_BACKSLASH : AKEY_PLUS);
+        else if (Tx < 247) keyPress = (local_shift ? AKEY_CARET : AKEY_ASTERISK);
     }
     else if (Ty < 157)  // ZXCV Row
     {
         if (Tx < 30)       keyPress = AKEY_CTRL;
-        else if (Tx <  49) keyPress = (shift ? AKEY_Z : AKEY_z);
-        else if (Tx <  68) keyPress = (shift ? AKEY_X : AKEY_x);
-        else if (Tx <  87) keyPress = (shift ? AKEY_C : AKEY_c);
-        else if (Tx < 106) keyPress = (shift ? AKEY_V : AKEY_v);
-        else if (Tx < 125) keyPress = (shift ? AKEY_B : AKEY_b);
-        else if (Tx < 144) keyPress = (shift ? AKEY_N : AKEY_n);
-        else if (Tx < 163) keyPress = (shift ? AKEY_M : AKEY_m);
-        else if (Tx < 182) keyPress = (shift ? AKEY_BRACKETLEFT : AKEY_COMMA);
-        else if (Tx < 201) keyPress = (shift ? AKEY_BRACKETRIGHT : AKEY_FULLSTOP);
-        else if (Tx < 220) keyPress = (shift ? AKEY_QUESTION : AKEY_SLASH);
+        else if (Tx <  49) keyPress = (local_shift ? AKEY_Z : AKEY_z);
+        else if (Tx <  68) keyPress = (local_shift ? AKEY_X : AKEY_x);
+        else if (Tx <  87) keyPress = (local_shift ? AKEY_C : AKEY_c);
+        else if (Tx < 106) keyPress = (local_shift ? AKEY_V : AKEY_v);
+        else if (Tx < 125) keyPress = (local_shift ? AKEY_B : AKEY_b);
+        else if (Tx < 144) keyPress = (local_shift ? AKEY_N : AKEY_n);
+        else if (Tx < 163) keyPress = (local_shift ? AKEY_M : AKEY_m);
+        else if (Tx < 182) keyPress = (local_shift ? AKEY_BRACKETLEFT : AKEY_COMMA);
+        else if (Tx < 201) keyPress = (local_shift ? AKEY_BRACKETRIGHT : AKEY_FULLSTOP);
+        else if (Tx < 220) keyPress = (local_shift ? AKEY_QUESTION : AKEY_SLASH);
         else if (Tx < 255) keyPress = AKEY_RETURN;
     }
     else if (Ty < 192)  // Spacebar Row
     {
-        if (Tx <  27) keyPress = AKEY_EXIT;
+        if (Tx <  27)      keyPress = AKEY_EXIT;
         else if (Tx <  46) keyPress = AKEY_ESCAPE;
         else if (Tx <  66) keyPress = AKEY_SHFT;
         else if (Tx < 200) keyPress = AKEY_SPACE;
@@ -1538,21 +1545,15 @@ int dsHandleKeyboard(int Tx, int Ty)
         else if (Tx < 255) keyPress = AKEY_BREAK;
     }
 
+    if (manual_ctrl) keyPress |= AKEY_CTRL;
+
     if (keyPress == AKEY_SHFT)
     {
         if ( !keyboard_debounce )   // To prevent from toggling so quickly...
         {
             keyboard_debounce=15;
-            if (shift == 0)
-            {
-                shift = 1;
-                dsPrintValue(0,0,0, "SHF");
-            }
-            else
-            {
-                shift = 0;
-                dsPrintValue(0,0,0, "   ");
-            }
+            shift ^= 1;
+            dsPrintValue(0,0,0, (ctrl ? "SFT":"   "));
         }
         keyPress = AKEY_NONE;
     }
@@ -2015,7 +2016,7 @@ void dsMainLoop(void)
         stick1 = STICK_CENTRE;
 
         if (keyboard_debounce > 0) keyboard_debounce--;
-
+        
         // ------------------------------------------------------
         // Check if the touch screen pressed and handle it...
         // ------------------------------------------------------
@@ -2346,19 +2347,22 @@ void dsMainLoop(void)
                     case 55: key_code = AKEY_DOWN;          break;
                     case 56: key_code = AKEY_LEFT;          break;
                     case 57: key_code = AKEY_RIGHT;         break;
-                    case 58: key_code = AKEY_NONE;          break;
-                    case 59: key_code = AKEY_NONE;          break;
-                    case 60: key_code = AKEY_NONE;          break;
+                    case 58: manual_shift_now = 1;          break;
+                    case 59: manual_ctrl_now = 1;           break;
+                    
+                    case 60: key_code = AKEY_NONE;          break;      // Spare 1
+                    case 61: key_code = AKEY_NONE;          break;      // Spare 2
+                    case 62: key_code = AKEY_NONE;          break;      // Spare 3
 
-                    case 61: screen_slide_y = 12;  dampen_slide_y = 6;     break;
-                    case 62: screen_slide_y = 24;  dampen_slide_y = 6;     break;
-                    case 63: screen_slide_y = -12; dampen_slide_y = 6;     break;
-                    case 64: screen_slide_y = -24; dampen_slide_y = 6;     break;
-                    case 65: screen_slide_x = 32;  dampen_slide_x = 6;     break;
-                    case 66: screen_slide_x = 64;  dampen_slide_x = 6;     break;
-                    case 67: screen_slide_x = -32; dampen_slide_x = 6;     break;
-                    case 68: screen_slide_x = -64; dampen_slide_x = 6;     break;
-                    case 69:
+                    case 63: screen_slide_y = 12;  dampen_slide_y = 6;     break;
+                    case 64: screen_slide_y = 24;  dampen_slide_y = 6;     break;
+                    case 65: screen_slide_y = -12; dampen_slide_y = 6;     break;
+                    case 66: screen_slide_y = -24; dampen_slide_y = 6;     break;
+                    case 67: screen_slide_x = 32;  dampen_slide_x = 6;     break;
+                    case 68: screen_slide_x = 64;  dampen_slide_x = 6;     break;
+                    case 69: screen_slide_x = -32; dampen_slide_x = 6;     break;
+                    case 70: screen_slide_x = -64; dampen_slide_x = 6;     break;
+                    case 71:
                         if (gTotalAtariFrames & 1)  // Every other frame...
                         {
                             if ((keys_pressed & KEY_UP))    myConfig.yOffset++;
@@ -2367,7 +2371,7 @@ void dsMainLoop(void)
                             if ((keys_pressed & KEY_RIGHT)) myConfig.xOffset--;
                         }
                         break;
-                    case 70:
+                    case 72:
                         if (gTotalAtariFrames & 1)  // Every other frame...
                         {
                             if ((keys_pressed & KEY_UP))     if (myConfig.yScale <= 256) myConfig.yScale++;
@@ -2376,12 +2380,18 @@ void dsMainLoop(void)
                             if ((keys_pressed & KEY_LEFT))   if (myConfig.xScale >= 192) myConfig.xScale--;
                         }
                         break;
-                    case 71:
+                    case 73:
                         dsZoomScreen();
                         break;
                 }
             }
         }
+        
+        manual_shift = manual_shift_now; 
+        manual_shift_now = 0;
+    
+        manual_ctrl = manual_ctrl_now; 
+        manual_ctrl_now = 0;
         
         // For the 5200 machine emulation, we map some of the XL/XE keys to 5200 equivalents... good enough
         if (myConfig.machine_type == MACHINE_5200)
@@ -2544,6 +2554,10 @@ void a8FindFiles(void)
       strcpy(filenametmp,pent->d_name);
       if (pent->d_type == DT_DIR)
       {
+        // Filter out the emulator directories from the list
+        if (strcasecmp(filenametmp, "SAV") == 0) continue;
+        if (strcasecmp(filenametmp, "sav") == 0) continue;
+          
         if (!( (filenametmp[0] == '.') && (strlen(filenametmp) == 1))) {
           a8romlist[count8bit].directory = true;
           strcpy(a8romlist[count8bit].filename,filenametmp);
@@ -2552,10 +2566,6 @@ void a8FindFiles(void)
       }
       else
       {
-          // Filter out the emulator directories from the list
-          if (strcasecmp(filenametmp, "SAV") == 0) continue;
-          if (strcasecmp(filenametmp, "sav") == 0) continue;
-          
           if (strcmp(file_load_id,"D2")!=0)      // For D2: we don't load .xex
           {
               if ( (strcasecmp(strrchr(filenametmp, '.'), ".xex") == 0) )  {

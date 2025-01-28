@@ -38,9 +38,10 @@ various Atari computer models released over a span of a decade.
 
 A8DS supports 3 optional (but highly recommended) Atari BIOS and BASIC files as follows (with their CRC32):
 
-*  atarixl.rom (0x1f9cd270)   - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines (NTSC Rev 02 - BB 01.02, 10.May.1983) 
+*  atarixl.rom  (0x1f9cd270)  - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines (NTSC Rev 02 - BB 01.02, 10.May.1983) 
 *  atariosb.rom (0x3e28a1fe)  - this is the 12k Atari 800 OS-B revision BIOS for older games  (NTSC OS-B version 2)
 *  ataribas.rom (0x7d684184)  - this is the 8k Atari BASIC cartridge (Rev C)
+*  a5200.rom    (0x4248d3e3)  - this is the 2k Atari 5200 BIOS ROM
 
 You can use other versions of these BIOS files, but these are the ones that I'm testing/running with.
 
@@ -309,6 +310,13 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
+V4.2  : ??-Feb-2025 by wavemotion-dave
+  * Fixed Turbo 128K cart type so it doesn't inadvertently disable the cartridge port.
+  * Added Right-Side cart support for Atari800.
+  * Added Atari 5200 cart support for carts of 32K or less.
+  * Added new key maps for SHIFT and CONTROL to NDS keys.
+  * Massive simplification of the configuration handling for machine type.
+
 V4.1  : 25-Jan-2025 by wavemotion-dave
   * Refactor the OS Enable/Disable on XL/XE emulation to avoid moving large blocks of memory. Speeds up many games that swap the OS in/out.
   * Improved SIO/Disk handling - sound effects reduced in volume and now configurable (default is OFF).

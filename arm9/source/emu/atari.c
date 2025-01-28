@@ -106,11 +106,11 @@ void Coldstart(void)
 
     /* set Atari OS Coldstart flag */
     dPutByte(0x244, 1);
-    /* handle Option key (disable BASIC in XL/XE)
-       and Start key (boot from cassette) */
+    /* handle Option key (disable BASIC in XL/XE) and Start key (boot from cassette) */
     consol_index = 2;
     consol_table[2] = 0x0f;
-    if (disable_basic && !BINLOAD_loading_basic) {
+    if ((myConfig.machine_type >= MACHINE_XLXE_64K) && disable_basic && !BINLOAD_loading_basic)
+    {
         /* hold Option during reboot */
         consol_table[2] &= ~CONSOL_OPTION;
     }

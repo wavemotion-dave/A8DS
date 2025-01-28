@@ -70,7 +70,8 @@ extern UBYTE ROM_basic[];
 
 UBYTE cart_image[CART_MAX_SIZE];    // Big enough to hold the largest carts we support ... 1MB
 UBYTE cart_header[16];
-int bank __attribute__((section(".dtcm")));
+
+int bank            __attribute__((section(".dtcm"))) = 0;
 UBYTE cart_sic_data __attribute__((section(".dtcm"))) = 0x00;
 UWORD last_bb1_bank __attribute__((section(".dtcm"))) = 1;
 UWORD last_bb2_bank __attribute__((section(".dtcm"))) = 5;
@@ -492,7 +493,6 @@ u8 Guess5200CartType(const char *filename)
     if (strcasestr(filename, "Frisky") != 0)         return CART_5200_EE_16;
     if (strcasestr(filename, "Threeedeep") != 0)     return CART_5200_EE_16;
     if (strcasestr(filename, "Gyruss") != 0)         return CART_5200_EE_16;
-    if (strcasestr(filename, "H.E.R.O") != 0)        return CART_5200_EE_16;
     if (strcasestr(filename, "Hangly") != 0)         return CART_5200_EE_16;
     if (strcasestr(filename, "James") != 0)          return CART_5200_EE_16;
     if (strcasestr(filename, "Joust") != 0)          return CART_5200_EE_16;
