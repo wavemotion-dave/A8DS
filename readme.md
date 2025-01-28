@@ -233,11 +233,10 @@ Configuration :
 ----------------------------------------------------------------------------------
 Global Options can now be set - *before* you load a game, use the GEAR icon to set and save your options that will be applied to new games going forward (you can still override on a per-game basis).
 
-* TV TYPE - Select PAL vs NTSC for 50/60Hz operation.
-* MACHINE TYPE - select XL/XE 128K, 320K RAMBO, 576K COMPY, 1088K or the compatibility-mode Atari 800 48K (a few older games need this).
-* OS Type - Select the built in Altirra OS or, if you have the OS ROMs available, the Atari OS.
-* BASIC - Select if BASIC is enabled and what flavor of BASIC to run.
-* PALETTE - Set to NTSC or PAL to suit your preferences (yes, you can run an NTSC palette on a PAL configured system and vice-versa).
+* MACHINE TYPE - There are seven possible machine configurations ranging from the Atari 5200 (16K of RAM) and Atari 800 (48K of RAM) all the way up to the XL/XE with 1088K of RAM.  The default machine is the standard XL/XE with 128K of RAM.
+* TV TYPE - Select PAL vs NTSC for 50/60Hz operation. The proper color palette will be swapped in automatically.
+* BASIC - Select if BASIC is Enabled or Disabled.
+* CART TYPE - If you load a Cartridge via a .CAR file, it should automatically pick the right Cart type. If you load via a .ROM file it will take a guess but it might not be right - so you can override (and SAVE) it here.
 * SKIP FRAMES - On the DSi you can keep this OFF for most games, but for the DS you may need a moderate-to-agressive frameskip.
 * FPS SETTING - Normally OFF but you might want to see the frames-per-second counter and you can set 'TURBO' mode to run full-speed (unthrottled) to check performance.
 * ARTIFACTING - Normally OFF but a few games utilize this high-rez mode trick that brings in a new set of colors to the output.
@@ -247,7 +246,6 @@ Global Options can now be set - *before* you load a game, use the GEAR icon to s
 * KEY CLICK - if you want the mechanical key-click when using the virtual 800 keyboards.
 * EMULATOR TEXT - if you want a clean main screen with just the disk-drives shown, you can disable text.
 * KEYBOARD STYLE - select the style of virtual keyboard that you prefer.
-* CART TYPE - If you load a Cartridge via a .CAR file, it should automatically pick the right Cart type. If you load via a .ROM file it will take a guess but it might not be right - so you can override (and SAVE) it here.
 
 Using the X button, you can go to a second menu of options mostly for key handling.  This menu allows you to map any DS key to any of the A8DS functions (joystick, keyboard, console switches and a few 'meta' commands such as smooth scrolling the screen some number of pixels).
 
@@ -276,7 +274,7 @@ Buttons can be re-configured in the Options (GEAR icon... press X for the keyboa
  * D-pad  : the joystick ... can be set to be Joystick 1 or Joystick 2
  * A      : Fire button
  * B      : Alternate Fire button
- * X      : Space Bar -  useful to start a few games
+ * X      : Vertical pan up
  * Y      : Return key (Carriage Return)
  * R+Dpad : Shift Screen UP or DOWN (necessary to center screen)
  * L+Dpad : Scale Screen UP or DOWN (generally try not to shrink the screen too much as pixel rows disappear)
