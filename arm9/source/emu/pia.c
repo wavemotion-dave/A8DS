@@ -99,7 +99,8 @@ void PIA_Initialise(void) {
 
 void PIA_Reset(void) {
     PORTA = 0xff;
-    if (machine_type == MACHINE_XLXE) {
+    if (myConfig.machine_type >= MACHINE_XLXE_64K) 
+    {
         MEMORY_HandlePORTB(0xff, (UBYTE) (PORTB | PORTB_mask));
     }
     PORTB = 0xff;
@@ -181,10 +182,12 @@ UBYTE PIA_GetByte(UWORD addr) {
             PBCTL &= 0x3f; /* clear bit 6 & 7 */
             update_PIA_IRQ();
 
-			if (Atari800_machine_type == Atari800_MACHINE_XLXE) {
+			if (myConfig.machine_type >= MACHINE_XLXE_64K) 
+            {
 				return PIA_PORTB | PORTB_mask;
 			}
-			else {
+			else 
+            {
 				return PORT_input[1] & (PIA_PORTB | PORTB_mask);
 			}
 		}
@@ -313,7 +316,8 @@ void PIA_PutByte(UWORD addr, UBYTE byte) {
 	case _PORTB:
 		if ((PBCTL & 0x04) == 0) {
 			/* write DDRB (data direction register B) */
-			if (Atari800_machine_type == Atari800_MACHINE_XLXE) {
+			if (myConfig.machine_type >= MACHINE_XLXE_64K) 
+            {
 				MEMORY_HandlePORTB((UBYTE) (PIA_PORTB | ~byte), (UBYTE) (PIA_PORTB | PORTB_mask));
 			}
 			PORTB_mask = ~byte;
@@ -330,7 +334,8 @@ void PIA_PutByte(UWORD addr, UBYTE byte) {
 				set_CB2(0);
 				set_CB2(1); /* FIXME one cycle later ... */
 			}
-			if (Atari800_machine_type == Atari800_MACHINE_XLXE) {
+			if (myConfig.machine_type >= MACHINE_XLXE_64K) 
+            {
 				MEMORY_HandlePORTB((UBYTE) (byte | PORTB_mask), (UBYTE) (PIA_PORTB | PORTB_mask));
 			}
 			PIA_PORTB = byte;

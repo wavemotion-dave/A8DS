@@ -96,7 +96,9 @@ ITCM_CODE UBYTE POKEY_GetByte(UWORD addr)
 
     addr &= 0x0f;
 
-    if (addr < 8) {
+    if (addr < 8) 
+    {
+        if (!POTENA) return 228;
         byte = POT_input[addr];
         if (byte <= pot_scanline)
             return byte;

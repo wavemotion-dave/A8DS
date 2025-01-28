@@ -53,6 +53,24 @@
 #define AKEY_CTRL 0x80
 #define AKEY_SHFTCTRL 0xc0
 
+/* 5200 key codes */
+#define AKEY_5200_START     0x39
+#define AKEY_5200_PAUSE     0x31
+#define AKEY_5200_RESET     0x29
+#define AKEY_5200_0         0x25
+#define AKEY_5200_1         0x3f
+#define AKEY_5200_2         0x3d
+#define AKEY_5200_3         0x3b
+#define AKEY_5200_4         0x37
+#define AKEY_5200_5         0x35
+#define AKEY_5200_6         0x33
+#define AKEY_5200_7         0x2f
+#define AKEY_5200_8         0x2d
+#define AKEY_5200_9         0x2b
+#define AKEY_5200_HASH      0x23
+#define AKEY_5200_ASTERISK  0x27
+
+/* Atari 800 / XL/XE codes */
 #define AKEY_0 0x32
 #define AKEY_1 0x1f
 #define AKEY_2 0x1e

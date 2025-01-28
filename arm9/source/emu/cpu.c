@@ -1366,7 +1366,7 @@ next:
 
     OPCODE(a7)              /* LAX ab [unofficial] */
         ZPAGE;
-        Z = N = X = A = GetByte(addr);
+        Z = N = X = A = dGetByte(addr);
         DONE
 
     OPCODE(a8)              /* TAY */

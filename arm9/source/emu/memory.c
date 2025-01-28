@@ -94,39 +94,22 @@ void ROM_PutByte(UWORD addr, UBYTE value) {}
 // -----------------------------------------------------------
 static void SetAtari800Memory(void)
 {
-    ram_size = RAM_48K; // Force 48k... 
     atarixe_memory = NULL;
 }
+
+// -----------------------------------------------------------
+// Force 16k and remove any XE memory buffers...
+// -----------------------------------------------------------
+static void SetAtari5200Memory(void)
+{
+    atarixe_memory = NULL;
+}
+
 // ------------------------------------------------------------
 // XL/XE has a number of supported memories from 48K to 1088K
 // ------------------------------------------------------------
 static void SetAtariXLXEMemory(void)
 {
-    // ----------------------------------------------------------------------
-    // Map the  ram_type to actual ram_size for use by the emulator...
-    // ----------------------------------------------------------------------
-    switch (myConfig.ram_type)
-    {
-        case RAM_IDX_48K:
-            ram_size = RAM_48K;
-            break;
-        case RAM_IDX_64K:
-            ram_size = RAM_64K;
-            break;
-        case RAM_IDX_128K:
-            ram_size = RAM_128K;
-            break;
-        case RAM_IDX_320K:
-            ram_size = RAM_320_RAMBO;
-            break;
-        case RAM_IDX_576K:
-            ram_size = RAM_576_COMPY;
-            break;
-        default:
-        case RAM_IDX_1088K:
-            ram_size = RAM_1088K;
-            break;
-    }
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -135,11 +118,11 @@ static void SetAtariXLXEMemory(void)
 // ----------------------------------------------------------------------------------------------
 static void AllocXEMemory(void)
 {
-    if (ram_size > RAM_64K) 
+    if (RAM_SIZES[myConfig.machine_type] > 64) 
     {
         /* don't count 64 KB of base memory */
         /* count number of 16 KB banks, add 1 for saving base memory 0x4000-0x7fff */
-        ULONG size = (1 + (ram_size - 64) / 16) * 16384;
+        ULONG size = (1 + (RAM_SIZES[myConfig.machine_type] - 64) / 16) * 16384;
         atarixe_memory = (UBYTE *) xe_mem_buffer; // Use the large 1088K buffer even if we don't use it all
         memset(atarixe_memory, 0x00, size);
     }
@@ -188,17 +171,16 @@ void MEMORY_InitialiseMachine(void)
 
     antic_xe_ptr = NULL;
     
-    switch (machine_type) 
+    switch (myConfig.machine_type) 
     {
-    case MACHINE_OSA:
-    case MACHINE_OSB:
+    case MACHINE_800_48K:
         SetAtari800Memory();
-        dFillMem(0x0000, 0x00, ram_size * 1024 - 1);
-        SetRAM(0x0000, ram_size * 1024 - 1);
-        if (ram_size < 52) 
+        dFillMem(0x0000, 0x00, RAM_SIZES[myConfig.machine_type] * 1024 - 1);
+        SetRAM(0x0000, RAM_SIZES[myConfig.machine_type] * 1024 - 1);
+        if (RAM_SIZES[myConfig.machine_type] < 52) 
         {
-            dFillMem(ram_size * 1024, 0xff, 0xd000 - ram_size * 1024);
-            SetROM(ram_size * 1024, 0xcfff);
+            dFillMem(RAM_SIZES[myConfig.machine_type] * 1024, 0xff, 0xd000 - RAM_SIZES[myConfig.machine_type] * 1024);
+            SetROM(RAM_SIZES[myConfig.machine_type] * 1024, 0xcfff);
         }
         SetROM(0xd800, 0xffff);
         memcpy(memory + 0xd800, atari_os + 0x1800, 0x800);
@@ -207,7 +189,14 @@ void MEMORY_InitialiseMachine(void)
         ESC_PatchOS();
         break;
             
-    case MACHINE_XLXE:
+    case MACHINE_5200:
+        SetAtari5200Memory();
+        SetRAM(0x0000, 0x3fff);
+        SetROM(0x4000, 0xffff);
+        memcpy(memory+0xf800, atari_os + 0x3800, 0x800);
+        break;
+
+    default: // All of the XL/XE machine types
         SetAtariXLXEMemory();
         SetRAM(0x0000, 0xbfff);
         SetROM(0xc000, 0xffff);
@@ -216,30 +205,83 @@ void MEMORY_InitialiseMachine(void)
         mem_map[0xE] = atari_os - 0xc000;
         mem_map[0xF] = atari_os - 0xc000;
         ESC_PatchOS();
-        break;
+        break;       
     }
 
-    // ----------------------------------------------------------------
-    // Setup the D000-D800 area to point to all the various hardware 
-    // chips that trigger on reads and/or writes to that memory area.
-    // ----------------------------------------------------------------
-    readmap[0xd0] = GTIA_GetByte;
-    readmap[0xd1] = PBI_GetByte;
-    readmap[0xd2] = POKEY_GetByte;
-    readmap[0xd3] = PIA_GetByte;
-    readmap[0xd4] = ANTIC_GetByte;
-    readmap[0xd5] = CART_GetByte;
-    readmap[0xd6] = PBIM1_GetByte;
-    readmap[0xd7] = PBIM2_GetByte;
-    
-    writemap[0xd0] = GTIA_PutByte;
-    writemap[0xd1] = PBI_PutByte;
-    writemap[0xd2] = POKEY_PutByte;
-    writemap[0xd3] = PIA_PutByte;
-    writemap[0xd4] = ANTIC_PutByte;
-    writemap[0xd5] = CART_PutByte;
-    writemap[0xd6] = PBIM1_PutByte;
-    writemap[0xd7] = PBIM2_PutByte;
+    if (myConfig.machine_type == MACHINE_5200)
+    {
+        // ----------------------------------------------------------------
+        // Setup the D000-D800 area to point to all the various hardware 
+        // chips that trigger on reads and/or writes to that memory area.
+        // ----------------------------------------------------------------
+        readmap[0xc0] = GTIA_GetByte;
+        readmap[0xc1] = GTIA_GetByte;
+        readmap[0xc2] = GTIA_GetByte;
+        readmap[0xc3] = GTIA_GetByte;
+        readmap[0xc4] = GTIA_GetByte;
+        readmap[0xc5] = GTIA_GetByte;
+        readmap[0xc6] = GTIA_GetByte;
+        readmap[0xc7] = GTIA_GetByte;
+        readmap[0xc8] = GTIA_GetByte;
+        readmap[0xc9] = GTIA_GetByte;
+        readmap[0xca] = GTIA_GetByte;
+        readmap[0xcb] = GTIA_GetByte;
+        readmap[0xcc] = GTIA_GetByte;
+        readmap[0xcd] = GTIA_GetByte;
+        readmap[0xce] = GTIA_GetByte;
+        readmap[0xcf] = GTIA_GetByte;
+        
+        readmap[0xd1] = PBI_GetByte;
+        readmap[0xd4] = ANTIC_GetByte;
+        readmap[0xd5] = CART_GetByte;
+        readmap[0xe8] = POKEY_GetByte;
+        
+        writemap[0xc0] = GTIA_PutByte;
+        writemap[0xc1] = GTIA_PutByte;
+        writemap[0xc2] = GTIA_PutByte;
+        writemap[0xc3] = GTIA_PutByte;
+        writemap[0xc4] = GTIA_PutByte;
+        writemap[0xc5] = GTIA_PutByte;
+        writemap[0xc6] = GTIA_PutByte;
+        writemap[0xc7] = GTIA_PutByte;
+        writemap[0xc8] = GTIA_PutByte;
+        writemap[0xc9] = GTIA_PutByte;
+        writemap[0xca] = GTIA_PutByte;
+        writemap[0xcb] = GTIA_PutByte;
+        writemap[0xcc] = GTIA_PutByte;
+        writemap[0xcd] = GTIA_PutByte;
+        writemap[0xce] = GTIA_PutByte;
+        writemap[0xcf] = GTIA_PutByte;
+        
+        writemap[0xd1] = PBI_PutByte;
+        writemap[0xd4] = ANTIC_PutByte;
+        writemap[0xd5] = CART_PutByte;
+        writemap[0xe8] = POKEY_PutByte;
+    }
+    else
+    {
+        // ----------------------------------------------------------------
+        // Setup the D000-D800 area to point to all the various hardware 
+        // chips that trigger on reads and/or writes to that memory area.
+        // ----------------------------------------------------------------
+        readmap[0xd0] = GTIA_GetByte;
+        readmap[0xd1] = PBI_GetByte;
+        readmap[0xd2] = POKEY_GetByte;
+        readmap[0xd3] = PIA_GetByte;
+        readmap[0xd4] = ANTIC_GetByte;
+        readmap[0xd5] = CART_GetByte;
+        readmap[0xd6] = PBIM1_GetByte;
+        readmap[0xd7] = PBIM2_GetByte;
+        
+        writemap[0xd0] = GTIA_PutByte;
+        writemap[0xd1] = PBI_PutByte;
+        writemap[0xd2] = POKEY_PutByte;
+        writemap[0xd3] = PIA_PutByte;
+        writemap[0xd4] = ANTIC_PutByte;
+        writemap[0xd5] = CART_PutByte;
+        writemap[0xd6] = PBIM1_PutByte;
+        writemap[0xd7] = PBIM2_PutByte;
+    }
     
     AllocXEMemory();
     
@@ -257,7 +299,7 @@ void MEMORY_InitialiseMachine(void)
 static int basic_disabled(UBYTE portb)
 {
     return (portb & 0x02) != 0
-     || ((portb & 0x10) == 0 && (ram_size == RAM_576_COMPY || ram_size == RAM_1088K));
+     || ((portb & 0x10) == 0 && (RAM_SIZES[myConfig.machine_type] >= 576));
 }
 
 
@@ -277,26 +319,28 @@ static int basic_disabled(UBYTE portb)
 // --------------------------------------------------------------------------
 void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
 {
+    if (myConfig.machine_type <= MACHINE_800_48K) return; // No PORTB handling here...
+    
     /* Switch XE memory bank in 0x4000-0x7fff */
-    if (ram_size > RAM_64K) 
+    if (RAM_SIZES[myConfig.machine_type] > 64) 
     {
         int bank = 0;
         /* bank = 0 : base RAM */
         /* bank = 1..64 : extended RAM */
         if ((byte & 0x10) == 0)
         {
-            if (ram_size == RAM_128K)
+            if (RAM_SIZES[myConfig.machine_type] == 128)
                 bank = ((byte & 0x0c) >> 2) + 1;
-            else if (ram_size == RAM_320_RAMBO)
+            else if (RAM_SIZES[myConfig.machine_type] == 320)
                 bank = (((byte & 0x0c) + ((byte & 0x60) >> 1)) >> 2) + 1;
-            else if (ram_size == RAM_576_COMPY)
+            else if (RAM_SIZES[myConfig.machine_type] == 576)
                 bank = (((byte & 0x0e) + ((byte & 0xc0) >> 2)) >> 1) + 1;
             else // Assume RAM_1088K
                 bank = (((byte & 0x0e) + ((byte & 0xe0) >> 1)) >> 1) + 1;
         }
         
         /* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
-        if (selftest_enabled && ((bank != xe_bank) || (ram_size == RAM_576_COMPY && (byte & 0x20) == 0)))
+        if (selftest_enabled && ((bank != xe_bank) || (RAM_SIZES[myConfig.machine_type] == 576 && (byte & 0x20) == 0)))
         {
             /* Disable Self Test ROM */
             memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
@@ -334,7 +378,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         // The 128k XE RAM and the COMPY 576K RAM allow the Antic 
         // to index into the RAM independently ... tricky stuff!
         // -------------------------------------------------------
-        if ((ram_size == RAM_128K) || (ram_size == RAM_576_COMPY))
+        if ((RAM_SIZES[myConfig.machine_type] == 128) || (RAM_SIZES[myConfig.machine_type] == 576))
         {
             switch (byte & 0x30)
             {
@@ -342,7 +386,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
                 antic_xe_ptr = memory + 0x4000;
                 break;
             case 0x10:  /* ANTIC: extended, CPU: base */
-                if (ram_size == RAM_128K)
+                if (RAM_SIZES[myConfig.machine_type] == 128)
                     antic_xe_ptr = atarixe_memory + ((((byte & 0x0c) >> 2)) << 14);
                 else // Assume RAM_576_COMPY
                     antic_xe_ptr = atarixe_memory + ((((byte & 0x0e) + ((byte & 0xc0) >> 2)) >> 1) << 14);
@@ -360,11 +404,16 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         if (byte & 0x01) 
         {
             /* Enable OS ROM */
-            if (ram_size > 48) 
+            if (RAM_SIZES[myConfig.machine_type] > 48) 
             {
                 memcpy(under_atarixl_os + 0x1800, memory + 0xd800, 0x800);
                 SetROM_Fast(0xc000, 0xcfff);
                 SetROM_Fast(0xd800, 0xffff);
+            }
+            
+            if (myConfig.machine_type == MACHINE_5200)
+            {
+                memcpy(memory+0xf800, atari_os + 0x3800, 0x800);
             }
             
             mem_map[0xC] = atari_os - 0xc000;
@@ -376,7 +425,7 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
         else 
         {
             /* Disable OS ROM */
-            if (ram_size > 48) 
+            if (RAM_SIZES[myConfig.machine_type] > 48) 
             {
                 mem_map[0xC] = memory;
                 memcpy(memory + 0xd800, under_atarixl_os + 0x1800, 0x800);
@@ -384,73 +433,86 @@ void MEMORY_HandlePORTB(UBYTE byte, UBYTE oldval)
                 SetRAM_Fast(0xd800, 0xffff);
                 mem_map[0xE] = memory;
                 mem_map[0xF] = memory;
-                
             } 
             else 
             {
-                dFillMem(0xc000, 0xff, 0x1000);
-                dFillMem(0xd800, 0xff, 0x2800);
+                if (myConfig.machine_type == MACHINE_5200)
+                {                
+                    dFillMem(0xf800, 0xff, 0x800);
+                }
+                else
+                {
+                    dFillMem(0xc000, 0xff, 0x1000);
+                    dFillMem(0xd800, 0xff, 0x2800);
+                }
             }
+            
             /* When OS ROM is disabled we also have to disable Self Test - Jindroush */
             if (selftest_enabled) 
             {
+                if (myConfig.machine_type != MACHINE_5200)
+                {
+                    memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
+                    SetRAM(0x5000, 0x57ff);
+                }
+            }
+            selftest_enabled = FALSE;
+        }
+    }
+
+    if (myConfig.machine_type != MACHINE_5200)
+    {
+        /* Enable/disable BASIC ROM in 0xa000-0xbfff */
+        if (!cartA0BF_enabled) 
+        {
+            /* BASIC is disabled if bit 1 set or accessing extended 576K or 1088K memory */
+            int now_disabled = basic_disabled(byte);
+            if (basic_disabled(oldval) != now_disabled) 
+            {
+                if (now_disabled) 
+                {
+                    /* Disable BASIC ROM */
+                    mem_map[0xA] = mem_map[UNDER_0xA];
+                    mem_map[0xB] = mem_map[UNDER_0xB];
+                    SetRAM(0xa000, 0xbfff);
+                }
+                else 
+                {
+                    /* Enable BASIC ROM */
+                    mem_map[UNDER_0xA] = mem_map[0xA];
+                    mem_map[UNDER_0xB] = mem_map[0xB];
+                    mem_map[0xA] = ROM_basic + 0x0000 - 0xA000;
+                    mem_map[0xB] = ROM_basic + 0x1000 - 0xB000;
+                    SetROM(0xa000, 0xbfff);
+                }
+            }
+        }
+
+        /* Enable/disable Self Test ROM in 0x5000-0x57ff */
+        /* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
+        if ((byte & 0x80) || ((RAM_SIZES[myConfig.machine_type] == 576) && (byte & 0x20) == 0))
+        {
+            if (selftest_enabled)
+            {
+                /* Disable Self Test ROM */
                 memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
                 SetRAM(0x5000, 0x57ff);
+                selftest_enabled = FALSE;
             }
-            selftest_enabled = FALSE;
         }
-    }
-
-    /* Enable/disable BASIC ROM in 0xa000-0xbfff */
-    if (!cartA0BF_enabled) 
-    {
-        /* BASIC is disabled if bit 1 set or accessing extended 576K or 1088K memory */
-        int now_disabled = basic_disabled(byte);
-        if (basic_disabled(oldval) != now_disabled) 
+        else 
         {
-            if (now_disabled) 
+            /* We can enable Self Test only if the OS ROM is enabled and we are not 576K or 1088K */
+            if (!selftest_enabled && (byte & 0x01) && 
+                   !((byte & 0x30) != 0x30 && RAM_SIZES[myConfig.machine_type] == 576) &&
+                   !((byte & 0x10) == 0 && RAM_SIZES[myConfig.machine_type] == 1088)) 
             {
-                /* Disable BASIC ROM */
-                mem_map[0xA] = mem_map[UNDER_0xA];
-                mem_map[0xB] = mem_map[UNDER_0xB];
-                SetRAM(0xa000, 0xbfff);
+                /* Enable Self Test ROM */
+                memcpy(under_atarixl_os + 0x1000, memory + 0x5000, 0x800);
+                SetROM(0x5000, 0x57ff);
+                memcpy(memory + 0x5000, atari_os + 0x1000, 0x800);
+                selftest_enabled = TRUE;
             }
-            else 
-            {
-                /* Enable BASIC ROM */
-                mem_map[UNDER_0xA] = mem_map[0xA];
-                mem_map[UNDER_0xB] = mem_map[0xB];
-                mem_map[0xA] = ROM_basic + 0x0000 - 0xA000;
-                mem_map[0xB] = ROM_basic + 0x1000 - 0xB000;
-                SetROM(0xa000, 0xbfff);
-            }
-        }
-    }
-
-    /* Enable/disable Self Test ROM in 0x5000-0x57ff */
-    /* Note: in Compy Shop bit 5 (ANTIC access) disables Self Test */
-    if ((byte & 0x80) || ((ram_size == RAM_576_COMPY) && (byte & 0x20) == 0))
-    {
-        if (selftest_enabled)
-        {
-            /* Disable Self Test ROM */
-            memcpy(memory + 0x5000, under_atarixl_os + 0x1000, 0x800);
-            SetRAM(0x5000, 0x57ff);
-            selftest_enabled = FALSE;
-        }
-    }
-    else 
-    {
-        /* We can enable Self Test only if the OS ROM is enabled and we are not 576K or 1088K */
-        if (!selftest_enabled && (byte & 0x01) && 
-               !((byte & 0x30) != 0x30 && ram_size == RAM_576_COMPY) &&
-               !((byte & 0x10) == 0 && ram_size == RAM_1088K)) 
-        {
-            /* Enable Self Test ROM */
-            memcpy(under_atarixl_os + 0x1000, memory + 0x5000, 0x800);
-            SetROM(0x5000, 0x57ff);
-            memcpy(memory + 0x5000, atari_os + 0x1000, 0x800);
-            selftest_enabled = TRUE;
         }
     }
 }
@@ -493,7 +555,7 @@ void CartA0BF_Disable(void)
     if (cartA0BF_enabled) 
     {
         /* No BASIC if not XL/XE or bit 1 of PORTB set */
-        if ((machine_type != MACHINE_XLXE) || basic_disabled((UBYTE) (PORTB | PORTB_mask))) 
+        if ((myConfig.machine_type < MACHINE_XLXE_64K) || basic_disabled((UBYTE) (PORTB | PORTB_mask))) 
         {
             mem_map[0xA] = mem_map[UNDER_0xA];
             mem_map[0xB] = mem_map[UNDER_0xB];
@@ -506,7 +568,7 @@ void CartA0BF_Disable(void)
             SetROM(0xa000, 0xbfff);
         }
         cartA0BF_enabled = FALSE;
-        if (machine_type == MACHINE_XLXE) 
+        if (myConfig.machine_type >= MACHINE_XLXE_64K) 
         {
             TRIG[3] = 0;
             if (GRACTL & 4)
@@ -524,7 +586,7 @@ void CartA0BF_Enable(void)
     {
         /* No BASIC if not XL/XE or bit 1 of PORTB set */
         /* or accessing extended 576K or 1088K memory */
-        if (ram_size > 40 && ((machine_type != MACHINE_XLXE) || (PORTB & 0x02) || ((PORTB & 0x10) == 0 && (ram_size == RAM_576_COMPY || ram_size == RAM_1088K)))) 
+        if (RAM_SIZES[myConfig.machine_type] > 40 && ((myConfig.machine_type < MACHINE_XLXE_64K) || (PORTB & 0x02) || ((PORTB & 0x10) == 0 && (RAM_SIZES[myConfig.machine_type] == 576 || RAM_SIZES[myConfig.machine_type] == 1088)))) 
         {
             /* Back-up 0xa000-0xbfff RAM */
             mem_map[UNDER_0xA] = mem_map[0xA];
@@ -532,7 +594,7 @@ void CartA0BF_Enable(void)
             SetROM(0xa000, 0xbfff);
         }
         cartA0BF_enabled = TRUE;
-        if (machine_type == MACHINE_XLXE)
+        if (myConfig.machine_type >= MACHINE_XLXE_64K)
             TRIG[3] = 1;
     }
 }

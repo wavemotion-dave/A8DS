@@ -75,7 +75,7 @@ UBYTE file_type        = AFILE_ERROR;
 
 void Warmstart(void) 
 {
-    if (machine_type == MACHINE_OSA || machine_type == MACHINE_OSB) 
+    if (myConfig.machine_type == MACHINE_800_48K) 
     {
         /* RESET key in 400/800 does not reset chips,
            but only generates RNMI interrupt */
@@ -121,7 +121,6 @@ int Atari800_InitialiseMachine(void)
 {
     ESC_ClearAll();
     MEMORY_InitialiseMachine();
-    //Devices_UpdatePatches();
     return TRUE;
 }
 
@@ -139,6 +138,8 @@ int Atari800_DetectFileType(const char *filename)
     if (strstr(filename, ".CAR") != 0) return  AFILE_CART;
     if (strstr(filename, ".rom") != 0) return  AFILE_ROM;
     if (strstr(filename, ".ROM") != 0) return  AFILE_ROM;
+    if (strstr(filename, ".a52") != 0) return  AFILE_A52;
+    if (strstr(filename, ".A52") != 0) return  AFILE_A52;
     return AFILE_ERROR;
 }
 
@@ -180,6 +181,7 @@ int Atari800_OpenFile(const char *filename, int reboot, int diskno, int readonly
       Atari800_Coldstart();
       break;
     case AFILE_ROM:
+    case AFILE_A52:
       CART_Insert(bEnableBasic, file_type, filename); 
       strcpy(disk_filename[DISK_1], "EMPTY");
       strcpy(disk_filename[DISK_2], "EMPTY");
@@ -205,11 +207,6 @@ int Atari800_Initialise(void)
     disk_readonly[DISK_XEX] = true;
     disk_readonly[DISK_1] = true;
     disk_readonly[DISK_2] = true;
-    
-    if (ram_size == RAM_48K)
-        machine_type     = MACHINE_OSB;
-    else
-        machine_type     = MACHINE_XLXE;
 
     INPUT_Initialise();
 
@@ -250,7 +247,6 @@ int Atari800_Exit(int run_monitor)
 
 void Atari800_Frame() 
 {
-    //Devices_Frame();
     INPUT_Frame();
     GTIA_Frame();
     ANTIC_Frame(myConfig.skip_frames ? (gTotalAtariFrames & (myConfig.skip_frames==1 ? 0x03:0x01)) : TRUE);  // Skip every 4th frame... or every other frame if we are "aggressive"

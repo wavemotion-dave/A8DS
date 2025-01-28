@@ -74,16 +74,16 @@ extern int debug[];
 #define OS_ATARI_XL     1
 #define OS_ALTIRRA_800  2
 #define OS_ATARI_OSB    3
+#define OS_ALTIRRA_5200 4
 
-#define BASIC_NONE      0
-#define BASIC_ALTIRRA   1
-#define BASIC_ATARIREVC 2
+#define BASIC_DISABLED  0
+#define BASIC_ENABLED   1
 
-#define DISK_XEX    0
-#define DISK_1      1
-#define DISK_2      2
+#define DISK_XEX        0
+#define DISK_1          1
+#define DISK_2          2
 
-#define DISK_MAX    3
+#define DISK_MAX        3
 
 extern char disk_filename[DISK_MAX][256];
 extern int disk_readonly[DISK_MAX];
@@ -104,24 +104,17 @@ extern int disk_readonly[DISK_MAX];
 /* Public interface ------------------------------------------------------ */
 
 /* Machine type. */
-#define MACHINE_OSA   0
-#define MACHINE_OSB   1
-#define MACHINE_XLXE  2
-
-#define Atari800_MACHINE_OSA   MACHINE_OSA
-#define Atari800_MACHINE_OSB   MACHINE_OSB
-#define Atari800_MACHINE_XLXE  MACHINE_XLXE
-
-/* RAM size in kilobytes. */
-#define RAM_48K              48
-#define RAM_64K              64
-#define RAM_128K            128
-#define RAM_320_RAMBO       320
-#define RAM_576_COMPY       576
-#define RAM_1088K           1088
-
+#define MACHINE_5200        0       // Atari 5200 mode with 16K of RAM (limited emulation... seek A5200DS for more complete emulation)
+#define MACHINE_800_48K     1       // Compatibility mode of Atari 800 with 48K and OSB
+#define MACHINE_XLXE_64K    2       // Standard Atari XL/XE with 64K   of RAM and XL OS
+#define MACHINE_XLXE_128K   3       // Standard Atari XL/XE with 128K  of RAM and XL OS
+#define MACHINE_XLXE_320R   4       // Standard Atari XL/XE with 320K  of RAM and XL OS (RAMBO style)
+#define MACHINE_XLXE_576C   5       // Standard Atari XL/XE with 576K  of RAM and XL OS (COMPY style)
+#define MACHINE_XLXE_1088K  6       // Standard Atari XL/XE with 1088K of RAM and XL OS (U1MB style)
 
 /* Always call Atari800_InitialiseMachine() after changing machine_type or ram_size! */
+
+extern const u16 RAM_SIZES[];
 
 /* Video system. */
 #define TV_NTSC_SCANLINES   262
@@ -169,6 +162,7 @@ extern int disk_readonly[DISK_MAX];
 #define AFILE_STATE_GZ   14
 #define AFILE_PRO        15
 #define AFILE_ATX        16
+#define AFILE_A52        17
 
 #define ATR_Header AFILE_ATR_Header
 /* ATR format header */

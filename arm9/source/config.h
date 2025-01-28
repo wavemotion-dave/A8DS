@@ -30,17 +30,18 @@
 // on the SD card. A reasonable compropmise... 
 // ---------------------------------------------------------------------------
 #define MAX_GAME_SETTINGS       2500
-#define GAME_DATABASE_VERSION   0x0C
+#define GAME_DATABASE_VERSION   0x0D
 
 struct GameSettings_t
 {
     unsigned int game_crc;
     UBYTE slot_used;
+    UBYTE machine_type;
     UBYTE tv_type;
-    UBYTE ram_type;
-    UBYTE os_type;
+    UBYTE cart_type;
+    UBYTE basic_enabled;
+    UBYTE keyboard_type;
     UBYTE keyMap[8];
-    UBYTE basic_type;
     UBYTE skip_frames;
     UBYTE startButtonMap;
     UBYTE selectButtonMap;
@@ -49,13 +50,12 @@ struct GameSettings_t
     UBYTE blending;
     UBYTE disk_speedup;
     UBYTE key_click_disable;
-    UBYTE keyboard_type;
     UBYTE dpad_type;
-    UBYTE cart_type;
     UBYTE fps_setting;
     UBYTE emulatorText;
     UBYTE alphaBlend;
     UBYTE disk_sound;
+    UBYTE analog_speed;
     UBYTE spare0;
     UBYTE spare1;
     UBYTE spare2;
@@ -74,24 +74,25 @@ struct GameSettings_t
 struct GameDatabase_t
 {
     UBYTE                       db_version;
+    UBYTE                       default_machine_type;
     UBYTE                       default_tv_type;
-    UBYTE                       default_ram_type;
-    UBYTE                       default_os_type;
-    UBYTE                       default_basic_type;
-    UBYTE                       default_skip_frames;
+    UBYTE                       default_basic_enabled;
     UBYTE                       default_keyboard_type;
+    UBYTE                       default_spare0;
+    UBYTE                       default_keyMap[8];
     UBYTE                       default_key_click_disable;
+    UBYTE                       default_skip_frames;
     UBYTE                       default_auto_fire;
     UBYTE                       default_blending;
     UBYTE                       default_alphaBlend;
     UBYTE                       default_disk_speedup;
-    UBYTE                       default_keyMap[8];
     UBYTE                       default_disk_sound;
     UBYTE                       default_spare1;
     UBYTE                       default_spare2;
     UBYTE                       default_spare3;
     UBYTE                       default_spare4;
     UBYTE                       default_spare5;
+    UBYTE                       default_spare6;
     UBYTE                       default_spare_more[1024];   // Maybe... someday...
     struct GameSettings_t       GameSettings[MAX_GAME_SETTINGS];
     unsigned int                checksum;
@@ -109,31 +110,13 @@ extern struct GameSettings_t myConfig;
 #define DB_KEY_STA  6
 #define DB_KEY_SEL  7
 
-extern UBYTE bAtariOS;
-extern UBYTE bAtariOSB;
-extern UBYTE bAtariBASIC;
-
 extern UBYTE option_table;
-extern UBYTE machine_type;
 extern UBYTE disable_basic;
-
-extern UWORD  ram_size;
-
-#define RAM_IDX_48K         0
-#define RAM_IDX_64K         1
-#define RAM_IDX_128K        2
-#define RAM_IDX_320K        3
-#define RAM_IDX_576K        4
-#define RAM_IDX_1088K       5
-
 extern UBYTE force_tv_type;
-extern UBYTE force_basic_type;
+extern UBYTE force_basic_enabled;
 
-
-#define TV_NTSC 0
-#define TV_PAL  1
-
-#define Atari800_machine_type machine_type
+#define TV_NTSC     0
+#define TV_PAL      1
 
 extern unsigned int last_crc;
 
@@ -142,6 +125,6 @@ extern void WriteGameSettings(void);
 extern void WriteGlobalSettings(void);
 extern void ApplyGameSpecificSettings(void);
 extern void ReadGameSettings(void);
-extern void dsChooseOptions(int bOkayToChangePalette);
+extern u8   dsChooseOptions(int bOkayToChangePalette);
 
 #endif // _CONFIG_H

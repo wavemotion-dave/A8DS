@@ -128,7 +128,7 @@ void ESC_PatchOS(void)
     // -----------------------------------------------
     if (myConfig.disk_speedup)
     {
-        if (myConfig.os_type != OS_ALTIRRA_XL)
+        if (!bAltirraOS_used)
         {
             ESC_AddEscRts(0xe459, ESC_SIOV, SIO_Handler);
             patched = TRUE;
@@ -139,10 +139,11 @@ void ESC_PatchOS(void)
         ESC_Remove(ESC_SIOV);
     }
     
-    if (patched && Atari800_machine_type == Atari800_MACHINE_XLXE) 
+    if (patched && 
+    (myConfig.machine_type >= MACHINE_XLXE_64K))
     {
         /* Disable Checksum Test */
-        if (myConfig.os_type != OS_ALTIRRA_XL)
+        if (!bAltirraOS_used)
         {
             dPutByte(0xc31d, 0xea);
             dPutByte(0xc31e, 0xea);
@@ -158,15 +159,19 @@ void ESC_UnpatchOS(void)
 
 void ESC_UpdatePatches(void)
 {
-    switch (Atari800_machine_type) {
-    case Atari800_MACHINE_OSA:
-    case Atari800_MACHINE_OSB:
+    switch (myConfig.machine_type) 
+    {
+    case MACHINE_800_48K:
         /* Restore unpatched OS */
         ESC_UnpatchOS();
         /* Set patches */
         ESC_PatchOS();
         break;
-    case Atari800_MACHINE_XLXE:
+    case MACHINE_XLXE_64K:
+    case MACHINE_XLXE_128K:
+    case MACHINE_XLXE_320R:
+    case MACHINE_XLXE_576C:
+    case MACHINE_XLXE_1088K:
         /* Don't patch if OS disabled */
         if ((PIA_PORTB & 1) == 0)
             break;

@@ -54,6 +54,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+char *strcasestr(const char *haystack, const char *needle);
 
 #include "main.h"
 #include "a8ds.h"
@@ -145,7 +146,7 @@ static void set_bank_A0BF(int b)
 static void set_bank_A0BF_WILLIAMS(int b, int mask)
 {
     if (b != bank) {
-        if (b & 0x0008)
+        if (b & 0x08)
         {
             CartA0BF_Disable();
         }
@@ -164,7 +165,7 @@ static void set_bank_A0BF_TURBOSOFT(UBYTE b, UBYTE mask)
 {
     if (b != bank)
     {
-        if (b & 0x08)
+        if (b & 0x10)
         {
             CartA0BF_Disable();
         }
@@ -478,6 +479,48 @@ void BountyBob2PutByte(UWORD addr, UBYTE value)
     access_BountyBob2(addr);
 }
 
+u8 Guess5200CartType(const char *filename)
+{
+    if (strcasestr(filename, "Battlezone") != 0)     return CART_5200_EE_16;
+    if (strcasestr(filename, "Rogers") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Centipede") != 0)      return CART_5200_EE_16;
+    if (strcasestr(filename, "Bongo") != 0)          return CART_5200_EE_16;
+    if (strcasestr(filename, "Countermeasure") != 0) return CART_5200_EE_16;
+    if (strcasestr(filename, "Defender") != 0)       return CART_5200_EE_16;
+    if (strcasestr(filename, "Dig Dug") != 0)        return CART_5200_EE_16;
+    if (strcasestr(filename, "DigDug") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Frisky") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Threeedeep") != 0)     return CART_5200_EE_16;
+    if (strcasestr(filename, "Gyruss") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "H.E.R.O") != 0)        return CART_5200_EE_16;
+    if (strcasestr(filename, "Hangly") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "James") != 0)          return CART_5200_EE_16;
+    if (strcasestr(filename, "Joust") != 0)          return CART_5200_EE_16;
+    if (strcasestr(filename, "Pac-Man") != 0)        return CART_5200_EE_16;
+    if (strcasestr(filename, "Pac Man") != 0)        return CART_5200_EE_16;
+    if (strcasestr(filename, "PacMan") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Jungle") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Kangaroo") != 0)       return CART_5200_EE_16;
+    if (strcasestr(filename, "Microgammon") != 0)    return CART_5200_EE_16;
+    if (strcasestr(filename, "Miniature") != 0)      return CART_5200_EE_16;
+    if (strcasestr(filename, "Montezuma") != 0)      return CART_5200_EE_16;
+    if (strcasestr(filename, "Popeye") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Position") != 0)       return CART_5200_EE_16;
+    if (strcasestr(filename, "QIX") != 0)            return CART_5200_EE_16;
+    if (strcasestr(filename, "Tennis") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Football") != 0)       return CART_5200_EE_16;
+    if (strcasestr(filename, "Soccer") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Runner") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Dungeon") != 0)        return CART_5200_EE_16;
+    if (strcasestr(filename, "Island") != 0)         return CART_5200_EE_16;
+    if (strcasestr(filename, "Stargate") != 0)       return CART_5200_EE_16;
+    if (strcasestr(filename, "Raiders") != 0)        return CART_5200_EE_16;
+    if (strcasestr(filename, "Trek") != 0)           return CART_5200_EE_16;
+    if (strcasestr(filename, "Wars") != 0)           return CART_5200_EE_16;
+    if (strcasestr(filename, "Xari") != 0)           return CART_5200_EE_16;
+    
+    return CART_5200_NS_16; // The more common 16K 
+}
 
 // ---------------------------------------------------------------------
 // We support both .CAR and .ROM files and instead of copying chunks
@@ -503,7 +546,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             myConfig.cart_type = cart_header[7];
         }
     }
-    if (file_type == AFILE_ROM)
+    else if (file_type == AFILE_ROM)
     {
         FILE * fp = fopen(filename, "rb");
         if (fp != NULL)
@@ -528,6 +571,28 @@ int CART_Insert(int enabled, int file_type, const char *filename)
             }
         }
     }
+    else if (file_type == AFILE_A52)
+    {
+        FILE * fp = fopen(filename, "rb");
+        if (fp != NULL)
+        {
+            int size = fread(cart_image, 1, CART_MAX_SIZE, fp);
+            fclose(fp);
+            size = size / 1024;
+            // If configuration hasn't been set for an A52 type, guess at the type based on ROM size
+            if (myConfig.cart_type == CART_NONE)
+            {
+                if (size == 4)      myConfig.cart_type = CART_5200_4;
+                if (size == 8)      myConfig.cart_type = CART_5200_8;
+                if (size == 16)     myConfig.cart_type = Guess5200CartType(filename);
+                if (size == 32)     myConfig.cart_type = CART_5200_32;
+                
+                myConfig.machine_type = MACHINE_5200;
+                install_os();
+                MEMORY_InitialiseMachine();
+            }
+        }
+    }
 
     if (enabled)
     {
@@ -543,9 +608,12 @@ void CART_Remove(void)
 {
     Cart809F_Disable();
     CartA0BF_Disable();
-    SetRAM(0x8000, 0x9fff);
-    SetRAM(0xa000, 0xbfff);
-    memset((UBYTE*)memory+0x8000, 0xFF, 0x4000);
+    if (myConfig.machine_type >= MACHINE_800_48K)
+    {
+        SetRAM(0x8000, 0x9fff);
+        SetRAM(0xa000, 0xbfff);
+        memset((UBYTE*)memory+0x8000, 0x00, 0x4000);
+    }
 }
 
 // --------------------------------------------------------------
@@ -704,10 +772,6 @@ void CART_Start(void)
         mem_map[0xB] = cart_image + 0x1000 - 0xB000;
         bank = 0;
         break;
-    case CART_RIGHT_8:
-        Cart809F_Disable();
-        CartA0BF_Disable();
-        break;
     case CART_MEGA_16:
     case CART_MEGA_32:
     case CART_MEGA_64:
@@ -828,23 +892,60 @@ void CART_Start(void)
         myConfig.disk_speedup = 0;  // And Disk Speedup must be off
         break;
 
+    case CART_5200_4:
+        memset(memory+0x4000, 0xff, 0x4000);
+        memcpy(memory+0x8000, cart_image, 0x1000);
+        memcpy(memory+0x9000, cart_image, 0x1000);
+        memcpy(memory+0xA000, cart_image, 0x1000);
+        memcpy(memory+0xB000, cart_image, 0x1000);
+        break;
+    case CART_5200_8:
+        memset(memory+0x4000, 0xff, 0x4000);
+        memcpy(memory+0x8000, cart_image, 0x2000);
+        memcpy(memory+0xA000, cart_image, 0x2000);
+        break;
+    case CART_5200_NS_16:
+        memset(memory+0x4000, 0xff, 0x4000);
+        memcpy(memory+0x8000, cart_image, 0x4000);
+        break;        
+    case CART_5200_EE_16:
+        memcpy(memory+0x4000, cart_image, 0x2000);
+        memcpy(memory+0x6000, cart_image, 0x4000);
+        memcpy(memory+0xA000, cart_image+0x2000, 0x2000);
+        break;        
+    case CART_5200_32:
+        memcpy(memory+0x4000, cart_image, 0x8000);
+        break;
+        
+    case CART_RIGHT_4:
+        memcpy(cart_image+0x1000, cart_image, 0x1000); // Duplicate 4K to fill entire region
+        // No break is intentional...
+    case CART_RIGHT_8:
+        Cart809F_Enable();
+        mem_map[0x8] = cart_image + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + 0x1000 - 0x9000;
+        
+        // With Right-side CARTs we might also be enabling BASIC
+        if (myConfig.basic_enabled)
+        {
+            CartA0BF_Enable();
+            mem_map[0xA] = ((UBYTE*)ROM_basic) + 0x0000 - 0xA000;
+            mem_map[0xB] = ((UBYTE*)ROM_basic) + 0x1000 - 0xB000;
+        }
+        else 
+        {
+            CartA0BF_Disable();
+        }
+        break;
+        
     default:
         // The only default cart we support is an 8K built-in BASIC cart
-        if (myConfig.basic_type)
+        if (myConfig.basic_enabled)
         {
             Cart809F_Disable();
             CartA0BF_Enable();
-            SetROM(0xa000, 0xbfff);
-            if (myConfig.basic_type == BASIC_ALTIRRA)
-            {
-                mem_map[0xA] = ((UBYTE*)ROM_altirra_basic) + 0x0000 - 0xA000;
-                mem_map[0xB] = ((UBYTE*)ROM_altirra_basic) + 0x1000 - 0xB000;
-            }
-            else
-            {
-                mem_map[0xA] = ((UBYTE*)ROM_basic) + 0x0000 - 0xA000;
-                mem_map[0xB] = ((UBYTE*)ROM_basic) + 0x1000 - 0xB000;
-            }
+            mem_map[0xA] = ((UBYTE*)ROM_basic) + 0x0000 - 0xA000;
+            mem_map[0xB] = ((UBYTE*)ROM_basic) + 0x1000 - 0xB000;
         }
         break;
     }

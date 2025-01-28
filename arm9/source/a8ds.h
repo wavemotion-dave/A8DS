@@ -59,6 +59,8 @@ extern u16 atari_frames;
 extern u16 sound_idx;
 extern u8 myPokeyBufIdx;
 
+extern u8 bAltirraOS_used;
+
 extern void FadeToColor(unsigned char ucSens, unsigned short ucBG, unsigned char ucScr, unsigned char valEnd, unsigned char uWait);
 extern void vblankIntr();
 extern void dsInitScreenMain(void);
@@ -86,5 +88,6 @@ extern void ReadGameSettings(void);
 extern void ApplyGameSpecificSettings(void);
 extern void install_os(void);
 extern void dsSetAtariPalette(void);
+extern bool dsQuery(char *str, char *str2);
 
 #endif // _A8DS_H

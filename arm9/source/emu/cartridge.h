@@ -113,6 +113,7 @@
 #define CART_SIC_512        56
 #define CART_STD_2          57
 #define CART_STD_4          58
+#define CART_RIGHT_4        59
 #define CART_BLIZZARD_32    60
 #define CART_ADAWLIAH32     69
 #define CART_ADAWLIAH64     70
