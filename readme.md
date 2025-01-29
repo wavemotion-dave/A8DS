@@ -41,7 +41,7 @@ A8DS supports 3 optional (but highly recommended) Atari BIOS and BASIC files as 
 *  atarixl.rom  (0x1f9cd270)  - this is the 16k XL/XE version of the Atari BIOS for XL/XE Machines (NTSC Rev 02 - BB 01.02, 10.May.1983) 
 *  atariosb.rom (0x3e28a1fe)  - this is the 12k Atari 800 OS-B revision BIOS for older games  (NTSC OS-B version 2)
 *  ataribas.rom (0x7d684184)  - this is the 8k Atari BASIC cartridge (Rev C)
-*  a5200.rom    (0x4248d3e3)  - this is the 2k Atari 5200 BIOS ROM
+*  a5200.rom    (0x4248d3e3)  - this is the 2k Atari 5200 BIOS ROM (Rev 1)
 
 You can use other versions of these BIOS files, but these are the ones that I'm testing/running with.
 
@@ -168,8 +168,10 @@ The following cartridge layouts are supported:
 * aDawliah 32K and 64K
 * JRC64
 * DCART
+* Corina 1MB+EE and 512K + SRAM + EE
+* MIO 8K
 * Right-side 4K and 8K
-* Atari 5200 Carts up to 32K
+* Atari 5200 Carts from 4K up to 32K (rename your 5200 carts to .a52 for easy loading)
 
 If you're using cartridge files, it is suggested you use .CAR files which contain type information to properly load up the cartirdge. Bare .ROM files 
 have ambiguities that are not always auto-detected by the emulator and as such will not always load correctly. You can go into the GEAR/Options menu
@@ -312,11 +314,12 @@ History :
 --------------------------------------------------------------------------------
 V4.2  : ??-Feb-2025 by wavemotion-dave
   * Fixed Turbo 128K cart type so it doesn't inadvertently disable the cartridge port.
-  * Added Right-Side cart support for Atari800.
-  * Added Atari 5200 cart support for carts of 32K or less.
+  * Added Right-Side cart support for Atari800 (fixing a few A800 emulation issues as well).
+  * Added Atari 5200 cart support for carts of 32K or less (rename your 5200 carts to ".a52" for easy loading)
   * Added new key maps for SHIFT and CONTROL to NDS keys.
   * Massive simplification of the configuration handling for machine type.
   * New NTSC and PAL color palettes from the awesome Trebor Pro Pack.
+  * Added new cart types for SIC+ (1MB), Corina (1MB+EE and 512K+512K+EE), Telelink II and MIO_8
 
 V4.1  : 25-Jan-2025 by wavemotion-dave
   * Refactor the OS Enable/Disable on XL/XE emulation to avoid moving large blocks of memory. Speeds up many games that swap the OS in/out.

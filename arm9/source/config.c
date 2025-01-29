@@ -439,8 +439,8 @@ struct options_t
                     "40-BLIZZARD16", "41-ATMAX128",   "42-ATMAX1024",  "43-SDX128",     "44-OSS8",       "45-OSS16-043M", "46-BLIZZARD4",  "47-AST32",      "48-NO SUPPORT", "49-NO SUPPORT", \
                     "50-TURBO64",    "51-TURBO128",   "52-ULTRACART",  "53-LOWBANK_8",  "54-SIC128",     "55-SIC256",     "56-SIC512",     "57-STD2",       "58-STD4",       "59-RIGHT 4K",   \
                     "60-BLIZZARD32", "61-NO SUPPORT", "62-NO SUPPORT", "63-NO SUPPORT", "64-NO SUPPORT", "65-NO SUPPORT", "66-NO SUPPORT", "67-NO SUPPORT", "68-NO SUPPORT", "69-ADAWLIAH32", \
-                    "70-ADAWLIAH64", "71-NO SUPPORT", "72-NO SUPPORT", "73-NO SUPPORT", "74-NO SUPPORT", "75-ATMAX-NEW",  "76-WILLIAMS16", "77-NO SUPPORT", "78-NO SUPPORT", "79-NO SUPPORT", \
-                    "80-JRC64",      "81-NO SUPPORT", "82-NO SUPPORT", "83-NO SUPPORT", "84-NO SUPPORT", "85-NO SUPPORT", "86-NO SUPPORT", "87-NO SUPPORT", "88-NO SUPPORT", "89-NO SUPPORT", \
+                    "70-ADAWLIAH64", "71-NO SUPPORT", "72-NO SUPPORT", "73-NO SUPPORT", "74-NO SUPPORT", "75-ATMAX-NEW",  "76-WILLIAMS16", "77-MIO 8K",     "78-TELELINK2",  "79-NO SUPPORT", \
+                    "80-JRC64",      "81-NO SUPPORT", "82-NO SUPPORT", "83-SIC+1024K",  "84-CORINA-1MB", "85-CORINA-RAM", "86-NO SUPPORT", "87-NO SUPPORT", "88-NO SUPPORT", "89-NO SUPPORT", \
                     "90-NO SUPPORT", "91-NO SUPPORT", "92-NO SUPPORT", "93-NO SUPPORT", "94-NO SUPPORT", "95-NO SUPPORT", "96-NO SUPPORT", "97-NO SUPPORT", "98-NO SUPPORT", "99-NO SUPPORT", \
                     "100-NO SUPPORT","101-NO SUPPORT","102-NO SUPPORT","103-NO SUPPORT","104-JATARI8",   "105-JATARI16",  "106-JATARI32",  "107-JATARI64",  "108-JATARI128", "109-JATARI256", \
                     "110-JATARI512", "111-JATARI1024","112-DCART",     "113-NO SUPPORT","114-NO SUPPORT","115-NO SUPPORT"}
@@ -481,7 +481,7 @@ const struct options_t Option_Table[2][20] =
         {"SELECT BTN",  KEY_MAP_TEXT,                                       &myConfig.keyMap[7],            OPT_KEYSEL, 72,  "SET SELECT KEY TO ",   "DESIRED FUNCTION  ",  "JOYSTICK, KEYBOARD ", "OR META BUTTON.   "},
         {"D-PAD",       {"JOY 1", "JOY 2", "DIAGONALS", "CURSORS"},         &myConfig.dpad_type,            OPT_NORMAL, 4,   "CHOOSE HOW THE    ",   "JOYSTICK OPERATES ",  "CAN SWAP JOY1 AND ",  "JOY2 OR MAP CURSOR"},    
         {"AUTOFIRE",    {"OFF",         "SLOW",   "MED",  "FAST"},          &myConfig.auto_fire,            OPT_NORMAL, 4,   "TOGGLE AUTOFIRE   ",   "SLOW = 4x/SEC     ",  "MED  = 8x/SEC     ",  "FAST = 15x/SEC    "},
-        {"5200 ANALOG",  {"FAST", "MEDIUM", "SLOW"},                         &myConfig.analog_speed,         OPT_NORMAL, 3,   "FOR THE A5200 THIS",   "REPRESENTS SPEED  ",  "OF THE ANALOG JOY ",  "STICK. EXPERIMENT."},
+        {"5200 ANALOG",  {"FAST", "MEDIUM", "SLOW"},                        &myConfig.analog_speed,         OPT_NORMAL, 3,   "FOR THE A5200 THIS",   "REPRESENTS SPEED  ",  "OF THE ANALOG JOY ",  "STICK. EXPERIMENT."},
         {"X OFFSET",    {"XX"},                                     (UBYTE*)&myConfig.xOffset,              OPT_NUMERIC,0,   "SET SCREEN OFFSET ",   "                  ",  "                  ",  "                  "},
         {"Y OFFSET",    {"XX"},                                     (UBYTE*)&myConfig.yOffset,              OPT_NUMERIC,0,   "SET SCREEN OFFSET ",   "                  ",  "                  ",  "                  "},
         {"X SCALE",     {"XX"},                                     (UBYTE*)&myConfig.xScale,               OPT_NUMERIC,0,   "SET SCREEN SCALE  ",   "                  ",  "                  ",  "                  "},

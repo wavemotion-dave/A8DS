@@ -66,7 +66,9 @@ int bg0, bg1, bg2, bg3, bg0b, bg1b;         // Background screen "pointers"
 u16 emu_state;                              // Emulator State
 u16 atari_frames = 0;                       // Number of frames per second (60 for NTSC and 50 for PAL)
 u8  bShowKeyboard = false;                  // set to true when the virtual keyboard is showing
-u8 bFirstLoad = true;
+u8 bFirstLoad = true;                       // True if this is the first game being loaded
+u16 shift=0;                                // Used to track shift keyboard status
+u16 ctrl=0;                                 // Used to track control keyboard status
 
 // ----------------------------------------------------------------------------------
 // These are the sound buffer vars which we use to pass along to the ARM7 core.
@@ -124,6 +126,36 @@ int getMemUsed() { // returns the amount of used memory in bytes
 int getMemFree() { // returns the amount of free memory in bytes
    struct mallinfo mi = mallinfo();
    return mi.fordblks + (getHeapLimit() - getHeapEnd());
+}
+
+// Show various keyboard indicators on screen
+static void dsUpdateKeyboardStatus(void)
+{
+    static u8 bWasShowing = false;
+    static u8 dampenKeyboardStatus = 0;
+    
+    // Handle the CAPS LOCK LED (only for keyboard use but not Star Raiders overlay)
+    if (++dampenKeyboardStatus >= 15)    // 4 times a second is fine
+    {
+        dampenKeyboardStatus = 0;
+        if (bShowKeyboard && (myConfig.keyboard_type < 5))
+        {
+            if (dGetByte(702) & 0x40) dsPrintValue((myConfig.keyboard_type == 4) ? 26:28,23,0, "@");
+            else dsPrintValue((myConfig.keyboard_type == 4) ? 26:28,23,0, " ");
+            
+            if ((ctrl | manual_ctrl) || (shift | manual_shift))
+            {
+                if (shift | manual_shift) dsPrintValue(0,0,0, "SFT");
+                if (ctrl | manual_ctrl)   dsPrintValue(0,0,0, "CTL");   // Control takes precedence 
+                bWasShowing = true;
+            }
+            else if (bWasShowing)
+            {
+                dsPrintValue(0,0,0, "   ");
+                bWasShowing = false;
+            }
+        }    
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1263,8 +1295,6 @@ unsigned int dsWaitForRom(void)
 // and some of the numbers. The user can select which keyboard they prefer in the
 // options area (gear icon).
 // ----------------------------------------------------------------------------------
-static u16 shift=0;
-static u16 ctrl=0;
 void dsShowKeyboard(void)
 {
       if (myConfig.keyboard_type == 5) // Star Raiders
@@ -1553,7 +1583,6 @@ int dsHandleKeyboard(int Tx, int Ty)
         {
             keyboard_debounce=15;
             shift ^= 1;
-            dsPrintValue(0,0,0, (ctrl ? "SFT":"   "));
         }
         keyPress = AKEY_NONE;
     }
@@ -1563,7 +1592,6 @@ int dsHandleKeyboard(int Tx, int Ty)
         {
             keyboard_debounce=15;
             ctrl ^= 1;
-            dsPrintValue(0,0,0, (ctrl ? "CTL":"   "));
         }
         keyPress = AKEY_NONE;
     }
@@ -1571,13 +1599,11 @@ int dsHandleKeyboard(int Tx, int Ty)
     {
         keyPress |= AKEY_CTRL;
         ctrl = 0;
-        dsPrintValue(0,0,0, "   ");
     }
     else if (keyPress != AKEY_NONE)
     {
         ctrl=0;
         shift=0;
-        dsPrintValue(0,0,0, "   ");
     }
 
     return keyPress;
@@ -2002,6 +2028,8 @@ void dsMainLoop(void)
             DumpDebugData();
             if(bAtariCrash) dsPrintValue(1,23,0, "GAME CRASH - PICK ANOTHER GAME");
         }
+        
+        dsUpdateKeyboardStatus();
 
         dsHandleDiskSounds();
 

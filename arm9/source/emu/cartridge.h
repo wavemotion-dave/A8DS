@@ -119,7 +119,12 @@
 #define CART_ADAWLIAH64     70
 #define CART_ATMAX_NEW_1024 75
 #define CART_WILL_16        76
+#define CART_MIO_8          77
+#define CART_TELELINK2      78
 #define CART_JRC_64         80
+#define CART_SIC_PLUS       83
+#define CART_CORINA_1MB     84
+#define CART_CORINA_SRAM    85
 #define CART_JATARI_8       104 
 #define CART_JATARI_16      105
 #define CART_JATARI_32      106 
@@ -138,7 +143,7 @@
 #define DIGITAL         0
 #define ANALOG          1
 
-#define CART_MAX_SIZE   (1024 * 1024)
+#define CART_MAX_SIZE   ((1024+8) * 1024)
 
 extern int bank;
 extern UBYTE cart_sic_data;

@@ -124,7 +124,7 @@ static void set_bank_A0AF(int b, int main)
     }
 }
 
-/* EXP_64, DIAMOND_64, SDX_64 */
+/* EXP_64, DIAMOND_64, SDX_64, MIO_8, etc. */
 static void set_bank_A0BF(int b)
 {
     if (b != bank)
@@ -347,6 +347,37 @@ static void set_bank_SIC(UBYTE data, UBYTE bank_mask)
     bank = b;
 }
 
+/* CART_SIC_PLUS */
+static void set_bank_SICPLUS(UBYTE data)
+{
+    UBYTE b = ((data & 0x80) >> 2) | (data & 0x1f);
+
+    if (!(data & 0x20))
+    {
+        Cart809F_Disable();
+    }
+    else
+    {
+        Cart809F_Enable();
+        mem_map[0x8] = cart_image + (b*0x4000) + 0x0000 - 0x8000;
+        mem_map[0x9] = cart_image + (b*0x4000) + 0x1000 - 0x9000;
+    }
+
+    if (data & 0x40)
+    {
+        CartA0BF_Disable();
+    }
+    else
+    {
+        CartA0BF_Enable();
+        mem_map[0xA] = cart_image + (b*0x4000) + 0x2000 - 0xA000;
+        mem_map[0xB] = cart_image + (b*0x4000) + 0x3000 - 0xB000;
+    }
+    
+    cart_sic_data = data;
+    bank = b;
+}
+
 /* CART_DCART */
 static void set_bank_A0BF_DCART(UBYTE b)
 {
@@ -413,6 +444,93 @@ static void set_bank_ADAWLIAH(UBYTE b)
     mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
 }
 
+static void set_bank_corina_1mb(UBYTE b)
+{
+    if (b & 0x80) // High bit disables the cart
+    {
+        Cart809F_Disable();
+        CartA0BF_Disable();
+        mem_map[0x8] = memory;
+        mem_map[0x9] = memory;
+        mem_map[0xA] = memory;
+        mem_map[0xB] = memory;
+    }
+    else
+    {
+        if (b & 0x40) // Bit 6 enables EEPROM 8K (mirrored across 16K bank)
+        {
+            Cart809F_Disable();
+            CartA0BF_Disable();            
+            mem_map[0x8] = cart_image + (1024*1024) + 0x0000 - 0x8000;
+            mem_map[0x9] = cart_image + (1024*1024) + 0x1000 - 0x9000;
+            mem_map[0xA] = cart_image + (1024*1024) + 0x0000 - 0xA000;
+            mem_map[0xB] = cart_image + (1024*1024) + 0x1000 - 0xB000;
+            SetRAM(0x8000, 0xbfff); // We treat the EE as RAM
+        }
+        else // ROM 1MB (banked in)
+        {
+            Cart809F_Enable();
+            CartA0BF_Enable();
+            bank = b & 0x3f;
+            mem_map[0x8] = cart_image + (bank*0x4000) + 0x0000 - 0x8000;
+            mem_map[0x9] = cart_image + (bank*0x4000) + 0x1000 - 0x9000;
+            mem_map[0xA] = cart_image + (bank*0x4000) + 0x2000 - 0xA000;
+            mem_map[0xB] = cart_image + (bank*0x4000) + 0x3000 - 0xB000;
+            SetROM(0x8000, 0xbfff);
+        }
+    }
+}
+
+static void set_bank_corina_sram(UBYTE b)
+{
+    if (b & 0x80) // High bit disables the cart
+    {
+        Cart809F_Disable();
+        CartA0BF_Disable();
+        mem_map[0x8] = memory;
+        mem_map[0x9] = memory;
+        mem_map[0xA] = memory;
+        mem_map[0xB] = memory;
+    }
+    else
+    {
+        //D5 = 0, D6 = 0 -> mapped from EPROM (ROM)
+        //D5 = 1, D6 = 0 -> mapped from SRAM
+        //D5 = 0, D6 = 1 -> mapped from EEPROM
+        if (b & 0x40) // EEPROM
+        {
+            Cart809F_Disable();
+            CartA0BF_Disable();            
+            mem_map[0x8] = cart_image + (512*1024) + 0x0000 - 0x8000;
+            mem_map[0x9] = cart_image + (512*1024) + 0x1000 - 0x9000;
+            mem_map[0xA] = cart_image + (512*1024) + 0x0000 - 0xA000;
+            mem_map[0xB] = cart_image + (512*1024) + 0x1000 - 0xB000;
+            SetRAM(0x8000, 0xbfff); // We treat the EE as RAM
+        }
+        else if (b & 0x20) // SRAM - we reuse the back-end empty Cart Image 
+        {
+            Cart809F_Disable();
+            CartA0BF_Disable();
+            bank = b & 0x1f;
+            mem_map[0x8] = cart_image + (520*1024) + (bank*0x4000) + 0x0000 - 0x8000;
+            mem_map[0x9] = cart_image + (520*1024) + (bank*0x4000) + 0x1000 - 0x9000;
+            mem_map[0xA] = cart_image + (520*1024) + (bank*0x4000) + 0x2000 - 0xA000;
+            mem_map[0xB] = cart_image + (520*1024) + (bank*0x4000) + 0x3000 - 0xB000;
+            SetRAM(0x8000, 0xbfff);
+        }
+        else // Normal ROM mapping area
+        {
+            Cart809F_Enable();
+            CartA0BF_Enable();
+            bank = b & 0x1f;
+            mem_map[0x8] = cart_image + (bank*0x4000) + 0x0000 - 0x8000;
+            mem_map[0x9] = cart_image + (bank*0x4000) + 0x1000 - 0x9000;
+            mem_map[0xA] = cart_image + (bank*0x4000) + 0x2000 - 0xA000;
+            mem_map[0xB] = cart_image + (bank*0x4000) + 0x3000 - 0xB000;
+            SetROM(0x8000, 0xbfff);
+        }
+    }
+}
 
 // The cartridge with "Bounty Bob Strikes Back" game uses very strange
 // bank switching method:
@@ -586,6 +704,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
                 if (size == 8)      myConfig.cart_type = CART_5200_8;
                 if (size == 16)     myConfig.cart_type = Guess5200CartType(filename);
                 if (size == 32)     myConfig.cart_type = CART_5200_32;
+                if (size == 40)     myConfig.cart_type = CART_5200_40;
                 
                 myConfig.machine_type = MACHINE_5200;
                 install_os();
@@ -682,6 +801,8 @@ void CART_Start(void)
         mem_map[0xB] = cart_image + 0x7000 - 0xB000;
         bank = 0;
         break;
+    case CART_MIO_8:
+       for (u16 i=1; i<8; i++) memcpy(cart_image + (i*2000), cart_image, 0x2000);   // Replicate bank 1 across 64K
     case CART_WILL_64:
     case CART_WILL_32:
     case CART_EXP_64:
@@ -830,6 +951,9 @@ void CART_Start(void)
     case CART_SIC_512:
         set_bank_SIC(0x00, 0x1f);
         break;
+    case CART_SIC_PLUS:
+        set_bank_SICPLUS(0x00);
+        break;
     case CART_ULTRACART:
         Cart809F_Disable();
         CartA0BF_Enable();
@@ -891,7 +1015,12 @@ void CART_Start(void)
         ESC_UnpatchOS();            // DCART won't work with patched OS
         myConfig.disk_speedup = 0;  // And Disk Speedup must be off
         break;
-
+    case CART_CORINA_1MB:
+        set_bank_corina_1mb(0);
+        break;
+    case CART_CORINA_SRAM:
+        set_bank_corina_sram(0);
+        break;
     case CART_5200_4:
         memset(memory+0x4000, 0xff, 0x4000);
         memcpy(memory+0x8000, cart_image, 0x1000);
@@ -916,7 +1045,15 @@ void CART_Start(void)
     case CART_5200_32:
         memcpy(memory+0x4000, cart_image, 0x8000);
         break;
-        
+    case CART_TELELINK2:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        memset(cart_image+0x2000, 0x00, 0x2000);        // Clear the 'NVRAM' area
+        mem_map[0xA] = cart_image + 0x0000 - 0xA000;    // Cart is mapped here
+        mem_map[0xB] = cart_image + 0x1000 - 0xB000;    // Cart is mapped here
+        mem_map[0x9] = cart_image + 0x2000 - 0x9000;    // This is 'NVRAM' and we just reuse the cart space
+        SetRAM(0x9000, 0x9fff); // We treat the NVRAM as RAM (not backed)
+        break;
     case CART_RIGHT_4:
         memcpy(cart_image+0x1000, cart_image, 0x1000); // Duplicate 4K to fill entire region
         // No break is intentional...
@@ -1065,6 +1202,10 @@ void CART_Access(UWORD addr)
         if ((addr & 0xf0) == 0xe0)
             set_bank_A0BF(addr);
         break;
+    case CART_MIO_8:
+        if ((addr & 0xf0) == 0xe0)
+            set_bank_A0BF(addr);
+        break;
     case CART_PHOENIX_8:
         CartA0BF_Disable();
         break;
@@ -1130,7 +1271,6 @@ void CART_Access(UWORD addr)
     case CART_DCART:
         set_bank_A0BF_DCART(addr & 0xff);
         break;
-
     default:    // Do nothing... this cart doesn't react to any access
         break;
     }
@@ -1163,6 +1303,9 @@ UBYTE CART_GetByte(UWORD addr)
     case CART_SIC_256:
     case CART_SIC_512:
         if ((addr & 0xe0) == 0x00) return cart_sic_data; else return 0xFF;
+        break;
+    case CART_SIC_PLUS:
+        if ((addr & 0xc0) == 0x00) return cart_sic_data; else return 0xFF;
         break;
     case CART_AST_32:
         return memory[addr]; // We've already moved in the 256 byte mini-window
@@ -1286,6 +1429,9 @@ void CART_PutByte(UWORD addr, UBYTE byte)
     case CART_SIC_512:
         if ((addr & 0xe0) == 0x00) set_bank_SIC(byte, 0x1f);
         break;
+    case CART_SIC_PLUS:
+        if ((addr & 0xc0) == 0x00) set_bank_SICPLUS(byte);
+        break;
     case CART_BLIZZARD_4:
         CartA0BF_Disable();
         break;
@@ -1305,7 +1451,13 @@ void CART_PutByte(UWORD addr, UBYTE byte)
         break;        
     case CART_JRC_64i:
         if ((addr & 0x80) == 0) set_bank_A0BF_JRCi(byte);
-        break;        
+        break;
+    case CART_CORINA_1MB:
+        if ((addr & 0xff) == 0) set_bank_corina_1mb(byte);
+        break;
+    case CART_CORINA_SRAM:
+        if ((addr & 0xff) == 0) set_bank_corina_sram(byte);
+        break;
     default:
         CART_Access(addr);
         break;
