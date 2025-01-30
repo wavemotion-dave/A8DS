@@ -2131,7 +2131,7 @@ void dsMainLoop(void)
                               {
                                   if (last_key_code == AKEY_NONE)
                                   {
-                                      if (!myConfig.key_click_disable) soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
+                                      if (myConfig.key_click) soundPlaySample(keyclick_wav, SoundFormat_16Bit, keyclick_wav_size, 44100, 127, 64, false, 0);
                                       last_key_code = key_code;
                                   }
                               }

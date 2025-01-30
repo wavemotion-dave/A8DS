@@ -48,7 +48,7 @@
 
 #pragma pack(1)
 
-struct GameDatabase_t GameDB;
+struct GameDatabase_t ConfigDatabase;
 struct GameSettings_t myConfig __attribute__((section(".dtcm")));
 
 UBYTE option_table        = 0;                // We have 2 pages of configuration options - this toggles between them
@@ -70,36 +70,62 @@ u8 UpgradeConfig(void)
     return bInitNeeded;
 }
 
-void InitGameSettings(void)
+void WriteEntireDatabase(void)
+{
+    ConfigDatabase.checksum = 0;
+    char *ptr = (char *)ConfigDatabase.GameSettings;
+    for (int i=0; i<sizeof(ConfigDatabase.GameSettings); i++) { ConfigDatabase.checksum += *ptr; }
+    
+    DIR* dir = opendir("/data");
+    if (dir)
+    {
+        closedir(dir);  // The Directory exists...
+    }
+    else
+    {
+        mkdir("/data", 0777); // Make a new directory...
+    }
+    FILE *fp = fopen("/data/A8DS.DAT", "wb+");
+    if (fp != NULL)
+    {
+        fwrite(&ConfigDatabase, sizeof(ConfigDatabase), 1, fp);
+        fclose(fp);
+    }
+}
+
+void InitWholeDatabase(void)
 {
     // --------------------------------------------------
     // This will set every byte to 0x00 but then we
-    // map a few specific things below...
+    // map a few specific default things below...
     // --------------------------------------------------
-    memset(&GameDB, 0x00, sizeof(GameDB));
-    for (int i=0; i<MAX_GAME_SETTINGS; i++)
-    {
-        GameDB.GameSettings[i].slot_used = 0;
-        // Map one with a default of '1' which may come in handy in the future....
-        GameDB.GameSettings[i].spare6 = 1;
-    }
-    GameDB.default_skip_frames        = (isDSiMode() ? 0:1);  // For older DS models, we skip frames to get full speed...
-    GameDB.default_machine_type       = MACHINE_XLXE_128K;    // Default machine is the XL/XE with 128K of RAM
-    GameDB.default_blending           = 1;                    // Light Blending
-    GameDB.default_alphaBlend         = 0;                    // No Alpha Blend
-    GameDB.default_disk_speedup       = 1;                    // Disk is Fast
-    GameDB.default_disk_sound         = 0;                    // No SIO sound
-    GameDB.default_keyMap[DB_KEY_A]   = 0;                    // Fire button
-    GameDB.default_keyMap[DB_KEY_B]   = 0;                    // Fire button
-    GameDB.default_keyMap[DB_KEY_X]   = 65;                   // VERTICAL-
-    GameDB.default_keyMap[DB_KEY_Y]   = 14;                   // SPACE BAR
-    GameDB.default_keyMap[DB_KEY_L]   = 72;                   // Scale X,Y
-    GameDB.default_keyMap[DB_KEY_R]   = 71;                   // Offset X,Y
-    GameDB.default_keyMap[DB_KEY_STA] = 10;                   // START
-    GameDB.default_keyMap[DB_KEY_SEL] = 11;                   // SELECT
-    GameDB.db_version = GAME_DATABASE_VERSION;
-}
+    memset(&ConfigDatabase, 0x00, sizeof(ConfigDatabase));
+    
+    ConfigDatabase.DefaultGameSettings.skip_frames        = (isDSiMode() ? 0:1);  // For older DS models, we skip frames to get full speed...
+    ConfigDatabase.DefaultGameSettings.machine_type       = MACHINE_XLXE_128K;    // Default machine is the XL/XE with 128K of RAM
+    ConfigDatabase.DefaultGameSettings.blending           = 1;                    // Light Blending by default
+    ConfigDatabase.DefaultGameSettings.disk_speedup       = 1;                    // Disk is Fast by default
+    ConfigDatabase.DefaultGameSettings.emulatorText       = 1;                    // Show emulator text by default
+    ConfigDatabase.DefaultGameSettings.key_click          = 1;                    // Key click sound enabled by default
+    ConfigDatabase.DefaultGameSettings.xOffset            = 32;                   // Reasonable X offset
+    ConfigDatabase.DefaultGameSettings.yOffset            = 24;                   // Reasonable Y offset
+    ConfigDatabase.DefaultGameSettings.xScale             = 256;                  // Reduce screen horizontally to fit
+    ConfigDatabase.DefaultGameSettings.yScale             = 256;                  // Full Scale
+    ConfigDatabase.DefaultGameSettings.cart_type          = CART_NONE;            // No cart type by default
 
+    ConfigDatabase.DefaultGameSettings.keyMap[DB_KEY_A]   = 0;                    // Fire button
+    ConfigDatabase.DefaultGameSettings.keyMap[DB_KEY_B]   = 0;                    // Fire button (for 5200 this will be 2nd button)
+    ConfigDatabase.DefaultGameSettings.keyMap[DB_KEY_X]   = 65;                   // VERTICAL- (pan screen)
+    ConfigDatabase.DefaultGameSettings.keyMap[DB_KEY_Y]   = 14;                   // SPACE BAR
+    ConfigDatabase.DefaultGameSettings.keyMap[DB_KEY_L]   = 72;                   // Scale X,Y
+    ConfigDatabase.DefaultGameSettings.keyMap[DB_KEY_R]   = 71;                   // Offset X,Y
+    ConfigDatabase.DefaultGameSettings.keyMap[DB_KEY_STA] = 10;                   // Atari START
+    ConfigDatabase.DefaultGameSettings.keyMap[DB_KEY_SEL] = 11;                   // Atari SELECT
+    
+    ConfigDatabase.db_version = GAME_DATABASE_VERSION;                            // And this lets us know what version of configuration we have...
+    
+    WriteEntireDatabase();
+}
 
 // -------------------------------------------------------------------------------------
 // Snap out the A8DS.DAT to the SD card. This is only done when the user asks for it 
@@ -108,66 +134,23 @@ void InitGameSettings(void)
 // -------------------------------------------------------------------------------------
 void WriteGameSettings(void)
 {
-    FILE *fp;
     int idx = 0;
 
-    GameDB.db_version = GAME_DATABASE_VERSION;
+    ConfigDatabase.db_version = GAME_DATABASE_VERSION;
     // Search through the Game Database to see if we have a match to our game filename....
     for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
     {
-        if (GameDB.GameSettings[idx].slot_used == 0) break;
-        if (GameDB.GameSettings[idx].game_crc == last_crc) break;
+        if (ConfigDatabase.GameSettings[idx].slot_used == 0) break;
+        if (ConfigDatabase.GameSettings[idx].game_crc == last_crc) break;
     }
 
-    if (idx < MAX_GAME_SETTINGS)
+    if (idx < MAX_GAME_SETTINGS) // Make sure there is room...
     {
-        GameDB.GameSettings[idx].game_crc           = last_crc;
-        GameDB.GameSettings[idx].slot_used          = 1;
-        GameDB.GameSettings[idx].machine_type       = myConfig.machine_type;
-        GameDB.GameSettings[idx].tv_type            = myConfig.tv_type;
-        GameDB.GameSettings[idx].basic_enabled      = myConfig.basic_enabled;
-        GameDB.GameSettings[idx].cart_type          = myConfig.cart_type;
-        GameDB.GameSettings[idx].keyboard_type      = myConfig.keyboard_type;
-        GameDB.GameSettings[idx].fps_setting        = myConfig.fps_setting;        
-        GameDB.GameSettings[idx].auto_fire          = myConfig.auto_fire;
-        GameDB.GameSettings[idx].skip_frames        = myConfig.skip_frames;
-        GameDB.GameSettings[idx].artifacting        = myConfig.artifacting;
-        GameDB.GameSettings[idx].xOffset            = myConfig.xOffset;
-        GameDB.GameSettings[idx].yOffset            = myConfig.yOffset;
-        GameDB.GameSettings[idx].xScale             = myConfig.xScale;
-        GameDB.GameSettings[idx].yScale             = myConfig.yScale;
-        GameDB.GameSettings[idx].blending           = myConfig.blending;
-        GameDB.GameSettings[idx].key_click_disable  = myConfig.key_click_disable;
-        GameDB.GameSettings[idx].dpad_type          = myConfig.dpad_type;
-        GameDB.GameSettings[idx].disk_speedup       = myConfig.disk_speedup;
-        GameDB.GameSettings[idx].disk_sound         = myConfig.disk_sound;
-        GameDB.GameSettings[idx].emulatorText       = myConfig.emulatorText;
-        GameDB.GameSettings[idx].alphaBlend         = myConfig.alphaBlend;
-        GameDB.GameSettings[idx].analog_speed       = myConfig.analog_speed;
-        for (int i=0; i<8; i++) GameDB.GameSettings[idx].keyMap[i] = myConfig.keyMap[i];
-        GameDB.checksum = 0;
-        char *ptr = (char *)GameDB.GameSettings;
-        for (int i=0; i<sizeof(GameDB.GameSettings); i++)
-        {
-               GameDB.checksum += *ptr;
-        }
-
-        DIR* dir = opendir("/data");
-        if (dir)
-        {
-            /* Directory exists. */
-            closedir(dir);
-        }
-        else
-        {
-            mkdir("/data", 0777);
-        }
-        fp = fopen("/data/A8DS.DAT", "wb+");
-        if (fp != NULL)
-        {
-            fwrite(&GameDB, sizeof(GameDB), 1, fp);
-            fclose(fp);
-        }
+        myConfig.game_crc           = last_crc;
+        myConfig.slot_used          = 1;
+        memcpy(&ConfigDatabase.GameSettings[idx], &myConfig, sizeof(myConfig));
+        
+        WriteEntireDatabase();
     }
 }
 
@@ -178,45 +161,10 @@ void WriteGameSettings(void)
 // -------------------------------------------------------------------------------------
 void WriteGlobalSettings(void)
 {
-    FILE *fp;
+    ConfigDatabase.db_version = GAME_DATABASE_VERSION;
+    memcpy(&ConfigDatabase.DefaultGameSettings, &myConfig, sizeof(myConfig));
 
-    GameDB.db_version = GAME_DATABASE_VERSION;
-
-    GameDB.default_tv_type            = myConfig.tv_type;
-    GameDB.default_machine_type       = myConfig.machine_type;
-    GameDB.default_basic_enabled      = myConfig.basic_enabled;
-    GameDB.default_keyboard_type      = myConfig.keyboard_type;
-    GameDB.default_skip_frames        = myConfig.skip_frames;
-    GameDB.default_key_click_disable  = myConfig.key_click_disable;
-    GameDB.default_auto_fire          = myConfig.auto_fire;
-    GameDB.default_blending           = myConfig.blending;
-    GameDB.default_alphaBlend         = myConfig.alphaBlend;
-    GameDB.default_disk_speedup       = myConfig.disk_speedup;
-    GameDB.default_disk_sound         = myConfig.disk_sound;
-    for (int i=0; i<8; i++) GameDB.default_keyMap[i] = myConfig.keyMap[i];
-    GameDB.checksum = 0;
-    char *ptr = (char *)GameDB.GameSettings;
-    for (int i=0; i<sizeof(GameDB.GameSettings); i++)
-    {
-           GameDB.checksum += *ptr;
-    }
-
-    DIR* dir = opendir("/data");
-    if (dir)
-    {
-        /* Directory exists. */
-        closedir(dir);
-    }
-    else
-    {
-        mkdir("/data", 0777);
-    }
-    fp = fopen("/data/A8DS.DAT", "wb+");
-    if (fp != NULL)
-    {
-        fwrite(&GameDB, sizeof(GameDB), 1, fp);
-        fclose(fp);
-    }
+    WriteEntireDatabase();
 }
 
 // ----------------------------------------------------------------------------------
@@ -225,89 +173,49 @@ void WriteGlobalSettings(void)
 // ----------------------------------------------------------------------------------
 void ReadGameSettings(void)
 {
-    FILE *fp;
     u8 bInitNeeded = false;
 
-    fp = fopen("/data/A8DS.DAT", "rb");
+    FILE *fp = fopen("/data/A8DS.DAT", "rb");
     if (fp != NULL)
     {
-        fread(&GameDB, sizeof(GameDB), 1, fp);
+        fread(&ConfigDatabase, sizeof(ConfigDatabase), 1, fp);
         fclose(fp);
 
         unsigned int checksum = 0;
-        char *ptr = (char *)GameDB.GameSettings;
-        for (int i=0; i<sizeof(GameDB.GameSettings); i++)
+        char *ptr = (char *)ConfigDatabase.GameSettings;
+        for (int i=0; i<sizeof(ConfigDatabase.GameSettings); i++)
         {
                checksum += *ptr;
         }
         
         // If checksum is bad, we must re-init. Can't trust the file...
-        if (GameDB.checksum != checksum)
+        if (ConfigDatabase.checksum != checksum)
         {
             bInitNeeded = true;
         }
-        
         // If the database version is old but checksum is good.... we might be able to update the config
-        if ((GameDB.db_version != GAME_DATABASE_VERSION) && (GameDB.checksum == checksum))
+        else if ((ConfigDatabase.db_version != GAME_DATABASE_VERSION) && (ConfigDatabase.checksum == checksum))
         {
             bInitNeeded = UpgradeConfig();  // See if we can upgrade the config database automatically
         }
         
         if (bInitNeeded)
         {
-            InitGameSettings();
+            InitWholeDatabase(); // Initialize all config data and write it out
         }
     }
     else
     {
-        InitGameSettings();
+        InitWholeDatabase(); // Initialize all config data and write it out
     }
-
-    myConfig.machine_type       = GameDB.default_machine_type;
-    myConfig.tv_type            = GameDB.default_tv_type;
-    myConfig.basic_enabled      = GameDB.default_basic_enabled;
-    myConfig.keyboard_type      = GameDB.default_keyboard_type;
-    myConfig.blending           = GameDB.default_blending;
-    myConfig.alphaBlend         = GameDB.default_alphaBlend;
-    myConfig.skip_frames        = GameDB.default_skip_frames;
-    myConfig.auto_fire          = GameDB.default_auto_fire;
-    myConfig.key_click_disable  = GameDB.default_key_click_disable;
-    myConfig.disk_speedup       = GameDB.default_disk_speedup;
-    myConfig.disk_sound         = GameDB.default_disk_sound;
-    myConfig.emulatorText       = true;
-    myConfig.analog_speed       = 0;
-    myConfig.fps_setting        = 0;
-    myConfig.dpad_type          = 0;
-    myConfig.artifacting        = 0;
     
-    for (int i=0; i<8; i++) myConfig.keyMap[i] = GameDB.default_keyMap[i];
+    // Copy over the default settings into the configuration struct...
+    memcpy(&myConfig, &ConfigDatabase.DefaultGameSettings, sizeof(myConfig));
 }
 
 void SetMyConfigDefaults(void)
 {
-    myConfig.xOffset            = 32;
-    myConfig.yOffset            = 24;
-    myConfig.xScale             = 256;
-    myConfig.yScale             = 256;
-    myConfig.artifacting        = 0;
-    myConfig.cart_type          = CART_NONE;
-    myConfig.emulatorText       = true;
-    myConfig.fps_setting        = 0;
-    myConfig.dpad_type          = 0;
-    myConfig.analog_speed       = 0;
-    myConfig.machine_type       = GameDB.default_machine_type;
-    myConfig.basic_enabled      = GameDB.default_basic_enabled;
-    myConfig.tv_type            = GameDB.default_tv_type;
-    myConfig.keyboard_type      = GameDB.default_keyboard_type;
-    myConfig.blending           = GameDB.default_blending;
-    myConfig.alphaBlend         = GameDB.default_alphaBlend;
-    myConfig.skip_frames        = GameDB.default_skip_frames;
-    myConfig.auto_fire          = GameDB.default_auto_fire;
-    myConfig.key_click_disable  = GameDB.default_key_click_disable;
-    myConfig.disk_speedup       = GameDB.default_disk_speedup;
-    myConfig.disk_sound         = GameDB.default_disk_sound;
-    
-    for (int i=0; i<8; i++)  myConfig.keyMap[i] = GameDB.default_keyMap[i];
+    memcpy(&myConfig, &ConfigDatabase.DefaultGameSettings, sizeof(myConfig));
 }
 
 // ---------------------------------------------------------------------------------
@@ -321,34 +229,12 @@ void ApplyGameSpecificSettings(void)
     // Search through the Game Database to see if we have a match to our game filename....
     for (idx=0; idx < MAX_GAME_SETTINGS; idx++)
     {
-        if (GameDB.GameSettings[idx].game_crc == last_crc) break;
+        if (ConfigDatabase.GameSettings[idx].game_crc == last_crc) break;
     }
 
     if (idx < MAX_GAME_SETTINGS)    // We found a match in the database... use it!
     {
-        myConfig.machine_type       = GameDB.GameSettings[idx].machine_type;
-        myConfig.tv_type            = GameDB.GameSettings[idx].tv_type;
-        myConfig.basic_enabled      = GameDB.GameSettings[idx].basic_enabled;
-        myConfig.cart_type          = GameDB.GameSettings[idx].cart_type;
-        myConfig.keyboard_type      = GameDB.GameSettings[idx].keyboard_type;
-        
-        myConfig.xOffset            = GameDB.GameSettings[idx].xOffset;
-        myConfig.yOffset            = GameDB.GameSettings[idx].yOffset;
-        myConfig.xScale             = GameDB.GameSettings[idx].xScale;
-        myConfig.yScale             = GameDB.GameSettings[idx].yScale;
-        myConfig.artifacting        = GameDB.GameSettings[idx].artifacting;
-        myConfig.fps_setting        = GameDB.GameSettings[idx].fps_setting;            
-        myConfig.auto_fire          = GameDB.GameSettings[idx].auto_fire;
-        myConfig.skip_frames        = GameDB.GameSettings[idx].skip_frames;
-        myConfig.blending           = GameDB.GameSettings[idx].blending;
-        myConfig.key_click_disable  = GameDB.GameSettings[idx].key_click_disable;
-        myConfig.dpad_type          = GameDB.GameSettings[idx].dpad_type;
-        myConfig.disk_speedup       = GameDB.GameSettings[idx].disk_speedup;
-        myConfig.disk_sound         = GameDB.GameSettings[idx].disk_sound;
-        myConfig.emulatorText       = GameDB.GameSettings[idx].emulatorText;
-        myConfig.alphaBlend         = GameDB.GameSettings[idx].alphaBlend;
-        myConfig.analog_speed       = GameDB.GameSettings[idx].analog_speed;
-        for (int i=0; i<8; i++)  myConfig.keyMap[i] = GameDB.GameSettings[idx].keyMap[i];
+        memcpy(&myConfig, &ConfigDatabase.GameSettings[idx], sizeof(myConfig));
     }
     else // No match. Use defaults for this game...
     {
@@ -461,7 +347,7 @@ const struct options_t Option_Table[2][20] =
                                         "3:RED/GREEN","4:GREEN/RED"},       &myConfig.artifacting,          OPT_NORMAL, 5,   "A FEW HIRES GAMES ",   "NEED ARTIFACING   ",  "TO LOOK RIGHT     ",  "OTHERWISE SET OFF "},
         {"SCREEN BLUR", {"NONE",        "LIGHT", "HEAVY"},                  &myConfig.blending,             OPT_NORMAL, 3,   "NORMALLY LIGHT    ",   "BLUR TO HELP WITH ",  "SCREEN SCALING    ",  "                  "},
         {"ALPHA BLEND", {"OFF",         "ON"},                              &myConfig.alphaBlend,           OPT_NORMAL, 2,   "TURN THIS ON TO   ",   "BLEND FRAMES. THIS",  "MAKES THE SCREEN  ",  "BRIGHTER ON NON-XL"},
-        {"KEY CLICK",   {"ON",          "OFF"},                             &myConfig.key_click_disable,    OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
+        {"KEY CLICK",   {"OFF",         "ON"},                              &myConfig.key_click,            OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "SILENCE KEY CLICKS",  "FOR KEYBOARD USE  "},
         {"DISK SPEED",  {"ACCURATE",    "FAST"},                            &myConfig.disk_speedup,         OPT_NORMAL, 2,   "NORMALLY FAST IS  ",   "DESIRED TO SPEED  ",  "UP FLOPPY DISK.   ",  "ACCURATE FOR SOME "},
         {"DISK SOUND",  {"DISABLED",    "ENABLED"},                         &myConfig.disk_sound,           OPT_NORMAL, 2,   "ENABLE FOR SOUND  ",   "EFFECTS ON SIO    ",  "ACCESS. OTHERWISE ",  "DISABLED.         "},
         {"EMULATOR TXT",{"OFF",         "ON"},                              &myConfig.emulatorText,         OPT_NORMAL, 2,   "NORMALLY ON       ",   "CAN BE USED TO    ",  "DISABLE FILENAME  ",  "INFO ON MAIN SCRN "},
