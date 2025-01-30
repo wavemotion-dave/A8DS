@@ -140,18 +140,19 @@ static void dsUpdateKeyboardStatus(void)
         dampenKeyboardStatus = 0;
         if (bShowKeyboard && (myConfig.keyboard_type < 5))
         {
+            // Handle the CAPS LOCK
             if (dGetByte(702) & 0x40) dsPrintValue((myConfig.keyboard_type == 4) ? 26:28,23,0, "@");
             else dsPrintValue((myConfig.keyboard_type == 4) ? 26:28,23,0, " ");
             
-            if ((ctrl | manual_ctrl) || (shift | manual_shift))
+            if ((ctrl | manual_ctrl) || (shift | manual_shift)) // Are we in Shift or Control handling?
             {
-                if (shift | manual_shift) dsPrintValue(0,0,0, "SFT");
-                if (ctrl | manual_ctrl)   dsPrintValue(0,0,0, "CTL");   // Control takes precedence 
+                if (shift | manual_shift) dsPrintValue(0,0,0, "SFT");   // Show the Shift indicator
+                if (ctrl | manual_ctrl)   dsPrintValue(0,0,0, "CTL");   // Control takes precedence over Shift 
                 bWasShowing = true;
             }
             else if (bWasShowing)
             {
-                dsPrintValue(0,0,0, "   ");
+                dsPrintValue(0,0,0, "   "); // Remove any SFT or CTL that was showing...
                 bWasShowing = false;
             }
         }    
@@ -440,7 +441,7 @@ void dsInitScreenMain(void)
     vramSetBankB(VRAM_B_MAIN_BG);             // This is the main Emulation screen - will be Alpha Blended with VRAM_A
     vramSetBankC(VRAM_C_SUB_BG);              // This is the Sub-Screen (touch screen) display (2 layers)
     vramSetBankD(VRAM_D_LCD );                // Not using this for video but need the 128K of VRAM to capture screenshots (DCAP)
-    vramSetBankE(VRAM_E_LCD );                // Not using this for video but  64K of faster RAM always useful!  Mapped at 0x06880000 (unused)
+    vramSetBankE(VRAM_E_LCD );                // Not using this for video but  64K of faster RAM always useful!  Mapped at 0x06880000 (used for cart shadow copy BBSB)
     vramSetBankF(VRAM_F_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06890000 (unused)
     vramSetBankG(VRAM_G_LCD );                // Not using this for video but  16K of faster RAM always useful!  Mapped at 0x06894000 (unused)
     vramSetBankH(VRAM_H_LCD );                // Not using this for video but  32K of faster RAM always useful!  Mapped at 0x06898000 (16K for Shadow RAM under XL OS and 16K for Pristine OS)
@@ -2044,6 +2045,15 @@ void dsMainLoop(void)
         stick1 = STICK_CENTRE;
 
         if (keyboard_debounce > 0) keyboard_debounce--;
+
+        // For the 5200 emulation, the NDS B Key becomes the second fire button automatically...
+        if (myConfig.machine_type == MACHINE_5200)
+        {
+            if (myConfig.keyMap[1] == 0) // If the 'B' key is mapped to 'fire' we repurpose as the 2nd fire button for A5200
+            {
+                if (keys_pressed & KEY_B) { key_code = AKEY_SHFT; key_shift = 1; keys_pressed &= ~KEY_B; }
+            }
+        }
         
         // ------------------------------------------------------
         // Check if the touch screen pressed and handle it...

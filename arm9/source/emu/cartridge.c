@@ -76,6 +76,8 @@ UBYTE cart_sic_data __attribute__((section(".dtcm"))) = 0x00;
 UWORD last_bb1_bank __attribute__((section(".dtcm"))) = 1;
 UWORD last_bb2_bank __attribute__((section(".dtcm"))) = 5;
 
+UBYTE *cart_shadow = (UBYTE *)0x06880000; // Mostly for BBSB for copy of memory
+
 /* DB_32, XEGS_32, XEGS_64, XEGS_128, XEGS_256, XEGS_512, XEGS_1024 */
 /* SWXEGS_32, SWXEGS_64, SWXEGS_128, SWXEGS_256, SWXEGS_512, SWXEGS_1024 */
 static void set_bank_809F(int b, int main)
@@ -308,7 +310,7 @@ static void set_bank_ultracart(UBYTE bank)
     {
         CartA0BF_Disable();
     }
-    else 
+    else
     {
         bank = 0;
         mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
@@ -373,7 +375,7 @@ static void set_bank_SICPLUS(UBYTE data)
         mem_map[0xA] = cart_image + (b*0x4000) + 0x2000 - 0xA000;
         mem_map[0xB] = cart_image + (b*0x4000) + 0x3000 - 0xB000;
     }
-    
+
     cart_sic_data = data;
     bank = b;
 }
@@ -381,7 +383,7 @@ static void set_bank_SICPLUS(UBYTE data)
 /* CART_DCART */
 static void set_bank_A0BF_DCART(UBYTE b)
 {
-    // We need to move the mini-memory window into place since the CPU emulation tends to do direct 
+    // We need to move the mini-memory window into place since the CPU emulation tends to do direct
     // memory access for emulation speed and we can't rely on the Cart_GetByte() being called always.
     if (bank != (b & 0x3f))
     {
@@ -444,6 +446,28 @@ static void set_bank_ADAWLIAH(UBYTE b)
     mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
 }
 
+static void set_bank_xe_multicart(UBYTE b)
+{
+    bank = b & 0x7f;
+    
+    if (b & 0x80) // Is this a 16K mapping?
+    {
+        Cart809F_Enable(); 
+        CartA0BF_Enable();
+        mem_map[0x8] = cart_image + (bank*0x2000) - 0x2000 - 0x8000;
+        mem_map[0x9] = cart_image + (bank*0x2000) - 0x1000 - 0x9000;
+        mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
+    }
+    else // 8K mapping
+    {   
+        Cart809F_Disable(); 
+        CartA0BF_Enable();
+        mem_map[0xA] = cart_image + (bank*0x2000) + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + (bank*0x2000) + 0x1000 - 0xB000;
+    }    
+}
+
 static void set_bank_corina_1mb(UBYTE b)
 {
     if (b & 0x80) // High bit disables the cart
@@ -460,7 +484,7 @@ static void set_bank_corina_1mb(UBYTE b)
         if (b & 0x40) // Bit 6 enables EEPROM 8K (mirrored across 16K bank)
         {
             Cart809F_Disable();
-            CartA0BF_Disable();            
+            CartA0BF_Disable();
             mem_map[0x8] = cart_image + (1024*1024) + 0x0000 - 0x8000;
             mem_map[0x9] = cart_image + (1024*1024) + 0x1000 - 0x9000;
             mem_map[0xA] = cart_image + (1024*1024) + 0x0000 - 0xA000;
@@ -500,14 +524,14 @@ static void set_bank_corina_sram(UBYTE b)
         if (b & 0x40) // EEPROM
         {
             Cart809F_Disable();
-            CartA0BF_Disable();            
+            CartA0BF_Disable();
             mem_map[0x8] = cart_image + (512*1024) + 0x0000 - 0x8000;
             mem_map[0x9] = cart_image + (512*1024) + 0x1000 - 0x9000;
             mem_map[0xA] = cart_image + (512*1024) + 0x0000 - 0xA000;
             mem_map[0xB] = cart_image + (512*1024) + 0x1000 - 0xB000;
             SetRAM(0x8000, 0xbfff); // We treat the EE as RAM
         }
-        else if (b & 0x20) // SRAM - we reuse the back-end empty Cart Image 
+        else if (b & 0x20) // SRAM - we reuse the back-end empty Cart Image
         {
             Cart809F_Disable();
             CartA0BF_Disable();
@@ -541,6 +565,7 @@ static void set_bank_corina_sram(UBYTE b)
 //  The remaining 8 KB is mapped to $A000-$BFFF.
 
 #define CopyROM(addr1, addr2, src) memcpy(memory + (addr1), src, (addr2) - (addr1) + 1)
+
 static void access_BountyBob1(UWORD addr)
 {
     UWORD base_addr = (addr & 0xf000);
@@ -553,7 +578,7 @@ static void access_BountyBob1(UWORD addr)
         new_state = (last_bb1_bank & 0x0c) | addr;
         if (new_state != last_bb1_bank)
         {
-            CopyROM(base_addr, base_addr + 0x0fff, cart_image + addr * 0x1000);
+            CopyROM(base_addr, base_addr + 0x0fff, cart_shadow + addr * 0x1000);
             last_bb1_bank = new_state;
         }
     }
@@ -570,7 +595,7 @@ static void access_BountyBob2(UWORD addr)
         new_state = (last_bb2_bank & 0x03) | (addr << 2);
         if (new_state != last_bb2_bank)
         {
-            CopyROM(base_addr, base_addr + 0x0fff, cart_image + 0x4000 + addr * 0x1000);
+            CopyROM(base_addr, base_addr + 0x0fff, cart_shadow + 0x4000 + addr * 0x1000);
             last_bb2_bank = new_state;
         }
     }
@@ -598,6 +623,149 @@ void BountyBob2PutByte(UWORD addr, UBYTE value)
     access_BountyBob2(addr);
 }
 
+void BryanBank(UBYTE b)
+{
+    mem_map[0x4] = cart_image + ((int)b*0x8000L) + 0x0000 - 0x4000;
+    mem_map[0x5] = cart_image + ((int)b*0x8000L) + 0x1000 - 0x5000;
+    mem_map[0x6] = cart_image + ((int)b*0x8000L) + 0x2000 - 0x6000;
+    mem_map[0x7] = cart_image + ((int)b*0x8000L) + 0x3000 - 0x7000;
+    mem_map[0x8] = cart_image + ((int)b*0x8000L) + 0x4000 - 0x8000;
+    mem_map[0x9] = cart_image + ((int)b*0x8000L) + 0x5000 - 0x9000;
+    mem_map[0xA] = cart_image + ((int)b*0x8000L) + 0x6000 - 0xA000;
+    mem_map[0xB] = cart_image + ((int)b*0x8000L) + 0x7000 - 0xB000;
+}
+
+UBYTE BryanGetByte64(UWORD addr)
+{
+    if (addr >= 0xBFE0) BryanBank(1);
+    else if (addr >= 0xBFD0) BryanBank((addr & 0x04) ? 1:0);
+
+    return dGetByte(addr);
+}
+
+UBYTE BryanGetByte128(UWORD addr)
+{
+    if (addr >= 0xBFE0) BryanBank(3);
+    else if (addr >= 0xBFD0) BryanBank((addr & 0x0C) >> 2);
+
+    return dGetByte(addr);
+}
+
+
+static void UnscrambleAtrax(UBYTE type, unsigned int size)
+{
+    /* On Atrax game and SDX cartridges, address and data lines between the
+       cartridge port and the EPROM are intermixed as a kind of copy
+       prevention. Data in the ROM chip, if read directly, would make no
+       sense. We have to decode the ROM contents according to the connections
+       on the cartridge. */
+
+    struct cross_map_t {
+        unsigned int addr[17]; /* Mapping of address (+ bank select) lines */
+        unsigned char data[8]; /* Mapping of data lines */
+    };
+    static struct cross_map_t cross_maps[2] = {
+        /* Atrax games cartridge */
+        { /* cartridge port + bank select <-> EPROM */
+            { 0x0020,              /*  A0 <->  A5 */
+              0x0040,              /*  A1 <->  A6 */
+              0x0080,              /*  A2 <->  A7 */
+              0x1000,              /*  A3 <-> A12 */
+              0x0001,              /*  A4 <->  A0 */
+              0x0002,              /*  A5 <->  A1 */
+              0x0004,              /*  A6 <->  A2 */
+              0x0008,              /*  A7 <->  A3 */
+              0x0010,              /*  A8 <->  A4 */
+              0x0100,              /*  A9 <->  A8 */
+              0x0400,              /* A10 <-> A10 */
+              0x0800,              /* A11 <-> A11 */
+              0x0200,              /* A12 <->  A9 */
+              0x2000,              /* A13 <-> A13 */
+              0x4000,              /* A14 <-> A14 */
+              0x8000,              /* A15 <-> A15 */
+              0x10000 },           /* A16 <-> A16 */
+            { 0x10,                /*  D4 <->  Q0 */
+              0x20,                /*  D5 <->  Q1 */
+              0x04,                /*  D2 <->  Q2 */
+              0x80,                /*  D7 <->  Q3 */
+              0x08,                /*  D3 <->  Q4 */
+              0x01,                /*  D0 <->  Q5 */
+              0x02,                /*  D1 <->  Q6 */
+              0x40 }               /*  D6 <->  Q7 */
+        },
+        /* Atrax SDX */
+        { /* cartridge port + bank select <-> EPROM */
+            { 0x0040,              /*  A0 <->  A6 */
+              0x0080,              /*  A1 <->  A7 */
+              0x1000,              /*  A2 <-> A12 */
+              0x8000,              /*  A3 <-> A15 */
+              0x4000,              /*  A4 <-> A14 */
+              0x2000,              /*  A5 <-> A13 */
+              0x0100,              /*  A6 <->  A8 */
+              0x0020,              /*  A7 <->  A5 */
+              0x0010,              /*  A8 <->  A4 */
+              0x0008,              /*  A9 <->  A3 */
+              0x0001,              /* A10 <->  A0 */
+              0x0002,              /* A11 <->  A1 */
+              0x0004,              /* A12 <->  A2 */
+              0x0200,              /* A13 <->  A9 */
+              0x0800,              /* A14 <-> A11 */
+              0x0400,              /* A15 <-> A10 */
+              0x10000 },           /* A16 <-> A16 (only on ATRAX_SDX_128) */
+            { 0x02,                /*  D1 <->  Q0 */
+              0x08,                /*  D3 <->  Q1 */
+              0x80,                /*  D7 <->  Q2 */
+              0x40,                /*  D6 <->  Q3 */
+              0x01,                /*  D0 <->  Q4 */
+              0x04,                /*  D2 <->  Q5 */
+              0x20,                /*  D5 <->  Q6 */
+              0x10 }               /*  D4 <->  Q7 */
+        }
+    };
+    struct cross_map_t *map;
+
+    map = &cross_maps[type];
+
+    for (unsigned int i = 0; i < size; i++)
+    {
+        unsigned int const rom_addr =
+            (i &  0x0001 ? map->addr[0] : 0) |
+            (i &  0x0002 ? map->addr[1] : 0) |
+            (i &  0x0004 ? map->addr[2] : 0) |
+            (i &  0x0008 ? map->addr[3] : 0) |
+            (i &  0x0010 ? map->addr[4] : 0) |
+            (i &  0x0020 ? map->addr[5] : 0) |
+            (i &  0x0040 ? map->addr[6] : 0) |
+            (i &  0x0080 ? map->addr[7] : 0) |
+            (i &  0x0100 ? map->addr[8] : 0) |
+            (i &  0x0200 ? map->addr[9] : 0) |
+            (i &  0x0400 ? map->addr[10] : 0) |
+            (i &  0x0800 ? map->addr[11] : 0) |
+            (i &  0x1000 ? map->addr[12] : 0) |
+            (i &  0x2000 ? map->addr[13] : 0) |
+            (i &  0x4000 ? map->addr[14] : 0) |
+            (i &  0x8000 ? map->addr[15] : 0) |
+            (i & 0x10000 ? map->addr[16] : 0);
+
+        UBYTE byte = cart_image[rom_addr];
+
+        cart_image[(512*1024) + i] =
+            (byte & 0x01 ? map->data[0] : 0) |
+            (byte & 0x02 ? map->data[1] : 0) |
+            (byte & 0x04 ? map->data[2] : 0) |
+            (byte & 0x08 ? map->data[3] : 0) |
+            (byte & 0x10 ? map->data[4] : 0) |
+            (byte & 0x20 ? map->data[5] : 0) |
+            (byte & 0x40 ? map->data[6] : 0) |
+            (byte & 0x80 ? map->data[7] : 0);
+    }
+
+    // Copy the unscrambled cart image back into place...
+    memcpy(cart_image, cart_image + (512*1024), size);
+}
+
+
+
 u8 Guess5200CartType(const char *filename)
 {
     if (strcasestr(filename, "Battlezone") != 0)     return CART_5200_EE_16;
@@ -609,7 +777,7 @@ u8 Guess5200CartType(const char *filename)
     if (strcasestr(filename, "Dig Dug") != 0)        return CART_5200_EE_16;
     if (strcasestr(filename, "DigDug") != 0)         return CART_5200_EE_16;
     if (strcasestr(filename, "Frisky") != 0)         return CART_5200_EE_16;
-    if (strcasestr(filename, "Threeedeep") != 0)     return CART_5200_EE_16;
+    if (strcasestr(filename, "Threedeep") != 0)      return CART_5200_EE_16;
     if (strcasestr(filename, "Gyruss") != 0)         return CART_5200_EE_16;
     if (strcasestr(filename, "Hangly") != 0)         return CART_5200_EE_16;
     if (strcasestr(filename, "James") != 0)          return CART_5200_EE_16;
@@ -630,22 +798,22 @@ u8 Guess5200CartType(const char *filename)
     if (strcasestr(filename, "Soccer") != 0)         return CART_5200_EE_16;
     if (strcasestr(filename, "Runner") != 0)         return CART_5200_EE_16;
     if (strcasestr(filename, "Dungeon") != 0)        return CART_5200_EE_16;
-    if (strcasestr(filename, "Island") != 0)         return CART_5200_EE_16;
     if (strcasestr(filename, "Stargate") != 0)       return CART_5200_EE_16;
     if (strcasestr(filename, "Raiders") != 0)        return CART_5200_EE_16;
     if (strcasestr(filename, "Trek") != 0)           return CART_5200_EE_16;
     if (strcasestr(filename, "Wars") != 0)           return CART_5200_EE_16;
     if (strcasestr(filename, "Xari") != 0)           return CART_5200_EE_16;
-    
-    return CART_5200_NS_16; // The more common 16K 
+
+    return CART_5200_NS_16; // The more common 16K
 }
 
 // ---------------------------------------------------------------------
 // We support both .CAR and .ROM files and instead of copying chunks
-// of memory around, we use the mem_map[] to point to various rom 
-// banks/segments/memory within the cartridge space. This saves us 
+// of memory around, we use the mem_map[] to point to various rom
+// banks/segments/memory within the cartridge space. This saves us
 // having to memcpy() and slowing down the emulation.
 // ---------------------------------------------------------------------
+int cart_size = 0;
 int CART_Insert(int enabled, int file_type, const char *filename)
 {
     memset(cart_image, 0xFF, sizeof(cart_image));   // Fill with 0xFF until we read in the cart
@@ -669,9 +837,9 @@ int CART_Insert(int enabled, int file_type, const char *filename)
         FILE * fp = fopen(filename, "rb");
         if (fp != NULL)
         {
-            int size = fread(cart_image, 1, CART_MAX_SIZE, fp);
+            cart_size = fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
-            size = size / 1024;
+            int size = cart_size / 1024;
             // If configuration hasn't been set for a Cartridge Type, guess at the type based on ROM size
             if (myConfig.cart_type == CART_NONE)
             {
@@ -694,9 +862,9 @@ int CART_Insert(int enabled, int file_type, const char *filename)
         FILE * fp = fopen(filename, "rb");
         if (fp != NULL)
         {
-            int size = fread(cart_image, 1, CART_MAX_SIZE, fp);
+            cart_size = fread(cart_image, 1, CART_MAX_SIZE, fp);
             fclose(fp);
-            size = size / 1024;
+            int size = cart_size / 1024;
             // If configuration hasn't been set for an A52 type, guess at the type based on ROM size
             if (myConfig.cart_type == CART_NONE)
             {
@@ -705,7 +873,9 @@ int CART_Insert(int enabled, int file_type, const char *filename)
                 if (size == 16)     myConfig.cart_type = Guess5200CartType(filename);
                 if (size == 32)     myConfig.cart_type = CART_5200_32;
                 if (size == 40)     myConfig.cart_type = CART_5200_40;
-                
+                if (size == 64)     myConfig.cart_type = CART_5200_64;
+                if (size == 128)    myConfig.cart_type = CART_5200_128;
+
                 myConfig.machine_type = MACHINE_5200;
                 install_os();
                 MEMORY_InitialiseMachine();
@@ -715,7 +885,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
 
     if (enabled)
     {
-        CART_Start();
+        CART_Start(cart_size);
     }
     return 1;
 }
@@ -739,7 +909,7 @@ void CART_Remove(void)
 // Setup the basic memory in the 0x8000 and 0xA000 region based
 // on the cartridge that has been 'inserted' into the emulation.
 // --------------------------------------------------------------
-void CART_Start(void)
+void CART_Start(int cart_size)
 {
     last_bb1_bank = 1;
     last_bb2_bank = 5;
@@ -801,6 +971,17 @@ void CART_Start(void)
         mem_map[0xB] = cart_image + 0x7000 - 0xB000;
         bank = 0;
         break;
+        
+    case CART_ATRAX_SDX_64:
+    case CART_ATRAX_SDX_128:
+        UnscrambleAtrax(1, 64*1024); // Once unscrambled, it's just SDX_64 and SDX 128
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        mem_map[0xA] = cart_image + 0x0000 - 0xA000;
+        mem_map[0xB] = cart_image + 0x1000 - 0xB000;
+        bank = 0;
+        break;
+    
     case CART_MIO_8:
        for (u16 i=1; i<8; i++) memcpy(cart_image + (i*2000), cart_image, 0x2000);   // Replicate bank 1 across 64K
     case CART_WILL_64:
@@ -878,9 +1059,10 @@ void CART_Start(void)
     case CART_BBSB_40:
         Cart809F_Enable();
         CartA0BF_Enable();
-        CopyROM(0x8000, 0x8fff, cart_image + (last_bb1_bank & 0x03) * 0x1000);
-        CopyROM(0x9000, 0x9fff, cart_image + 0x4000 + ((last_bb2_bank & 0x0c) >> 2) * 0x1000);
-        CopyROM(0xa000, 0xbfff, cart_image + 0x8000);
+        memcpy(cart_shadow, cart_image, 40*1024);
+        CopyROM(0x8000, 0x8fff, cart_shadow + (last_bb1_bank & 0x03) * 0x1000);
+        CopyROM(0x9000, 0x9fff, cart_shadow + 0x4000 + ((last_bb2_bank & 0x0c) >> 2) * 0x1000);
+        CopyROM(0xa000, 0xbfff, cart_shadow + 0x8000);
         readmap[0x8f] = BountyBob1GetByte;
         readmap[0x9f] = BountyBob2GetByte;
         writemap[0x8f] = BountyBob1PutByte;
@@ -954,6 +1136,18 @@ void CART_Start(void)
     case CART_SIC_PLUS:
         set_bank_SICPLUS(0x00);
         break;
+    case CART_XE_MULTI_8:
+    case CART_XE_MULTI_16:
+    case CART_XE_MULTI_32:
+    case CART_XE_MULTI_64:
+    case CART_XE_MULTI_128:
+    case CART_XE_MULTI_256:
+    case CART_XE_MULTI_512:
+    case CART_XE_MULTI_1024:
+        Cart809F_Disable();
+        CartA0BF_Enable();
+        memcpy(memory+0xA000, cart_image, 0x2000);   // First 8K mapped in (despite cart.txt saying last)
+        break;
     case CART_ULTRACART:
         Cart809F_Disable();
         CartA0BF_Enable();
@@ -1008,7 +1202,7 @@ void CART_Start(void)
     case CART_JATARI_512:
     case CART_JATARI_1024:
         set_bank_A0BF_JATARI(0, 0x7f);
-        break;        
+        break;
     case CART_DCART:
         Cart809F_Disable();
         set_bank_A0BF_DCART(0);     // Bank 0 on power up
@@ -1036,14 +1230,33 @@ void CART_Start(void)
     case CART_5200_NS_16:
         memset(memory+0x4000, 0xff, 0x4000);
         memcpy(memory+0x8000, cart_image, 0x4000);
-        break;        
+        break;
     case CART_5200_EE_16:
         memcpy(memory+0x4000, cart_image, 0x2000);
         memcpy(memory+0x6000, cart_image, 0x4000);
         memcpy(memory+0xA000, cart_image+0x2000, 0x2000);
-        break;        
+        break;
+    case CART_5200_40:
+        memcpy(cart_shadow, cart_image, 40*1024);
+        memcpy(memory+0x4000, cart_shadow + (last_bb1_bank & 0x03) * 0x1000, 0x1000);
+        memcpy(memory+0x5000, cart_shadow + 0x4000 + ((last_bb2_bank & 0x0c) >> 2) * 0x1000, 0x1000);
+        memcpy(memory+0x8000, cart_shadow+0x8000, 0x2000); // Fixed bank 8K
+        memcpy(memory+0xA000, cart_shadow+0x8000, 0x2000); // Fixed bank mirror
+        readmap[0x4f] = BountyBob1GetByte;
+        readmap[0x5f] = BountyBob2GetByte;
+        writemap[0x4f] = BountyBob1PutByte;
+        writemap[0x5f] = BountyBob2PutByte;
+        break;
     case CART_5200_32:
         memcpy(memory+0x4000, cart_image, 0x8000);
+        break;
+    case CART_5200_64:
+        BryanBank(1);
+        readmap[0xbf] = BryanGetByte64;
+        break;
+    case CART_5200_128:
+        BryanBank(3);
+        readmap[0xbf] = BryanGetByte128;
         break;
     case CART_TELELINK2:
         Cart809F_Disable();
@@ -1061,7 +1274,7 @@ void CART_Start(void)
         Cart809F_Enable();
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
         mem_map[0x9] = cart_image + 0x1000 - 0x9000;
-        
+
         // With Right-side CARTs we might also be enabling BASIC
         if (myConfig.basic_enabled)
         {
@@ -1069,13 +1282,13 @@ void CART_Start(void)
             mem_map[0xA] = ((UBYTE*)ROM_basic) + 0x0000 - 0xA000;
             mem_map[0xB] = ((UBYTE*)ROM_basic) + 0x1000 - 0xB000;
         }
-        else 
+        else
         {
             CartA0BF_Disable();
             memset(memory+0x8000, 0xFF, 0x2000);   // Just clear out anything in this slot...
         }
         break;
-        
+
     default:
         // The only default cart we support is an 8K built-in BASIC cart
         if (myConfig.basic_enabled)
@@ -1198,6 +1411,7 @@ void CART_Access(UWORD addr)
         if ((addr & 0xf0) == 0xd0)
             set_bank_A0BF(addr);
         break;
+    case CART_ATRAX_SDX_64:
     case CART_SDX_64:
         if ((addr & 0xf0) == 0xe0)
             set_bank_A0BF(addr);
@@ -1229,6 +1443,7 @@ void CART_Access(UWORD addr)
     case CART_ATMAX_NEW_1024:
         set_bank_A0BF_ATMAX1024(addr & 0xff);
         break;
+    case CART_ATRAX_SDX_128:
     case CART_SDX_128:
         set_bank_SDX_128(addr);
         break;
@@ -1287,9 +1502,9 @@ UBYTE CART_GetByte(UWORD addr)
     if (addr == 0xd5b8 || addr == 0xd5b9)
     {
         // Disable RTIME for a few special carts
-        if ((myConfig.cart_type != CART_AST_32)  && 
-            (myConfig.cart_type != CART_SIC_128) && 
-            (myConfig.cart_type != CART_SIC_256) && 
+        if ((myConfig.cart_type != CART_AST_32)  &&
+            (myConfig.cart_type != CART_SIC_128) &&
+            (myConfig.cart_type != CART_SIC_256) &&
             (myConfig.cart_type != CART_SIC_512) &&
             (myConfig.cart_type != CART_DCART))
         {
@@ -1332,9 +1547,9 @@ void CART_PutByte(UWORD addr, UBYTE byte)
     if (addr == 0xd5b8 || addr == 0xd5b9)
     {
         // Disable RTIME for a few special carts
-        if ((myConfig.cart_type != CART_AST_32)  && 
-            (myConfig.cart_type != CART_SIC_128) && 
-            (myConfig.cart_type != CART_SIC_256) && 
+        if ((myConfig.cart_type != CART_AST_32)  &&
+            (myConfig.cart_type != CART_SIC_128) &&
+            (myConfig.cart_type != CART_SIC_256) &&
             (myConfig.cart_type != CART_SIC_512) &&
             (myConfig.cart_type != CART_DCART))
         {
@@ -1448,7 +1663,7 @@ void CART_PutByte(UWORD addr, UBYTE byte)
         break;
     case CART_JRC_64:
         if ((addr & 0x80) == 0) set_bank_A0BF_JRC(byte);
-        break;        
+        break;
     case CART_JRC_64i:
         if ((addr & 0x80) == 0) set_bank_A0BF_JRCi(byte);
         break;
@@ -1458,6 +1673,17 @@ void CART_PutByte(UWORD addr, UBYTE byte)
     case CART_CORINA_SRAM:
         if ((addr & 0xff) == 0) set_bank_corina_sram(byte);
         break;
+    case CART_XE_MULTI_8:
+    case CART_XE_MULTI_16:
+    case CART_XE_MULTI_32:
+    case CART_XE_MULTI_64:
+    case CART_XE_MULTI_128:
+    case CART_XE_MULTI_256:
+    case CART_XE_MULTI_512:
+    case CART_XE_MULTI_1024:
+        set_bank_xe_multicart(byte);
+        break;
+        
     default:
         CART_Access(addr);
         break;

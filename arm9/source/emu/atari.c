@@ -66,6 +66,7 @@
 #include "rtime.h"
 #include "sio.h"
 #include "util.h"
+#include "cartridge.h"
 #include "pokeysnd.h"
 
 char disk_filename[DISK_MAX][256];
@@ -102,7 +103,7 @@ void Coldstart(void)
     CPU_Reset();
     /* note: POKEY and GTIA have no Reset pin */
     /* reset cartridge to power-up state */
-    CART_Start();
+    CART_Start(cart_size);
 
     /* set Atari OS Coldstart flag */
     dPutByte(0x244, 1);

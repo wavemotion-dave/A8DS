@@ -221,28 +221,33 @@ void INPUT_Frame_5200(void)
     {
       if ((STICK[i] & (STICK_CENTRE ^ STICK_LEFT)) == 0)
       {
-          PCPOT_input[2 * i] = joy_5200_min[myConfig.analog_speed];
+          if (myConfig.analog_speed < 3) PCPOT_input[2 * i] = joy_5200_min[myConfig.analog_speed];
+          else PCPOT_input[2 * i] -= 2;
+          
       }
       else if ((STICK[i] & (STICK_CENTRE ^ STICK_RIGHT)) == 0)
       {
-          PCPOT_input[2 * i] = joy_5200_max[myConfig.analog_speed];
+          if (myConfig.analog_speed < 3) PCPOT_input[2 * i] = joy_5200_max[myConfig.analog_speed];
+          else PCPOT_input[2 * i] += 2;
       }
       else
       {
-          PCPOT_input[2 * i] = joy_5200_center;
+          if (myConfig.analog_speed < 3) PCPOT_input[2 * i] = joy_5200_center;
       }
 
       if ((STICK[i] & (STICK_CENTRE ^ STICK_FORWARD)) == 0)
       {
-          PCPOT_input[2 * i +1] = joy_5200_min[myConfig.analog_speed];
+          if (myConfig.analog_speed < 3) PCPOT_input[2 * i +1] = joy_5200_min[myConfig.analog_speed];
+          else PCPOT_input[2 * i +1] -= 2;
       }
       else if ((STICK[i] & (STICK_CENTRE ^ STICK_BACK)) == 0)
       {
-          PCPOT_input[2 * i +1] = joy_5200_max[myConfig.analog_speed];
+          if (myConfig.analog_speed < 3)  PCPOT_input[2 * i +1] = joy_5200_max[myConfig.analog_speed];
+          else PCPOT_input[2 * i +1] += 2;
       }
       else
       {
-          PCPOT_input[2 * i + 1] = joy_5200_center;
+          if (myConfig.analog_speed < 3) PCPOT_input[2 * i + 1] = joy_5200_center;
       }
     }
 

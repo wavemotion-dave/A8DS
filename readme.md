@@ -171,7 +171,7 @@ The following cartridge layouts are supported:
 * Corina 1MB+EE and 512K + SRAM + EE
 * MIO 8K
 * Right-side 4K and 8K
-* Atari 5200 Carts from 4K up to 32K (rename your 5200 carts to .a52 for easy loading)
+* Atari 5200 Carts from 4K up to 64K (rename your 5200 carts to .a52 for easy loading)
 
 If you're using cartridge files, it is suggested you use .CAR files which contain type information to properly load up the cartirdge. Bare .ROM files 
 have ambiguities that are not always auto-detected by the emulator and as such will not always load correctly. You can go into the GEAR/Options menu

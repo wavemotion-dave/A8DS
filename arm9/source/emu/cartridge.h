@@ -104,6 +104,8 @@
 #define CART_OSS_16_043M    45
 #define CART_BLIZZARD_4     46
 #define CART_AST_32         47
+#define CART_ATRAX_SDX_64   48
+#define CART_ATRAX_SDX_128  49
 #define CART_TURBOSOFT_64   50
 #define CART_TURBOSOFT_128  51
 #define CART_ULTRACART      52
@@ -117,6 +119,8 @@
 #define CART_BLIZZARD_32    60
 #define CART_ADAWLIAH32     69
 #define CART_ADAWLIAH64     70
+#define CART_5200_64        71
+#define CART_5200_128       72
 #define CART_ATMAX_NEW_1024 75
 #define CART_WILL_16        76
 #define CART_MIO_8          77
@@ -125,6 +129,14 @@
 #define CART_SIC_PLUS       83
 #define CART_CORINA_1MB     84
 #define CART_CORINA_SRAM    85
+#define CART_XE_MULTI_8     86
+#define CART_XE_MULTI_16    87
+#define CART_XE_MULTI_32    88
+#define CART_XE_MULTI_64    89
+#define CART_XE_MULTI_128   90
+#define CART_XE_MULTI_256   91
+#define CART_XE_MULTI_512   92
+#define CART_XE_MULTI_1024  93
 #define CART_JATARI_8       104 
 #define CART_JATARI_16      105
 #define CART_JATARI_32      106 
@@ -149,14 +161,14 @@ extern int bank;
 extern UBYTE cart_sic_data;
 extern UWORD last_bb1_bank;
 extern UWORD last_bb2_bank;
-
+extern int cart_size;
 
 extern UBYTE *cart_mem_ptr;
 extern UBYTE cart_image[];
 
 int CART_Insert(int enabled, int type, const char *filename);
 void CART_Remove(void);
-void CART_Start(void);
+void CART_Start(int cart_size);
 UBYTE CART_GetByte(UWORD addr);
 void CART_PutByte(UWORD addr, UBYTE byte);
 
