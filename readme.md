@@ -21,7 +21,8 @@ Features :
 *  CAR and ROM cartridge-based games up to 1MB in size
 *  XEX Atari 8-bit Executable images of any size provided they fit into the chosen Memory Configuration
 *  ATR and ATX disk-based games (two emulated drives supported as D1 and D2)
-*  NTSC and PAL support
+*  Atari 5200 cartridge based games (up to 128K Super Carts)
+*  NTSC and PAL support with proper palettes
 *  Virtual keyboard in various Atari 800/XL/XE stylings
 *  R-Time8 Real-Time Clock support (mostly for SpartaDOS X)
 *  Built in Altirra OS (3.41) and BASIC (1.58) but optional external BIOS/BASIC support to use the real Atari firmware
@@ -143,8 +144,7 @@ might run at the wrong speed unless you're using the actual ATARI REV C rom.
 
 A8DS emulates a Real-Time clock mostly used for SpartaDOS X.
 
-Cartridge support was added with A8DS 3.1 and later. You can load .CAR and .ROM 
-files (using the XEX/CAR button on the main screen).
+You can load .CAR and .ROM cartridge files (using the XEX/CAR button on the main screen).
 
 The following cartridge layouts are supported:
 * Standard 2K, 4K, 8K and 16K
