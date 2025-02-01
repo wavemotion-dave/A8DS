@@ -312,15 +312,17 @@ the one in CPU as it has a big impact on performance).
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
-V4.2  : ??-Feb-2025 by wavemotion-dave
+V4.2  : 01-Feb-2025 by wavemotion-dave
   * Fixed Turbo 128K cart type so it doesn't inadvertently disable the cartridge port.
   * Added Right-Side cart support for Atari800 (fixing a few A800 emulation issues as well).
-  * Added Atari 5200 cart support for carts of 32K or less (rename your 5200 carts to ".a52" for easy loading)
+  * Added Atari 5200 cart support for carts of 128K or less (rename your 5200 carts to ".a52" for easy loading)
   * Added new key maps for SHIFT and CONTROL to NDS keys.
   * Massive simplification of the configuration handling for machine type.
   * New NTSC and PAL color palettes from the awesome Trebor Pro Pack.
-  * Added new cart types for SIC+ (1MB), Corina (1MB+EE and 512K+512K+EE), Telelink II and MIO_8
-
+  * New Caps Lock LED added to all virtual keyboards.
+  * Added new cart types for SIC+ (1MB), Corina (1MB+EE and 512K+512K+EE), Telelink II and MIO_8, XE Multicart and more...
+  * Many small cleanups and improvements and a few bug fixes as well.
+  
 V4.1  : 25-Jan-2025 by wavemotion-dave
   * Refactor the OS Enable/Disable on XL/XE emulation to avoid moving large blocks of memory. Speeds up many games that swap the OS in/out.
   * Improved SIO/Disk handling - sound effects reduced in volume and now configurable (default is OFF).
