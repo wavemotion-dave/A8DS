@@ -104,6 +104,16 @@ inline UBYTE dGetByteFull(UWORD addr)
     return (readmap[addr >> 8] ? (*readmap[addr >> 8])(addr) : dGetByte(addr));
 }
 
+inline UWORD zGetByte(UWORD addr)
+{
+    return fast_page[addr];
+}
+
+inline void zPutByte(UWORD addr, UBYTE data)
+{
+    fast_page[addr] = data;
+}
+
 inline UWORD zGetWord(UWORD addr)
 {
     return (fast_page[addr] | (fast_page[(UBYTE)(addr+1)]<<8));

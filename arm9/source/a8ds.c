@@ -164,7 +164,7 @@ static void dsUpdateKeyboardStatus(void)
 // Useful to help debug the emulator - this goes out approximately once
 // per second. Caller just needs to stuff values into the debug[] array.
 // ---------------------------------------------------------------------------
-ITCM_CODE static void DumpDebugData(void)
+static void DumpDebugData(void)
 {
     if (DEBUG_DUMP)
     {

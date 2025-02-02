@@ -2623,9 +2623,9 @@ ITCM_CODE void ANTIC_Frame(int draw_display)
             continue;
         }
 #ifdef NEW_CYCLE_EXACT
-        new_pm_scanline();
+        if (draw_display) new_pm_scanline();
         GOEOL_CYCLE_EXACT;
-        draw_partial_scanline(cur_screen_pos, RBORDER_END);
+        if (draw_display) draw_partial_scanline(cur_screen_pos, RBORDER_END);
         UPDATE_DMACTL
         cur_screen_pos = NOT_DRAWING;
 
@@ -2643,7 +2643,7 @@ ITCM_CODE void ANTIC_Frame(int draw_display)
             xpos += before_cycles[md];
 
         GO(SCR_C);
-        new_pm_scanline();
+        if (draw_display) new_pm_scanline();
 
         xpos += DMAR;
 

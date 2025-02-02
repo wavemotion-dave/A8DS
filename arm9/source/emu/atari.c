@@ -250,7 +250,7 @@ void Atari800_Frame()
 {
     INPUT_Frame();
     GTIA_Frame();
-    ANTIC_Frame(myConfig.skip_frames ? (gTotalAtariFrames & (myConfig.skip_frames==1 ? 0x03:0x01)) : TRUE);  // Skip every 4th frame... or every other frame if we are "aggressive"
+    ANTIC_Frame(myConfig.skip_frames ? (gTotalAtariFrames & (myConfig.skip_frames==1 ? 0x07:0x03)) : TRUE);  // Skip every 8th frame... or every 4th frame if we are "aggressive"
     POKEY_Frame();
     
     gTotalAtariFrames++;

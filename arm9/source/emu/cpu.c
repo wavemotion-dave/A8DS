@@ -92,8 +92,8 @@
 //#define CPU65C02                // Do not emulate the original 6502 bug on JMP
 
 /* 6502 stack handling */
-#define PL                  dGetByte(0x0100 + ++S)
-#define PH(x)               dPutByte(0x0100 + S--, x)
+#define PL                  zGetByte(0x0100 + ++S)
+#define PH(x)               zPutByte(0x0100 + S--, x)
 #define PHW(x)              PH((x) >> 8); PH((x) & 0xff)
 
 /* 6502 code fetching */
@@ -479,25 +479,25 @@ next:
 
     OPCODE(05)              /* ORA ab */
         ZPAGE;
-        ORA(dGetByte(addr));
+        ORA(zGetByte(addr));
         DONE
 
     OPCODE(06)              /* ASL ab */
         ZPAGE;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         C = (data & 0x80) ? 1 : 0;
         Z = N = data << 1;
-        dPutByte(addr, Z);
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(07)              /* ASO ab [unofficial - ASL then ORA with Acc] */
         ZPAGE;
 
     aso_zpage:
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         C = (data & 0x80) ? 1 : 0;
         data <<= 1;
-        dPutByte(addr, data);
+        zPutByte(addr, data);
         Z = N = A |= data;
         DONE
 
@@ -556,15 +556,15 @@ next:
 
     OPCODE(15)              /* ORA ab,x */
         ZPAGE_X;
-        ORA(dGetByte(addr));
+        ORA(zGetByte(addr));
         DONE
 
     OPCODE(16)              /* ASL ab,x */
         ZPAGE_X;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         C = (data & 0x80) ? 1 : 0;
         Z = N = data << 1;
-        dPutByte(addr, Z);
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(17)              /* ASO ab,x [unofficial - ASL then ORA with Acc] */
@@ -646,7 +646,7 @@ next:
 
     OPCODE(24)              /* BIT ab */
         ZPAGE;
-        N = dGetByte(addr);
+        N = zGetByte(addr);
 #ifndef NO_V_FLAG_VARIABLE
         V = N & 0x40;
 #else
@@ -657,22 +657,22 @@ next:
 
     OPCODE(25)              /* AND ab */
         ZPAGE;
-        AND(dGetByte(addr));
+        AND(zGetByte(addr));
         DONE
 
     OPCODE(26)              /* ROL ab */
         ZPAGE;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         Z = N = (data << 1) + C;
         C = (data & 0x80) ? 1 : 0;
-        dPutByte(addr, Z);
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(27)              /* RLA ab [unofficial - ROL Mem, then AND with A] */
         ZPAGE;
 
     rla_zpage:
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         if (C) {
             C = (data & 0x80) ? 1 : 0;
             data = (data << 1) + 1;
@@ -681,7 +681,7 @@ next:
             C = (data & 0x80) ? 1 : 0;
             data = (data << 1);
         }
-        dPutByte(addr, data);
+        zPutByte(addr, data);
         Z = N = A &= data;
         DONE
 
@@ -743,15 +743,15 @@ next:
 
     OPCODE(35)              /* AND ab,x */
         ZPAGE_X;
-        AND(dGetByte(addr));
+        AND(zGetByte(addr));
         DONE
 
     OPCODE(36)              /* ROL ab,x */
         ZPAGE_X;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         Z = N = (data << 1) + C;
         C = (data & 0x80) ? 1 : 0;
-        dPutByte(addr, Z);
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(37)              /* RLA ab,x [unofficial - ROL Mem, then AND with A] */
@@ -815,26 +815,26 @@ next:
 
     OPCODE(45)              /* EOR ab */
         ZPAGE;
-        EOR(dGetByte(addr));
+        EOR(zGetByte(addr));
         DONE
 
     OPCODE(46)              /* LSR ab */
         ZPAGE;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         C = data & 1;
         Z = data >> 1;
         N = 0;
-        dPutByte(addr, Z);
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(47)              /* LSE ab [unofficial - LSR then EOR result with A] */
         ZPAGE;
 
     lse_zpage:
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         C = data & 1;
         data >>= 1;
-        dPutByte(addr, data);
+        zPutByte(addr, data);
         Z = N = A ^= data;
         DONE
 
@@ -898,16 +898,16 @@ next:
 
     OPCODE(55)              /* EOR ab,x */
         ZPAGE_X;
-        EOR(dGetByte(addr));
+        EOR(zGetByte(addr));
         DONE
 
     OPCODE(56)              /* LSR ab,x */
         ZPAGE_X;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         C = data & 1;
         Z = data >> 1;
         N = 0;
-        dPutByte(addr, Z);
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(57)              /* LSE ab,x [unofficial - LSR then EOR result with A] */
@@ -981,22 +981,22 @@ next:
 
     OPCODE(65)              /* ADC ab */
         ZPAGE;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         goto adc;
 
     OPCODE(66)              /* ROR ab */
         ZPAGE;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         Z = N = (C << 7) + (data >> 1);
         C = data & 1;
-        dPutByte(addr, Z);
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(67)              /* RRA ab [unofficial - ROR Mem, then ADC to Acc] */
         ZPAGE;
 
     rra_zpage:
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         if (C) {
             C = data & 1;
             data = (data >> 1) + 0x80;
@@ -1005,7 +1005,7 @@ next:
             C = data & 1;
             data >>= 1;
         }
-        dPutByte(addr, data);
+        zPutByte(addr, data);
         goto adc;
 
     OPCODE(68)              /* PLA */
@@ -1105,15 +1105,15 @@ next:
 
     OPCODE(75)              /* ADC ab,x */
         ZPAGE_X;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         goto adc;
 
     OPCODE(76)              /* ROR ab,x */
         ZPAGE_X;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         Z = N = (C << 7) + (data >> 1);
         C = data & 1;
-        dPutByte(addr, Z);
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(77)              /* RRA ab,x [unofficial - ROR Mem, then ADC to Acc] */
@@ -1166,23 +1166,23 @@ next:
 
     OPCODE(84)              /* STY ab */
         ZPAGE;
-        dPutByte(addr, Y);
+        zPutByte(addr, Y);
         DONE
 
     OPCODE(85)              /* STA ab */
         ZPAGE;
-        dPutByte(addr, A);
+        zPutByte(addr, A);
         DONE
 
     OPCODE(86)              /* STX ab */
         ZPAGE;
-        dPutByte(addr, X);
+        zPutByte(addr, X);
         DONE
 
     OPCODE(87)              /* SAX ab [unofficial - Store result A AND X] */
         ZPAGE;
         data = A & X;
-        dPutByte(addr, data);
+        zPutByte(addr, data);
         DONE
 
     OPCODE(88)              /* DEY */
@@ -1243,23 +1243,23 @@ next:
 
     OPCODE(94)              /* STY ab,x */
         ZPAGE_X;
-        dPutByte(addr, Y);
+        zPutByte(addr, Y);
         DONE
 
     OPCODE(95)              /* STA ab,x */
         ZPAGE_X;
-        dPutByte(addr, A);
+        zPutByte(addr, A);
         DONE
 
     OPCODE(96)              /* STX ab,y */
         ZPAGE_Y;
-        PutByte(addr, X);
+        zPutByte(addr, X);
         DONE
 
     OPCODE(97)              /* SAX ab,y [unofficial - Store result A AND X] */
         ZPAGE_Y;
         data = A & X;
-        dPutByte(addr, data);
+        zPutByte(addr, data);
         DONE
 
     OPCODE(98)              /* TYA */
@@ -1351,22 +1351,22 @@ next:
 
     OPCODE(a4)              /* LDY ab */
         ZPAGE;
-        LDY(dGetByte(addr));
+        LDY(zGetByte(addr));
         DONE
 
     OPCODE(a5)              /* LDA ab */
         ZPAGE;
-        LDA(dGetByte(addr));
+        LDA(zGetByte(addr));
         DONE
 
     OPCODE(a6)              /* LDX ab */
         ZPAGE;
-        LDX(dGetByte(addr));
+        LDX(zGetByte(addr));
         DONE
 
     OPCODE(a7)              /* LAX ab [unofficial] */
         ZPAGE;
-        Z = N = X = A = dGetByte(addr);
+        Z = N = X = A = zGetByte(addr);
         DONE
 
     OPCODE(a8)              /* TAY */
@@ -1422,12 +1422,12 @@ next:
 
     OPCODE(b4)              /* LDY ab,x */
         ZPAGE_X;
-        LDY(dGetByte(addr));
+        LDY(zGetByte(addr));
         DONE
 
     OPCODE(b5)              /* LDA ab,x */
         ZPAGE_X;
-        LDA(dGetByte(addr));
+        LDA(zGetByte(addr));
         DONE
 
     OPCODE(b6)              /* LDX ab,y */
@@ -1517,26 +1517,26 @@ next:
 
     OPCODE(c4)              /* CPY ab */
         ZPAGE;
-        CPY(dGetByte(addr));
+        CPY(zGetByte(addr));
         DONE
 
     OPCODE(c5)              /* CMP ab */
         ZPAGE;
-        CMP(dGetByte(addr));
+        CMP(zGetByte(addr));
         DONE
 
     OPCODE(c6)              /* DEC ab */
         ZPAGE;
-        Z = N = dGetByte(addr) - 1;
-        dPutByte(addr, Z);
+        Z = N = zGetByte(addr) - 1;
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(c7)              /* DCM ab [unofficial - DEC Mem then CMP with Acc] */
         ZPAGE;
 
     dcm_zpage:
-        data = dGetByte(addr) - 1;
-        dPutByte(addr, data);
+        data = zGetByte(addr) - 1;
+        zPutByte(addr, data);
         CMP(data);
         DONE
 
@@ -1596,15 +1596,15 @@ next:
 
     OPCODE(d5)              /* CMP ab,x */
         ZPAGE_X;
-        CMP(dGetByte(addr));
+        CMP(zGetByte(addr));
         //Z = N = A - data;
         //C = (A >= data);
         DONE
 
     OPCODE(d6)              /* DEC ab,x */
         ZPAGE_X;
-        Z = N = dGetByte(addr) - 1;
-        dPutByte(addr, Z);
+        Z = N = zGetByte(addr) - 1;
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(d7)              /* DCM ab,x [unofficial - DEC Mem then CMP with Acc] */
@@ -1662,26 +1662,26 @@ next:
 
     OPCODE(e4)              /* CPX ab */
         ZPAGE;
-        CPX(dGetByte(addr));
+        CPX(zGetByte(addr));
         DONE
 
     OPCODE(e5)              /* SBC ab */
         ZPAGE;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         goto sbc;
 
     OPCODE(e6)              /* INC ab */
         ZPAGE;
-        Z = N = dGetByte(addr) + 1;
-        dPutByte(addr, Z);
+        Z = N = zGetByte(addr) + 1;
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(e7)              /* INS ab [unofficial - INC Mem then SBC with Acc] */
         ZPAGE;
 
     ins_zpage:
-        data = dGetByte(addr) + 1;
-        dPutByte(addr, data);
+        data = zGetByte(addr) + 1;
+        zPutByte(addr, data);
         goto sbc;
 
     OPCODE(e8)              /* INX */
@@ -1738,13 +1738,13 @@ next:
 
     OPCODE(f5)              /* SBC ab,x */
         ZPAGE_X;
-        data = dGetByte(addr);
+        data = zGetByte(addr);
         goto sbc;
 
     OPCODE(f6)              /* INC ab,x */
         ZPAGE_X;
-        Z = N = dGetByte(addr) + 1;
-        dPutByte(addr, Z);
+        Z = N = zGetByte(addr) + 1;
+        zPutByte(addr, Z);
         DONE
 
     OPCODE(f7)              /* INS ab,x [unofficial - INC Mem then SBC with Acc] */
