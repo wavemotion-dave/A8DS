@@ -68,7 +68,7 @@ char *strcasestr(const char *haystack, const char *needle);
 
 extern UBYTE ROM_basic[];
 
-UBYTE cart_image[CART_MAX_SIZE];    // Big enough to hold the largest carts we support ... 1MB
+UBYTE *cart_image = 0;    // Big enough to hold the largest carts we support ... 1MB
 UBYTE cart_header[16];
 
 int bank            __attribute__((section(".dtcm"))) = 0;
@@ -264,6 +264,30 @@ static void set_bank_80BF(int b)
         bank = b;
     }
 }
+
+/* CART_MEGA_4MB */
+static void set_bank_80BF_MEGA4MB(int b)
+{
+    if (b != bank)
+    {
+        if (b == 255)
+        {
+            Cart809F_Disable();
+            CartA0BF_Disable();
+        }
+        else
+        {
+            Cart809F_Enable();
+            CartA0BF_Enable();
+            mem_map[0x8] = (cart_image + b*0x4000) + 0x0000 - 0x8000;
+            mem_map[0x9] = (cart_image + b*0x4000) + 0x1000 - 0x9000;
+            mem_map[0xA] = (cart_image + b*0x4000) + 0x2000 - 0xA000;
+            mem_map[0xB] = (cart_image + b*0x4000) + 0x3000 - 0xB000;
+        }
+        bank = b;
+    }
+}
+
 
 /* CART_SDX_128 */
 static void set_bank_SDX_128(UWORD addr)
@@ -816,7 +840,7 @@ u8 Guess5200CartType(const char *filename)
 int cart_size = 0;
 int CART_Insert(int enabled, int file_type, const char *filename)
 {
-    memset(cart_image, 0xFF, sizeof(cart_image));   // Fill with 0xFF until we read in the cart
+    memset(cart_image, 0xFF, (isDSiMode() ? CART_MAX_SIZE_DSI:CART_MAX_SIZE));   // Fill with 0xFF until we read in the cart
     bank = 0;
 
     CART_Remove();
@@ -827,7 +851,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
         if (fp != NULL)
         {
             fread(cart_header, 1, 16, fp);
-            fread(cart_image, 1, CART_MAX_SIZE, fp);
+            fread(cart_image, 1, (isDSiMode() ? CART_MAX_SIZE_DSI:CART_MAX_SIZE), fp);
             fclose(fp);
             myConfig.cart_type = cart_header[7];
         }
@@ -837,7 +861,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
         FILE * fp = fopen(filename, "rb");
         if (fp != NULL)
         {
-            cart_size = fread(cart_image, 1, CART_MAX_SIZE, fp);
+            cart_size = fread(cart_image, 1, (isDSiMode() ? CART_MAX_SIZE_DSI:CART_MAX_SIZE), fp);
             fclose(fp);
             int size = cart_size / 1024;
             // If configuration hasn't been set for a Cartridge Type, guess at the type based on ROM size
@@ -854,6 +878,8 @@ int CART_Insert(int enabled, int file_type, const char *filename)
                 if (size == 256)    myConfig.cart_type = CART_XEGS_256;
                 if (size == 512)    myConfig.cart_type = CART_XEGS_512;
                 if (size == 1024)   myConfig.cart_type = CART_ATMAX_1024;
+                if (size == 2048)   myConfig.cart_type = CART_MEGA_2MB;
+                if (size == 4096)   myConfig.cart_type = CART_MEGA_4MB;
             }
         }
     }
@@ -862,7 +888,7 @@ int CART_Insert(int enabled, int file_type, const char *filename)
         FILE * fp = fopen(filename, "rb");
         if (fp != NULL)
         {
-            cart_size = fread(cart_image, 1, CART_MAX_SIZE, fp);
+            cart_size = fread(cart_image, 1, (isDSiMode() ? CART_MAX_SIZE_DSI:CART_MAX_SIZE), fp);
             fclose(fp);
             int size = cart_size / 1024;
             // If configuration hasn't been set for an A52 type, guess at the type based on ROM size
@@ -1082,6 +1108,8 @@ void CART_Start(int cart_size)
     case CART_MEGA_256:
     case CART_MEGA_512:
     case CART_MEGA_1024:
+    case CART_MEGA_2MB:
+    case CART_MEGA_4MB:
         Cart809F_Enable();
         CartA0BF_Enable();
         mem_map[0x8] = cart_image + 0x0000 - 0x8000;
@@ -1616,6 +1644,12 @@ void CART_PutByte(UWORD addr, UBYTE byte)
         break;
     case CART_MEGA_1024:
         set_bank_80BF(byte & 0xbf);
+        break;
+    case CART_MEGA_2MB:
+        set_bank_80BF(byte & 0xff);
+        break;
+    case CART_MEGA_4MB:
+        set_bank_80BF_MEGA4MB(byte & 0xff);
         break;
     case CART_SWXEGS_32:
         set_bank_809F(byte & 0x83, 0x6000);

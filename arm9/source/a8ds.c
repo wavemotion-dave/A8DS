@@ -59,6 +59,21 @@
 #include "highscore.h"
 #include "loadsave.h"
 
+// ----------------------------------------------------------------------------------
+// These are the sound buffer vars which we use to pass along to the ARM7 core.
+// This buffer cannot be in .dtcm fast memory because the ARM7 core wouldn't see it.
+// ----------------------------------------------------------------------------------
+u8 sound_buffer[32]         __attribute__((aligned (4))) = {0};
+u16* aptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000);
+u16* bptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
+u16 sound_idx               __attribute__((section(".dtcm"))) = 0;
+u8 myPokeyBufIdx            __attribute__((section(".dtcm"))) = 0;
+u8 bMute                    __attribute__((section(".dtcm"))) = 0;
+u16 sampleExtender[256]     __attribute__((section(".dtcm"))) = {0};
+
+short int screen_slide_x    __attribute__((section(".dtcm"))) = 0;
+short int screen_slide_y    __attribute__((section(".dtcm"))) = 0;
+
 FICA_A8 *a8romlist;                         // For reading all the .ATR .XEX .CAR and .ROM files from the SD card
 u16 count8bit=0, countfiles=0, ucFicAct=0;  // Counters for all the 8-bit files found on the SD card
 u16 gTotalAtariFrames = 0;                  // For FPS counting
@@ -69,21 +84,6 @@ u8  bShowKeyboard = false;                  // set to true when the virtual keyb
 u8 bFirstLoad = true;                       // True if this is the first game being loaded
 u16 shift=0;                                // Used to track shift keyboard status
 u16 ctrl=0;                                 // Used to track control keyboard status
-
-// ----------------------------------------------------------------------------------
-// These are the sound buffer vars which we use to pass along to the ARM7 core.
-// This buffer cannot be in .dtcm fast memory because the ARM7 core wouldn't see it.
-// ----------------------------------------------------------------------------------
-u8 sound_buffer[32]         __attribute__((aligned (2))) = {0};
-u16* aptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[0] + 0xA000000);
-u16* bptr                   __attribute__((section(".dtcm"))) = (u16*) ((u32)&sound_buffer[2] + 0xA000000);
-u16 sound_idx               __attribute__((section(".dtcm"))) = 0;
-u8 myPokeyBufIdx            __attribute__((section(".dtcm"))) = 0;
-u8 bMute                    __attribute__((section(".dtcm"))) = 0;
-u16 sampleExtender[256]     __attribute__((section(".dtcm"))) = {0};
-
-short int screen_slide_x __attribute__((section(".dtcm"))) = 0;
-short int screen_slide_y __attribute__((section(".dtcm"))) = 0;
 
 u16 play_sio_sound = 0;
 
@@ -577,7 +577,7 @@ void dsFreeEmu(void)
 // -------------------------------------------------------------------
 UBYTE ROM_atarios_xl[0x4000];
 UBYTE ROM_atarios_800[0x2800];
-UBYTE ROM_a5200_os[0x800];
+UBYTE ROM_atarios_5200[0x800];
 UBYTE ROM_basic[0x2000];
 
 u8 bAltirraOS_used = 0; 
@@ -606,7 +606,7 @@ void load_os(void)
     }
 
     // -------------------------------------------
-    // Read A800 older ROM from SD card...
+    // Read A800 OS-B ROM from SD card...
     // -------------------------------------------
     romfile = fopen("atariosb.rom", "rb");
     if (romfile == NULL) romfile = fopen("/roms/bios/atariosb.rom", "rb");
@@ -634,11 +634,11 @@ void load_os(void)
     if (romfile == NULL)
     {
         // If we can't find the a5200 BIOS, we force the Altirra 5200 bios in
-        memcpy(ROM_a5200_os, ROM_altirra_5200_os, 0x800);
+        memcpy(ROM_atarios_5200, ROM_altirra_5200_os, 0x800);
     }
     else
     {
-        fread(ROM_a5200_os, 0x800, 1, romfile);
+        fread(ROM_atarios_5200, 0x800, 1, romfile);
         fclose(romfile);
     }
 
@@ -682,7 +682,7 @@ void install_os(void)
     }
     else if (myConfig.machine_type == MACHINE_5200)
     {
-        memcpy(atari_os+0x3800, ROM_a5200_os, 0x800);
+        memcpy(atari_os+0x3800, ROM_atarios_5200, 0x800);
     }
     else // Must be OS_ATARI_XL
     {

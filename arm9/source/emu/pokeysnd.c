@@ -416,16 +416,13 @@ ITCM_CODE void Pokey_process(void *sndbuffer, unsigned sndn)
     /* output change for increased performance (less over-all math). */
     /* add the output values of all 4 channels */
     cur_val = SAMP_MIN;
-    if (*out_ptr++) cur_val += *vol_ptr;
+    if (*out_ptr++) cur_val += *vol_ptr;  
     vol_ptr++;
-
-    if (*out_ptr++) cur_val += *vol_ptr;
+    if (*out_ptr++) cur_val += *vol_ptr;  
     vol_ptr++;
-
-    if (*out_ptr++) cur_val += *vol_ptr;
+    if (*out_ptr++) cur_val += *vol_ptr;  
     vol_ptr++;
-
-    if (*out_ptr++) cur_val += *vol_ptr;
+    if (*out_ptr++) cur_val += *vol_ptr;  
     vol_ptr++;
 
     /* loop until the buffer is filled */
@@ -469,16 +466,12 @@ ITCM_CODE void Pokey_process(void *sndbuffer, unsigned sndn)
         if (next_event != SAMPLE) {
             /* shift the polynomial counters */
 
-      /* decrement all counters by the smallest count found */
-      /* again, no loop for efficiency */
-      div_n_ptr--;
-      *div_n_ptr -= event_min;
-      div_n_ptr--;
-      *div_n_ptr -= event_min;
-      div_n_ptr--;
-      *div_n_ptr -= event_min;
-      div_n_ptr--;
-      *div_n_ptr -= event_min;
+            /* decrement all counters by the smallest count found */
+            /* again, no loop for efficiency */
+            div_n_ptr--;  *div_n_ptr -= event_min;
+            div_n_ptr--;  *div_n_ptr -= event_min;
+            div_n_ptr--;  *div_n_ptr -= event_min;
+            div_n_ptr--;  *div_n_ptr -= event_min;
 
             WRITE_U32(samp_cnt_w_ptr, READ_U32(samp_cnt_w_ptr) - event_min);
 
@@ -584,12 +577,12 @@ ITCM_CODE void Pokey_process(void *sndbuffer, unsigned sndn)
         else {                  /* otherwise we're processing a sample */
             /* adjust the sample counter - note we're using the 24.8 integer
                which includes an 8 bit fraction for accuracy */
-      int iout;
-      iout = cur_val;
-      *buffer++ = (char) ((iout))+128;
-      *Samp_n_cnt += Samp_n_max;
-      /* and indicate one less byte in the buffer */
-      n--;
+            int iout;
+            iout = cur_val;
+            *buffer++ = (char) ((iout))+128;
+            *Samp_n_cnt += Samp_n_max;
+            /* and indicate one less byte in the buffer */
+            n--;
         }    
     }
 }

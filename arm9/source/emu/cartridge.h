@@ -117,6 +117,8 @@
 #define CART_STD_4          58
 #define CART_RIGHT_4        59
 #define CART_BLIZZARD_32    60
+#define CART_MEGA_4MB       63
+#define CART_MEGA_2MB       64
 #define CART_ADAWLIAH32     69
 #define CART_ADAWLIAH64     70
 #define CART_5200_64        71
@@ -155,7 +157,8 @@
 #define DIGITAL         0
 #define ANALOG          1
 
-#define CART_MAX_SIZE   ((1024+8) * 1024)
+#define CART_MAX_SIZE       ((1024+8) * 1024)
+#define CART_MAX_SIZE_DSI   ((4096+8) * 1024)
 
 extern int bank;
 extern UBYTE cart_sic_data;
@@ -164,7 +167,7 @@ extern UWORD last_bb2_bank;
 extern int cart_size;
 
 extern UBYTE *cart_mem_ptr;
-extern UBYTE cart_image[];
+extern UBYTE *cart_image;
 
 int CART_Insert(int enabled, int type, const char *filename);
 void CART_Remove(void);

@@ -72,6 +72,12 @@ int main(int argc, char **argv)
     }
 #endif
 
+    // --------------------------------------------------------------------------------------
+    // The older DS hardware can support a 1MB cart buffer and the DSi can support up to 4MB
+    // --------------------------------------------------------------------------------------
+    extern uint8_t *cart_image;
+    cart_image = malloc((isDSiMode() ? CART_MAX_SIZE_DSI:CART_MAX_SIZE));    
+
     // Get these in before we load configuration 
     load_os();          // Read in the "atarixl.rom" file or use the built-in Altirra OS
     install_os();       // And install the right OS into our system...
