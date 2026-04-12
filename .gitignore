@@ -1,0 +1,10 @@
+
+arm7/build/
+
+arm9/build/
+
+*.elf
+
+arm7/A8DSi
+
+arm9/A8DSi
