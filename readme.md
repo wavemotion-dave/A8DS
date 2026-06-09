@@ -14,6 +14,7 @@ you want to run and off it goes!
 
 ![A8DS](https://github.com/wavemotion-dave/A8DS/blob/main/arm9/gfx/bgTop.png)
 
+A8DS is free to download and use... but if you have found anything I've done to be useful, buy me a virtual coffee here: https://ko-fi.com/wavemotiondave 
 
 Features :
 ----------------------------------------------------------------------------------
